@@ -242,3 +242,76 @@ For detailed information, see the `agents/` directory:
 - **[agents/rules/](agents/rules/)** - Modular engineering rules
 - **[agents/commands.md](agents/commands.md)** - Complete command reference
 - **[agents/knowledge-base.md](agents/knowledge-base.md)** - Domain knowledge and business rules
+
+---
+
+## AIM Production Deployment Context
+
+This section is specific to the AIM fork. It describes how this repo is deployed and
+what makes the AIM instance different from a vanilla cal.diy installation.
+
+### What this fork is
+
+This is **AIM's (Advisor Internet Marketing) fork** of cal.diy, deployed at
+**https://cal.annuitygator.com** for 85 financial advisors. The ops repo lives at
+`https://github.com/advisorinternetmarketing/cal-aim` (parent directory when cloned).
+
+### Git remotes
+
+- `origin` → `https://github.com/AIM-techteam/cal.diy` (AIM fork — push here)
+- `upstream` → `https://github.com/calcom/cal.diy` (original — pull updates from here)
+
+### Production server
+
+| Item | Value |
+|---|---|
+| URL | https://cal.annuitygator.com |
+| Server | DigitalOcean droplet 159.203.143.99, `/opt/cal-aim/cal.diy` |
+| Database | DigitalOcean Managed PostgreSQL (external, sslmode=require) |
+| Container | Docker image built from `Dockerfile` in this repo root |
+| Admin account | erandi@advisorinternetmarketing.com |
+
+### AIM-specific behavior and gotchas
+
+**Platform API is not available.** `apps/api` (NestJS) is not built or deployed.
+All bulk operations are done via DB-direct SQL. Any `/api/v2/` endpoint will 404.
+
+**Admin role requires 2FA.** `INACTIVE_ADMIN` is assigned to any admin user with
+`identityProvider='CAL'` who has not enabled TOTP 2FA. Enabling 2FA in Settings →
+Security promotes the role to `ADMIN`, which makes the admin sidebar sections appear.
+
+**85 advisor accounts are DB-seeded.** Created via `../scripts/seed-advisors.js`
+(direct Postgres INSERTs). Each has `identityProvider='CAL'`, `role='USER'`,
+`completedOnboarding=false`. Advisors activate by signing in with Google OAuth.
+
+**Default timezone is Europe/London.** AIM advisors were bulk-updated to
+`America/Chicago` after seeding. New users should be updated after creation.
+
+**n8n webhook.** Every advisor has a webhook pointing to
+`https://aimkt-app.app.n8n.cloud/webhook/cal-booking` for FUB + Keap CRM sync.
+Metadata fields `fubId`, `keapContactId`, `leadId` are passed from the Cal embed
+in the funnel and appear in every webhook payload as `$json.payload.metadata.*`.
+
+### How to deploy a UI change
+
+1. Edit files under `apps/web/` or the relevant `packages/`
+2. `git push origin main` → pushes to AIM-techteam fork
+3. SSH to `root@159.203.143.99` → `/opt/cal-aim` → inside `cal.diy/`, run
+   `git pull origin main`
+4. `docker compose build cal && docker compose up -d cal`
+5. Verify: `curl -s https://cal.annuitygator.com/api/health`
+
+Full guide: `../docs/howto-deploy-ui-changes.md`
+
+### Key env vars (AIM-specific values)
+
+| Var | Notes |
+|---|---|
+| `EMAIL_SERVER_HOST` | `smtp.sendgrid.net` — SendGrid, not Gmail |
+| `EMAIL_SERVER_USER` | `apikey` (literal string for SendGrid) |
+| `EMAIL_SERVER_PASSWORD` | SendGrid API key |
+| `GOOGLE_API_CREDENTIALS` | Google Cloud project "AIM Calendar" — separate from any personal project |
+| `CALCOM_TELEMETRY_DISABLED` | `1` — always disabled in production |
+
+Never reuse credentials from `cale.ndi.mx` (Erandi's personal instance) — they are
+separate Google Cloud projects with separate OAuth clients.
