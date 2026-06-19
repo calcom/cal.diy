@@ -1562,6 +1562,7 @@
   "impersonate_user_tip": "All uses of this feature is audited.",
   "impersonating_user_warning": "Impersonating username \"{{user}}\".",
   "impersonating_stop_instructions": "Click here to stop",
+  "error_impersonating_user": "Failed to impersonate user. Please try again.",
   "event_location_changed": "Updated - Your event changed the location",
   "new_guests_added": "Added - New guests added to your event",
   "location_changed_event_type_subject": "Location Changed: {{eventType}} with {{name}} at {{date}}",

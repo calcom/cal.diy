@@ -13,6 +13,7 @@ import { DropdownActions, Table } from "@calcom/ui/components/table";
 import { showToast } from "@calcom/ui/components/toast";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const { Cell, ColumnTitle, Header, Row } = Table;
@@ -26,6 +27,28 @@ export function UsersTable() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const router = useRouter();
+  const { data: session } = useSession();
+
+  async function loginAsUser(userId: number) {
+    try {
+      const res = await fetch("/api/auth/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId: userId }),
+        credentials: "same-origin",
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        showToast(body.error ?? t("error_impersonating_user"), "error");
+        return;
+      }
+      // Redirect to dashboard as the impersonated user
+      router.push("/");
+      router.refresh();
+    } catch {
+      showToast(t("error_impersonating_user"), "error");
+    }
+  }
 
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
@@ -169,6 +192,16 @@ export function UsersTable() {
                           href: `/settings/admin/users/${user.id}/edit`,
                           icon: "pencil" as const,
                         },
+                        ...(session?.user?.id !== user.id
+                          ? [
+                              {
+                                id: "impersonate",
+                                label: t("impersonate"),
+                                onClick: () => loginAsUser(user.id),
+                                icon: "user" as const,
+                              },
+                            ]
+                          : []),
                         {
                           id: "reset-password",
                           label: t("reset_password"),

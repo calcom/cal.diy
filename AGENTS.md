@@ -245,6 +245,45 @@ For detailed information, see the `agents/` directory:
 
 ---
 
+## AIM Custom Features
+
+Features added to the AIM fork that are NOT in the upstream cal.diy repo:
+
+### Admin Impersonation ("Login as User")
+
+Added 2026-06-19. Allows instance admins to take over any advisor's session for
+full management (schedules, integrations, personal settings) without sharing
+credentials.
+
+**Entry point:** `/settings/admin/users` → DropdownActions → "Impersonate"
+
+**API route:** `POST /api/auth/impersonate` — validates admin session server-side,
+generates a signed NextAuth JWT as the target user (with `impersonatedBy` metadata),
+and sets the session cookie. Admin ID is NEVER trusted from the request body.
+
+**Security model:**
+- Only `role='ADMIN'` users can impersonate
+- Cannot impersonate yourself or locked users
+- JWT is signed with `NEXTAUTH_SECRET` — cannot be forged
+- Admin identity stored in `session.user.impersonatedBy` (readable server-side)
+
+**UI:**
+- Orange `ImpersonationBanner` shown at the top of all pages while impersonating
+- "Click here to stop" calls `signOut()` and redirects to `/settings/admin/users`
+
+**Files involved:**
+- `apps/web/pages/api/auth/impersonate.ts` — API route (core logic)
+- `apps/web/modules/users/components/ImpersonationBanner.tsx` — warning banner
+- `apps/web/modules/shell/banners/LayoutBanner.tsx` — banner registry
+- `apps/web/modules/users/components/UsersTable.tsx` — dropdown action
+- `packages/i18n/locales/en/common.json` — `error_impersonating_user` key
+
+**i18n keys used (already existed in upstream):**
+- `impersonating_user_warning` — "Viewing as {user}"
+- `impersonating_stop_instructions` — "Click here to stop impersonating"
+
+---
+
 ## AIM Production Deployment Context
 
 This section is specific to the AIM fork. It describes how this repo is deployed and
