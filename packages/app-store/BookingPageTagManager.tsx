@@ -15,6 +15,7 @@ const JS_STRING_LITERAL_ESCAPES: Record<string, string> = {
   "'": "\\'",
   '"': '\\"',
   "`": "\\`",
+  "$": "\\$",
   "<": "\\x3C",
   ">": "\\x3E",
   "\r": "\\r",
@@ -25,12 +26,13 @@ const JS_STRING_LITERAL_ESCAPES: Record<string, string> = {
 
 /**
  * Escapes a value that is substituted into a JS string literal inside an inline <script>.
- * Quotes and backslashes keep the value inside its literal, and `<`/`>` keep it from ending
- * the script element. Values that analytics apps legitimately hold (ids, hostnames, URLs)
- * contain none of these characters, so their rendered output is unchanged.
+ * Quotes and backslashes keep the value inside its literal, `$` keeps it from starting an
+ * interpolation when the literal is delimited by backticks, and `<`/`>` keep it from ending
+ * the script element. A backslash before `$` is a no-op in every literal form, so values that
+ * analytics apps legitimately hold (ids, hostnames, URLs, amounts) render unchanged.
  */
 const escapeJsStringLiteral = (value: string) =>
-  value.replace(/[\\'"`<>\r\n\u2028\u2029]/g, (char) => JS_STRING_LITERAL_ESCAPES[char]);
+  value.replace(/[\\'"`<>$\r\n\u2028\u2029]/g, (char) => JS_STRING_LITERAL_ESCAPES[char]);
 
 // AnalyticApp has appData.tag always set
 type AnalyticApp = Omit<AppMeta, "appData"> & {

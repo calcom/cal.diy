@@ -99,6 +99,15 @@ describe("BookingPageTagManager", () => {
     expect(source).toContain("\\x3C/script\\x3E");
   });
 
+  it("escapes the interpolation opener so a value cannot interpolate in a template literal", () => {
+    const source = renderApp("gtm", { trackingId: "GTM-X${alert(1)}" });
+
+    // No shipped template delimits its literals with backticks today, but a value that carries
+    // the opener must not become active interpolation if one ever does.
+    expect(source).not.toContain("GTM-X${alert(1)}");
+    expect(source).toContain("GTM-X\\${alert(1)}");
+  });
+
   it("leaves a legitimate tracking id untouched", () => {
     const source = renderApp("gtm", { trackingId: "GTM-ABC123" });
 
