@@ -43,9 +43,7 @@
   "invite_team_individual_segment": "Undang satu per satu",
   "invite_team_bulk_segment": "Impor massal",
   "trial_days_left": "Tersisa $t(day, {\"count\": {{days}} }) di akun PRO kamu",
-  "day_one": "{{count}} hari",
   "day_other": "{{count}} hari",
-  "second_one": "{{count}} detik",
   "second_other": "{{count}} detik",
   "upgrade_now": "Upgrade sekarang",
   "accept_invitation": "Terima undangan",
@@ -197,7 +195,6 @@
   "apply_to_all_event_types": "Terapkan untuk semua, termasuk jenis acara di masa depan",
   "date_and_time": "Tanggal & Waktu",
   "email_reminder_upcoming_event_notice": "Ini adalah pengingat tentang acara mendatang Anda.",
-  "email_reminder_triggered_by_workflow": "Pengingat ini dipicu oleh Workflow di Cal.",
   "event_upper_case": "Acara",
   "scheduling_by": "Dijadwalkan oleh",
   "experience_review_prompt": "Bagaimana pengalaman terakhir Anda?",
@@ -205,6 +202,5 @@
   "meeting_satisfaction_question": "Seberapa puas Anda dengan rapat terakhir Anda?",
   "meeting_not_joined_question": "tidak bergabung dengan rapat?",
   "reschedule_cta_short": "Jadwal ulang di sini.",
-  "you_and_conjunction": "Anda &",
-  "email_survey_triggered_by_workflow": "Survei ini dipicu oleh Workflow di Cal."
+  "you_and_conjunction": "Anda &"
 }

@@ -86,7 +86,6 @@
   "no_options_available": "Ez dago aukerarik eskuragarri",
   "cancellation_reason": "Bertan behera uztearen arrazoia (aukerakoa)",
   "cancelled_by": "Bertan behera utzi du",
-  "cancellation_reason_host": "Bertan behera uzteko arrazoia",
   "cancellation_reason_placeholder": "Zergatik utzi duzu bertan behera?",
   "notify_attendee_cancellation_reason_warning": "Bertan behera uzteko arrazoia gonbidatuekin partekatuko da",
   "rejection_reason_placeholder": "Zergatik ari zara ukatzen?",
