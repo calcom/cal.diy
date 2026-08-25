@@ -1451,7 +1451,7 @@
   "12_hour_short": "12h",
   "24_hour_short": "24h",
   "redirect_success_booking": "Ümbersuunamine broneerimisel",
-  "you_are_being_redirected": "Teid suunatakse $t(second, {\"count\": {{seconds}} }) aadressile {{ url }}.",
+  "you_are_being_redirected": "Teid suunatakse {{seconds}} sekundi pärast aadressile {{ url }}.",
   "external_redirect_url": "https://example.com/redirect-to-my-success-page",
   "redirect_url_description": "Pärast edukat broneerimist suuna ümber kohandatud URL-ile",
   "redirect_on_no_routing_form": "Suuna ümber, kui ligipääs toimub ilma suunamisvormita",
