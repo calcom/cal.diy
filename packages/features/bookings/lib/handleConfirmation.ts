@@ -91,31 +91,30 @@ export async function handleConfirmation(args: {
     };
 
     tracingLogger.error(`Booking ${user.username} failed`, safeStringify({ error, results }));
-  } else {
-    if (results.length) {
-      // TODO: Handle created event metadata more elegantly
-      metadata.hangoutLink = results[0].createdEvent?.hangoutLink;
-      metadata.conferenceData = results[0].createdEvent?.conferenceData;
-      metadata.entryPoints = results[0].createdEvent?.entryPoints;
-    }
-    try {
-      const isHostConfirmationEmailsDisabled =
-        eventTypeMetadata?.disableStandardEmails?.confirmation?.host || false;
-      const isAttendeeConfirmationEmailDisabled =
-        eventTypeMetadata?.disableStandardEmails?.confirmation?.attendee || false;
+  }
+  if (results.length) {
+    // TODO: Handle created event metadata more elegantly
+    metadata.hangoutLink = results[0].createdEvent?.hangoutLink;
+    metadata.conferenceData = results[0].createdEvent?.conferenceData;
+    metadata.entryPoints = results[0].createdEvent?.entryPoints;
+  }
+  try {
+    const isHostConfirmationEmailsDisabled =
+      eventTypeMetadata?.disableStandardEmails?.confirmation?.host || false;
+    const isAttendeeConfirmationEmailDisabled =
+      eventTypeMetadata?.disableStandardEmails?.confirmation?.attendee || false;
 
-      if (emailsEnabled) {
-        await sendScheduledEmailsAndSMS(
-          { ...evt, additionalInformation: metadata },
-          undefined,
-          isHostConfirmationEmailsDisabled,
-          isAttendeeConfirmationEmailDisabled,
-          eventTypeMetadata
-        );
-      }
-    } catch (error) {
-      tracingLogger.error(error);
+    if (emailsEnabled) {
+      await sendScheduledEmailsAndSMS(
+        { ...evt, additionalInformation: metadata },
+        undefined,
+        isHostConfirmationEmailsDisabled,
+        isAttendeeConfirmationEmailDisabled,
+        eventTypeMetadata
+      );
     }
+  } catch (error) {
+    tracingLogger.error(error);
   }
   let updatedBookings: {
     id: number;
