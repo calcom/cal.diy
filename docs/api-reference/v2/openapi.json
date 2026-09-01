@@ -1964,7 +1964,7 @@
             "name": "eventUid",
             "required": true,
             "in": "path",
-            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For team events: GET /v2/organizations/{orgId}/teams/{teamId}/bookings/{bookingUid}/references\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
+            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
             "schema": {
               "type": "string"
             }
@@ -2011,7 +2011,7 @@
             "name": "eventUid",
             "required": true,
             "in": "path",
-            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For team events: GET /v2/organizations/{orgId}/teams/{teamId}/bookings/{bookingUid}/references\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
+            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
             "schema": {
               "type": "string"
             }
@@ -2110,7 +2110,7 @@
             "name": "eventUid",
             "required": true,
             "in": "path",
-            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For team events: GET /v2/organizations/{orgId}/teams/{teamId}/bookings/{bookingUid}/references\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
+            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
             "schema": {
               "type": "string"
             }
@@ -2157,7 +2157,7 @@
             "name": "eventUid",
             "required": true,
             "in": "path",
-            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For team events: GET /v2/organizations/{orgId}/teams/{teamId}/bookings/{bookingUid}/references\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
+            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
             "schema": {
               "type": "string"
             }
@@ -4909,7 +4909,7 @@
       "post": {
         "operationId": "SchedulesController_2024_06_11_createSchedule",
         "summary": "Create a schedule",
-        "description": "\n      Create a schedule for the authenticated user.\n\n      The point of creating schedules is for event types to be available at specific times.\n\n      The first goal of schedules is to have a default schedule. If you are platform customer and created managed users, then it is important to note that each managed user should have a default schedule.\n      1. If you passed `timeZone` when creating managed user, then the default schedule from Monday to Friday from 9AM to 5PM will be created with that timezone. The managed user can then change the default schedule via the `AvailabilitySettings` atom.\n      2. If you did not, then we assume you want the user to have this specific schedule right away. You should create a default schedule by specifying\n      `\"isDefault\": true` in the request body. Until the user has a default schedule the user can't be booked nor manage their schedule via the AvailabilitySettings atom.\n\n      The second goal of schedules is to create another schedule that event types can point to. This is useful for when an event is booked because availability is not checked against the default schedule but instead against that specific schedule.\n      After creating a non-default schedule, you can update an event type to point to that schedule via the PATCH `event-types/{eventTypeId}` endpoint.\n\n      When specifying start time and end time for each day use the 24 hour format e.g. 08:00, 15:00 etc.\n\n      <Note>Please make sure to pass in the cal-api-version header value as mentioned in the Headers section. Not passing the correct value will default to an older version of this endpoint.</Note>\n      ",
+        "description": "\n      Create a schedule for the authenticated user.\n\n      The point of creating schedules is for event types to be available at specific times.\n\n      The first goal of schedules is to have a default schedule. If you are a platform customer and have created managed users, then it is important to note that each managed user should have a default schedule.\n      1. If you passed `timeZone` when creating a managed user, then the default schedule from Monday to Friday from 9AM to 5PM will be created with that timezone. The managed user can then change the default schedule via the `AvailabilitySettings` atom.\n      2. If you did not, then we assume you want the user to have this specific schedule right away. You should create a default schedule by specifying\n      `\"isDefault\": true` in the request body. Until the user has a default schedule the user can't be booked nor manage their schedule via the AvailabilitySettings atom.\n\n      The second goal of schedules is to create another schedule that event types can point to. This is useful for when an event is booked because availability is not checked against the default schedule but instead against that specific schedule.\n      After creating a non-default schedule, you can update an event type to point to that schedule via the PATCH `event-types/{eventTypeId}` endpoint.\n\n      When specifying start time and end time for each day use the 24 hour format e.g. 08:00, 15:00 etc.\n\n      <Note>Please make sure to pass in the cal-api-version header value as mentioned in the Headers section. Not passing the correct value will default to an older version of this endpoint.</Note>\n      ",
         "parameters": [
           {
             "name": "Authorization",
@@ -11625,11 +11625,11 @@
         "properties": {
           "urls": {
             "type": "array",
-            "example": ["https://cal.com/ics/feed.ics", "http://cal.com/ics/feed.ics"],
+            "example": ["https://cal.com/ics/feed.ics", "https://caldav.example.com/calendars/user?export"],
             "description": "An array of ICS URLs",
             "items": {
               "type": "string",
-              "example": "https://cal.com/ics/feed.ics"
+              "example": "https://caldav.example.com/calendars/user?export"
             }
           },
           "readOnly": {
@@ -15194,7 +15194,6 @@
                 "MEETING_ENDED",
                 "MEETING_STARTED",
                 "RECORDING_READY",
-                "INSTANT_MEETING",
                 "RECORDING_TRANSCRIPTION_GENERATED",
                 "OOO_CREATED",
                 "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
@@ -15242,7 +15241,6 @@
                 "MEETING_ENDED",
                 "MEETING_STARTED",
                 "RECORDING_READY",
-                "INSTANT_MEETING",
                 "RECORDING_TRANSCRIPTION_GENERATED",
                 "OOO_CREATED",
                 "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
@@ -15326,7 +15324,6 @@
                 "MEETING_ENDED",
                 "MEETING_STARTED",
                 "RECORDING_READY",
-                "INSTANT_MEETING",
                 "RECORDING_TRANSCRIPTION_GENERATED",
                 "OOO_CREATED",
                 "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
@@ -15390,7 +15387,6 @@
                 "MEETING_ENDED",
                 "MEETING_STARTED",
                 "RECORDING_READY",
-                "INSTANT_MEETING",
                 "RECORDING_TRANSCRIPTION_GENERATED",
                 "OOO_CREATED",
                 "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
@@ -15489,7 +15485,6 @@
                 "MEETING_ENDED",
                 "MEETING_STARTED",
                 "RECORDING_READY",
-                "INSTANT_MEETING",
                 "RECORDING_TRANSCRIPTION_GENERATED",
                 "OOO_CREATED",
                 "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
