@@ -189,9 +189,20 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     await handleSeatsEventTypeOnBooking(eventType, bookingInfo, seatReferenceUid, isLoggedInUserHost);
   }
 
+  // For multi-seat bookings, find the payment matching the seat's attendee
+  // Each seat creates a separate payment with the attendee's email in metadata
+  const seatAttendeeEmail = bookingInfo.attendees?.[0]?.email;
   const payment = await prisma.payment.findFirst({
     where: {
       bookingId: bookingInfo.id,
+      ...(seatAttendeeEmail
+        ? {
+            data: {
+              path: ["metadata", "bookerEmail"],
+              equals: seatAttendeeEmail,
+            },
+          }
+        : {}),
     },
     select: {
       appId: true,
