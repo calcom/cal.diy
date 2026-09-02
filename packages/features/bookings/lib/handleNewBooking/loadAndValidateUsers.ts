@@ -152,6 +152,23 @@ const _loadAndValidateUsers = async ({
 
   users = eligibleUsers;
 
+  // Exclude users whose membership is PAUSED in this team
+  if (eventType.teamId) {
+    const activeMemberships = await prisma.membership.findMany({
+      where: {
+        teamId: eventType.teamId,
+        userId: { in: users.map((u) => u.id) },
+        status: "ACTIVE",
+      },
+      select: { userId: true },
+    });
+    const activeUserIds = new Set(activeMemberships.map((m) => m.userId));
+    users = users.filter((u) => activeUserIds.has(u.id));
+    if (users.length === 0) {
+      throw new HttpError({ statusCode: 404, message: "eventTypeUser.notFound" });
+    }
+  }
+
   // map fixed users
   users = users.map((user) => ({
     ...user,

@@ -6,6 +6,8 @@ import { router } from "@calcom/trpc/server/trpc";
 import type { inferRouterOutputs } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { updateMembershipStatusHandler } from "./updateMembershipStatus.handler";
+import { ZUpdateMembershipStatusInput } from "./updateMembershipStatus.schema";
 
 export type UserAdminRouter = typeof userAdminRouter;
 export type UserAdminRouterOutputs = inferRouterOutputs<UserAdminRouter>;
@@ -144,4 +146,7 @@ export const userAdminRouter = router({
     await prisma.user.delete({ where: { id: requestedUser.id } });
     return { message: `User with id: ${requestedUser.id} deleted successfully` };
   }),
+  updateMembershipStatus: authedAdminProcedure
+    .input(ZUpdateMembershipStatusInput)
+    .mutation(updateMembershipStatusHandler),
 });

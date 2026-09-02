@@ -33,6 +33,7 @@ export class HostRepository {
         },
         eventTypeId,
         isFixed: false,
+        OR: [{ memberId: null }, { member: { status: "ACTIVE" } }],
         createdAt: {
           gte: startDate,
         },
@@ -44,6 +45,7 @@ export class HostRepository {
     return await this.prismaClient.host.findMany({
       where: {
         eventTypeId,
+        OR: [{ memberId: null }, { member: { status: "ACTIVE" } }],
       },
       select: {
         userId: true,
@@ -95,6 +97,7 @@ export class HostRepository {
     const hosts = await this.prismaClient.host.findMany({
       where: {
         eventTypeId,
+        OR: [{ memberId: null }, { member: { status: "ACTIVE" } }],
         ...(cursor && { userId: { gt: cursor } }),
       },
       take: limit + 1,
@@ -156,6 +159,7 @@ export class HostRepository {
     const hosts = await this.prismaClient.host.findMany({
       where: {
         eventTypeId,
+        OR: [{ memberId: null }, { member: { status: "ACTIVE" } }],
         ...(cursor && { userId: { gt: cursor } }),
         ...(search && {
           OR: [
@@ -214,6 +218,7 @@ export class HostRepository {
     const hosts = await this.prismaClient.host.findMany({
       where: {
         eventTypeId,
+        OR: [{ memberId: null }, { member: { status: "ACTIVE" } }],
         ...(userIdFilter && { userId: userIdFilter }),
         ...(search && {
           OR: [
@@ -261,6 +266,7 @@ export class HostRepository {
       where: {
         eventTypeId,
         isFixed: false,
+        OR: [{ memberId: null }, { member: { status: "ACTIVE" } }],
       },
       select: {
         userId: true,
@@ -326,7 +332,10 @@ export class HostRepository {
 
   async findHostsWithConferencingCredentials(eventTypeId: number) {
     return await this.prismaClient.host.findMany({
-      where: { eventTypeId },
+      where: { 
+        eventTypeId,
+        OR: [{ memberId: null }, { member: { status: "ACTIVE" } }],
+      },
       select: {
         userId: true,
         user: {
