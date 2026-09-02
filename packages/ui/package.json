@@ -25,6 +25,7 @@
     "./components/dialog": "./components/dialog/index.ts",
     "./components/disconnect-calendar-integration": "./components/disconnect-calendar-integration/index.ts",
     "./components/divider": "./components/divider/index.ts",
+    "./components/duration": "./components/duration/index.ts",
     "./components/dropdown": "./components/dropdown/index.ts",
     "./components/editable-heading": "./components/editable-heading/index.ts",
     "./components/editor": "./components/editor/index.ts",

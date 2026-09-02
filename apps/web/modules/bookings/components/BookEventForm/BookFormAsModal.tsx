@@ -1,18 +1,16 @@
-import type { ReactNode } from "react";
-import React from "react";
-
 import { useEventTypeById } from "@calcom/atoms/hooks/event-types/private/useEventTypeById";
 import { useIsPlatform } from "@calcom/atoms/hooks/useIsPlatform";
 import { useBookerStoreContext } from "@calcom/features/bookings/Booker/BookerStoreProvider";
+import { useBookerTime } from "@calcom/features/bookings/Booker/hooks/useBookerTime";
+import { FromTime } from "@calcom/features/bookings/Booker/utils/dates";
 import { Dialog } from "@calcom/features/components/controlled-dialog";
+import { getDurationAccessibleLabel, getDurationFormatted } from "@calcom/lib/formatEventDuration";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { DialogContent } from "@calcom/ui/components/dialog";
-
-import { getDurationFormatted } from "../event-meta/Duration";
-import { FromTime } from "@calcom/features/bookings/Booker/utils/dates";
+import { DurationText } from "@calcom/ui/components/duration";
 import { useEvent } from "@calcom/web/modules/schedules/hooks/useEvent";
-import { useBookerTime } from "@calcom/features/bookings/Booker/hooks/useBookerTime";
+import type { ReactNode } from "react";
 
 const BookEventFormWrapper = ({ children, onCancel }: { onCancel: () => void; children: ReactNode }) => {
   const { data } = useEvent();
@@ -65,7 +63,9 @@ export const BookEventFormWrapperComponent = ({
         </Badge>
         {(selectedDuration || eventLength) && (
           <Badge variant="grayWithoutHover" startIcon="clock" size="lg">
-            <span>{getDurationFormatted(selectedDuration || eventLength, t)}</span>
+            <DurationText label={getDurationAccessibleLabel(selectedDuration || eventLength, t) ?? ""}>
+              {getDurationFormatted(selectedDuration || eventLength, t)}
+            </DurationText>
           </Badge>
         )}
 
