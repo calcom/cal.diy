@@ -37,6 +37,7 @@ import type { BookingRepository } from "@calcom/features/bookings/repositories/B
 import type { BusyTimesService } from "@calcom/features/busyTimes/services/getBusyTimes";
 import type { getBusyTimesService } from "@calcom/features/di/containers/BusyTimes";
 import { getDefaultEvent } from "@calcom/features/eventtypes/lib/defaultEvents";
+import { getDefinedBufferTimes } from "@calcom/features/eventtypes/lib/getDefinedBufferTimes";
 import type { EventTypeRepository } from "@calcom/features/eventtypes/repositories/eventTypeRepository";
 import type { PrismaOOORepository } from "@calcom/features/ooo/repositories/PrismaOOORepository";
 import type { IRedisService } from "@calcom/features/redis/IRedisService";
@@ -81,6 +82,15 @@ const DEFAULT_SLOTS_CACHE_TTL = 2000;
 type GetAvailabilityUserWithDelegationCredentials = Omit<NonNullable<GetAvailabilityUser>, "credentials"> & {
   credentials: CredentialForCalendarService[];
 };
+
+export function getBookingPrefetchWindow(startDate: Date, endDate: Date) {
+  const maxBuffer = Math.max(...getDefinedBufferTimes());
+
+  return {
+    startDate: dayjs(startDate).subtract(maxBuffer, "minute").toDate(),
+    endDate: dayjs(endDate).add(maxBuffer, "minute").toDate(),
+  };
+}
 
 export type GetAvailableSlotsResponse = Awaited<
   ReturnType<(typeof AvailableSlotsService)["prototype"]["_getAvailableSlots"]>
@@ -569,7 +579,10 @@ export class AvailableSlotsService {
 
             const selectedDuration = (duration || eventType.length) ?? 0;
 
-            const { title: durationTitle, source: durationSource } = LimitSources.eventDurationLimit({ limit, unit });
+            const { title: durationTitle, source: durationSource } = LimitSources.eventDurationLimit({
+              limit,
+              unit,
+            });
 
             if (selectedDuration > limit) {
               limitManager.addBusyTime({
@@ -726,10 +739,15 @@ export class AvailableSlotsService {
     const allUserIds = Array.from(userIdAndEmailMap.keys());
 
     const bookingRepo = this.dependencies.bookingRepo;
+    const { startDate: prefetchedStartDate, endDate: prefetchedEndDate } = getBookingPrefetchWindow(
+      startTimeDate,
+      endTimeDate
+    );
+
     const [currentBookingsAllUsers, outOfOfficeDaysAllUsers] = await Promise.all([
       bookingRepo.findAllExistingBookingsForEventTypeBetween({
-        startDate: startTimeDate,
-        endDate: endTimeDate,
+        startDate: prefetchedStartDate,
+        endDate: prefetchedEndDate,
         eventTypeId: eventType.id,
         seatedEvent: Boolean(eventType.seatsPerTimeSlot),
         userIdAndEmailMap,
