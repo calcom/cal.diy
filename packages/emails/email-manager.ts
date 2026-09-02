@@ -1,6 +1,3 @@
-import { default as cloneDeep } from "lodash/cloneDeep";
-import type { z } from "zod";
-
 import dayjs from "@calcom/dayjs";
 import type BaseEmail from "@calcom/emails/templates/_base-email";
 import type { EventNameObjectType } from "@calcom/features/eventtypes/lib/eventNaming";
@@ -12,7 +9,8 @@ import { withReporting } from "@calcom/lib/sentryWrapper";
 import { prisma } from "@calcom/prisma";
 import type { EventTypeMetaDataSchema } from "@calcom/prisma/zod-utils";
 import type { CalendarEvent, Person } from "@calcom/types/Calendar";
-
+import { default as cloneDeep } from "lodash/cloneDeep";
+import type { z } from "zod";
 import AwaitingPaymentSMS from "../sms/attendee/awaiting-payment-sms";
 import CancelledSeatSMS from "../sms/attendee/cancelled-seat-sms";
 import EventCancelledSMS from "../sms/attendee/event-cancelled-sms";
@@ -112,7 +110,11 @@ const _sendScheduledEmailsAndSMS = async (
                 ...formattedCalEvent,
                 ...(formattedCalEvent.hideCalendarNotes && { additionalNotes: undefined }),
                 ...(eventNameObject && {
-                  title: getEventName({ ...eventNameObject, t: attendee.language.translate }),
+                  title: getEventName({
+                    ...eventNameObject,
+                    t: attendee.language.translate,
+                    ...(formattedCalEvent.responses && { bookingFields: formattedCalEvent.responses }),
+                  }),
                 }),
               },
               attendee

@@ -1,3 +1,4 @@
+import { replaceCustomInputVariables } from "@calcom/features/eventtypes/lib/eventNaming";
 import { getRichDescription } from "@calcom/lib/CalEventParser";
 import { getReplyToHeader } from "@calcom/lib/getReplyToHeader";
 import { TimeFormat } from "@calcom/lib/timeFormat";
@@ -36,12 +37,25 @@ export default class AttendeeScheduledEmail extends BaseEmail {
     this.t = attendee.language.translate;
   }
 
+  protected resolveCustomPlaceholders(text: string): string {
+    const bookingFields =
+      this.calEvent.responses || this.calEvent.userFieldsResponses || this.calEvent.customInputs || null;
+    return replaceCustomInputVariables(text, bookingFields);
+  }
+
   protected async getNodeMailerPayload(): Promise<Record<string, unknown>> {
     const clonedCalEvent = cloneDeep(this.calEvent);
+    clonedCalEvent.title = this.resolveCustomPlaceholders(clonedCalEvent.title);
+    if (clonedCalEvent.description) {
+      clonedCalEvent.description = this.resolveCustomPlaceholders(clonedCalEvent.description);
+    }
+    if (clonedCalEvent.additionalNotes) {
+      clonedCalEvent.additionalNotes = this.resolveCustomPlaceholders(clonedCalEvent.additionalNotes);
+    }
 
     return {
       icalEvent: generateIcsFile({
-        calEvent: this.calEvent,
+        calEvent: clonedCalEvent,
         role: GenerateIcsRole.ATTENDEE,
         status: "CONFIRMED",
       }),
@@ -51,7 +65,7 @@ export default class AttendeeScheduledEmail extends BaseEmail {
         this.calEvent,
         this.calEvent.attendees.filter(({ email }) => email !== this.attendee.email).map(({ email }) => email)
       ),
-      subject: `${this.calEvent.title}`,
+      subject: this.resolveCustomPlaceholders(this.calEvent.title),
       html: await this.getHtml(clonedCalEvent, this.attendee),
       text: this.getTextBody(),
     };
@@ -65,7 +79,7 @@ export default class AttendeeScheduledEmail extends BaseEmail {
   }
 
   protected getTextBody(title = "", subtitle = "emailed_you_and_any_other_attendees"): string {
-    return `
+    const rawText = `
 ${this.t(
   title
     ? title
@@ -77,6 +91,7 @@ ${this.t(subtitle)}
 
 ${getRichDescription(this.calEvent, this.t)}
 `.trim();
+    return this.resolveCustomPlaceholders(rawText);
   }
 
   protected getTimezone(): string {
