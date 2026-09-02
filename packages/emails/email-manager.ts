@@ -1,6 +1,3 @@
-import { default as cloneDeep } from "lodash/cloneDeep";
-import type { z } from "zod";
-
 import dayjs from "@calcom/dayjs";
 import type BaseEmail from "@calcom/emails/templates/_base-email";
 import type { EventNameObjectType } from "@calcom/features/eventtypes/lib/eventNaming";
@@ -12,7 +9,8 @@ import { withReporting } from "@calcom/lib/sentryWrapper";
 import { prisma } from "@calcom/prisma";
 import type { EventTypeMetaDataSchema } from "@calcom/prisma/zod-utils";
 import type { CalendarEvent, Person } from "@calcom/types/Calendar";
-
+import { default as cloneDeep } from "lodash/cloneDeep";
+import type { z } from "zod";
 import AwaitingPaymentSMS from "../sms/attendee/awaiting-payment-sms";
 import CancelledSeatSMS from "../sms/attendee/cancelled-seat-sms";
 import EventCancelledSMS from "../sms/attendee/event-cancelled-sms";
@@ -84,6 +82,9 @@ const _sendScheduledEmailsAndSMS = async (
   eventTypeMetadata?: EventTypeMetadata
 ) => {
   const formattedCalEvent = formatCalEvent(calEvent);
+  // getEventName falls back to the default "X between A and B" template when no custom event name
+  // is configured, so a truthy eventName is what distinguishes a custom title from the default one.
+  formattedCalEvent.hasCustomEventName = Boolean(eventNameObject?.eventName);
   const emailsToSend: Promise<unknown>[] = [];
   const organizationSettings = await fetchOrganizationEmailSettings(calEvent.organizationId);
 
@@ -147,6 +148,7 @@ export const sendReassignedScheduledEmailsAndSMS = async ({
 }) => {
   if (eventTypeDisableHostEmail(eventTypeMetadata)) return;
   const formattedCalEvent = formatCalEvent(calEvent);
+  // hasCustomEventName is intentionally not set here, so the reassignment subject keeps the default template — out of scope for #29658.
   const emailsAndSMSToSend: Promise<unknown>[] = [];
   const eventScheduledSMS = new EventSuccessfullyScheduledSMS(calEvent);
 
