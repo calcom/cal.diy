@@ -1,6 +1,11 @@
-export const downloadAsCsv = (data: string | Record<string, any>[], filename: string) => {
+export const downloadAsCsv = (data: string | Record<string, unknown>[], filename: string): void => {
   // If data is an array of objects, convert it to CSV string
-  const csvString = typeof data === "string" ? data : objectsToCsv(data);
+  let csvString: string;
+  if (typeof data === "string") {
+    csvString = data;
+  } else {
+    csvString = objectsToCsv(data);
+  }
 
   // Create a Blob from the text data
   const blob = new Blob([csvString], { type: "text/plain" });
@@ -20,7 +25,7 @@ export const downloadAsCsv = (data: string | Record<string, any>[], filename: st
   window.URL.revokeObjectURL(url);
 };
 
-export const objectsToCsv = (data: Record<string, any>[]): string => {
+export const objectsToCsv = (data: Record<string, unknown>[]): string => {
   if (!data.length) return "";
 
   // Get headers from the first object
@@ -46,16 +51,23 @@ export const objectsToCsv = (data: Record<string, any>[]): string => {
   return csvRows.join("\n");
 };
 
-export const sanitizeValue = (value: string) => {
-  // handling three cases:
-  // 1. quotes - we need to double quotes for CSV
-  // 2. commas
-  // 3. newlines
-  if (value.includes('"')) {
-    return `"${value.replace(/"/g, '""')}"`;
+export const sanitizeValue = (value: string): string => {
+  // Neutralize formula injection (OWASP CSV injection prevention)
+  // Prefix with single quote to prevent formula evaluation
+  // Characters that can start formulas: = + - @ \t \r
+  if (/^[=+\-@\t\r]/.test(value)) {
+    value = `'${value}`;
   }
-  if (value.includes(",") || value.includes("\n")) {
-    return `"${value}"`;
+
+  // Check for characters that require quoting per RFC 4180
+  // \r and \r\n are record separators in RFC 4180
+  const needsQuoting =
+    value.includes('"') || value.includes(",") || value.includes("\n") || value.includes("\r");
+
+  if (needsQuoting) {
+    // Escape quotes by doubling them
+    const escaped = value.replace(/"/g, '""');
+    return `"${escaped}"`;
   }
   return value;
 };
