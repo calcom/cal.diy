@@ -965,7 +965,7 @@ export default abstract class BaseCalendarService implements Calendar {
 
           return {
             uid: event.uid,
-            etag: object.etag,
+            etag: object.etag ?? "",
             url: object.url,
             summary: event.summary,
             description: event.description,
