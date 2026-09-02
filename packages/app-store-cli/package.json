@@ -8,7 +8,7 @@
     "node": ">=10"
   },
   "scripts": {
-    "build": "ts-node --transpile-only src/build.ts",
+    "build": "node init && ts-node --transpile-only src/build.ts",
     "cli": "ts-node --transpile-only src/cli.tsx",
     "watch": "ts-node --transpile-only src/build.ts --watch",
     "generate": "ts-node --transpile-only src/build.ts",

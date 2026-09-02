@@ -16,7 +16,7 @@
     "components.ts"
   ],
   "scripts": {
-    "build:types": "tsc --project tsconfig.build.json",
+    "build:types": "node init && tsc --project tsconfig.build.json",
     "type-check": "tsc --pretty --noEmit",
     "type-check:ci": "tsc-absolute --pretty --noEmit",
     "lint": "biome lint .",

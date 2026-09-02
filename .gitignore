@@ -1,7 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # .env file
-.env
 !packages/prisma/.env
 
 # dependencies
@@ -34,11 +33,9 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # local env files
-.env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env.*
 !.env.example
 !.env.appStore.example
 
@@ -49,7 +46,6 @@ yarn-error.log*
 .idea
 
 ### VisualStudioCode template
-.vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
@@ -117,3 +113,4 @@ agents/devin-knowledge.json
 
 # pagefind
 _pagefind/
+config.bat

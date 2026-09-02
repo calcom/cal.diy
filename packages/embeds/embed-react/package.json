@@ -10,8 +10,8 @@
     "directory": "packages/embeds/embed-react"
   },
   "scripts": {
-    "dev": "vite --port=3101 --open",
-    "build": "npx rimraf dist && vite build && npx shx cp ./dist/Cal.es.js ./dist/Cal.es.mjs && tsc --emitDeclarationOnly --declarationDir dist",
+    "dev": "node init && vite --port=3101 --open",
+    "build": "node init && npx rimraf dist && vite build && npx shx cp ./dist/Cal.es.js ./dist/Cal.es.mjs && tsc --emitDeclarationOnly --declarationDir dist",
     "preview": "vite preview",
     "type-check": "tsc --pretty --noEmit",
     "type-check:ci": "tsc-absolute --pretty --noEmit",

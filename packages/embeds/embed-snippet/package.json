@@ -12,7 +12,7 @@
     "directory": "packages/embeds/embed-snippet"
   },
   "scripts": {
-    "build": "npx rimraf dist && vite build && tsc --emitDeclarationOnly --declarationDir dist",
+    "build": "node init && npx rimraf dist && vite build && tsc --emitDeclarationOnly --declarationDir dist",
     "type-check": "tsc --pretty --noEmit",
     "type-check:ci": "tsc-absolute --pretty --noEmit",
     "lint": "biome lint src",

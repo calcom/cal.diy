@@ -5,9 +5,9 @@
   "types": "./dist/index.js",
   "private": true,
   "scripts": {
-    "build": "yarn clean && tsc --build --force tsconfig.json",
+    "build": "node init && yarn clean && tsc --build --force tsconfig.json",
     "clean": "npx rimraf dist",
-    "build:watch": "tsc --build --force ./tsconfig.json --watch",
+    "build:watch": "node init && tsc --build --force ./tsconfig.json --watch",
     "post-install": "yarn build"
   },
   "dependencies": {

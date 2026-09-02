@@ -5,7 +5,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "dev": "node ./index.js"
+    "dev": "node init && node ./index.js"
   },
   "author": "",
   "license": "ISC",

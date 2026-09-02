@@ -5,8 +5,8 @@
   "types": "./dist/index.d.ts",
   "private": true,
   "scripts": {
-    "build": "tsc --build --force tsconfig.json",
-    "build:watch": "tsc --build --force ./tsconfig.json --watch",
+    "build": "node init && tsc --build --force tsconfig.json",
+    "build:watch": "node init && tsc --build --force ./tsconfig.json --watch",
     "post-install": "yarn build"
   }
 }

@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "PORT=5100 next dev",
-    "build": "next build",
-    "start": "next start"
+    "dev": "node init && PORT=5100 next dev",
+    "build": "node init && next build",
+    "start": "node init && next start"
   },
   "dependencies": {
     "@calcom/atoms": "workspace:*",

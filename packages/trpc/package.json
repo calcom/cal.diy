@@ -9,9 +9,9 @@
   "scripts": {
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
-    "build": "yarn build:server && yarn build:react",
-    "build:server": "yarn tsc --project tsconfig.server.json",
-    "build:react": "yarn tsc --project tsconfig.react.json"
+    "build": "node init && yarn build:server && yarn build:react",
+    "build:server": "node init && yarn tsc --project tsconfig.server.json",
+    "build:react": "node init && yarn tsc --project tsconfig.react.json"
   },
   "dependencies": {
     "@calcom/i18n": "workspace:*",

@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "next --turbopack",
-    "build": "next build && pagefind --site .next/server/app --output-path public/_pagefind",
-    "start": "next start"
+    "dev": "node init && next --turbopack",
+    "build": "node init && next build && pagefind --site .next/server/app --output-path public/_pagefind",
+    "start": "node init && next start"
   },
   "dependencies": {
     "next": "^15.1.0",
