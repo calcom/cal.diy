@@ -59,7 +59,7 @@ describe("/api/cron/calendar-subscriptions", () => {
 
       expect(response.status).toBe(403);
       const body = await response.json();
-      expect(body.message).toBe("Forbiden");
+      expect(body.message).toBe("Forbidden");
     }, 10000);
 
     test("should return 403 when invalid API key is provided", async () => {
@@ -71,7 +71,21 @@ describe("/api/cron/calendar-subscriptions", () => {
 
       expect(response.status).toBe(403);
       const body = await response.json();
-      expect(body.message).toBe("Forbiden");
+      expect(body.message).toBe("Forbidden");
+    });
+
+    test("should return 403 when both CRON_API_KEY and CRON_SECRET are unset", async () => {
+      vi.stubEnv("CRON_API_KEY", "");
+      vi.stubEnv("CRON_SECRET", "");
+      const request = new NextRequest("http://localhost/api/cron/calendar-subscriptions");
+      request.headers.set("authorization", "Bearer undefined");
+
+      const { GET } = await import("../route");
+      const response = await GET(request, { params: Promise.resolve({}) });
+
+      expect(response.status).toBe(403);
+      const body = await response.json();
+      expect(body.message).toBe("Forbidden");
     });
 
     test("should accept valid API key", async () => {
