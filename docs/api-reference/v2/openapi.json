@@ -46,7 +46,7 @@
       "post": {
         "operationId": "BookingsController_2024_08_13_createBooking",
         "summary": "Create a booking",
-        "description": "\n      POST /v2/bookings is used to create regular bookings, recurring bookings and instant bookings. The request bodies for all 3 are almost the same except:\n      If eventTypeId in the request body is id of a regular event, then regular booking is created.\n\n      If it is an id of a recurring event type, then recurring booking is created.\n\n      Meaning that the request bodies are equal but the outcome depends on what kind of event type it is with the goal of making it as seamless for developers as possible.\n\n      The start needs to be in UTC aka if the timezone is GMT+2 in Rome and meeting should start at 11, then UTC time should have hours 09:00 aka without time zone.\n\n      Finally, there are 2 ways to book an event type belonging to an individual user:\n      1. Provide `eventTypeId` in the request body.\n      2. Provide `eventTypeSlug` and `username` and optionally `organizationSlug` if the user with the username is within an organization.\n\n      And 2 ways to book and event type belonging to a team:\n      1. Provide `eventTypeId` in the request body.\n      2. Provide `eventTypeSlug` and `teamSlug` and optionally `organizationSlug` if the team with the teamSlug is within an organization.\n\n      If you are creating a seated booking for an event type with 'show attendees' disabled, then to retrieve attendees in the response either set 'show attendees' to true on event type level or\n      you have to provide an authentication method of event type owner, host, team admin or owner or org admin or owner.\n\n      For event types that have SMS reminders enabled, you need to pass the attendee's phone number in the request body via `attendee.phoneNumber` (e.g., \"+19876543210\" in international format). This is an optional field, but becomes required when SMS reminders are enabled for the event type. For the complete attendee object structure, see the attendee schema in the `/docs` Swagger endpoint.\n\n      <Note>Please make sure to pass in the cal-api-version header value as mentioned in the Headers section. Not passing the correct value will default to an older version of this endpoint.</Note>\n      ",
+        "description": "\n      POST /v2/bookings is used to create regular bookings, recurring bookings and instant bookings. The request bodies for all 3 are almost the same except:\n      If eventTypeId in the request body is id of a regular event, then regular booking is created.\n\n      If it is an id of a recurring event type, then recurring booking is created.\n\n      Meaning that the request bodies are equal but the outcome depends on what kind of event type it is with the goal of making it as seamless for developers as possible.\n\n      The start needs to be in UTC aka if the timezone is GMT+2 in Rome and meeting should start at 11, then UTC time should have hours 09:00 aka without time zone.\n\n      Finally, there are 2 ways to book an event type belonging to an individual user:\n      1. Provide `eventTypeId` in the request body.\n      2. Provide `eventTypeSlug` and `username` and optionally `organizationSlug` if the user with the username is within an organization.\n\n      And 2 ways to book and event type belonging to a team:\n      1. Provide `eventTypeId` in the request body.\n      2. Provide `eventTypeSlug` and `teamSlug` and optionally `organizationSlug` if the team with the teamSlug is within an organization.\n\n      If you are creating a seated booking for an event type with 'show attendees' disabled, then to retrieve attendees in the response either set 'show attendees' to true on event type level or\n      you have to provide an authentication method of event type owner, host, team admin or owner or org admin or owner.\n\n      To create a booking that overlaps busy time or existing bookings (organizer override), set `overrideAvailability` to `true` in the JSON body while authenticated as the event type owner, host, team admin or owner, or org admin or owner.\n\n      For event types that have SMS reminders enabled, you need to pass the attendee's phone number in the request body via `attendee.phoneNumber` (e.g., \"+19876543210\" in international format). This is an optional field, but becomes required when SMS reminders are enabled for the event type. For the complete attendee object structure, see the attendee schema in the `/docs` Swagger endpoint.\n\n      <Note>Please make sure to pass in the cal-api-version header value as mentioned in the Headers section. Not passing the correct value will default to an older version of this endpoint.</Note>\n      ",
         "parameters": [
           {
             "name": "cal-api-version",
@@ -1964,7 +1964,7 @@
             "name": "eventUid",
             "required": true,
             "in": "path",
-            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For team events: GET /v2/organizations/{orgId}/teams/{teamId}/bookings/{bookingUid}/references\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
+            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
             "schema": {
               "type": "string"
             }
@@ -2011,7 +2011,7 @@
             "name": "eventUid",
             "required": true,
             "in": "path",
-            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For team events: GET /v2/organizations/{orgId}/teams/{teamId}/bookings/{bookingUid}/references\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
+            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
             "schema": {
               "type": "string"
             }
@@ -2110,7 +2110,7 @@
             "name": "eventUid",
             "required": true,
             "in": "path",
-            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For team events: GET /v2/organizations/{orgId}/teams/{teamId}/bookings/{bookingUid}/references\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
+            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
             "schema": {
               "type": "string"
             }
@@ -2157,7 +2157,7 @@
             "name": "eventUid",
             "required": true,
             "in": "path",
-            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For team events: GET /v2/organizations/{orgId}/teams/{teamId}/bookings/{bookingUid}/references\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
+            "description": "The Google Calendar event ID. You can retrieve this by getting booking references from the following endpoints:\n\n- For user events: GET /v2/bookings/{bookingUid}/references",
             "schema": {
               "type": "string"
             }
@@ -12426,6 +12426,12 @@
             "type": "string",
             "description": "Email verification code required when event type has email verification enabled.",
             "example": "123456"
+          },
+          "overrideAvailability": {
+            "type": "boolean",
+            "description": "When true, skips host availability and calendar conflict checks. Only permitted when the request is authenticated as the event type owner, a host, or a team or organization administrator. Use for organizer overrides (double bookings, administrative sessions) or integration tests.",
+            "example": false,
+            "default": false
           }
         },
         "required": ["start", "attendee"]
@@ -12549,6 +12555,12 @@
             "type": "string",
             "description": "Email verification code required when event type has email verification enabled.",
             "example": "123456"
+          },
+          "overrideAvailability": {
+            "type": "boolean",
+            "description": "When true, skips host availability and calendar conflict checks. Only permitted when the request is authenticated as the event type owner, a host, or a team or organization administrator. Use for organizer overrides (double bookings, administrative sessions) or integration tests.",
+            "example": false,
+            "default": false
           },
           "recurrenceCount": {
             "type": "number",
@@ -15194,7 +15206,6 @@
                 "MEETING_ENDED",
                 "MEETING_STARTED",
                 "RECORDING_READY",
-                "INSTANT_MEETING",
                 "RECORDING_TRANSCRIPTION_GENERATED",
                 "OOO_CREATED",
                 "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
@@ -15242,7 +15253,6 @@
                 "MEETING_ENDED",
                 "MEETING_STARTED",
                 "RECORDING_READY",
-                "INSTANT_MEETING",
                 "RECORDING_TRANSCRIPTION_GENERATED",
                 "OOO_CREATED",
                 "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
@@ -15326,7 +15336,6 @@
                 "MEETING_ENDED",
                 "MEETING_STARTED",
                 "RECORDING_READY",
-                "INSTANT_MEETING",
                 "RECORDING_TRANSCRIPTION_GENERATED",
                 "OOO_CREATED",
                 "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
@@ -15390,7 +15399,6 @@
                 "MEETING_ENDED",
                 "MEETING_STARTED",
                 "RECORDING_READY",
-                "INSTANT_MEETING",
                 "RECORDING_TRANSCRIPTION_GENERATED",
                 "OOO_CREATED",
                 "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
@@ -15489,7 +15497,6 @@
                 "MEETING_ENDED",
                 "MEETING_STARTED",
                 "RECORDING_READY",
-                "INSTANT_MEETING",
                 "RECORDING_TRANSCRIPTION_GENERATED",
                 "OOO_CREATED",
                 "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
