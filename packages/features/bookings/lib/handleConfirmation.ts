@@ -11,6 +11,7 @@ import { safeStringify } from "@calcom/lib/safeStringify";
 import type { TraceContext } from "@calcom/lib/tracing";
 import { distributedTracing } from "@calcom/lib/tracing/factory";
 import type { PrismaClient } from "@calcom/prisma";
+import { handleAppsStatus } from "./handleNewBooking/handleAppsStatus";
 import type { Prisma } from "@calcom/prisma/client";
 import type { SchedulingType } from "@calcom/prisma/enums";
 import { BookingStatus, WebhookTriggerEvents } from "@calcom/prisma/enums";
@@ -98,24 +99,8 @@ export async function handleConfirmation(args: {
     metadata.conferenceData = results[0].createdEvent?.conferenceData;
     metadata.entryPoints = results[0].createdEvent?.entryPoints;
   }
-  try {
-    const isHostConfirmationEmailsDisabled =
-      eventTypeMetadata?.disableStandardEmails?.confirmation?.host || false;
-    const isAttendeeConfirmationEmailDisabled =
-      eventTypeMetadata?.disableStandardEmails?.confirmation?.attendee || false;
-
-    if (emailsEnabled) {
-      await sendScheduledEmailsAndSMS(
-        { ...evt, additionalInformation: metadata },
-        undefined,
-        isHostConfirmationEmailsDisabled,
-        isAttendeeConfirmationEmailDisabled,
-        eventTypeMetadata
-      );
-    }
-  } catch (error) {
-    tracingLogger.error(error);
-  }
+  // ponytail: populate appsStatus before any notification so all-failed calendar still shows ❌ warnings
+  evt.appsStatus = handleAppsStatus(results, booking as never, undefined);
   let updatedBookings: {
     id: number;
     status: BookingStatus;
@@ -305,6 +290,26 @@ export async function handleConfirmation(args: {
         uid: booking.uid,
       },
     ];
+  }
+
+  // ponytail: send confirmation only after DB is ACCEPTED
+  try {
+    const isHostConfirmationEmailsDisabled =
+      eventTypeMetadata?.disableStandardEmails?.confirmation?.host || false;
+    const isAttendeeConfirmationEmailDisabled =
+      eventTypeMetadata?.disableStandardEmails?.confirmation?.attendee || false;
+
+    if (emailsEnabled) {
+      await sendScheduledEmailsAndSMS(
+        { ...evt, additionalInformation: metadata },
+        undefined,
+        isHostConfirmationEmailsDisabled,
+        isAttendeeConfirmationEmailDisabled,
+        eventTypeMetadata
+      );
+    }
+  } catch (error) {
+    tracingLogger.error(error);
   }
 
   const triggerForUser = true;
