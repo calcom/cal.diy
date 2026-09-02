@@ -1,0 +1,22 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "Sayora",
+  "slug": "sayora",
+  "type": "sayora_automation",
+  "logo": "icon.svg",
+  "url": "https://sayora.ai",
+  "variant": "automation",
+  "categories": [
+    "automation"
+  ],
+  "publisher": "Sayora",
+  "email": "hi@sayora.ai",
+  "description": "AI receptionist for UK small businesses that answers your calls and books callers into your Cal.com",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "link-as-an-app",
+  "externalLink": {
+    "url": "https://sayora.ai",
+    "newTab": true
+  }
+}
