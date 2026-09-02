@@ -1393,6 +1393,7 @@ async function handler(
       customReplyToEmail: eventType.customReplyToEmail,
       disableRescheduling: eventType.disableRescheduling ?? false,
       disableCancelling: eventType.disableCancelling ?? false,
+      metadata: eventType.metadata as { confirmationEmailSubject?: string | null } | null,
     })
     .withMetadataAndResponses({
       additionalNotes,
