@@ -46,9 +46,10 @@ type BeaconFunction = {
 
 interface UserDropdownProps {
   small?: boolean;
+  iconOnly?: boolean;
 }
 
-export function UserDropdown({ small }: UserDropdownProps) {
+export function UserDropdown({ small, iconOnly }: UserDropdownProps) {
   const { t } = useLocale();
   const { data: user, isPending } = useMeQuery();
 
@@ -114,18 +115,25 @@ export function UserDropdown({ small }: UserDropdownProps) {
           <button
             data-testid="user-dropdown-trigger-button"
             className={classNames(
-              "hover:bg-emphasis todesktop:!bg-transparent group mx-0 flex w-full cursor-pointer appearance-none items-center rounded-full text-left outline-none transition focus:outline-none focus:ring-0 md:rounded-none lg:rounded",
-              small ? "p-2" : "px-2 py-1.5"
+              "todesktop:!bg-transparent group flex cursor-pointer appearance-none items-center text-left outline-none transition focus:outline-none focus:ring-0",
+              iconOnly
+                ? "mx-auto size-9 justify-center rounded-full p-0 hover:bg-transparent"
+                : "hover:bg-emphasis mx-0 w-full rounded-full md:rounded-none lg:rounded",
+              !iconOnly && (small ? "p-2" : "px-2 py-1.5")
             )}
           />
         }>
         <span
           className={classNames(
-            small ? "h-4 w-4" : "h-5 w-5 ltr:mr-2 rtl:ml-2",
+            iconOnly
+              ? "h-6 w-6"
+              : small
+                ? "h-4 w-4"
+                : "h-5 w-5 ltr:mr-2 rtl:ml-2",
             "relative shrink-0 rounded-full"
           )}>
           <Avatar
-            size={small ? "xs" : "xsm"}
+            size={iconOnly ? "sm" : small ? "xs" : "xsm"}
             imageSrc={user?.avatarUrl ?? user?.avatar}
             alt={user?.username ? `${user.username} Avatar` : "Nameless User Avatar"}
             className="overflow-hidden"
@@ -137,7 +145,7 @@ export function UserDropdown({ small }: UserDropdownProps) {
             )}
           />
         </span>
-        {!small && (
+        {!small && !iconOnly && (
           <span className="flex grow items-center gap-2">
             <span className="w-24 shrink-0 text-sm leading-none">
               <span className="text-emphasis block truncate py-0.5 font-medium leading-normal">

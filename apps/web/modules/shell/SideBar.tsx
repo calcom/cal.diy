@@ -11,6 +11,8 @@ import { Logo } from "@calcom/ui/components/logo";
 import { SkeletonText } from "@calcom/ui/components/skeleton";
 import { Tooltip } from "@calcom/ui/components/tooltip";
 import { ArrowLeftIcon, ArrowRightIcon } from "@coss/ui/icons";
+import { PanelLeftIcon } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import type { User as UserAuth } from "next-auth";
 import { useSession } from "next-auth/react";
@@ -44,6 +46,8 @@ export function SideBarContainer({ bannersHeight }: SideBarContainerProps) {
 export function SideBar({ bannersHeight, user }: SideBarProps) {
   const { t, isLocaleReady } = useLocale();
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const publicPageUrl = `${WEBAPP_URL}/${user?.orgAwareUsername}`;
 
   const bottomNavItems = useBottomNavItems({
@@ -58,13 +62,34 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
   return (
     <div className="relative">
       <aside
+        id="app-sidebar"
         style={sidebarStylingAttributes}
         className={classNames(
-          "fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-muted border-r bg-cal-muted md:sticky md:flex lg:w-56 lg:px-3",
-          "max-h-screen"
+          "fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-muted border-r bg-cal-muted transition-[width] duration-200 md:sticky md:flex",
+          "max-h-screen",
+          isCollapsed ? "lg:w-14 lg:px-0" : "lg:w-56 lg:px-3"
         )}>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
-          <header className="todesktop:-mt-3 todesktop:flex-col-reverse items-center justify-between todesktop:[-webkit-app-region:drag] md:hidden lg:flex">
+          {/* Tablet sidebar header */}
+          <div className="hidden flex-col items-center gap-2 md:flex lg:hidden">
+            <Link href="/event-types" className="text-center">
+              <Logo small icon />
+            </Link>
+
+            {!user?.org && <UserDropdown iconOnly />}
+          </div>
+          
+
+          {/* Logo for collapsed desktop */}
+          {isCollapsed && (
+            <Link href="/event-types" className="hidden text-center lg:inline">
+              <Logo small icon />
+            </Link>
+          )}
+          <header className={classNames(
+            "todesktop:-mt-3 todesktop:flex-col-reverse items-center justify-between todesktop:[-webkit-app-region:drag] md:hidden lg:flex",
+            isCollapsed && "lg:flex-col lg:gap-1"
+          )}>
             {user?.org ? (
               !ENABLE_PROFILE_SWITCHER ? (
                 <Link href="/settings/organizations/profile" className="w-full px-1.5">
@@ -83,16 +108,21 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 <ProfileDropdown />
               )
             ) : (
-              <div data-testid="user-dropdown-trigger" className="todesktop:mt-4 w-full">
-                <span className="hidden lg:inline">
-                  <UserDropdown />
-                </span>
-                <span className="hidden md:inline lg:hidden">
-                  <UserDropdown small />
-                </span>
+              <div
+                data-testid="user-dropdown-trigger"
+                className={classNames(
+                  "todesktop:mt-4 w-full",
+                  isCollapsed && "lg:mt-0 lg:flex lg:justify-center"
+                )}>
+                <div className={classNames("hidden lg:block", isCollapsed && "lg:flex lg:justify-center")}>
+                  <UserDropdown iconOnly={isCollapsed} />
+                </div>
               </div>
             )}
-            <div className="flex w-full justify-end rtl:space-x-reverse">
+            <div className={classNames(
+              "flex w-full justify-end rtl:space-x-reverse",
+              isCollapsed && "lg:justify-center"
+            )}>
               <button
                 color="minimal"
                 onClick={() => window.history.back()}
@@ -111,53 +141,87 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 </div>
               )}
               <KBarTrigger />
+              
             </div>
           </header>
-          {/* logo icon for tablet */}
-          <Link href="/event-types" className="text-center md:inline lg:hidden">
-            <Logo small icon />
-          </Link>
-          <Navigation />
+          
+          <Navigation isCollapsed={isCollapsed} />
         </div>
 
-        <div className="md:px-2 md:pb-4 lg:p-0">
+        <div
+          className={classNames(
+            "md:px-2 md:pb-4",
+            !isCollapsed && "lg:p-0"
+          )}>
           {bottomNavItems.map((item, index) => (
-            <Tooltip side="right" content={t(item.name)} className="lg:hidden" key={item.name}>
-              <ButtonOrLink
-                id={item.name}
-                href={item.href || undefined}
-                aria-label={t(item.name)}
-                target={item.target}
-                className={classNames(
-                  "text-left",
-                  "justify-right group flex items-center rounded-md px-2 py-1.5 font-medium text-default text-sm transition [&[aria-current='page']]:bg-emphasis",
-                  "mt-0.5 w-full text-sm [&[aria-current='page']]:text-emphasis",
-                  isLocaleReady ? "hover:bg-subtle hover:text-emphasis" : "",
-                  index === 0 && "mt-3"
-                )}
-                onClick={item.onClick}>
-                {!!item.icon && (
-                  <Icon
-                    name={item.isLoading ? "rotate-cw" : item.icon}
-                    className={classNames(
-                      "h-4 w-4 shrink-0 aria-[aria-current='page']:text-inherit",
-                      "ml-3 md:mx-auto lg:ltr:mr-2 lg:rtl:ml-2",
-                      item.isLoading && "animate-spin"
-                    )}
-                    aria-hidden="true"
-                  />
-                )}
-                {isLocaleReady ? (
-                  <span className="hidden w-full justify-between lg:flex">
-                    <div className="flex">{t(item.name)}</div>
-                  </span>
-                ) : (
-                  <SkeletonText className="h-[20px] w-full" />
-                )}
-              </ButtonOrLink>
+            <Tooltip
+              side="right"
+              content={t(item.name)}
+              className={classNames(!isCollapsed && "lg:hidden")}
+              key={item.name}>
+              <span className="flex w-full">
+                <ButtonOrLink
+                  id={item.name}
+                  href={item.href || undefined}
+                  aria-label={t(item.name)}
+                  target={item.target}
+                  className={classNames(
+                    "text-left",
+                    "justify-right group flex items-center rounded-md px-2 py-1.5 font-medium text-default text-sm transition [&[aria-current='page']]:bg-emphasis",
+                    "mt-0.5 w-full text-sm [&[aria-current='page']]:text-emphasis",
+                    isLocaleReady ? "hover:bg-subtle hover:text-emphasis" : "",
+                    index === 0 && "mt-3"
+                  )}
+                  onClick={item.onClick}>
+                  {!!item.icon && (
+                    <Icon
+                      name={item.isLoading ? "rotate-cw" : item.icon}
+                      className={classNames(
+                        "h-4 w-4 shrink-0 aria-[aria-current='page']:text-inherit",
+                        "md:mx-auto",
+                        !isCollapsed && "lg:mx-0 lg:ltr:mr-2 lg:rtl:ml-2",
+                        item.isLoading && "animate-spin"
+                      )}
+                      aria-hidden="true"
+                    />
+                  )}
+
+                  {isLocaleReady ? (
+                    <span
+                      className={classNames(
+                        "hidden w-full justify-between",
+                        !isCollapsed && "lg:flex"
+                      )}>
+                      <div className="flex">{t(item.name)}</div>
+                    </span>
+                  ) : (
+                    <SkeletonText className="h-[20px] w-full" />
+                  )}
+                </ButtonOrLink>
+              </span>
             </Tooltip>
           ))}
-          {!IS_VISUAL_REGRESSION_TESTING && <Credits />}
+          <Tooltip
+            side="right"
+            content={isCollapsed ? t("expand_sidebar") : t("collapse_sidebar")}
+            className={classNames(!isCollapsed && "lg:hidden")}>
+            <button
+              type="button"
+              onClick={() => setIsCollapsed((collapsed) => !collapsed)}
+              aria-label={isCollapsed ? t("expand_sidebar") : t("collapse_sidebar")}
+              aria-expanded={!isCollapsed}
+              aria-controls="app-sidebar"
+              className={classNames(
+              "hidden w-full items-center rounded-md px-2 py-1.5 font-medium text-default text-sm transition hover:bg-subtle hover:text-emphasis focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 lg:flex",
+              isCollapsed ? "justify-center" : "justify-start gap-2"
+            )}>
+              <PanelLeftIcon className="h-4 w-4 shrink-0" />
+
+              {!isCollapsed && <span>{t("collapse_sidebar")}</span>}
+            </button>
+          </Tooltip>
+
+          {!IS_VISUAL_REGRESSION_TESTING && !isCollapsed && <Credits />}
         </div>
       </aside>
     </div>
