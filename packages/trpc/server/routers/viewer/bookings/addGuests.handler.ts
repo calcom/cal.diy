@@ -208,10 +208,21 @@ export async function sanitizeAndFilterGuests(
   const guestEmailsLowerCase = deduplicatedGuests.map((email) => extractBaseEmail(email).toLowerCase());
   const emailToRequiresVerification = await getEmailVerificationRequirements(guestEmailsLowerCase);
 
-  // Create a map of email to guest object for easy lookup
-  const emailToGuestMap = new Map(
-    guests.map((guest) => [extractBaseEmail(guest.email).toLowerCase(), guest])
-  );
+  // Create a map of email to guest object using FIRST occurrence (consistent with deduplicateGuestEmails)
+  type Guest = {
+    email: string;
+    name?: string;
+    timeZone?: string;
+    phoneNumber?: string;
+    language?: string;
+  };
+  const emailToGuestMap = new Map<string, Guest>();
+  for (const guest of guests) {
+    const baseEmail = extractBaseEmail(guest.email).toLowerCase();
+    if (!emailToGuestMap.has(baseEmail)) {
+      emailToGuestMap.set(baseEmail, guest);
+    }
+  }
 
   const uniqueGuestEmails = deduplicatedGuests.filter((email) => {
     const baseGuestEmail = extractBaseEmail(email).toLowerCase();
@@ -228,7 +239,7 @@ export async function sanitizeAndFilterGuests(
     throw new TRPCError({ code: "BAD_REQUEST", message: "emails_must_be_unique_valid" });
   }
 
-  // Return the full guest objects for unique emails
+  // Return the full guest objects for unique emails (using first occurrence)
   return uniqueGuestEmails
     .map((email) => emailToGuestMap.get(extractBaseEmail(email).toLowerCase()))
     .filter((guest): guest is NonNullable<typeof guest> => guest !== undefined);
