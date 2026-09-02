@@ -7,6 +7,7 @@ import { getBrandingForEventType } from "@calcom/features/profile/lib/getBrandin
 import { shouldHideBrandingForEvent } from "@calcom/features/profile/lib/hideBranding";
 import { parseRecurringEvent } from "@calcom/lib/isRecurringEvent";
 import { markdownToSafeHTML } from "@calcom/lib/markdownToSafeHTML";
+import { getSeatPaymentUid } from "@calcom/lib/server/getSeatPaymentUid";
 import { maybeGetBookingUidFromSeat } from "@calcom/lib/server/maybeGetBookingUidFromSeat";
 import prisma from "@calcom/prisma";
 import { customInputSchema } from "@calcom/prisma/zod-utils";
@@ -189,9 +190,30 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     await handleSeatsEventTypeOnBooking(eventType, bookingInfo, seatReferenceUid, isLoggedInUserHost);
   }
 
+  // In a multi-seat booking every seat shares the same parent booking, so scoping the payment
+  // lookup only by bookingId would return the first seat's payment for every seat. When a seat is
+  // being viewed, prefer the payment referenced by that seat's metadata so each seat shows its own
+  // price. Seats created before this reference was persisted fall back to the booking-level lookup.
+  let seatPaymentUid: string | undefined;
+  if (seatReferenceUid) {
+    // The seat is already resolved when the page is reached via /booking/<seatReferenceUid>;
+    // otherwise (e.g. /booking/<bookingUid>?seatReferenceUid=...) look it up by its reference.
+    const seatMetadata =
+      maybeBookingUidFromSeat.seatReferenceUid === seatReferenceUid
+        ? maybeBookingUidFromSeat.bookingSeat?.metadata
+        : (
+            await prisma.bookingSeat.findUnique({
+              where: { referenceUid: seatReferenceUid },
+              select: { metadata: true },
+            })
+          )?.metadata;
+    seatPaymentUid = getSeatPaymentUid(seatMetadata);
+  }
+
   const payment = await prisma.payment.findFirst({
     where: {
       bookingId: bookingInfo.id,
+      ...(seatPaymentUid ? { uid: seatPaymentUid } : {}),
     },
     select: {
       appId: true,
