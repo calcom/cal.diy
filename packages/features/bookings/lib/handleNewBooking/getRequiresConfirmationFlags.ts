@@ -1,6 +1,8 @@
 import dayjs from "@calcom/dayjs";
 import { checkIfFreeEmailDomain } from "@calcom/features/watchlist/lib/freeEmailDomainCheck/checkIfFreeEmailDomain";
 import { withReporting } from "@calcom/lib/sentryWrapper";
+import { BookingStatus } from "@calcom/prisma/enums";
+import type { OriginalRescheduledBooking } from "./originalRescheduledBookingUtils";
 
 import type { getEventTypeResponse } from "./getEventTypesFromDB";
 
@@ -15,22 +17,26 @@ export async function getRequiresConfirmationFlags({
   bookingStartTime,
   userId,
   paymentAppData,
-  originalRescheduledBookingOrganizerId,
+  originalRescheduledBooking,
   bookerEmail,
 }: {
   eventType: EventType;
   bookingStartTime: string;
   userId: number | undefined;
   paymentAppData: PaymentAppData;
-  originalRescheduledBookingOrganizerId: number | undefined;
+  originalRescheduledBooking: OriginalRescheduledBooking | null,
   bookerEmail: string;
 }) {
   const requiresConfirmation = await determineRequiresConfirmation(eventType, bookingStartTime, bookerEmail);
+  const originalRescheduledBookingOrganizerId = originalRescheduledBooking?.user?.id
   const userReschedulingIsOwner = isUserReschedulingOwner(userId, originalRescheduledBookingOrganizerId);
+  const originalWasPending = originalRescheduledBooking?.status === BookingStatus.PENDING
+
   const isConfirmedByDefault = determineIsConfirmedByDefault(
     requiresConfirmation,
     paymentAppData.price,
-    userReschedulingIsOwner
+    userReschedulingIsOwner,
+    originalWasPending
   );
 
   return {
@@ -87,7 +93,8 @@ function isUserReschedulingOwner(
 function determineIsConfirmedByDefault(
   requiresConfirmation: boolean,
   price: number,
-  userReschedulingIsOwner: boolean
+  userReschedulingIsOwner: boolean,
+  originalWasPending: boolean,
 ): boolean {
-  return (!requiresConfirmation && price === 0) || userReschedulingIsOwner;
+  return (!requiresConfirmation && price === 0) || userReschedulingIsOwner && !originalWasPending;
 }

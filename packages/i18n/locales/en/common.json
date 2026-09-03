@@ -4771,5 +4771,10 @@
   "user_updated_successfully": "User updated successfully.",
   "error_updating_user": "There was an error updating this user.",
   "please_reschedule": "Please reschedule.",
+  "rescheduled_pending_event_type_subject": "New time proposed for your pending booking - {{title}} on {{date}}",
+"rescheduled_pending_attendee_email_title": "A new time has been proposed for your booking",
+"rescheduled_pending_attendee_email_subtitle": "This booking still requires confirmation from the organizer. You will receive a separate email once it is confirmed or declined.",
+"rescheduled_pending_organizer_email_title": "You have proposed a new time for a pending booking",
+"rescheduled_pending_organizer_email_subtitle": "This booking still requires your confirmation. The attendee has been notified of the proposed new time.",
   "ADD_NEW_STRINGS_ABOVE_THIS_LINE_TO_PREVENT_MERGE_CONFLICTS": "↑↑↑↑↑↑↑↑↑↑↑↑↑ Add your new strings above here ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑"
 }

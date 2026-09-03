@@ -101,6 +101,7 @@ export function getEditEventActions(context: BookingActionContext): ActionType[]
     isDisabledRescheduling,
     getSeatReferenceUid,
     isAttendee,
+    isPending,
     t,
   } = context;
   const seatReferenceUid = getSeatReferenceUid();
@@ -211,8 +212,8 @@ export function shouldShowPendingActions(context: BookingActionContext): boolean
 }
 
 export function shouldShowEditActions(context: BookingActionContext): boolean {
-  const { isPending, isTabRecurring, isRecurring, isCancelled } = context;
-  return !isPending && !(isTabRecurring && isRecurring) && !isCancelled;
+    const { isTabRecurring, isRecurring, isCancelled } = context;
+    return !(isTabRecurring && isRecurring) && !isCancelled;
 }
 
 export function shouldShowRecurringCancelAction(context: BookingActionContext): boolean {
@@ -235,31 +236,43 @@ export function isActionDisabled(actionId: string, context: BookingActionContext
     isAttendee,
     isCancelled,
     isRejected,
+    isPending,
   } = context;
 
   switch (actionId) {
     case "reschedule":
-    case "reschedule_request":
-      // Only apply minimum reschedule notice restriction if user is NOT the organizer
-      // If user is an attendee (or not authenticated), apply the restriction
       const isUserOrganizer =
-        !isAttendee &&
-        booking.loggedInUser?.userId &&
-        booking.user?.id &&
-        booking.loggedInUser.userId === booking.user.id;
-      const isWithinMinimumNotice =
-        !isUserOrganizer &&
-        isWithinMinimumRescheduleNotice(
-          new Date(booking.startTime),
+     !isAttendee &&
+     booking.loggedInUser?.userId &&
+     booking.user?.id &&
+     booking.loggedInUser.userId === booking.user.id;
+   const isWithinMinimumNotice =
+     !isUserOrganizer &&
+     isWithinMinimumRescheduleNotice(
+      new Date(booking.startTime),
           booking.eventType.minimumRescheduleNotice ?? null
         );
-      return (
-        isCancelled ||
-        isRejected ||
-        (isBookingInPast && !booking.eventType.allowReschedulingPastBookings) ||
-        isDisabledRescheduling ||
-        isWithinMinimumNotice
+    return (
+      isCancelled ||
+      isRejected ||
+      (isBookingInPast && !booking.eventType.allowReschedulingPastBookings) ||
+      isDisabledRescheduling ||
+      isWithinMinimumNotice
+    );
+      case "reschedule_request":
+        const isWithinMinimumNoticeForRequest =
+      isWithinMinimumRescheduleNotice(
+        new Date(booking.startTime),
+        booking.eventType.minimumRescheduleNotice ?? null
       );
+    return (
+      isPending ||
+      isCancelled ||
+      isRejected ||
+      (isBookingInPast && !booking.eventType.allowReschedulingPastBookings) ||
+      isDisabledRescheduling ||
+      isWithinMinimumNoticeForRequest
+    );
     case "cancel":
       return isDisabledCancelling || isBookingInPast || isCancelled || isRejected;
     case "view_recordings":
@@ -271,7 +284,7 @@ export function isActionDisabled(actionId: string, context: BookingActionContext
     case "reassign":
     case "change_location":
     case "add_members":
-      return isBookingInPast || isCancelled || isRejected;
+      return isBookingInPast || isCancelled || isRejected || isPending;
     default:
       return false;
   }

@@ -11,6 +11,7 @@ import type { EventTypeMetadata } from "@calcom/prisma/zod-utils";
 import type { AdditionalInformation, CalendarEvent, Person } from "@calcom/types/Calendar";
 import { default as cloneDeep } from "lodash/cloneDeep";
 import type { Logger } from "tslog";
+import { BookingStatus } from "@calcom/prisma/enums";
 
 export const BookingActionMap = {
   confirmed: "BOOKING_CONFIRMED",
@@ -54,6 +55,8 @@ type ConfirmedEmailAndSmsPayload = EmailAndSmsPayload & {
 type RequestedEmailAndSmsPayload = EmailAndSmsPayload & {
   attendees?: Person[];
   additionalNotes?: string | null;
+  originalRescheduledBooking?: NonNullable<BookingType>;
+  rescheduleReason?: string;
 };
 
 type AddGuestsEmailAndSmsPayload = EmailAndSmsPayload & {
@@ -115,6 +118,7 @@ export class BookingEmailSmsHandler {
       rescheduleReason,
       additionalNotes,
       additionalInformation,
+      originalRescheduledBooking,
     } = data;
 
     const { sendRescheduledEmailsAndSMS } = await import("@calcom/emails/email-manager");
@@ -125,7 +129,8 @@ export class BookingEmailSmsHandler {
         additionalNotes,
         cancellationReason: `$RCH$${rescheduleReason || ""}`,
       },
-      metadata
+      metadata,
+      originalRescheduledBooking.status,
     );
   }
 
@@ -294,11 +299,38 @@ export class BookingEmailSmsHandler {
       eventType: { metadata },
       attendees,
       additionalNotes,
+      originalRescheduledBooking,
+      rescheduleReason,
     } = data;
     if (!attendees?.length) {
       this.log.error("Requested action called without attendee details.");
       return;
     }
+
+    if (originalRescheduledBooking?.status === BookingStatus.PENDING) {
+    this.log.debug(
+      "Action: BOOKING_REQUESTED via pending reschedule. Sending rescheduled pending emails.",
+      safeStringify({ calEvent: getPiiFreeCalendarEvent(evt) })
+    );
+
+    const { sendRescheduledEmailsAndSMS } = await import("@calcom/emails/email-manager");
+
+    try {
+      await sendRescheduledEmailsAndSMS(
+        {
+          ...evt,
+          additionalNotes,
+          cancellationReason: `$RCH$${rescheduleReason || ""}`,
+        },
+        metadata,
+        originalRescheduledBooking.status,
+      );
+    } catch (err) {
+      this.log.error("Failed to send pending reschedule emails", err);
+    }
+    return;
+  }
+
     this.log.debug(
       "Action: BOOKING_REQUESTED. Sending request emails.",
       safeStringify({ calEvent: getPiiFreeCalendarEvent(evt) })
