@@ -52,15 +52,21 @@ function CalendarList(props: Props): JSX.Element {
               shouldHighlight
               slug={item.slug}
               actions={
-                <InstallAppButton
-                  type={item.type}
-                  render={(buttonProps) => (
-                    <Button color="secondary" {...buttonProps}>
-                      {t("connect")}
-                    </Button>
-                  )}
-                  onChanged={() => props.onChanged()}
-                />
+                item.isInstalled ? (
+                  <Button color="secondary" disabled>
+                    {t("installed")}
+                  </Button>
+                ) : (
+                  <InstallAppButton
+                    type={item.type}
+                    render={(buttonProps) => (
+                      <Button color="secondary" {...buttonProps}>
+                        {t("connect")}
+                      </Button>
+                    )}
+                    onChanged={() => props.onChanged()}
+                  />
+                )
               }
             />
           ))}
@@ -112,6 +118,12 @@ export function CalendarListContainer({
     Promise.allSettled([
       utils.viewer.apps.integrations.invalidate(
         { variant: "calendar", onlyInstalled: true },
+        {
+          exact: true,
+        }
+      ),
+      utils.viewer.apps.integrations.invalidate(
+        { variant: "calendar", onlyInstalled: false },
         {
           exact: true,
         }
