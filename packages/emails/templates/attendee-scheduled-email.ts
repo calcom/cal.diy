@@ -14,6 +14,10 @@ export default class AttendeeScheduledEmail extends BaseEmail {
   showAttendees: boolean | undefined;
   t: TFunction;
 
+  /**
+   * Seated booking confirmations render from the recipient's perspective so later attendees do
+   * not inherit the first attendee's name in Outlook-generated invite content.
+   */
   constructor(calEvent: CalendarEvent, attendee: Person, showAttendees?: boolean | undefined) {
     super();
     let shouldShowAttendees: boolean;
@@ -25,9 +29,16 @@ export default class AttendeeScheduledEmail extends BaseEmail {
       shouldShowAttendees = true;
     }
 
-    if (!shouldShowAttendees && calEvent.seatsPerTimeSlot) {
-      this.calEvent = cloneDeep(calEvent);
-      this.calEvent.attendees = [attendee];
+    if (calEvent.seatsPerTimeSlot) {
+      let attendees = [attendee];
+      if (shouldShowAttendees) {
+        attendees = [
+          attendee,
+          ...calEvent.attendees.filter((eventAttendee) => eventAttendee.email !== attendee.email),
+        ];
+      }
+
+      this.calEvent = cloneDeep({ ...calEvent, attendees });
     } else {
       this.calEvent = calEvent;
     }

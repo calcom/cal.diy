@@ -1,8 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-
 import type { EventTypeMetadata } from "@calcom/prisma/zod-utils";
 import type { CalendarEvent, Person } from "@calcom/types/Calendar";
-
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { shouldSkipAttendeeEmailWithSettings } from "./email-manager";
 import AttendeeScheduledEmail from "./templates/attendee-scheduled-email";
 
@@ -259,17 +257,26 @@ describe("AttendeeScheduledEmail - Privacy fix for seated events", () => {
       expect(email.calEvent).not.toBe(calEvent);
     });
 
-    it("should use same calEvent reference when not filtering (performance optimization)", () => {
+    it("should not mutate original calEvent when reordering seated attendees", () => {
       const calEvent = createMockCalendarEvent({
         seatsPerTimeSlot: 5,
         seatsShowAttendees: true,
       });
-      const recipient = calEvent.attendees[0];
+      const recipient = calEvent.attendees[1];
 
       const email = new AttendeeScheduledEmail(calEvent, recipient);
 
-      // Should use same reference when not filtering
-      expect(email.calEvent).toBe(calEvent);
+      expect(email.calEvent).not.toBe(calEvent);
+      expect(calEvent.attendees.map((attendee) => attendee.email)).toEqual([
+        "alice@example.com",
+        "bob@example.com",
+        "charlie@example.com",
+      ]);
+      expect(email.calEvent.attendees.map((attendee) => attendee.email)).toEqual([
+        "bob@example.com",
+        "alice@example.com",
+        "charlie@example.com",
+      ]);
     });
   });
 
@@ -316,6 +323,30 @@ describe("AttendeeScheduledEmail - Privacy fix for seated events", () => {
       expect(email.calEvent.attendees.map((a) => a.email)).toEqual([
         "attendee1@example.com",
         "attendee2@example.com",
+      ]);
+    });
+
+    it("should keep the recipient first when sharing is enabled for seated events", () => {
+      const calEvent = createMockCalendarEvent({
+        seatsPerTimeSlot: 10,
+        seatsShowAttendees: true,
+        attendees: [
+          createMockPerson("First Seat", "first@example.com"),
+          createMockPerson("Second Seat", "second@example.com"),
+          createMockPerson("Third Seat", "third@example.com"),
+        ],
+      });
+      const recipient = calEvent.attendees[1];
+
+      const email = new AttendeeScheduledEmail(calEvent, recipient);
+
+      expect(email.calEvent.attendees).toHaveLength(3);
+      expect(email.calEvent.attendees[0].email).toBe("second@example.com");
+      expect(email.calEvent.attendees[0].name).toBe("Second Seat");
+      expect(email.calEvent.attendees.map((attendee) => attendee.email)).toEqual([
+        "second@example.com",
+        "first@example.com",
+        "third@example.com",
       ]);
     });
   });
