@@ -13,7 +13,10 @@ const IV_LENGTH = 16; // AES blocksize
  * @returns Encrypted value using key
  */
 export const symmetricEncrypt = function (text: string, key: string) {
-  const _key = Buffer.from(key, "latin1");
+  let _key = Buffer.from(key, "base64");
+  if (_key.length !== 32) {
+    _key = Buffer.from(key, "latin1");
+  }
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, _key, iv);
   let ciphered = cipher.update(text, INPUT_ENCODING, OUTPUT_ENCODING);
@@ -29,13 +32,19 @@ export const symmetricEncrypt = function (text: string, key: string) {
  * @param key Key used to decrypt value must be 32 bytes for AES256 encryption algorithm
  */
 export const symmetricDecrypt = function (text: string, key: string) {
-  const _key = Buffer.from(key, "latin1");
-
-  const components = text.split(":");
-  const iv_from_ciphertext = Buffer.from(components.shift() || "", OUTPUT_ENCODING);
-  const decipher = crypto.createDecipheriv(ALGORITHM, _key, iv_from_ciphertext);
-  let deciphered = decipher.update(components.join(":"), OUTPUT_ENCODING, INPUT_ENCODING);
-  deciphered += decipher.final(INPUT_ENCODING);
-
-  return deciphered;
+  const decryptWith = (encoding: BufferEncoding) => {
+    const _key = Buffer.from(key, encoding);
+    const components = text.split(":");
+    const iv_from_ciphertext = Buffer.from(components.shift() || "", OUTPUT_ENCODING);
+    const decipher = crypto.createDecipheriv(ALGORITHM, _key, iv_from_ciphertext);
+    let deciphered = decipher.update(components.join(":"), OUTPUT_ENCODING, INPUT_ENCODING);
+    deciphered += decipher.final(INPUT_ENCODING);
+    return deciphered;
+  };
+  try {
+    return decryptWith("base64");
+  } catch (error) {
+    return decryptWith("latin1");
+  }
 };
+

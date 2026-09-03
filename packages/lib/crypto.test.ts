@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import crypto from "node:crypto";
 
 import { symmetricDecrypt, symmetricEncrypt } from "./crypto";
 
@@ -99,6 +100,22 @@ describe("crypto", () => {
       const decrypted = symmetricDecrypt(encrypted, testKey);
 
       expect(decrypted).toBe(unicodeText);
+    });
+
+    it("should decrypt legacy ciphertext encrypted with a latin1 decoded key", () => {
+      const legacySymmetricEncrypt = (text: string, key: string) => {
+        const _key = Buffer.from(key, "latin1");
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipheriv("aes256", _key, iv);
+        let ciphered = cipher.update(text, "utf8", "hex");
+        ciphered += cipher.final("hex");
+        return `${iv.toString("hex")}:${ciphered}`;
+      };
+
+      const encrypted = legacySymmetricEncrypt(testText, testKey);
+      const decrypted = symmetricDecrypt(encrypted, testKey);
+
+      expect(decrypted).toBe(testText);
     });
   });
 });
