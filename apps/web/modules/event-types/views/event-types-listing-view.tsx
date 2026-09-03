@@ -621,49 +621,43 @@ export const InfiniteEventTypeList = ({
                           <ButtonGroup combined>
                             {!isManagedEventType && (
                               <>
-                                <Tooltip content={t("preview")}>
-                                  <Button
-                                    data-testid="preview-link-button"
-                                    color="secondary"
-                                    target="_blank"
-                                    variant="icon"
-                                    href={calLink}
-                                    StartIcon="external-link"
-                                  />
-                                </Tooltip>
+                                <Button
+                                  data-testid="preview-link-button"
+                                  color="secondary"
+                                  target="_blank"
+                                  variant="icon"
+                                  href={calLink}
+                                  StartIcon="external-link"
+                                  tooltip={t("preview")}
+                                />
 
-                                <Tooltip content={t("copy_link")}>
-                                  <Button
-                                    color="secondary"
-                                    variant="icon"
-                                    StartIcon="link"
-                                    onClick={() => {
-                                      showToast(t("link_copied"), "success");
-                                      copyToClipboard(calLink);
-                                    }}
-                                  />
-                                </Tooltip>
+                                <Button
+                                  color="secondary"
+                                  variant="icon"
+                                  StartIcon="link"
+                                  tooltip={t("copy_link")}
+                                  onClick={() => {
+                                    showToast(t("link_copied"), "success");
+                                    copyToClipboard(calLink);
+                                  }}
+                                />
 
                                 {isPrivateURLEnabled && (
-                                  <Tooltip content={t("copy_private_link_to_event")}>
-                                    <Button
-                                      color="secondary"
-                                      variant="icon"
-                                      StartIcon="venetian-mask"
-                                      onClick={() => {
-                                        showToast(t("private_link_copied"), "success");
-                                        copyToClipboard(placeholderHashedLink);
-                                        setPrivateLinkCopyIndices((prev) => {
-                                          const prevIndex = prev[type.slug] ?? 0;
-                                          const nextIndex = (prevIndex + 1) % activeHashedLinks.length;
-                                          return {
-                                            ...prev,
-                                            [type.slug]: nextIndex,
-                                          };
-                                        });
-                                      }}
-                                    />
-                                  </Tooltip>
+                                  <Button
+                                    color="secondary"
+                                    variant="icon"
+                                    StartIcon="venetian-mask"
+                                    tooltip={t("copy_private_link_to_event")}
+                                    onClick={() => {
+                                      showToast(t("private_link_copied"), "success");
+                                      copyToClipboard(placeholderHashedLink);
+                                      setPrivateLinkCopyIndices((prev) => {
+                                        const prevIndex = prev[type.slug] ?? 0;
+                                        const nextIndex = (prevIndex + 1) % activeHashedLinks.length;
+                                        return { ...prev, [type.slug]: nextIndex };
+                                      });
+                                    }}
+                                  />
                                 )}
                               </>
                             )}
