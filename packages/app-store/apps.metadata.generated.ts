@@ -85,6 +85,7 @@ import salesroom_config_json from "./salesroom/config.json";
 import sendgrid_config_json from "./sendgrid/config.json";
 import shimmervideo_config_json from "./shimmervideo/config.json";
 import signal_config_json from "./signal/config.json";
+import simple_analytics_config_json from "./simple-analytics/config.json";
 import sirius_video_config_json from "./sirius_video/config.json";
 import skype_config_json from "./skype/config.json";
 import { metadata as stripepayment__metadata_ts } from "./stripepayment/_metadata";
@@ -198,6 +199,7 @@ export const appStoreMetadata = {
   sendgrid: sendgrid_config_json,
   shimmervideo: shimmervideo_config_json,
   signal: signal_config_json,
+  "simple-analytics": simple_analytics_config_json,
   sirius_video: sirius_video_config_json,
   skype: skype_config_json,
   stripepayment: stripepayment__metadata_ts,

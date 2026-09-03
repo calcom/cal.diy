@@ -3072,6 +3072,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@calcom/simple-analytics@workspace:packages/app-store/simple-analytics":
+  version: 0.0.0-use.local
+  resolution: "@calcom/simple-analytics@workspace:packages/app-store/simple-analytics"
+  dependencies:
+    "@calcom/lib": "workspace:*"
+    "@calcom/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@calcom/sirius_video@workspace:packages/app-store/sirius_video":
   version: 0.0.0-use.local
   resolution: "@calcom/sirius_video@workspace:packages/app-store/sirius_video"

@@ -63,6 +63,7 @@ export const apiHandlers = {
   sendgrid: import("./sendgrid/api"),
   shimmervideo: import("./shimmervideo/api"),
   signal: import("./signal/api"),
+  "simple-analytics": import("./simple-analytics/api"),
   sirius_video: import("./sirius_video/api"),
   skype: import("./skype/api"),
   stripepayment: import("./stripepayment/api"),

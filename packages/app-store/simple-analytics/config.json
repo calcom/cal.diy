@@ -1,0 +1,30 @@
+{
+  "name": "Simple Analytics",
+  "slug": "simple-analytics",
+  "type": "simple-analytics_analytics",
+  "logo": "icon.svg",
+  "url": "https://example.com/link",
+  "variant": "analytics",
+  "categories": [
+    "analytics"
+  ],
+  "publisher": "Simple Analytics B.V.",
+  "email": "support@simpleanalytics.com",
+  "description": "Simple Analytics is a European privacy-friendly and simple alternative to Google Analytics. No cookies. No trackers. No consent required from your visitors. Just straightforward analytics.\r\r",
+  "extendsFeature": "EventType",
+  "appData": {
+    "tag": {
+      "scripts": [
+        {
+          "src": "https://cdn.example.com/script.js",
+          "attrs": {
+            "data-site": "{TRACKING_ID}"
+          }
+        }
+      ]
+    }
+  },
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "booking-pages-tag"
+}
