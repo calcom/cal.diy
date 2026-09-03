@@ -2422,6 +2422,8 @@
   "no_availability_in_month": "No availability in {{month}}",
   "no_availability_rolling": "Scheduling is only available up to {{days}} in advance. Please check again soon.",
   "no_availability_range": "Scheduling ended on {{date}}. Please check again soon.",
+  "bookings_open_on_date": "Scheduling open on {{date}}. View upcoming availability below.",
+  "show_available_slots": "View available slots",
   "view_previous_month": "View previous month",
   "view_next_month": "View next month",
   "send_code": "Send code",
