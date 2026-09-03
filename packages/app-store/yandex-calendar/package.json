@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "private": true,
+  "name": "@calcom/yandex-calendar",
+  "version": "0.0.0",
+  "main": "./index.ts",
+  "dependencies": {
+    "@calcom/lib": "workspace:*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@calcom/types": "workspace:*"
+  },
+  "description": "Yandex Calendar is an online calendar service developed by the Russian tech giant Yandex. It helps users manage their schedules, set reminders, and share events, with seamless integration into other Yandex services for efficient time management."
+}

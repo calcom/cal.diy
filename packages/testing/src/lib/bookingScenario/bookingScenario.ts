@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { vi } from "vitest";
 import "vitest-fetch-mock";
 import { appStoreMetadata } from "@calcom/app-store/appStoreMetaData";
+import { CalendarServiceCredentialPayload } from "@calcom/lib/CalendarService";
 import { type WeekDays, weekdayToWeekIndex } from "@calcom/lib/dayjs";
 import type { IntervalLimit } from "@calcom/lib/intervalLimits/intervalLimitSchema";
 import logger from "@calcom/lib/logger";
@@ -40,7 +41,6 @@ import type {
   IntegrationCalendar,
   NewCalendarEventType,
 } from "@calcom/types/Calendar";
-import type { CredentialPayload } from "@calcom/types/Credential";
 import type { VideoApiAdapter } from "@calcom/types/VideoApiAdapter";
 import type { z } from "zod";
 import type { getMockRequestDataForBooking } from "./getMockRequestDataForBooking";
@@ -1611,7 +1611,7 @@ export enum BookingLocations {
 
 export type CalendarServiceMethodMockCallBase = {
   calendarServiceConstructorArgs: {
-    credential: CredentialPayload;
+    credential: CalendarServiceCredentialPayload;
   };
 };
 
