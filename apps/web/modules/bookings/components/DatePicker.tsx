@@ -1,18 +1,17 @@
-import { shallow } from "zustand/shallow";
-
 import type { Dayjs } from "@calcom/dayjs";
 import dayjs from "@calcom/dayjs";
+import { useSlotsViewOnSmallScreen } from "@calcom/embed-core/embed-iframe";
 import { useBookerStoreContext } from "@calcom/features/bookings/Booker/BookerStoreProvider";
 import type { DatePickerClassNames } from "@calcom/features/bookings/Booker/types";
+import type { Slots } from "@calcom/features/bookings/types";
 import { DatePicker as DatePickerComponent } from "@calcom/features/calendars/components/DatePicker";
-import { useNonEmptyScheduleDays } from "@calcom/web/modules/schedules/hooks/useNonEmptyScheduleDays";
 import { weekdayToWeekIndex } from "@calcom/lib/dayjs";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import type { User } from "@calcom/prisma/client";
 import type { PeriodData } from "@calcom/types/Event";
-import { useSlotsViewOnSmallScreen } from "@calcom/embed-core/embed-iframe";
-
-import type { Slots } from "@calcom/features/bookings/types";
+import { useNonEmptyScheduleDays } from "@calcom/web/modules/schedules/hooks/useNonEmptyScheduleDays";
+import { useEffect, useRef } from "react";
+import { shallow } from "zustand/shallow";
 
 const useMoveToNextMonthOnNoAvailability = ({
   browsingDate,
@@ -25,31 +24,28 @@ const useMoveToNextMonthOnNoAvailability = ({
   isLoading: boolean;
   onMonthChange: (date: Dayjs) => void;
 }) => {
-  if (isLoading) {
-    return {
-      moveToNextMonthOnNoAvailability: () => {
-        /* return noop until ready */
-      },
-    };
-  }
+  // Only auto-advance once per mount so a user navigating back to a fully
+  // booked current month isn't bounced forward again on every render.
+  const hasAutoAdvancedRef = useRef(false);
+  // onMonthChange is recreated each render in the parent; keep a ref so the
+  // effect doesn't need it as a dependency (which would defeat the one-shot
+  // guard by re-running on every render).
+  const onMonthChangeRef = useRef(onMonthChange);
+  onMonthChangeRef.current = onMonthChange;
 
-  const nonEmptyScheduleDaysInBrowsingMonth = nonEmptyScheduleDays.filter((date) =>
-    dayjs(date).isSame(browsingDate, "month")
-  );
+  useEffect(() => {
+    if (isLoading || hasAutoAdvancedRef.current) return;
 
-  const moveToNextMonthOnNoAvailability = () => {
     const currentMonth = dayjs().startOf("month").format("YYYY-MM");
     const browsingMonth = browsingDate.format("YYYY-MM");
-    // Not meeting the criteria to move to next month
-    // Has to be currentMonth and it must have all days unbookable
-    if (currentMonth != browsingMonth || nonEmptyScheduleDaysInBrowsingMonth.length) {
-      return;
-    }
-    onMonthChange(browsingDate.add(1, "month"));
-  };
-  return {
-    moveToNextMonthOnNoAvailability,
-  };
+    if (currentMonth !== browsingMonth) return;
+
+    const hasAvailability = nonEmptyScheduleDays.some((date) => dayjs(date).isSame(browsingDate, "month"));
+    if (hasAvailability) return;
+
+    hasAutoAdvancedRef.current = true;
+    onMonthChangeRef.current(browsingDate.add(1, "month"));
+  }, [isLoading, browsingDate, nonEmptyScheduleDays]);
 };
 
 export const DatePicker = ({
@@ -102,13 +98,12 @@ export const DatePicker = ({
   const nonEmptyScheduleDays = useNonEmptyScheduleDays(slots);
   const browsingDate = month ? dayjs(month) : dayjs().startOf("month");
 
-  const { moveToNextMonthOnNoAvailability } = useMoveToNextMonthOnNoAvailability({
+  useMoveToNextMonthOnNoAvailability({
     browsingDate,
     nonEmptyScheduleDays,
     onMonthChange,
     isLoading: isLoading ?? true,
   });
-  moveToNextMonthOnNoAvailability();
 
   // Determine if this is a compact sidebar view based on layout
   const isCompact = layout !== "month_view" && layout !== "mobile";
