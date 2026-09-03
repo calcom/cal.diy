@@ -14,6 +14,7 @@ import type {
 } from "@calcom/types/Calendar";
 
 import { WEBAPP_URL } from "./constants";
+import { isValidHttpUrl } from "./isValidHttpUrl";
 import isSmsCalEmail from "./isSmsCalEmail";
 import {
   buildPlatformCancelLink,
@@ -205,8 +206,7 @@ export const getProviderName = (location?: string | null): string => {
     }
     return locationName[0].toUpperCase() + locationName.slice(1);
   }
-  // If location its a url, probably we should be validating it with a custom library
-  if (location && /^https?:\/\//.test(location)) {
+  if (location && isValidHttpUrl(location)) {
     return location;
   }
   return "";
