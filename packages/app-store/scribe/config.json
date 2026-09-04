@@ -1,0 +1,20 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "Scribe",
+  "slug": "scribe",
+  "type": "scribe_automation",
+  "logo": "icon.svg",
+  "url": "https://www.scribe-mail.com/integrations/cal-com",
+  "variant": "automation",
+  "categories": ["automation"],
+  "publisher": "Scribe",
+  "email": "hello@scribe-mail.com",
+  "description": "Email signature automation that puts every teammate's own Cal.com booking links in their email signature",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "link-as-an-app",
+  "externalLink": {
+    "url": "https://www.scribe-mail.com/integrations/cal-com",
+    "newTab": true
+  }
+}

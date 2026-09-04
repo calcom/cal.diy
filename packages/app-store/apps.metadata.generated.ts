@@ -82,6 +82,7 @@ import riverside_config_json from "./riverside/config.json";
 import roam_config_json from "./roam/config.json";
 import salesforce_config_json from "./salesforce/config.json";
 import salesroom_config_json from "./salesroom/config.json";
+import scribe_config_json from "./scribe/config.json";
 import sendgrid_config_json from "./sendgrid/config.json";
 import shimmervideo_config_json from "./shimmervideo/config.json";
 import signal_config_json from "./signal/config.json";
@@ -195,6 +196,7 @@ export const appStoreMetadata = {
   roam: roam_config_json,
   salesforce: salesforce_config_json,
   salesroom: salesroom_config_json,
+  scribe: scribe_config_json,
   sendgrid: sendgrid_config_json,
   shimmervideo: shimmervideo_config_json,
   signal: signal_config_json,
