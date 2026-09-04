@@ -2071,7 +2071,8 @@ async function handler(
         `EventManager.create failure in some of the integrations ${organizerUser.username}`,
         safeStringify({ error, results })
       );
-    } else {
+    }
+    {
       const additionalInformation: AdditionalInformation = {};
 
       if (results.length) {
@@ -2147,6 +2148,9 @@ async function handler(
             },
           });
         }
+      } else {
+        // No calendar results - still populate appsStatus so calWarnings can surface in emails
+        evt.appsStatus = handleAppsStatus(results, booking, reqAppsStatus);
       }
       if (!noEmail) {
         if (!isDryRun && !(eventType.seatsPerTimeSlot && rescheduleUid)) {
