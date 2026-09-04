@@ -71,7 +71,7 @@ export class GoogleCalendarClient {
 
     return data.items.map((event) => {
       const dateStr = event.start.date || event.start.dateTime?.split("T")[0];
-      const date = dateStr ? dayjs(dateStr).toDate() : new Date();
+      const date = dateStr ? dayjs.utc(dateStr).toDate() : new Date();
 
       return {
         id: `${countryCode}_${event.id}`,
