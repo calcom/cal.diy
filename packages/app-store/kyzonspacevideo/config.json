@@ -1,0 +1,24 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "KYZON Space",
+  "slug": "kyzonspacevideo",
+  "type": "kyzonspacevideo_video",
+  "logo": "icon.svg",
+  "url": "https://kyzonsolutions.com",
+  "variant": "conferencing",
+  "categories": ["conferencing"],
+  "publisher": "KYZON Solutions",
+  "email": "support@kyzonsolutions.com",
+  "appData": {
+    "location": {
+      "type": "integrations:{SLUG}_video",
+      "label": "{TITLE}",
+      "linkType": "dynamic"
+    }
+  },
+  "description": "KYZON Space is a browser-based platform that makes it easy to present, collaborate, and edit documents on video calls.",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "event-type-location-video-static",
+  "isOAuth": true
+}
