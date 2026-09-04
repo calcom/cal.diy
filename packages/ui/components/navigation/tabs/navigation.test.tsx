@@ -148,7 +148,7 @@ describe("Navigation Components", () => {
         }
 
         if (tab.info) {
-          const infoElement = screen.getByTestId("apps-info");
+          const infoElement = screen.getByTestId(`${tab["data-testid"]}-info`);
           expect(infoElement).toBeInTheDocument();
           expect(infoElement).toHaveTextContent(tab.info);
         }
