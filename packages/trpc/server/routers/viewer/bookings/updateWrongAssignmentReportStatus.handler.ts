@@ -1,10 +1,9 @@
 import { WrongAssignmentReportRepository } from "@calcom/features/bookings/repositories/WrongAssignmentReportRepository";
+import { MembershipRepository } from "@calcom/features/membership/repositories/MembershipRepository";
 import prisma from "@calcom/prisma";
-import { MembershipRole } from "@calcom/prisma/enums";
 import type { TrpcSessionUser } from "@calcom/trpc/server/types";
 import { TRPCError } from "@trpc/server";
 import type { TUpdateWrongAssignmentReportStatusInputSchema } from "./updateWrongAssignmentReportStatus.schema";
-
 
 type UpdateWrongAssignmentReportStatusOptions = {
   ctx: {
@@ -31,6 +30,18 @@ export const updateWrongAssignmentReportStatusHandler = async ({
     });
   }
 
+  // Reports for non-team bookings have no teamId to authorize against, so deny by default.
+  let membership = null;
+  if (report.teamId) {
+    membership = await MembershipRepository.getAdminOrOwnerMembership(user.id, report.teamId);
+  }
+
+  if (!membership) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You don't have permission to update this report",
+    });
+  }
 
   const updatedReport = await repo.updateStatus({
     id: reportId,
