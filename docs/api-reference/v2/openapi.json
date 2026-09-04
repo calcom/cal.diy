@@ -9328,6 +9328,47 @@
         },
         "required": ["type", "slug", "label", "required", "placeholder", "hidden", "isDefault"]
       },
+      "EmailFieldOutput_2024_06_14": {
+        "type": "object",
+        "properties": {
+          "isDefault": {
+            "type": "object",
+            "description": "This property is always false because it's not default field but custom field",
+            "example": false,
+            "default": false
+          },
+          "type": {
+            "type": "string",
+            "example": "email",
+            "description": "only allowed value for type is `email`"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Unique identifier for the field in format `some-slug`. It is used to access response to this booking field during the booking",
+            "example": "some-slug"
+          },
+          "label": {
+            "type": "string",
+            "example": "Please enter your email"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "placeholder": {
+            "type": "string",
+            "example": "e.g., example@example.com"
+          },
+          "disableOnPrefill": {
+            "type": "boolean",
+            "description": "Disable this booking field if the URL contains query parameter with key equal to the slug and prefill it with the provided value."
+          },
+          "hidden": {
+            "type": "boolean",
+            "description": "If true show under event type settings but don't show this booking field in the Booker. If false show in both."
+          }
+        },
+        "required": ["isDefault", "type", "slug", "label", "required", "placeholder", "hidden"]
+      },
       "MultiSelectFieldOutput_2024_06_14": {
         "type": "object",
         "properties": {
@@ -9812,6 +9853,9 @@
                   "$ref": "#/components/schemas/MultiEmailFieldOutput_2024_06_14"
                 },
                 {
+                  "$ref": "#/components/schemas/EmailFieldOutput_2024_06_14"
+                },
+                {
                   "$ref": "#/components/schemas/CheckboxGroupFieldOutput_2024_06_14"
                 },
                 {
@@ -10208,6 +10252,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/MultiEmailFieldOutput_2024_06_14"
+                },
+                {
+                  "$ref": "#/components/schemas/EmailFieldOutput_2024_06_14"
                 },
                 {
                   "$ref": "#/components/schemas/CheckboxGroupFieldOutput_2024_06_14"

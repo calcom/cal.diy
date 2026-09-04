@@ -35,6 +35,7 @@ import {
   transformSeatsInternalToApi,
 } from ".";
 import {
+  BookingFieldSchema,
   systemBeforeFieldEmail,
   systemBeforeFieldName,
   type CustomField,
@@ -893,6 +894,79 @@ describe("transformBookingFieldsInternalToApi", () => {
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
+    const result = transformBookingFieldsInternalToApi(transformedField);
+
+    expect(result).toEqual(expectedOutput);
+  });
+
+  it("should reverse transform a custom email field instead of returning unknown", () => {
+    // Mirrors OutputEventTypesService.transformBookingFields: a custom email field
+    // stored by the form builder is first validated, then transformed.
+    const databaseField = {
+      name: "custom-email",
+      type: "email",
+      label: "Your work email",
+      sources: [{ id: "user", type: "user", label: "User", fieldRequired: false }],
+      editable: "user",
+      required: false,
+      placeholder: "you@company.com",
+      hidden: true,
+      disableOnPrefill: false,
+    };
+
+    const parsed = BookingFieldSchema.safeParse(databaseField);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+
+    const result = transformBookingFieldsInternalToApi([parsed.data]);
+
+    expect(result).toEqual([
+      {
+        isDefault: false,
+        type: "email",
+        slug: "custom-email",
+        label: "Your work email",
+        required: false,
+        placeholder: "you@company.com",
+        hidden: true,
+        disableOnPrefill: false,
+      },
+    ]);
+  });
+
+  it("should reverse transform email field", () => {
+    const transformedField: CustomField[] = [
+      {
+        name: "your-email",
+        type: "email",
+        label: "Your email",
+        sources: [
+          {
+            id: "user",
+            type: "user",
+            label: "User",
+            fieldRequired: true,
+          },
+        ],
+        editable: "user",
+        required: true,
+        placeholder: "you@example.com",
+      },
+    ];
+
+    const expectedOutput = [
+      {
+        isDefault: false,
+        type: "email",
+        slug: "your-email",
+        label: "Your email",
+        required: true,
+        placeholder: "you@example.com",
+        hidden: false,
+        disableOnPrefill: false,
+      },
+    ];
+
     const result = transformBookingFieldsInternalToApi(transformedField);
 
     expect(result).toEqual(expectedOutput);
