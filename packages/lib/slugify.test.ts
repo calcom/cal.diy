@@ -55,8 +55,14 @@ describe("slugify", () => {
     expect(slugify("📚🕯️")).toEqual("");
   });
 
-  it.skip("should remove unicode", () => {
+  it("should remove unicode", () => {
     expect(slugify("Hello ®️ There")).toEqual("hello-there");
     expect(slugify("®️")).toEqual("");
+  });
+
+  it("should keep letters from non-latin scripts", () => {
+    expect(slugify("北京会议")).toEqual("北京会议");
+    expect(slugify("Встреча")).toEqual("встреча");
+    expect(slugify("اجتماع")).toEqual("اجتماع");
   });
 });
