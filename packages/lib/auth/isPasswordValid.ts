@@ -1,3 +1,4 @@
+// Canonical implementation — also duplicated in packages/prisma/zod-utils.ts (keep in sync)
 export function isPasswordValid(password: string): boolean;
 export function isPasswordValid(
   password: string,
@@ -13,8 +14,8 @@ export function isPasswordValid(password: string, breakdown?: boolean, strict?: 
   if (password.length >= 7 && (!strict || password.length > 14)) min = true;
   if (strict && password.length > 14) admin_min = true;
   if (password.match(/\d/)) num = true;
-  if (password.match(/[a-z]/)) low = true;
-  if (password.match(/[A-Z]/)) cap = true;
+  if (password.match(/\p{Ll}/u)) low = true;
+  if (password.match(/\p{Lu}/u)) cap = true;
 
   if (!breakdown) return cap && low && num && min && (strict ? admin_min : true);
 
