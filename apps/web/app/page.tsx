@@ -23,7 +23,7 @@ const RedirectPage = async () => {
     redirect(onboardingPath);
   }
 
-  redirect("/event-types");
+  redirect(`/${session.user.defaultHomeView || "event-types"}`);
 };
 
 export default RedirectPage;
