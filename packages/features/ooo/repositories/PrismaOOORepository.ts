@@ -52,6 +52,9 @@ export class PrismaOOORepository {
           },
         ],
       },
+      // Overlapping entries are flattened per-day downstream where the last entry wins, so a stable
+      // order is required to make the winning entry reproducible across identical requests.
+      orderBy: [{ start: "asc" }, { id: "asc" }],
       select: {
         id: true,
         start: true,
@@ -121,6 +124,9 @@ export class PrismaOOORepository {
           },
         ],
       },
+      // Overlapping entries are flattened per-day downstream where the last entry wins, so a stable
+      // order is required to make the winning entry reproducible across identical requests.
+      orderBy: [{ start: "asc" }, { id: "asc" }],
       select: {
         id: true,
         start: true,
