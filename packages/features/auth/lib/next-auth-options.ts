@@ -4,6 +4,14 @@ import { updateProfilePhotoMicrosoft } from "@calcom/app-store/_utils/oauth/upda
 import { createGoogleCalendarServiceWithGoogleType } from "@calcom/app-store/googlecalendar/lib/CalendarService";
 import { getIdentityProvider } from "@calcom/features/auth/lib/identityProviders";
 import {
+  IS_OIDC_LOGIN_ENABLED,
+  OIDC_CLIENT_ID,
+  OIDC_CLIENT_SECRET,
+  OIDC_ISSUER,
+  OIDC_PROVIDER_NAME,
+} from "@calcom/features/auth/lib/oidc";
+import { createOidcProvider } from "@calcom/features/auth/lib/oidcProvider";
+import {
   OUTLOOK_CLIENT_ID,
   OUTLOOK_CLIENT_SECRET,
   OUTLOOK_LOGIN_ENABLED,
@@ -352,6 +360,17 @@ if (OUTLOOK_LOGIN_ENABLED && OUTLOOK_CLIENT_ID && OUTLOOK_CLIENT_SECRET) {
           image: null,
         };
       },
+    })
+  );
+}
+
+if (IS_OIDC_LOGIN_ENABLED && OIDC_CLIENT_ID && OIDC_CLIENT_SECRET && OIDC_ISSUER) {
+  providers.push(
+    createOidcProvider({
+      clientId: OIDC_CLIENT_ID,
+      clientSecret: OIDC_CLIENT_SECRET,
+      issuer: OIDC_ISSUER,
+      providerName: OIDC_PROVIDER_NAME,
     })
   );
 }
@@ -1027,12 +1046,13 @@ export const getOptions = ({
             }
           }
 
-          // User signs up with email/password and then tries to login with Google/SAML/AzureAD using the same email
+          // User signs up with email/password and then tries to login with Google/SAML/AzureAD/OIDC using the same email
           if (
             existingUserWithEmail.identityProvider === IdentityProvider.CAL &&
             (idP === IdentityProvider.GOOGLE ||
               idP === IdentityProvider.SAML ||
-              idP === IdentityProvider.AZUREAD)
+              idP === IdentityProvider.AZUREAD ||
+              idP === IdentityProvider.OIDC)
           ) {
             // Prevent account pre-hijacking: block OAuth linking for unverified accounts
             if (!existingUserWithEmail.emailVerified) {
