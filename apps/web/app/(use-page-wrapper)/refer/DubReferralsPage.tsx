@@ -1,12 +1,12 @@
 "use client";
 
-import { DubEmbed } from "@dub/embed-react";
-import { useTheme } from "next-themes";
-import { useState, useEffect } from "react";
-
 import { IS_DUB_REFERRALS_ENABLED } from "@calcom/lib/constants";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { showToast } from "@calcom/ui/components/toast";
+import { DubEmbed } from "@dub/embed-react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import Loading from "./loading";
 
 const fetchReferralsToken = async () => {
   try {
@@ -30,6 +30,7 @@ const fetchReferralsToken = async () => {
 // The enabled referrals page implementation
 export const DubReferralsPage = () => {
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { t } = useLocale();
   const { resolvedTheme } = useTheme();
 
@@ -41,13 +42,26 @@ export const DubReferralsPage = () => {
       } catch (err) {
         console.error("Error fetching referrals token:", err);
         showToast(t("unexpected_error_try_again"), "error");
+      } finally {
+        setIsLoading(false);
       }
     };
 
     getToken();
   }, [t]);
 
-  if (!IS_DUB_REFERRALS_ENABLED || !token) {
+  if (!IS_DUB_REFERRALS_ENABLED) {
+    return null;
+  }
+
+  // Keep the route's loading skeleton mounted for the duration of the client-side
+  // token fetch, otherwise the page collapses to zero height between the skeleton
+  // unmounting and the DubEmbed widget mounting, causing a visible bounce.
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (!token) {
     return null;
   }
 
