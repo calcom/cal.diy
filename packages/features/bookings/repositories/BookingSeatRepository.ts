@@ -34,6 +34,7 @@ export class BookingSeatRepository {
             email: true,
             locale: true,
             timeZone: true,
+            createdAt: true,
           },
         },
       },

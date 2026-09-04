@@ -834,6 +834,7 @@ model Attendee {
   bookingId   Int?
   bookingSeat BookingSeat?
   noShow      Boolean?     @default(false)
+  createdAt   DateTime?    @default(now())
 
   @@index([email])
   @@index([bookingId])

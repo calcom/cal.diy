@@ -75,7 +75,6 @@ import type {
   AdditionalInformation,
   AppsStatus,
   CalEventResponses,
-  CalendarEvent,
 } from "@calcom/types/Calendar";
 import type { CredentialForCalendarService } from "@calcom/types/Credential";
 import type { EventResult, PartialReference } from "@calcom/types/EventManager";
@@ -1526,6 +1525,7 @@ async function handler(
           id: 0,
           email: bookerEmail,
           name: fullName,
+          createdAt: new Date(),
           timeZone: reqBody.timeZone,
           locale: null,
           phoneNumber: null,

@@ -211,9 +211,11 @@ describe("Bookings Endpoints 2024-08-13", () => {
                 ...body.bookingFieldsResponses,
               },
               metadata: body.metadata,
+              createdAt: expect.any(String)
             });
             expect(data.location).toBeDefined();
             expect(data.absentHost).toEqual(false);
+            expect(data.attendees[0].createdAt).toBeDefined();
             createdSeatedBooking = data;
           } else {
             throw new Error(
@@ -511,6 +513,7 @@ describe("Bookings Endpoints 2024-08-13", () => {
               expect(data.attendees[0].email).toEqual(emailAttendeeThree);
               expect(data.attendees[0].name).toEqual(nameAttendeeThree);
               expect(data.attendees[0].seatUid).toEqual(secondAttendeeSeatUid);
+              expect(data.attendees[0].createdAt).toBeDefined();
             } else {
               throw new Error("Invalid response data - expected seated booking");
             }
@@ -609,9 +612,11 @@ describe("Bookings Endpoints 2024-08-13", () => {
                 ...attendee?.bookingFieldsResponses,
               },
               metadata: attendee?.metadata,
+              createdAt: expect.any(String)
             });
             expect(data.location).toBeDefined();
             expect(data.absentHost).toEqual(false);
+            expect(data.attendees[0].createdAt).toBeDefined();
             createdSeatedBooking = data;
           } else {
             throw new Error("Invalid response data - expected booking but received array response");
@@ -876,6 +881,7 @@ describe("Bookings Endpoints 2024-08-13", () => {
               expect(data.attendees[0].name).toEqual(nameAttendeeOne);
               expect(data.attendees[0].language).toEqual("it");
               expect(data.attendees[0].seatUid).toBeDefined();
+              expect(data.attendees[0].createdAt).toBeDefined();
               expect(data.location).toBeDefined();
               expect(data.absentHost).toEqual(false);
               booking = data;
@@ -919,6 +925,7 @@ describe("Bookings Endpoints 2024-08-13", () => {
               expect(data.attendees[0].name).toEqual(nameAttendeeOne);
               expect(data.attendees[0].language).toEqual("it");
               expect(data.attendees[0].seatUid).toBeDefined();
+              expect(data.attendees[0].createdAt).toBeDefined();
               expect(data.location).toBeDefined();
               expect(data.absentHost).toEqual(false);
               await bookingsRepositoryFixture.deleteById(data.id);
@@ -1034,9 +1041,11 @@ describe("Bookings Endpoints 2024-08-13", () => {
                     ...body.bookingFieldsResponses,
                   },
                   metadata: body.metadata,
+                  createdAt: expect.any(String)
                 });
                 expect(data.location).toBeDefined();
                 expect(data.absentHost).toEqual(false);
+                expect(data.attendees[0].createdAt).toBeDefined()
                 createdSeatedBooking2 = data;
               } else {
                 throw new Error(
