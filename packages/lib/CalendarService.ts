@@ -1011,13 +1011,97 @@ export default abstract class BaseCalendarService implements Calendar {
   }
 
   private async getAccount(): Promise<DAVAccount> {
-    return createAccount({
-      account: {
-        serverUrl: this.url,
-        accountType: DEFAULT_CALENDAR_TYPE,
-        credentials: this.credentials,
-      },
-      headers: this.headers,
-    });
+    // Normalize the URL by ensuring it ends with a trailing slash
+    const normalizedUrl = this.url.endsWith("/") ? this.url : `${this.url}/`;
+
+    // Try with the normalized URL first
+    try {
+      return await createAccount({
+        account: {
+          serverUrl: normalizedUrl,
+          accountType: DEFAULT_CALENDAR_TYPE,
+          credentials: this.credentials,
+        },
+        headers: this.headers,
+      });
+    } catch (initialError) {
+      this.log.debug(`Initial account creation failed, trying alternative URL formats: ${initialError}`);
+
+      // Generate alternative URLs to try based on common CalDAV URL patterns
+      const alternativeUrls = this.generateAlternativeUrls(normalizedUrl);
+
+      for (const altUrl of alternativeUrls) {
+        try {
+          this.log.debug(`Trying alternative URL: ${altUrl}`);
+          return await createAccount({
+            account: {
+              serverUrl: altUrl,
+              accountType: DEFAULT_CALENDAR_TYPE,
+              credentials: this.credentials,
+            },
+            headers: this.headers,
+          });
+        } catch (altError) {
+          this.log.debug(`Alternative URL ${altUrl} failed: ${altError}`);
+          // Continue to the next alternative
+        }
+      }
+
+      // If all alternatives fail, throw the original error with more context
+      if (initialError instanceof Error) {
+        throw new Error(
+          `CalDAV discovery failed: ${initialError.message}. Tried URL: ${normalizedUrl} and ${alternativeUrls.length} alternative URL formats.`
+        );
+      }
+      throw initialError;
+    }
+  }
+
+  /**
+   * Generate alternative CalDAV URLs based on common patterns
+   * Some CalDAV servers require specific URL structures for discovery
+   */
+  private generateAlternativeUrls(originalUrl: string): string[] {
+    const alternatives: string[] = [];
+    const parsedUrl = new URL(originalUrl);
+    const baseUrl = `${parsedUrl.protocol}//${parsedUrl.host}`;
+
+    // If the URL contains a calendar-specific path, try the parent paths
+    const pathSegments = parsedUrl.pathname.split("/").filter(Boolean);
+
+    if (pathSegments.length > 1) {
+      // Try removing the last path segment (e.g., specific calendar ID)
+      alternatives.push(`${baseUrl}/${pathSegments.slice(0, -1).join("/")}/`);
+    }
+
+    if (pathSegments.length > 2) {
+      // Try with just the first two path segments
+      alternatives.push(`${baseUrl}/${pathSegments.slice(0, 2).join("/")}/`);
+    }
+
+    // Try the base URL without any path (for .well-known discovery)
+    if (parsedUrl.pathname !== "/" && parsedUrl.pathname !== "") {
+      alternatives.push(`${baseUrl}/`);
+    }
+
+    // Common CalDAV path patterns to try
+    const commonPaths = [
+      "/dav/",
+      "/caldav/",
+      "/remote.php/dav/",
+      "/calendars/",
+      `/${this.credentials.username}/`,
+      `/calendars/${this.credentials.username}/`,
+      `/dav/calendars/${this.credentials.username}/`,
+    ];
+
+    for (const path of commonPaths) {
+      const fullUrl = `${baseUrl}${path}`;
+      if (!alternatives.includes(fullUrl) && fullUrl !== originalUrl) {
+        alternatives.push(fullUrl);
+      }
+    }
+
+    return alternatives;
   }
 }
