@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f46e5"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <!-- ribbon tails -->
+  <path d="M392 620 L332 900 L448 836 L512 900 L512 700 Z" fill="#c7d2fe"/>
+  <path d="M632 620 L692 900 L576 836 L512 900 L512 700 Z" fill="#a5b4fc"/>
+  <!-- rosette -->
+  <circle cx="512" cy="440" r="272" fill="#ffffff" opacity="0.18"/>
+  <circle cx="512" cy="440" r="232" fill="#ffffff"/>
+  <circle cx="512" cy="440" r="184" fill="none" stroke="#4f46e5" stroke-width="20"/>
+  <!-- check mark -->
+  <path d="M410 446 L484 520 L626 372" fill="none" stroke="#4f46e5" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

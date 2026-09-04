@@ -1,0 +1,20 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "IssueBadge",
+  "slug": "issuebadge",
+  "type": "issuebadge_automation",
+  "logo": "icon.svg",
+  "url": "https://issuebadge.com/h/integration/cal-com",
+  "variant": "automation",
+  "categories": ["automation"],
+  "publisher": "IssueBadge",
+  "email": "support@issuebadge.com",
+  "description": "Automatically send a verifiable certificate of attendance or completion to every attendee when a Cal.com meeting, class or workshop ends.",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "link-as-an-app",
+  "externalLink": {
+    "url": "https://issuebadge.com/h/integration/cal-com",
+    "newTab": true
+  }
+}
