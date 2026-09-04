@@ -1,0 +1,23 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "SquadCast",
+  "slug": "squadcast",
+  "type": "squadcast_conferencing",
+  "logo": "icon.svg",
+  "url": "https://squadcast.fm",
+  "variant": "conferencing",
+  "categories": ["conferencing"],
+  "publisher": "Bandhan Majumder",
+  "email": "bandhan.majumder4@gmail.com",
+  "appData": {
+    "location": {
+      "type": "integrations:squadcast_conferencing",
+      "label": "SquadCast",
+      "linkType": "dynamic"
+    }
+  },
+  "description": "High-quality audio and video content with our in-browser software for premium recordings auto-saved with cloud storage.",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "basic"
+}
