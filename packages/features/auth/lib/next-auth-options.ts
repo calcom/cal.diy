@@ -336,6 +336,11 @@ if (OUTLOOK_LOGIN_ENABLED && OUTLOOK_CLIENT_ID && OUTLOOK_CLIENT_SECRET) {
       clientId: OUTLOOK_CLIENT_ID,
       clientSecret: OUTLOOK_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true,
+      // next-auth only defaults unconfigured providers to checks: ["state"] (see
+      // core/lib/providers.js) - unlike GoogleProvider, which enables PKCE itself.
+      // Set it explicitly so Azure AD's callback can't be satisfied without a PKCE
+      // verifier, matching every other OAuth provider registered here.
+      checks: ["pkce", "state"],
       authorization: {
         params: {
           scope: ["openid", "profile", "email", ...MICROSOFT_CALENDAR_SCOPES].join(" "),
