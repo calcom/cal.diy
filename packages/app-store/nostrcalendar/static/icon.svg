@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#7c3aed"/>
+  <!-- Calendar base -->
+  <rect x="6" y="10" width="20" height="16" rx="2" fill="white"/>
+  <!-- Calendar header -->
+  <rect x="6" y="10" width="20" height="6" fill="#5b21b6"/>
+  <!-- Calendar hooks -->
+  <rect x="10" y="7" width="2" height="6" rx="1" fill="white"/>
+  <rect x="20" y="7" width="2" height="6" rx="1" fill="white"/>
+  <!-- Calendar grid lines -->
+  <rect x="6" y="20" width="20" height="0.5" fill="#e5e7eb"/>
+  <rect x="12" y="16" width="0.5" height="10" fill="#e5e7eb"/>
+  <rect x="19" y="16" width="0.5" height="10" fill="#e5e7eb"/>
+  <!-- Current date highlight -->
+  <rect x="13" y="21" width="5" height="4" rx="0.5" fill="#fbbf24"/>
+</svg>

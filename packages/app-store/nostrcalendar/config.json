@@ -1,0 +1,17 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "nostrcalendar",
+  "slug": "nostrcalendar",
+  "type": "nostr_calendar",
+  "title": "Nostr Calendar",
+  "logo": "icon.svg",
+  "url": "https://nostrcal.com",
+  "variant": "calendar",
+  "categories": ["calendar"],
+  "publisher": "NostrCal.com",
+  "email": "hello@nostrcal.com",
+  "description": "Sync your calendar with Nostr (NIP-52) events",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "basic"
+}
