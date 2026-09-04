@@ -273,4 +273,75 @@ describe("getBookings - stub PermissionCheckService behavior", () => {
 
     expect(mockKysely._mockQueryBuilder.distinct).toHaveBeenCalled();
   });
+
+  describe("Case-insensitive attendee email and name filtering", () => {
+    it("should apply case-insensitive filter when attendeeEmail is a simple string", async () => {
+      mockGetTeamIdsWithPermission.mockResolvedValue([]);
+      mockPrisma.user.findMany = vi.fn().mockResolvedValue([]);
+      mockPrisma.booking.groupBy = vi.fn().mockResolvedValue([]);
+
+      await getBookings({
+        user: mockUser,
+        prisma: mockPrisma,
+        kysely: mockKysely as unknown as Kysely<DB>,
+        bookingListingByStatus: ["upcoming"],
+        filters: {
+          attendeeEmail: "Testuser@test.com",
+        },
+        take: 10,
+        skip: 0,
+      });
+
+      // Verify where() is called with a callback function (which applies lower())
+      // instead of a direct string comparison like .where("Attendee.email", "=", "Testuser@test.com")
+      const whereCalls = mockKysely._mockQueryBuilder.where.mock.calls;
+      const hasCallbackWhere = whereCalls.some((call: unknown[]) => typeof call[0] === "function");
+      expect(hasCallbackWhere).toBe(true);
+    });
+
+    it("should apply case-insensitive filter when attendeeName is a simple string", async () => {
+      mockGetTeamIdsWithPermission.mockResolvedValue([]);
+      mockPrisma.user.findMany = vi.fn().mockResolvedValue([]);
+      mockPrisma.booking.groupBy = vi.fn().mockResolvedValue([]);
+
+      await getBookings({
+        user: mockUser,
+        prisma: mockPrisma,
+        kysely: mockKysely as unknown as Kysely<DB>,
+        bookingListingByStatus: ["upcoming"],
+        filters: {
+          attendeeName: "Test User",
+        },
+        take: 10,
+        skip: 0,
+      });
+
+      // Verify where() is called with a callback function (which applies lower())
+      // instead of a direct string comparison like .where("Attendee.name", "=", "Test User")
+      const whereCalls = mockKysely._mockQueryBuilder.where.mock.calls;
+      const hasCallbackWhere = whereCalls.some((call: unknown[]) => typeof call[0] === "function");
+      expect(hasCallbackWhere).toBe(true);
+    });
+
+    it("should join Attendee table when filtering by attendeeEmail", async () => {
+      mockGetTeamIdsWithPermission.mockResolvedValue([]);
+      mockPrisma.user.findMany = vi.fn().mockResolvedValue([]);
+      mockPrisma.booking.groupBy = vi.fn().mockResolvedValue([]);
+
+      await getBookings({
+        user: mockUser,
+        prisma: mockPrisma,
+        kysely: mockKysely as unknown as Kysely<DB>,
+        bookingListingByStatus: ["upcoming"],
+        filters: {
+          attendeeEmail: "test@example.com",
+        },
+        take: 10,
+        skip: 0,
+      });
+
+      // Verify innerJoin is called to join the Attendee table for email filtering
+      expect(mockKysely._mockQueryBuilder.innerJoin).toHaveBeenCalled();
+    });
+  });
 });
