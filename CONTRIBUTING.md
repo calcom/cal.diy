@@ -152,6 +152,10 @@ export class HashedLinkService { ... }
 
 [See README](https://github.com/calcom/cal.diy#development)
 
+### React Version Standard
+
+This monorepo has standardized on **React 19** (e.g., `react@19.2.4`, `@types/react@19.0.0`). We are using React 19 instead of React 18 because Next.js 16 does not support React 18. Please ensure any new apps, packages, or updates use React 19 to avoid version drift and hydration mismatches.
+
 ## Building
 
 You can build the project with:
