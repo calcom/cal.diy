@@ -1,0 +1,27 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "Descript",
+  "slug": "descript",
+  "type": "descript_conferencing",
+  "logo": "icon.svg",
+  "url": "https://descript.com",
+  "variant": "conferencing",
+  "categories": [
+    "conferencing"
+  ],
+  "publisher": "Bandhan Majumder",
+  "email": "bandhan.majumder4@gmail.com",
+  "appData": {
+    "location": {
+      "type": "integrations:{SLUG}_video",
+      "label": "{TITLE}",
+      "linkType": "static",
+      "organizerInputPlaceholder": "https://web.descript.com/room/1234",
+      "urlRegExp": "^https:\/\/web\\.descript\\.com\/room\/[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+    }
+  },
+  "description": "Make Videos, Podcasts & Short Clips For Social Fast With Descript's Powerful AI Tools. One Tool To Create Anything You Want. Get AI Superpowers At Every Step With Descript. All-In-One Tool.",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "event-type-location-video-static"
+}
