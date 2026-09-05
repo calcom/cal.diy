@@ -42,4 +42,5 @@ export enum Locales {
   UK = "uk",
   ZH_TW = "zh-TW",
   BN = "bn",
+  SL = "sl",
 }
