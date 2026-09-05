@@ -182,18 +182,71 @@ export const confirmHandler = async ({ ctx, input }: ConfirmOptions) => {
     throw new TRPCError({ code: "BAD_REQUEST", message: "Booking already confirmed" });
   }
 
-  // If booking requires payment and is not paid, we don't allow confirmation
-  if (confirmed && booking.payment.length > 0 && !booking.paid) {
-    await prisma.booking.update({
-      where: {
-        id: bookingId,
-      },
-      data: {
-        status: BookingStatus.ACCEPTED,
-      },
+  if (confirmed && booking.status !== BookingStatus.PENDING) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Only pending bookings can be confirmed",
     });
+  }
 
-    return { message: "Booking confirmed", status: BookingStatus.ACCEPTED };
+  // Atomically claim the booking and guard against double-booking.
+  // A per-user advisory lock serializes concurrent confirmations so the overlap check
+  // and the compare-and-swap status write cannot interleave: a second request waits
+  // until the first transaction commits before reading, and will then see the ACCEPTED row.
+  if (confirmed && booking.status === BookingStatus.PENDING) {
+    const userId = booking.userId;
+    if (userId) {
+      await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(${BigInt(userId)})`;
+
+        const conflictingBooking = await tx.booking.findFirst({
+          where: {
+            userId,
+            status: BookingStatus.ACCEPTED,
+            id: { not: bookingId },
+            startTime: { lt: booking.endTime },
+            endTime: { gt: booking.startTime },
+          },
+          select: { id: true },
+        });
+
+        if (conflictingBooking) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "A confirmed booking already exists that overlaps with this time slot",
+          });
+        }
+
+        const updated = await tx.booking.updateMany({
+          where: { id: bookingId, status: BookingStatus.PENDING },
+          data: { status: BookingStatus.ACCEPTED },
+        });
+
+        if (updated.count === 0) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Booking was already confirmed or rejected by another request",
+          });
+        }
+      });
+
+      if (booking.payment.length > 0 && !booking.paid) {
+        // Payment path: status already ACCEPTED; return early.
+        return { message: "Booking confirmed", status: BookingStatus.ACCEPTED };
+      }
+      // Non-payment path: falls through to handleConfirmation below, which writes
+      // status=ACCEPTED again (idempotent) and attaches calendar references and metadata.
+    } else if (booking.payment.length > 0 && !booking.paid) {
+      // No userId: payment path without overlap check.
+      const updated = await prisma.booking.updateMany({
+        where: { id: bookingId, status: BookingStatus.PENDING },
+        data: { status: BookingStatus.ACCEPTED },
+      });
+      if (updated.count === 0) {
+        throw new TRPCError({ code: "CONFLICT", message: "Booking was already confirmed by another request" });
+      }
+      return { message: "Booking confirmed", status: BookingStatus.ACCEPTED };
+    }
   }
 
   // Cache translations to avoid requesting multiple times.
@@ -361,17 +414,28 @@ export const confirmHandler = async ({ ctx, input }: ConfirmOptions) => {
     );
     evt.conferenceCredentialId = conferenceCredentialId.conferenceCredentialId;
 
-    await handleConfirmation({
-      user: { ...user, credentials: allCredentials },
-      evt,
-      recurringEventId,
-      prisma,
-      bookingId,
-      booking,
-      emailsEnabled,
-      platformClientParams,
-      traceContext,
-    });
+    try {
+      await handleConfirmation({
+        user: { ...user, credentials: allCredentials },
+        evt,
+        recurringEventId,
+        prisma,
+        bookingId,
+        booking,
+        emailsEnabled,
+        platformClientParams,
+        traceContext,
+      });
+    } catch (err) {
+      // If we pre-claimed ACCEPTED via the advisory lock path and handleConfirmation
+      // fails, restore the booking to PENDING so the confirmation can be retried.
+      // When the booking was not pre-claimed this updateMany matches 0 rows (no-op).
+      await prisma.booking.updateMany({
+        where: { id: bookingId, status: BookingStatus.ACCEPTED },
+        data: { status: BookingStatus.PENDING },
+      });
+      throw err;
+    }
   } else {
     evt.rejectionReason = rejectionReason;
     let rejectedBookings: {
