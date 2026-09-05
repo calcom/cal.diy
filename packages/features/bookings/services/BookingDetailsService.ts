@@ -43,6 +43,7 @@ export class BookingDetailsService {
       rescheduledToBooking,
       previousBooking,
       tracking: booking.tracking,
+      rootBookingUid: previousBooking?.uid ?? booking.uid,
     };
   }
 }

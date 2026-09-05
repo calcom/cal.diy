@@ -659,6 +659,7 @@ export class BookingRepository implements IBookingRepository {
       },
       select: {
         uid: true,
+        fromReschedule: true,
         startTime: true,
         endTime: true,
       },
