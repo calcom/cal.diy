@@ -1,3 +1,8 @@
+/**
+ * An alternative to Object.fromEntries that allows duplicate keys.
+ * There is a duplicate of the function in @calcom/embeds/embed-core/src/lib/utils.ts
+ * (embed-core must stay dependency-free). Keep them in sync.
+ */
 export function fromEntriesWithDuplicateKeys(entries: IterableIterator<[string, string]> | null) {
   const result: Record<string, string | string[]> = {};
 
