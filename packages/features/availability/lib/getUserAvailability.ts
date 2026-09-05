@@ -620,13 +620,21 @@ export class UserAvailabilityService {
     const detailedBusyTimesWithSource: EventBusyDetails[] = [
       ...busyTimes.map((a) => ({
         ...a,
-        start: dayjs(a.start).toISOString(),
-        end: dayjs(a.end).toISOString(),
+        start: dayjs(a.start).utc().toISOString(),
+        end: dayjs(a.end).utc().toISOString(),
         title: a.title,
         source: a.source,
       })),
-      ...busyTimesFromLimits,
-      ...busyTimesFromTeamLimits,
+      ...busyTimesFromLimits.map((a) => ({
+        ...a,
+        start: dayjs(a.start).utc().toISOString(),
+        end: dayjs(a.end).utc().toISOString(),
+      })),
+      ...busyTimesFromTeamLimits.map((a) => ({
+        ...a,
+        start: dayjs(a.start).utc().toISOString(),
+        end: dayjs(a.end).utc().toISOString(),
+      })),
     ];
 
     const detailedBusyTimes: UserAvailabilityBusyDetails[] = withSource
@@ -641,15 +649,21 @@ export class UserAvailabilityService {
     );
 
     const formattedBusyTimes = detailedBusyTimes.map((busy) => ({
+      ...busy,
+      start: dayjs(busy.start).utc().toISOString(),
+      end: dayjs(busy.end).utc().toISOString(),
+    }));
+
+    const formattedBusyTimesForSubtract = formattedBusyTimes.map((busy) => ({
       start: dayjs(busy.start),
       end: dayjs(busy.end),
     }));
 
-    const dateRangesInWhichUserIsAvailable = subtract(dateRanges, formattedBusyTimes);
-    const dateRangesInWhichUserIsAvailableWithoutOOO = subtract(oooExcludedDateRanges, formattedBusyTimes);
+    const dateRangesInWhichUserIsAvailable = subtract(dateRanges, formattedBusyTimesForSubtract);
+    const dateRangesInWhichUserIsAvailableWithoutOOO = subtract(oooExcludedDateRanges, formattedBusyTimesForSubtract);
 
     const result = {
-      busy: detailedBusyTimes,
+      busy: formattedBusyTimes,
       timeZone: finalTimezone,
       dateRanges: dateRangesInWhichUserIsAvailable,
       oooExcludedDateRanges: dateRangesInWhichUserIsAvailableWithoutOOO,
