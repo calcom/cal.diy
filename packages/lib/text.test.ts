@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { truncate } from "./text";
+import { truncate, truncateOnWord } from "./text";
 
 describe("Text util tests", () => {
   describe("fn: truncate", () => {
@@ -67,6 +67,21 @@ describe("Text util tests", () => {
 
         expect(result).toEqual(expected);
       }
+    });
+  });
+
+  describe("fn: truncateOnWord", () => {
+    it("should return the original text when it is shorter than the max length", () => {
+      expect(truncateOnWord("Hello world", 100)).toEqual("Hello world");
+    });
+
+    it("should truncate on a word boundary at the given max length", () => {
+      // Regression: previously ignored maxLength and always cut at 148 chars
+      expect(truncateOnWord("Hello world foo bar baz qux", 12)).toEqual("Hello world...");
+    });
+
+    it("should omit the ellipsis when ellipsis is false", () => {
+      expect(truncateOnWord("Hello world foo bar baz qux", 12, false)).toEqual("Hello world");
     });
   });
 });
