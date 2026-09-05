@@ -5,6 +5,7 @@ import {
   constructMeetingImage,
   constructAppImage,
   constructGenericImage,
+  OG_ASSETS,
 } from "./OgImages";
 
 describe("OgImages", () => {
@@ -114,6 +115,27 @@ describe("OgImages", () => {
       const v1 = await getOGImageVersion("generic");
       const v2 = await getOGImageVersion("generic");
       expect(v1).toBe(v2);
+    });
+  });
+
+  describe("OG_ASSETS size data types for Satori image rendering", () => {
+    it("passes numeric sizes for meeting OG asset (logoWidth, avatarSize)", () => {
+      expect(typeof OG_ASSETS.meeting.logoWidth).toBe("number");
+      expect(typeof OG_ASSETS.meeting.avatarSize).toBe("number");
+      expect(OG_ASSETS.meeting.logoWidth).toBe(350);
+      expect(OG_ASSETS.meeting.avatarSize).toBe(160);
+    });
+
+    it("passes numeric sizes for app OG asset (logoWidth, iconSize)", () => {
+      expect(typeof OG_ASSETS.app.logoWidth).toBe("number");
+      expect(typeof OG_ASSETS.app.iconSize).toBe("number");
+      expect(OG_ASSETS.app.logoWidth).toBe(150);
+      expect(OG_ASSETS.app.iconSize).toBe(172);
+    });
+
+    it("passes numeric sizes for generic OG asset (logoWidth)", () => {
+      expect(typeof OG_ASSETS.generic.logoWidth).toBe("number");
+      expect(OG_ASSETS.generic.logoWidth).toBe(350);
     });
   });
 });
