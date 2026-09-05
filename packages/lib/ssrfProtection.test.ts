@@ -24,7 +24,7 @@ describe("isPrivateIP", () => {
     "0.0.0.0",
     "100.64.0.1", // RFC 6598 CGNAT start
     "100.127.255.254", // RFC 6598 CGNAT end
-  ])("blocks private IPv4 %s", (ip) => {
+  ])("blocks private IPv4 %s", (ip: string) => {
     expect(isPrivateIP(ip)).toBe(true);
   });
 
@@ -35,11 +35,11 @@ describe("isPrivateIP", () => {
     "1.1.1.1", // Cloudflare DNS
     "100.63.255.255", // just below RFC 6598
     "100.128.0.0", // just above RFC 6598
-  ])("allows public IPv4 %s", (ip) => {
+  ])("allows public IPv4 %s", (ip: string) => {
     expect(isPrivateIP(ip)).toBe(false);
   });
 
-  it.each(["::1", "::", "fc00::1", "fd00::1", "fe80::1"])("blocks private IPv6 %s", (ip) => {
+  it.each(["::1", "::", "fc00::1", "fd00::1", "fe80::1"])("blocks private IPv6 %s", (ip: string) => {
     expect(isPrivateIP(ip)).toBe(true);
   });
 
@@ -66,7 +66,7 @@ describe("isBlockedHostname", () => {
     "metadata.google.internal",
     "169.254.169.254.",
     "METADATA.GOOGLE.INTERNAL",
-  ])("blocks %s", (hostname) => {
+  ])("blocks %s", (hostname: string) => {
     expect(isBlockedHostname(hostname)).toBe(true);
   });
 
@@ -113,7 +113,7 @@ describe("validateUrlForSSRFSync", () => {
     ["https://169.254.169.254/latest/meta-data/", "Blocked hostname"],
     ["https://localhost/logo.png", "Blocked hostname"],
     ["not-a-url", "Invalid URL format"],
-  ])("blocks %s", (url, expectedError) => {
+  ])("blocks %s", (url: string, expectedError: string) => {
     const result = validateUrlForSSRFSync(url);
     expect(result).toEqual({ isValid: false, error: expectedError });
   });
@@ -123,7 +123,7 @@ describe("validateUrlForSSRFSync", () => {
     ["https://[fe80::1]/path", "Private IP address"],
     ["https://[fc00::1]:8080/", "Private IP address"],
     ["https://[::ffff:127.0.0.1]/", "Private IP address"],
-  ])("blocks IPv6 private addresses with brackets %s", (url, expectedError) => {
+  ])("blocks IPv6 private addresses with brackets %s", (url: string, expectedError: string) => {
     const result = validateUrlForSSRFSync(url);
     expect(result).toEqual({ isValid: false, error: expectedError });
   });
@@ -201,6 +201,10 @@ describe("Self-hosted environment behavior", () => {
     expect(validateSelfHosted("http://metadata.google.com/computeMetadata/v1/").isValid).toBe(false);
     // Azure alternate
     expect(validateSelfHosted("http://169.254.169.253/metadata/instance").isValid).toBe(false);
+    // AWS ECS task metadata
+    expect(validateSelfHosted("http://169.254.170.2/v2/metadata").isValid).toBe(false);
+    // Alibaba Cloud metadata
+    expect(validateSelfHosted("http://100.100.100.200/latest/meta-data/").isValid).toBe(false);
   });
 
   it("allows HTTPS URLs for self-hosted", async () => {

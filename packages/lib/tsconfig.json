@@ -1,7 +1,10 @@
 {
-  "extends": "@calcom/tsconfig/base.json",
+  "extends": "../tsconfig/base.json",
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "lib": ["es2022", "dom"],
     "jsx": "preserve",
     "resolveJsonModule": true
   },

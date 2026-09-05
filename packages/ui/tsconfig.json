@@ -1,6 +1,9 @@
 {
-  "extends": "@calcom/tsconfig/react-library.json",
+  "extends": "../tsconfig/base.json",
   "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2022", "dom"],
+    "jsx": "preserve",
     "resolveJsonModule": true,
     "experimentalDecorators": true
   },
