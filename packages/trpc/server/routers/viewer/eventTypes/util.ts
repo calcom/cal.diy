@@ -13,8 +13,29 @@ import type { TUpdateInputSchema } from "./types";
 
 type PermissionString = string;
 class PermissionCheckService {
-  constructor(_prisma?: unknown) {}
-  async checkPermission(..._args: unknown[]) { return true; }
+  constructor(private readonly _prismaClient?: typeof prisma) {}
+  async checkPermission({
+    userId,
+    teamId,
+    fallbackRoles,
+  }: {
+    userId: number;
+    teamId: number;
+    permission: string;
+    fallbackRoles?: string[];
+  }): Promise<boolean> {
+    const client = this._prismaClient ?? prisma;
+    const membership = await client.membership.findFirst({
+      where: {
+        userId,
+        teamId,
+        accepted: true,
+        ...(fallbackRoles && fallbackRoles.length > 0 ? { role: { in: fallbackRoles as import("@calcom/prisma/enums").MembershipRole[] } } : {}),
+      },
+      select: { id: true },
+    });
+    return membership !== null;
+  }
   async hasPermission(..._args: unknown[]) { return true; }
   async getTeamIdsWithPermission(..._args: unknown[]): Promise<number[]> { return []; }
 }
