@@ -3,7 +3,7 @@ export const downloadAsCsv = (data: string | Record<string, any>[], filename: st
   const csvString = typeof data === "string" ? data : objectsToCsv(data);
 
   // Create a Blob from the text data
-  const blob = new Blob([csvString], { type: "text/plain" });
+  const blob = new Blob([csvString], { type: "text/csv;charset=utf-8" });
 
   // Create an Object URL for the Blob
   const url = window.URL.createObjectURL(blob);
@@ -47,15 +47,23 @@ export const objectsToCsv = (data: Record<string, any>[]): string => {
 };
 
 export const sanitizeValue = (value: string) => {
+  // Protect against formula injection (OWASP). Values starting with =, +, -, @
+  // are interpreted as formulas by Excel/Sheets. Prefix with a single quote to
+  // force text rendering, which is invisible in most spreadsheet apps.
+  // This runs before quoting: quoting is a CSV delimiter, not an escape the
+  // spreadsheet honours, so a formula that also contains a comma would come
+  // back merely quoted and still be evaluated.
+  const sanitized = /^[=+\-@]/.test(value) ? `'${value}` : value;
+
   // handling three cases:
   // 1. quotes - we need to double quotes for CSV
   // 2. commas
-  // 3. newlines
-  if (value.includes('"')) {
-    return `"${value.replace(/"/g, '""')}"`;
+  // 3. line breaks (LF, CR, CRLF — per RFC 4180, CR and CRLF are valid record separators)
+  if (sanitized.includes('"')) {
+    return `"${sanitized.replace(/"/g, '""')}"`;
   }
-  if (value.includes(",") || value.includes("\n")) {
-    return `"${value}"`;
+  if (sanitized.includes(",") || sanitized.includes("\n") || sanitized.includes("\r")) {
+    return `"${sanitized}"`;
   }
-  return value;
+  return sanitized;
 };
