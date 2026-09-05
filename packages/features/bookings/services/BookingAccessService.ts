@@ -4,8 +4,33 @@ import { MembershipRole } from "@calcom/prisma/enums";
 import { BookingRepository } from "../repositories/BookingRepository";
 
 class PermissionCheckService {
-  constructor(_prisma?: unknown) {}
-  async checkPermission(..._args: unknown[]) { return true; }
+  constructor(private readonly prismaClient?: PrismaClient) {}
+  async checkPermission({
+    userId,
+    teamId,
+    permission: _permission,
+    fallbackRoles,
+  }: {
+    userId: number;
+    teamId: number;
+    permission: string;
+    fallbackRoles?: MembershipRole[];
+  }): Promise<boolean> {
+    // `_permission` is accepted for interface compatibility but this PR implements the
+    // role-based fallback path only. Querying the PBAC permission store for _permission
+    // is a follow-up task once the store abstraction is stable.
+    if (!this.prismaClient) return false;
+    const membership = await this.prismaClient.membership.findFirst({
+      where: {
+        userId,
+        teamId,
+        accepted: true,
+        ...(fallbackRoles && fallbackRoles.length > 0 ? { role: { in: fallbackRoles } } : {}),
+      },
+      select: { id: true },
+    });
+    return membership !== null;
+  }
   async hasPermission(..._args: unknown[]) { return true; }
   async getTeamIdsWithPermission(..._args: unknown[]): Promise<number[]> { return []; }
 }
@@ -16,7 +41,7 @@ export class BookingAccessService {
   private permissionCheckService: PermissionCheckService;
 
   constructor(private prismaClient: PrismaClient) {
-    this.permissionCheckService = new PermissionCheckService();
+    this.permissionCheckService = new PermissionCheckService(prismaClient);
   }
 
   private isUserAHost(userId: number, booking: BookingForAccessCheck): boolean {
