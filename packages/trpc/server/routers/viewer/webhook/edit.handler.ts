@@ -5,6 +5,7 @@ import {
 } from "@calcom/features/webhooks/lib/scheduleTrigger";
 import { validateUrlForSSRFSync } from "@calcom/lib/ssrfProtection";
 import { prisma } from "@calcom/prisma";
+import { MembershipRole } from "@calcom/prisma/enums";
 import type { TrpcSessionUser } from "@calcom/trpc/server/types";
 
 import { TRPCError } from "@trpc/server";
@@ -29,6 +30,20 @@ export const editHandler = async ({ input, ctx }: EditOptions) => {
 
   if (!webhook) {
     return null;
+  }
+
+  if (webhook.teamId) {
+    const membership = await prisma.membership.findFirst({
+      where: {
+        teamId: webhook.teamId,
+        userId: ctx.user.id,
+        accepted: true,
+        role: { in: [MembershipRole.ADMIN, MembershipRole.OWNER] },
+      },
+    });
+    if (!membership) {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
   }
 
   // SSRF validation: only validate if URL is being changed

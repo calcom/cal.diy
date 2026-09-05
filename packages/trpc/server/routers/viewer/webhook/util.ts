@@ -1,4 +1,5 @@
 import { prisma } from "@calcom/prisma";
+import { MembershipRole } from "@calcom/prisma/enums";
 
 import { TRPCError } from "@trpc/server";
 
@@ -20,6 +21,7 @@ export const createWebhookProcedure = () => {
           id: true,
           userId: true,
           eventTypeId: true,
+          teamId: true,
         },
       });
 
@@ -34,14 +36,42 @@ export const createWebhookProcedure = () => {
       if (webhook.eventTypeId) {
         const eventType = await prisma.eventType.findUnique({
           where: { id: webhook.eventTypeId },
-          select: { id: true, userId: true },
+          select: { id: true, userId: true, teamId: true },
         });
 
         if (!eventType) {
           throw new TRPCError({ code: "NOT_FOUND" });
         }
 
-        if (eventType.userId !== ctx.user.id) {
+        if (webhook.teamId && eventType.teamId && webhook.teamId !== eventType.teamId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Webhook teamId must match eventType teamId" });
+        }
+
+        if (eventType.teamId) {
+          const membership = await prisma.membership.findFirst({
+            where: {
+              teamId: eventType.teamId,
+              userId: ctx.user.id,
+              accepted: true,
+              role: { in: [MembershipRole.ADMIN, MembershipRole.OWNER] },
+            },
+          });
+          if (!membership) {
+            throw new TRPCError({ code: "FORBIDDEN" });
+          }
+        } else if (eventType.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+      } else if (webhook.teamId) {
+        const membership = await prisma.membership.findFirst({
+          where: {
+            teamId: webhook.teamId,
+            userId: ctx.user.id,
+            accepted: true,
+            role: { in: [MembershipRole.ADMIN, MembershipRole.OWNER] },
+          },
+        });
+        if (!membership) {
           throw new TRPCError({ code: "FORBIDDEN" });
         }
       } else if (webhook.userId && webhook.userId !== ctx.user.id) {
@@ -50,14 +80,26 @@ export const createWebhookProcedure = () => {
     } else if (eventTypeId) {
       const eventType = await prisma.eventType.findUnique({
         where: { id: eventTypeId },
-        select: { id: true, userId: true },
+        select: { id: true, userId: true, teamId: true },
       });
 
       if (!eventType) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      if (eventType.userId !== ctx.user.id) {
+      if (eventType.teamId) {
+        const membership = await prisma.membership.findFirst({
+          where: {
+            teamId: eventType.teamId,
+            userId: ctx.user.id,
+            accepted: true,
+            role: { in: [MembershipRole.ADMIN, MembershipRole.OWNER] },
+          },
+        });
+        if (!membership) {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+      } else if (eventType.userId !== ctx.user.id) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
     }
