@@ -1,8 +1,30 @@
 import { describe, expect, it } from "vitest";
 
-import { truncate } from "./text";
+import { truncate, truncateOnWord } from "./text";
 
 describe("Text util tests", () => {
+  describe("fn: truncateOnWord", () => {
+    it("should respect the maxLength parameter instead of a hardcoded constant", () => {
+      const text = "the quick brown fox jumps over the lazy dog ".repeat(10);
+      const result158 = truncateOnWord(text, 158);
+      const result100 = truncateOnWord(text, 100);
+      expect(result158.length).toBeLessThanOrEqual(158 + 3);
+      expect(result100.length).toBeLessThanOrEqual(100 + 3);
+      expect(result158).not.toBe("...");
+      expect(result100).not.toBe("...");
+    });
+
+    it("should preserve text when no space exists within maxLength", () => {
+      const text = "a".repeat(200);
+      const result = truncateOnWord(text, 100);
+      expect(result).toBe("a".repeat(100) + "...");
+    });
+
+    it("should return the original text when shorter than maxLength", () => {
+      expect(truncateOnWord("short", 100)).toBe("short");
+    });
+  });
+
   describe("fn: truncate", () => {
     it("should return the original text when it is shorter than the max length", () => {
       const cases = [

@@ -200,6 +200,7 @@ export const getLocation = (calEvent: {
 export const getProviderName = (location?: string | null): string => {
   if (location && location.includes("integrations:")) {
     let locationName = location.split(":")[1];
+    if (!locationName) return "";
     if (locationName === "daily") {
       locationName = "Cal Video";
     }

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CalendarEvent } from "@calcom/types/Calendar";
 
-import { getRichDescription, getUserFieldsResponses } from "./CalEventParser";
+import { getProviderName, getRichDescription, getUserFieldsResponses } from "./CalEventParser";
 
 describe("getRichDescription", () => {
   const t = ((key: string, _args?: Record<string, unknown>) => key) as TFunction;
@@ -83,6 +83,26 @@ describe("getRichDescription", () => {
     // Should still contain required fields
     expect(description).toContain("what:");
     expect(description).toContain("who:");
+  });
+});
+
+describe("getProviderName", () => {
+  it("should return empty string for integrations: with no provider", () => {
+    expect(getProviderName("integrations:")).toBe("");
+  });
+
+  it("should return capitalized provider name", () => {
+    expect(getProviderName("integrations:daily")).toBe("Cal Video");
+    expect(getProviderName("integrations:zoom")).toBe("Zoom");
+  });
+
+  it("should return empty string for null/undefined", () => {
+    expect(getProviderName(null)).toBe("");
+    expect(getProviderName(undefined)).toBe("");
+  });
+
+  it("should return URL as-is for http locations", () => {
+    expect(getProviderName("https://zoom.us/j/123")).toBe("https://zoom.us/j/123");
   });
 });
 
