@@ -8,9 +8,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check-api-key:
+    name: Check for lingo.dev API key
+    permissions: {}
+    runs-on: ubuntu-latest
+    outputs:
+      has-api-key: ${{ steps.check.outputs.has-api-key }}
+    steps:
+      - name: Check CI_LINGO_DOT_DEV_API_KEY
+        id: check
+        env:
+          CI_LINGO_DOT_DEV_API_KEY: ${{ secrets.CI_LINGO_DOT_DEV_API_KEY }}
+        run: |
+          if [ -n "$CI_LINGO_DOT_DEV_API_KEY" ]; then
+            echo "has-api-key=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-api-key=false" >> "$GITHUB_OUTPUT"
+          fi
+
   i18n:
     name: Run i18n
-    if: ${{ secrets.CI_LINGO_DOT_DEV_API_KEY != '' }}
+    needs: check-api-key
+    if: needs.check-api-key.outputs.has-api-key == 'true'
     runs-on: ubuntu-latest
     permissions:
       actions: write
