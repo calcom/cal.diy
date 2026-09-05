@@ -234,18 +234,36 @@ export class StripeService {
 
   async createStripeCustomerId(user: Pick<User, "email" | "name" | "metadata">) {
     let customerId: string;
+    let customersResponse: Stripe.ApiList<Stripe.Customer>;
 
     const stripe = this.getStripe();
     try {
-      const customersResponse = await stripe.customers.list({
+      customersResponse = await stripe.customers.list({
         email: user.email,
         limit: 1,
       });
-
-      customerId = customersResponse.data[0].id;
     } catch (error) {
-      const customer = await stripe.customers.create({ email: user.email });
-      customerId = customer.id;
+      console.error(error);
+      throw new InternalServerErrorException({
+        message: "Failed to create Stripe customer.",
+      });
+    }
+
+    if (customersResponse.data[0] && customersResponse.data[0].id) {
+      customerId = customersResponse.data[0].id;
+    } else {
+      try {
+      const customer = await stripe.customers.create(
+        { email: user.email },
+        { idempotencyKey: `stripe-customer-${user.email.toLowerCase()}` }
+      );
+        customerId = customer.id;
+      } catch (error) {
+        console.error(error);
+        throw new InternalServerErrorException({
+          message: "Failed to create Stripe customer.",
+        });
+      }
     }
 
     await this.usersRepository.updateByEmail(user.email, {
