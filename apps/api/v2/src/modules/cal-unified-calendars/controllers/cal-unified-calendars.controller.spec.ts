@@ -414,6 +414,59 @@ describe("CalUnifiedCalendarsController", () => {
     });
   });
 
+  describe("deprecated singular /event/ path aliases", () => {
+    it("getCalendarEventDetailsByDeprecatedPath should behave like the plural path", async () => {
+      const transformedEvent = {
+        eventId: "event-uid",
+        status: "confirmed",
+        title: "Test Meeting",
+        start: { time: "2024-01-15T10:00:00Z", timeZone: "UTC" },
+        end: { time: "2024-01-15T11:00:00Z", timeZone: "UTC" },
+      };
+      mockUnifiedCalendarService.getEventDetails.mockResolvedValue(transformedEvent);
+
+      const result = await controller.getCalendarEventDetailsByDeprecatedPath(GOOGLE_CALENDAR, "event-uid");
+
+      expect(result.status).toBe(SUCCESS_STATUS);
+      expect(result.data).toBeDefined();
+      expect(mockUnifiedCalendarService.getEventDetails).toHaveBeenCalledWith(GOOGLE_CALENDAR, "event-uid");
+    });
+
+    it("updateCalendarEventByDeprecatedPath should behave like the plural path", async () => {
+      const updateData = { title: "Updated" };
+      const transformedEvent = {
+        eventId: "event-uid",
+        title: "Updated",
+        start: { time: "2024-01-15T10:00:00Z", timeZone: "UTC" },
+        end: { time: "2024-01-15T11:00:00Z", timeZone: "UTC" },
+      };
+      mockUnifiedCalendarService.updateEventDetails.mockResolvedValue(transformedEvent);
+
+      const result = await controller.updateCalendarEventByDeprecatedPath(
+        GOOGLE_CALENDAR,
+        "event-uid",
+        updateData
+      );
+
+      expect(result.status).toBe(SUCCESS_STATUS);
+      expect(mockUnifiedCalendarService.updateEventDetails).toHaveBeenCalledWith(
+        GOOGLE_CALENDAR,
+        "event-uid",
+        updateData
+      );
+    });
+
+    it("should propagate errors from the deprecated aliases", async () => {
+      mockUnifiedCalendarService.getEventDetails.mockRejectedValue(
+        new BadRequestException("Meeting details is currently only available for Google Calendar.")
+      );
+
+      await expect(
+        controller.getCalendarEventDetailsByDeprecatedPath("office365", "event-uid")
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
   describe("listCalendarEvents (user-scoped)", () => {
     it("should list events for Google Calendar", async () => {
       mockUnifiedCalendarService.listEvents.mockResolvedValue([]);
