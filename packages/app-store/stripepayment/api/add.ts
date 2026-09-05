@@ -11,6 +11,10 @@ import { getStripeAppKeys } from "../lib/getStripeAppKeys";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { client_id } = await getStripeAppKeys();
 
+  if (!client_id) {
+    return res.status(400).json({ message: "Stripe Connect client_id is not configured" });
+  }
+
   if (req.method === "GET") {
     // Get user
     const user = await prisma.user.findUnique({

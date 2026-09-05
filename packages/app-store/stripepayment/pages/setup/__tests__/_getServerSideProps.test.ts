@@ -277,6 +277,25 @@ describe("Stripe Setup Page getServerSideProps", () => {
         },
       });
     });
+
+    it("should redirect when client_id is not configured in direct API keys mode", async () => {
+      mockGetStripeAppKeys.mockResolvedValue({
+        client_secret: "sk_test_123",
+        public_key: "pk_test_123",
+        webhook_secret: "whsec_test_123",
+        direct_api_keys: true,
+      } as any);
+      const ctx = createMockContext();
+
+      const result = await getServerSideProps(ctx);
+
+      expect(result).toEqual({
+        redirect: {
+          destination: "https://app.cal.com/apps/installed/payment?error=stripe_connect_not_configured",
+          permanent: false,
+        },
+      });
+    });
   });
 
   describe("E2E mode", () => {

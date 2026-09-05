@@ -41,6 +41,14 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
 
   try {
     const { client_id } = await getStripeAppKeys();
+    if (!client_id) {
+      return {
+        redirect: {
+          destination: `${WEBAPP_URL}/apps/installed/payment?error=stripe_connect_not_configured`,
+          permanent: false,
+        },
+      };
+    }
     const returnTo = ctx.query.returnTo ? String(ctx.query.returnTo) : undefined;
     const onErrorReturnTo = ctx.query.onErrorReturnTo
       ? String(ctx.query.onErrorReturnTo)
