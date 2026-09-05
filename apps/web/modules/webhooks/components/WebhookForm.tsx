@@ -1,8 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-
 import SectionBottomActions from "@calcom/features/settings/SectionBottomActions";
 import customTemplate, { hasTemplateIntegration } from "@calcom/features/webhooks/lib/integrationTemplate";
 import { WebhookVersion } from "@calcom/features/webhooks/lib/interface/IWebhookRepository";
@@ -11,15 +8,18 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { TimeUnit, WebhookTriggerEvents } from "@calcom/prisma/enums";
 import type { RouterOutputs } from "@calcom/trpc/react";
 import { Button } from "@calcom/ui/components/button";
-import { Select } from "@calcom/ui/components/form";
-import { TextArea } from "@calcom/ui/components/form";
-import { ToggleGroup } from "@calcom/ui/components/form";
-import { Form } from "@calcom/ui/components/form";
-import { Label } from "@calcom/ui/components/form";
-import { TextField } from "@calcom/ui/components/form";
-import { Switch } from "@calcom/ui/components/form";
-
-
+import {
+  Form,
+  Input,
+  Label,
+  Select,
+  Switch,
+  TextArea,
+  TextField,
+  ToggleGroup,
+} from "@calcom/ui/components/form";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import WebhookTestDisclosure from "./WebhookTestDisclosure";
 
 export type TWebhook = RouterOutputs["viewer"]["webhook"]["list"][number];
@@ -294,6 +294,13 @@ const WebhookForm = (props: {
   const time = formMethods.watch("time");
   const timeUnit = formMethods.watch("timeUnit");
 
+  const TIME_UNITS = [TimeUnit.MINUTE, TimeUnit.HOUR, TimeUnit.DAY] as const;
+  const timeUnitOptions = TIME_UNITS.map((unit) => ({
+    value: unit,
+    label: t(`${unit.toLowerCase()}_timeUnit`),
+  }));
+  const selectedTimeUnit = timeUnitOptions.find((option) => option.value === timeUnit) ?? timeUnitOptions[0];
+
   const isCreating = !props?.webhook?.id;
   const needsTime = triggers.some(
     (t) =>
@@ -339,9 +346,9 @@ const WebhookForm = (props: {
     : formMethods.formState.isDirty || changeSecret;
 
   useEffect(() => {
-    if (isCreating && needsTime && !time && !timeUnit) {
-      formMethods.setValue("time", 5, { shouldDirty: true });
-      formMethods.setValue("timeUnit", TimeUnit.MINUTE, { shouldDirty: true });
+    if (needsTime && !time && !timeUnit) {
+      formMethods.setValue("time", 5, { shouldDirty: isCreating });
+      formMethods.setValue("timeUnit", TimeUnit.MINUTE, { shouldDirty: isCreating });
     }
   }, [isCreating, needsTime, time, timeUnit, formMethods]);
 
@@ -432,8 +439,8 @@ const WebhookForm = (props: {
                         shouldDirty: true,
                       });
                     } else {
-                      formMethods.setValue("time", undefined, { shouldDirty: true });
-                      formMethods.setValue("timeUnit", undefined, { shouldDirty: true });
+                      formMethods.setValue("time", null, { shouldDirty: true });
+                      formMethods.setValue("timeUnit", null, { shouldDirty: true });
                     }
                   }}
                 />
@@ -444,8 +451,38 @@ const WebhookForm = (props: {
 
         {showTimeSection && (
           <div className="mt-5">
-            <Label>{t("how_long_after_user_no_show_minutes")}</Label>
-            <div />
+            <Label className="font-sm text-emphasis font-medium">
+              {t("how_long_after_user_no_show_minutes")}
+            </Label>
+            <div className="flex items-center">
+              <Input
+                type="number"
+                min={0}
+                required
+                data-testid="webhook-time"
+                className="m-0! block w-16 rounded-r-none border-default border-r-0 text-sm [appearance:textfield] focus:z-10 focus:border-r"
+                value={time ?? 5}
+                onChange={(e) => {
+                  const next = Number(e.target.value);
+                  formMethods.setValue("time", Number.isFinite(next) ? next : 5, { shouldDirty: true });
+                }}
+              />
+              <Select
+                grow={false}
+                isSearchable={false}
+                options={timeUnitOptions}
+                value={selectedTimeUnit}
+                data-testid="webhook-time-unit"
+                className="block w-auto"
+                innerClassNames={{
+                  control: "rounded-l-none max-h-4 px-3 bg-subtle py-1",
+                }}
+                onChange={(option) => {
+                  if (!option) return;
+                  formMethods.setValue("timeUnit", option.value, { shouldDirty: true });
+                }}
+              />
+            </div>
           </div>
         )}
 

@@ -49,15 +49,11 @@ export const editHandler = async ({ input, ctx }: EditOptions) => {
     }
   }
 
-  const updatedWebhook= await prisma.webhook.update({
+  const updatedWebhook = await prisma.webhook.update({
     where: {
       id,
     },
-    data: {
-      ...data,
-      time: data.time ?? null,
-      timeUnit: data.timeUnit ?? null,
-    },
+    data,
   });
 
   if (data.active) {

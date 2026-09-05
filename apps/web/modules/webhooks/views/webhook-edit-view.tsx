@@ -4,7 +4,7 @@ import { WEBHOOK_TRIGGER_EVENTS } from "@calcom/features/webhooks/lib/constants"
 import type { WebhookVersion } from "@calcom/features/webhooks/lib/interface/IWebhookRepository";
 import { subscriberUrlReserved } from "@calcom/features/webhooks/lib/subscriberUrlReserved";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
-import type { WebhookTriggerEvents } from "@calcom/prisma/enums";
+import type { TimeUnit, WebhookTriggerEvents } from "@calcom/prisma/enums";
 import { trpc } from "@calcom/trpc/react";
 import { revalidateWebhooksList } from "@calcom/web/app/(use-page-wrapper)/settings/(settings-layout)/developer/webhooks/(with-loader)/actions";
 import { toastManager } from "@coss/ui/components/toast";
@@ -26,6 +26,8 @@ type WebhookProps = {
   secret: string | null;
   platform: boolean;
   version: WebhookVersion;
+  time: number | null;
+  timeUnit: TimeUnit | null;
 };
 
 export function EditWebhookView({ webhook }: { webhook?: WebhookProps }) {
@@ -97,8 +99,8 @@ export function EditWebhookView({ webhook }: { webhook?: WebhookProps }) {
           active: values.active,
           payloadTemplate: values.payloadTemplate,
           secret: values.secret,
-          time: values.time,
-          timeUnit: values.timeUnit,
+          time: values.time ?? null,
+          timeUnit: values.timeUnit ?? null,
           version: values.version,
         });
       }}

@@ -90,9 +90,22 @@ export default function WebhookListItem(props: {
       await utils.viewer.eventTypes.get.invalidate();
     },
     onError() {
+      setActive(webhook.active);
       toastManager.add({ title: t("something_went_wrong"), type: "error" });
     },
   });
+
+  const toggleWebhookActive = (checked: boolean) => {
+    setActive(checked);
+    toggleWebhook.mutate({
+      id: webhook.id,
+      active: checked,
+      payloadTemplate: webhook.payloadTemplate,
+      eventTypeId: webhook.eventTypeId || undefined,
+      time: webhook.time,
+      timeUnit: webhook.timeUnit,
+    });
+  };
 
   return (
     <ListItem data-testid="webhook-list-item" className="*:px-4">
@@ -186,15 +199,7 @@ export default function WebhookListItem(props: {
                       checked={active}
                       data-testid="webhook-switch"
                       disabled={toggleWebhook.isPending}
-                      onCheckedChange={(checked) => {
-                        setActive(checked);
-                        toggleWebhook.mutate({
-                          id: webhook.id,
-                          active: checked,
-                          payloadTemplate: webhook.payloadTemplate,
-                          eventTypeId: webhook.eventTypeId || undefined,
-                        });
-                      }}
+                      onCheckedChange={toggleWebhookActive}
                     />
                   }
                 />
@@ -285,15 +290,7 @@ export default function WebhookListItem(props: {
                 <MenuCheckboxItem
                   checked={active}
                   disabled={toggleWebhook.isPending}
-                  onCheckedChange={(checked) => {
-                    setActive(checked);
-                    toggleWebhook.mutate({
-                      id: webhook.id,
-                      active: checked,
-                      payloadTemplate: webhook.payloadTemplate,
-                      eventTypeId: webhook.eventTypeId || undefined,
-                    });
-                  }}
+                  onCheckedChange={toggleWebhookActive}
                   variant="switch"
                 >
                   {t("enable_webhook")}
