@@ -351,7 +351,28 @@ export const FormBuilder = function FormBuilder({
                         }}
                         tooltip={t("show_on_booking_page")}
                       />
+                      
                     )}
+                    <Label htmlFor={`parent-question-name-${index}`}>Show only if question</Label>
+                    <Input
+                      id={`parent-question-name-${index}`}
+                      data-testid="parent-question-name"
+                      placeholder="e.g. How did you hear about us?"
+                      value={field.parentQuestionName || ""}
+                      onChange={(e) => {
+                        update(index, { ...field, parentQuestionName: e.target.value });
+                      }}
+                    />
+                    <Label htmlFor={`trigger-value-${index}`}>Equals this value</Label>
+                    <Input
+                      id={`trigger-value-${index}`}
+                      data-testid="trigger-value"
+                      placeholder="e.g. Web"
+                      value={field.triggerValue || ""}
+                      onChange={(e) => {
+                        update(index, { ...field, triggerValue: e.target.value });
+                      }}
+                    />
                     {isUserField && (
                       <Button
                         data-testid="delete-field-action"

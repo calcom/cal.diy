@@ -983,6 +983,8 @@ export const baseFieldSchema = z.object({
         label: z.string(),
         value: z.string(),
         price: z.coerce.number().min(0).optional(),
+        parentQuestionName: z.string().optional(),
+        triggerValue: z.string().optional(),
       })
     )
     .optional(),
@@ -1029,6 +1031,8 @@ export const baseFieldSchema = z.object({
   requireEmails: excludeOrRequireEmailSchema.optional(),
   // Price associated with the field which works like addons which users can add to the booking
   price: z.coerce.number().min(0).optional(),
+  parentQuestionName: z.string().optional(),
+  triggerValue: z.string().optional(),
 });
 
 export const variantsConfigSchema = z.object({
