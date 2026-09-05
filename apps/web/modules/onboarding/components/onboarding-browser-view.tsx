@@ -14,22 +14,18 @@ type OnboardingBrowserViewProps = {
   name?: string;
   bio?: string;
   username?: string | null;
-  teamSlug?: string;
 };
 
 const getDisplayUrl = (
   orgSlug: string | null | undefined,
-  username: string | null | undefined,
-  teamSlug: string | undefined
+  username: string | null | undefined
 ): string => {
   if (orgSlug) {
-    return teamSlug !== undefined
-      ? `${orgSlug}.${""}/team/${teamSlug || ""}`
-      : `${orgSlug}.${""}/${username || ""}`;
+    return `${orgSlug}.${""}/${username || ""}`;
   }
 
   const webappUrl = WEBAPP_URL.replace(/^https?:\/\//, "");
-  return teamSlug !== undefined ? `${webappUrl}/team/${teamSlug || ""}` : `${webappUrl}/${username || ""}`;
+  return `${webappUrl}/${username || ""}`;
 };
 
 export const OnboardingBrowserView = ({
@@ -37,13 +33,12 @@ export const OnboardingBrowserView = ({
   name,
   bio,
   username,
-  teamSlug,
 }: OnboardingBrowserViewProps) => {
   const { t } = useLocale();
   const pathname = usePathname();
   const orgBranding = null as { slug: string } | null;
 
-  const displayUrl = getDisplayUrl(orgBranding?.slug, username, teamSlug);
+  const displayUrl = getDisplayUrl(orgBranding?.slug, username);
 
   // Animation variants for entry and exit
   const containerVariants = {

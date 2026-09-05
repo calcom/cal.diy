@@ -10,7 +10,6 @@ interface UseNearestFutureBookingProps {
     statuses: BookingListingStatus[];
     userIds?: number[];
   };
-  enabled?: boolean;
 }
 
 /**
@@ -24,7 +23,6 @@ interface UseNearestFutureBookingProps {
 export function useNearestFutureBooking({
   currentWeekStart,
   filters,
-  enabled = true,
 }: UseNearestFutureBookingProps) {
   // Search from the end of current week to NAVIGATION_PROBE_WINDOW_MONTHS months ahead
   const afterDate = currentWeekStart.add(1, "week").startOf("day");
@@ -42,7 +40,6 @@ export function useNearestFutureBooking({
       // Default sort for "upcoming" status is ASC, which gives us the nearest future booking
     },
     {
-      enabled,
       staleTime: 5 * 60 * 1000, // 5 minutes
     }
   );

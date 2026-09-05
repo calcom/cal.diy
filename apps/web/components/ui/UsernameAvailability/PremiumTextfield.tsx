@@ -36,7 +36,6 @@ interface ICustomUsernameProps {
   setInputUsernameValue: (value: string) => void;
   onSuccessMutation?: () => void;
   onErrorMutation?: (error: TRPCClientErrorLike<AppRouter>) => void;
-  readonly?: boolean;
 }
 
 const obtainNewUsernameChangeCondition = ({
@@ -66,7 +65,6 @@ const PremiumTextfield = (props: ICustomUsernameProps) => {
     usernameRef,
     onSuccessMutation,
     onErrorMutation,
-    readonly: disabled,
   } = props;
   const [user] = trpc.viewer.me.get.useSuspenseQuery();
   const [usernameIsAvailable, setUsernameIsAvailable] = useState(false);
@@ -215,7 +213,6 @@ const PremiumTextfield = (props: ICustomUsernameProps) => {
             autoComplete="none"
             autoCapitalize="none"
             autoCorrect="none"
-            disabled={disabled}
             className={classNames(
               "border-l my-0 rounded-md font-sans text-sm leading-4 focus:ring-0! sm:rounded-l-none",
               isInputUsernamePremium
@@ -223,8 +220,7 @@ const PremiumTextfield = (props: ICustomUsernameProps) => {
                 : "border focus:border",
               markAsError
                 ? "focus:shadow-0 focus:ring-shadow-0 border-red-500  focus:border-red-500 focus:outline-none"
-                : "border-l-default",
-              disabled ? "bg-subtle text-muted focus:border-0" : ""
+                : "border-l-default"
             )}
             value={inputUsernameValue}
             onChange={(event) => {

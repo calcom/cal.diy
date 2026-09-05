@@ -10,7 +10,6 @@ type EventProps = {
   currentlySelectedEventId?: number;
   eventDuration: number;
   onEventClick?: (event: CalendarEvent) => void;
-  disabled?: boolean;
   isHovered?: boolean;
 };
 
@@ -61,7 +60,6 @@ export function Event({
   event,
   currentlySelectedEventId,
   eventDuration,
-  disabled,
   onEventClick,
   isHovered = false,
 }: EventProps) {
@@ -115,7 +113,6 @@ export function Event({
         className={classNames(
           eventClasses({
             status: options?.status,
-            disabled,
             selected,
             borderOnly: options?.borderOnly ?? false,
           }),

@@ -98,7 +98,6 @@ interface InfiniteEventTypeListProps {
         eventTypes: InfiniteEventType[];
       }[]
     | undefined;
-  lockedByOrg?: boolean;
   isPending?: boolean;
   debouncedSearchTerm?: string;
 }
@@ -282,7 +281,6 @@ export const InfiniteEventTypeList = ({
   readOnly,
   pages,
   bookerUrl,
-  lockedByOrg,
   isPending,
   debouncedSearchTerm,
 }: InfiniteEventTypeListProps): JSX.Element => {
@@ -604,7 +602,6 @@ export const InfiniteEventTypeList = ({
                                 <div className="self-center rounded-md p-2">
                                   <Switch
                                     name="Hidden"
-                                    disabled={lockedByOrg}
                                     checked={!type.hidden}
                                     onCheckedChange={() => {
                                       setHiddenMutation.mutate({

@@ -44,8 +44,6 @@ const MAX_BADGES_TWO_ROWS = 7;
 
 export default function WebhookListItem(props: {
   webhook: Webhook;
-  profile?: { name: string | null; image?: string; slug?: string | null };
-  canEditWebhook?: boolean;
   editHref?: string;
   onEditWebhookAction?: () => void;
   permissions: {

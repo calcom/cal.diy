@@ -63,12 +63,10 @@ export type FormValues = Pick<
 
 export function UserForm({
   defaultValues,
-  localeProp = "en",
   onSubmit = noop,
   submitLabel = "save",
 }: {
   defaultValues?: Pick<User, keyof FormValues>;
-  localeProp?: string;
   onSubmit: (data: FormValues) => void;
   submitLabel?: string;
 }) {
@@ -81,15 +79,15 @@ export function UserForm({
 
   const weekStartOptions = useMemo(
     () => [
-      { value: "Sunday", label: nameOfDay(language || localeProp, 0) },
-      { value: "Monday", label: nameOfDay(language || localeProp, 1) },
-      { value: "Tuesday", label: nameOfDay(language || localeProp, 2) },
-      { value: "Wednesday", label: nameOfDay(language || localeProp, 3) },
-      { value: "Thursday", label: nameOfDay(language || localeProp, 4) },
-      { value: "Friday", label: nameOfDay(language || localeProp, 5) },
-      { value: "Saturday", label: nameOfDay(language || localeProp, 6) },
+      { value: "Sunday", label: nameOfDay(language, 0) },
+      { value: "Monday", label: nameOfDay(language, 1) },
+      { value: "Tuesday", label: nameOfDay(language, 2) },
+      { value: "Wednesday", label: nameOfDay(language, 3) },
+      { value: "Thursday", label: nameOfDay(language, 4) },
+      { value: "Friday", label: nameOfDay(language, 5) },
+      { value: "Saturday", label: nameOfDay(language, 6) },
     ],
-    [language, localeProp]
+    [language]
   );
 
   const userRoleOptions = [
@@ -178,7 +176,7 @@ export function UserForm({
         <div>
           <Label className="text-default font-medium">{t("member_since")}</Label>
           <div className="text-default mt-1 text-sm">
-            {formatToLocalizedDate(new Date(defaultValues.createdDate), localeProp)}
+            {formatToLocalizedDate(new Date(defaultValues.createdDate))}
           </div>
         </div>
       )}

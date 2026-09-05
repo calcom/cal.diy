@@ -24,7 +24,6 @@ export type UseScheduleWithCacheArgs = {
   orgSlug?: string;
   teamMemberEmail?: string | null;
   useApiV2?: boolean;
-  enabled?: boolean;
   /***
    * Required when prefetching is needed
    */
@@ -62,7 +61,6 @@ export const useSchedule = ({
   orgSlug,
   teamMemberEmail,
   useApiV2 = false,
-  enabled: enabledProp = true,
   bookerLayout,
 }: UseScheduleWithCacheArgs) => {
   const bookerState = useBookerStore((state) => state.state);
@@ -131,8 +129,7 @@ export const useSchedule = ({
       Boolean(month) &&
       Boolean(timezone) &&
       // Should only wait for one or the other, not both.
-      (Boolean(eventSlug) || Boolean(eventId) || eventId === 0) &&
-      enabledProp,
+      (Boolean(eventSlug) || Boolean(eventId) || eventId === 0),
   };
 
   const isCallingApiV2Slots = useApiV2 && Boolean(isTeamEvent) && options.enabled;

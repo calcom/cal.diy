@@ -16,9 +16,6 @@ const Schedule = <
   name: TPath;
   control: Control<TFieldValues>;
   weekStart?: number;
-  disabled?: boolean;
-  labels?: ScheduleLabelsType;
-  userTimeFormat?: number | null;
 }) => {
   const query = useMeQuery();
   const { timeFormat } = query.data || { timeFormat: null };

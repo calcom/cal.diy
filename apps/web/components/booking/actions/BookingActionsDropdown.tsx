@@ -44,7 +44,6 @@ import {
 
 interface BookingActionsDropdownProps {
   booking: BookingItemProps;
-  size?: "xs" | "sm" | "base" | "lg";
   className?: string;
   /**
    * Whether to use a portal for the dropdown menu.
@@ -62,7 +61,6 @@ interface BookingActionsDropdownProps {
 
 export function BookingActionsDropdown({
   booking,
-  size = "base",
   className,
   usePortal = true,
   context,
@@ -545,7 +543,6 @@ export function BookingActionsDropdown({
           <Button
             type="button"
             color="secondary"
-            size={size}
             StartIcon="ellipsis"
             className={classNames("px-2", className)}
             // Prevent click from bubbling to parent row/container click handlers

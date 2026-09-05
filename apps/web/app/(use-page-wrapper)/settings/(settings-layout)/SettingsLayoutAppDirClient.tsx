@@ -32,7 +32,6 @@ const getTabs = (
     slug?: string;
     name?: string;
     logoUrl?: string | null;
-    fullDomain?: string | null;
   } | null
 ) => {
   const tabs: VerticalTabItemProps[] = [

@@ -5,7 +5,6 @@ import { useFormContext, Controller } from "react-hook-form";
 
 import { useIsPlatform } from "@calcom/atoms/hooks/useIsPlatform";
 import type { FormValues } from "@calcom/features/eventtypes/lib/types";
-import type { CalVideoSettings as CalVideoSettingsType } from "@calcom/features/eventtypes/lib/types";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import classNames from "@calcom/ui/classNames";
 import { TextField } from "@calcom/ui/components/form";
@@ -15,7 +14,7 @@ import { Tooltip } from "@calcom/ui/components/tooltip";
 import LocationSettingsContainer from "@calcom/web/modules/event-types/components/locations/LocationSettingsContainer";
 import { InfoBadge } from "@calcom/ui/components/badge";
 
-const CalVideoSettings = ({ calVideoSettings }: { calVideoSettings?: CalVideoSettingsType }) => {
+const CalVideoSettings = () => {
   const { t } = useLocale();
   const formMethods = useFormContext<FormValues>();
   const isPlatform = useIsPlatform();
@@ -44,7 +43,7 @@ const CalVideoSettings = ({ calVideoSettings }: { calVideoSettings?: CalVideoSet
           <LocationSettingsContainer>
             <Controller
               name="calVideoSettings.disableRecordingForGuests"
-              defaultValue={!!calVideoSettings?.disableRecordingForGuests}
+              defaultValue={false}
               render={({ field: { onChange, value } }) => {
                 return (
                   <SettingsToggle
@@ -61,7 +60,7 @@ const CalVideoSettings = ({ calVideoSettings }: { calVideoSettings?: CalVideoSet
 
             <Controller
               name="calVideoSettings.disableRecordingForOrganizer"
-              defaultValue={!!calVideoSettings?.disableRecordingForOrganizer}
+              defaultValue={false}
               render={({ field: { onChange, value } }) => {
                 return (
                   <SettingsToggle
@@ -79,7 +78,7 @@ const CalVideoSettings = ({ calVideoSettings }: { calVideoSettings?: CalVideoSet
             {!isPlatform && (
               <Controller
                 name="calVideoSettings.enableAutomaticRecordingForOrganizer"
-                defaultValue={!!calVideoSettings?.enableAutomaticRecordingForOrganizer}
+                defaultValue={false}
                 render={({ field: { onChange, value } }) => {
                   return (
                     <SettingsToggle
@@ -97,7 +96,7 @@ const CalVideoSettings = ({ calVideoSettings }: { calVideoSettings?: CalVideoSet
 
             <Controller
               name="calVideoSettings.enableAutomaticTranscription"
-              defaultValue={!!calVideoSettings?.enableAutomaticTranscription}
+              defaultValue={false}
               render={({ field: { onChange, value } }) => {
                 return (
                   <SettingsToggle
@@ -115,7 +114,7 @@ const CalVideoSettings = ({ calVideoSettings }: { calVideoSettings?: CalVideoSet
             {!isPlatform && (
               <Controller
                 name="calVideoSettings.disableTranscriptionForGuests"
-                defaultValue={!!calVideoSettings?.disableTranscriptionForGuests}
+                defaultValue={false}
                 render={({ field: { onChange, value } }) => {
                   return (
                     <SettingsToggle
@@ -133,7 +132,7 @@ const CalVideoSettings = ({ calVideoSettings }: { calVideoSettings?: CalVideoSet
             {!isPlatform && (
               <Controller
                 name="calVideoSettings.disableTranscriptionForOrganizer"
-                defaultValue={!!calVideoSettings?.disableTranscriptionForOrganizer}
+                defaultValue={false}
                 render={({ field: { onChange, value } }) => {
                   return (
                     <SettingsToggle
@@ -151,7 +150,7 @@ const CalVideoSettings = ({ calVideoSettings }: { calVideoSettings?: CalVideoSet
 
             <Controller
               name="calVideoSettings.requireEmailForGuests"
-              defaultValue={!!calVideoSettings?.requireEmailForGuests}
+              defaultValue={false}
               render={({ field: { onChange, value } }) => {
                 return (
                   <SettingsToggle
@@ -174,7 +173,7 @@ const CalVideoSettings = ({ calVideoSettings }: { calVideoSettings?: CalVideoSet
                   <InfoBadge content={t("enter_redirect_url_on_exit_description")} />
                 </div>
               }
-              defaultValue={calVideoSettings?.redirectUrlOnExit || ""}
+              defaultValue=""
               data-testid="calVideoSettings.redirectUrlOnExit"
               containerClassName="mt-4"
               className="leading-6"

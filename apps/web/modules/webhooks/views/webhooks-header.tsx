@@ -8,9 +8,8 @@ import {
   AppHeaderContent,
   AppHeaderDescription,
 } from "@coss/ui/shared/app-header";
-import type { ReactNode } from "react";
 
-export function WebhooksHeader({ actions }: { actions?: ReactNode }) {
+export function WebhooksHeader() {
   const { t } = useLocale();
 
   return (
@@ -18,7 +17,6 @@ export function WebhooksHeader({ actions }: { actions?: ReactNode }) {
       <AppHeaderContent title={t("webhooks")}>
         <AppHeaderDescription>{t("add_webhook_description", { appName: APP_NAME })}</AppHeaderDescription>
       </AppHeaderContent>
-      {actions ? <AppHeaderActions>{actions}</AppHeaderActions> : null}
     </AppHeader>
   );
 }

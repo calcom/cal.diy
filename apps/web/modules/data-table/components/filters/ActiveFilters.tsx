@@ -9,10 +9,9 @@ import { FilterPopover } from "./FilterPopover";
 // Add the new ActiveFilters component
 interface ActiveFiltersProps<TData> {
   table: Table<TData>;
-  columnIdsToHide?: string[];
 }
 
-export function ActiveFilters<TData>({ table, columnIdsToHide }: ActiveFiltersProps<TData>) {
+export function ActiveFilters<TData>({ table }: ActiveFiltersProps<TData>) {
   const { activeFilters } = useDataTable();
   const filterableColumns = useFilterableColumns(table);
 
@@ -21,9 +20,6 @@ export function ActiveFilters<TData>({ table, columnIdsToHide }: ActiveFiltersPr
       {activeFilters.map((filter) => {
         const column = filterableColumns.find((col) => col.id === filter.f);
         if (!column) {
-          return null;
-        }
-        if (columnIdsToHide?.includes(column.id)) {
           return null;
         }
 

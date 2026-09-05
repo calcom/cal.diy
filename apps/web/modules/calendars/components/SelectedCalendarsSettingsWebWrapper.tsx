@@ -22,7 +22,6 @@ type SelectedCalendarsSettingsWebWrapperProps = {
   fromOnboarding?: boolean;
   destinationCalendarId?: string;
   isPending?: boolean;
-  classNames?: string;
   eventTypeId?: number;
   disabledScope?: SelectedCalendarSettingsScope;
   scope?: SelectedCalendarSettingsScope;
@@ -38,7 +37,6 @@ const ConnectedCalendarList = ({
   disableConnectionModification,
   eventTypeId,
   onChanged,
-  destinationCalendarId,
   isDisabled,
 }: {
   fromOnboarding?: boolean;
@@ -47,7 +45,6 @@ const ConnectedCalendarList = ({
   disableConnectionModification?: boolean;
   eventTypeId: number | null;
   onChanged?: () => unknown | Promise<unknown>;
-  destinationCalendarId?: string;
   isDisabled: boolean;
 }) => {
   const { t } = useLocale();
@@ -89,7 +86,7 @@ const ConnectedCalendarList = ({
                           name={cal.name || "Nameless calendar"}
                           type={connectedCalendar.integration.type}
                           isChecked={cal.isSelected}
-                          destination={cal.externalId === destinationCalendarId}
+                          destination={false}
                           credentialId={cal.credentialId}
                           eventTypeId={(() => {
                             if (shouldUseEventTypeScope) {
@@ -176,7 +173,7 @@ export const SelectedCalendarsSettingsWebWrapper = (props: SelectedCalendarsSett
   const shouldDisableConnectionModification = isDisabled || disableConnectionModification;
   return (
     <div>
-      <SelectedCalendarsSettings classNames={props.classNames}>
+      <SelectedCalendarsSettings>
         <SelectedCalendarsSettingsHeading
           isConnectedCalendarsPresent={!!query.data?.connectedCalendars.length}
           isPending={isPending}

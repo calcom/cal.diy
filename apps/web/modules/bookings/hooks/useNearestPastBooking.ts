@@ -10,7 +10,6 @@ interface UseNearestPastBookingProps {
     statuses: BookingListingStatus[];
     userIds?: number[];
   };
-  enabled?: boolean;
 }
 
 /**
@@ -25,7 +24,6 @@ interface UseNearestPastBookingProps {
 export function useNearestPastBooking({
   currentWeekStart,
   filters,
-  enabled = true,
 }: UseNearestPastBookingProps) {
   // Search from NAVIGATION_PROBE_WINDOW_MONTHS months ago to the start of current week
   const afterDate = currentWeekStart.subtract(NAVIGATION_PROBE_WINDOW_MONTHS, "month").startOf("day");
@@ -43,7 +41,6 @@ export function useNearestPastBooking({
       sort: { sortStart: "desc" }, // Get the closest past booking first
     },
     {
-      enabled,
       staleTime: 5 * 60 * 1000, // 5 minutes
     }
   );

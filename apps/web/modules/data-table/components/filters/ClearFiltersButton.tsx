@@ -4,11 +4,11 @@ import { Tooltip } from "@calcom/ui/components/tooltip";
 
 import { useDataTable } from "~/data-table/hooks/useDataTable";
 
-export const ClearFiltersButton = ({ exclude }: { exclude?: string[] }) => {
+export const ClearFiltersButton = () => {
   const { t } = useLocale();
   const { activeFilters, clearAll } = useDataTable();
 
-  if (!activeFilters?.length || (exclude && activeFilters.every((filter) => exclude.includes(filter.f)))) {
+  if (!activeFilters?.length) {
     return null;
   }
 
@@ -20,7 +20,7 @@ export const ClearFiltersButton = ({ exclude }: { exclude?: string[] }) => {
         target="_blank"
         rel="noreferrer"
         StartIcon="x"
-        onClick={() => clearAll(exclude)}>
+        onClick={() => clearAll()}>
         {t("clear")}
       </Button>
     </Tooltip>

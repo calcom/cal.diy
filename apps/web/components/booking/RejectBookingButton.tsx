@@ -11,8 +11,6 @@ interface RejectBookingButtonProps {
   isRecurring?: boolean;
   isTabRecurring?: boolean;
   isTabUnconfirmed?: boolean;
-  size?: "sm" | "base" | "lg";
-  color?: "primary" | "secondary" | "minimal" | "destructive";
   className?: string;
 }
 
@@ -23,8 +21,6 @@ export function RejectBookingButton({
   isRecurring = false,
   isTabRecurring = false,
   isTabUnconfirmed = false,
-  size = "base",
-  color = "secondary",
   className,
 }: RejectBookingButtonProps) {
   const { t } = useLocale();
@@ -48,8 +44,6 @@ export function RejectBookingButton({
       />
 
       <Button
-        color={color}
-        size={size}
         className={className}
         onClick={handleReject}
         disabled={isPending}

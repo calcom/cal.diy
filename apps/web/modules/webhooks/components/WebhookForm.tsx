@@ -244,7 +244,6 @@ export type WebhookFormValues = {
 const WebhookForm = (props: {
   webhook?: TWebhook | WebhookFormData;
   apps?: (keyof typeof WEBHOOK_TRIGGER_EVENTS_GROUPED_BY_APP_V2)[];
-  overrideTriggerOptions?: (typeof WEBHOOK_TRIGGER_EVENTS_GROUPED_BY_APP_V2)["core"];
   onSubmit: (event: WebhookFormSubmitData) => void;
   onCancel?: () => void;
   headerWrapper?: (
@@ -252,13 +251,11 @@ const WebhookForm = (props: {
     children: React.ReactNode
   ) => React.ReactNode;
 }) => {
-  const { apps = [], overrideTriggerOptions } = props;
+  const { apps = [] } = props;
   const { t } = useLocale();
   const webhookVariables = getWebhookVariables(t);
 
-  const triggerOptions = overrideTriggerOptions
-    ? [...overrideTriggerOptions]
-    : [...WEBHOOK_TRIGGER_EVENTS_GROUPED_BY_APP_V2["core"]];
+  const triggerOptions = [...WEBHOOK_TRIGGER_EVENTS_GROUPED_BY_APP_V2["core"]];
   if (apps) {
     for (const app of apps) {
       if (WEBHOOK_TRIGGER_EVENTS_GROUPED_BY_APP_V2[app]) {

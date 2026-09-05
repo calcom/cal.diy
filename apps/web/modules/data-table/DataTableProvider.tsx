@@ -73,11 +73,7 @@ interface DataTableProviderProps {
   tableIdentifier: string;
   children: React.ReactNode;
   useSegments?: UseSegments;
-  ctaContainerClassName?: string;
   defaultPageSize?: number;
-  segments?: FilterSegmentOutput[];
-  timeZone?: string;
-  preferredSegmentId?: SegmentIdentifier | null;
   systemSegments?: SystemFilterSegment[];
   validateActiveFilters?: ActiveFiltersValidatorState;
 }
@@ -141,10 +137,6 @@ export function DataTableProvider({
   children,
   useSegments,
   defaultPageSize,
-  ctaContainerClassName,
-  segments: providedSegments,
-  timeZone,
-  preferredSegmentId,
   systemSegments,
   validateActiveFilters,
 }: DataTableProviderProps) {
@@ -152,13 +144,9 @@ export function DataTableProvider({
     <DataTableStateProvider
       tableIdentifier={tableIdentifier}
       defaultPageSize={defaultPageSize}
-      ctaContainerClassName={ctaContainerClassName}
-      timeZone={timeZone}
-      preferredSegmentId={preferredSegmentId}
       validateActiveFilters={validateActiveFilters}>
       <DataTableSegmentProvider
         useSegments={useSegments}
-        segments={providedSegments}
         systemSegments={systemSegments}>
         <DataTableFiltersProvider>
           <DataTableContextBridge>{children}</DataTableContextBridge>

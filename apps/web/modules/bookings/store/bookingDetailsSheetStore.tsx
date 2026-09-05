@@ -215,11 +215,9 @@ function useBiDirectionalSyncBetweenStoreAndUrl({ store }: { store: BookingDetai
 export function BookingDetailsSheetStoreProvider({
   children,
   bookings,
-  capabilities,
 }: {
   children: React.ReactNode;
   bookings: BookingOutput[];
-  capabilities?: NavigationCapabilities | null;
 }) {
   const [store] = useState(() => createBookingDetailsSheetStore(bookings));
   const previousBookingsRef = useRef<BookingOutput[]>(bookings);
@@ -234,11 +232,6 @@ export function BookingDetailsSheetStoreProvider({
     store.getState().setBookings(bookings);
     previousBookingsRef.current = bookings;
   }, [bookings, store]);
-
-  // Update capabilities when they change
-  useEffect(() => {
-    store.getState().setCapabilities(capabilities ?? null);
-  }, [capabilities, store]);
 
   useBiDirectionalSyncBetweenStoreAndUrl({ store });
 

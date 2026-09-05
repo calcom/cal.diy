@@ -452,20 +452,16 @@ export const FormBuilder = function FormBuilder({
 };
 
 function Options({
-  label = "Options",
   value,
 
   onChange = () => { },
   className = "",
-  readOnly = false,
   showPrice = false,
   paymentCurrency,
 }: {
-  label?: string;
   value: { label: string; value: string; price?: number }[];
   onChange?: (value: { label: string; value: string; price?: number }[]) => void;
   className?: string;
-  readOnly?: boolean;
   showPrice?: boolean;
   paymentCurrency: string;
 }) {
@@ -486,7 +482,6 @@ function Options({
   }
   return (
     <div className={className}>
-      <Label>{label}</Label>
       <div className="bg-cal-muted rounded-md p-4" data-testid="options-container">
         <ul ref={animationRef} className="flex flex-col gap-3">
           {value?.map((option, index) => (
@@ -506,11 +501,10 @@ function Options({
                       });
                       onChange(newOptions);
                     }}
-                    readOnly={readOnly}
                     placeholder={t("enter_option", { index: index + 1 })}
-                    className={value.length > 2 && !readOnly ? "pr-8" : ""}
+                    className={value.length > 2 ? "pr-8" : ""}
                   />
-                  {value.length > 2 && !readOnly && (
+                  {value.length > 2 && (
                     <Button
                       type="button"
                       className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent! focus:bg-transparent! focus:outline-none! focus:ring-0!"
@@ -543,7 +537,6 @@ function Options({
                         };
                         onChange(updatedOptions);
                       }}
-                      readOnly={readOnly}
                       placeholder="0"
                       addOnLeading={getCurrencySymbol(paymentCurrency)}
                     />
@@ -553,20 +546,18 @@ function Options({
             </li>
           ))}
         </ul>
-        {!readOnly && (
-          <Button
-            color="minimal"
-            data-testid="add-option"
-            className="mt-3"
-            onClick={() => {
-              const newOptions = [...(value || [])];
-              newOptions.push({ label: "", value: "", price: 0 });
-              onChange(newOptions);
-            }}
-            StartIcon="plus">
-            Add an Option
-          </Button>
-        )}
+        <Button
+          color="minimal"
+          data-testid="add-option"
+          className="mt-3"
+          onClick={() => {
+            const newOptions = [...(value || [])];
+            newOptions.push({ label: "", value: "", price: 0 });
+            onChange(newOptions);
+          }}
+          StartIcon="plus">
+          Add an Option
+        </Button>
       </div>
     </div>
   );

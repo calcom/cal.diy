@@ -10,20 +10,14 @@ interface JoinMeetingButtonProps {
   location: string | null;
   metadata?: unknown;
   bookingStatus: BookingStatus;
-  size?: "sm" | "base" | "lg";
-  color?: "primary" | "secondary" | "minimal" | "destructive";
   className?: string;
-  onClick?: (e: React.MouseEvent) => void;
 }
 
 export function JoinMeetingButton({
   location,
   metadata,
   bookingStatus,
-  size = "base",
-  color = "secondary",
   className,
-  onClick,
 }: JoinMeetingButtonProps) {
   const { t } = useLocale();
   const { isJoinable, locationToDisplay, provider } = useJoinableLocation({
@@ -39,13 +33,10 @@ export function JoinMeetingButton({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onClick?.(e);
   };
 
   return (
     <Button
-      color={color}
-      size={size}
       href={locationToDisplay}
       target="_blank"
       rel="noopener noreferrer"

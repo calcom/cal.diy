@@ -12,13 +12,7 @@ import { Form } from "@calcom/ui/components/form";
 import { InputField } from "@calcom/ui/components/form";
 import { showToast } from "@calcom/ui/components/toast";
 
-export function NewScheduleButton({
-  name = "new-schedule",
-  fromEventType,
-}: {
-  name?: string;
-  fromEventType?: boolean;
-}) {
+export function NewScheduleButton() {
   const router = useRouter();
   const { t } = useLocale();
 
@@ -30,7 +24,7 @@ export function NewScheduleButton({
 
   const createMutation = trpc.viewer.availability.schedule.create.useMutation({
     onSuccess: async ({ schedule }) => {
-      await router.push(`/availability/${schedule.id}${fromEventType ? "?fromEventType=true" : ""}`);
+      await router.push(`/availability/${schedule.id}`);
       showToast(t("schedule_created_successfully", { scheduleName: schedule.name }), "success");
       revalidateAvailabilityList();
       utils.viewer.availability.list.setData(undefined, (data) => {
@@ -59,9 +53,9 @@ export function NewScheduleButton({
   });
 
   return (
-    <Dialog name={name} clearQueryParamsOnClose={["copy-schedule-id"]}>
+    <Dialog name="new-schedule" clearQueryParamsOnClose={["copy-schedule-id"]}>
       <DialogTrigger asChild>
-        <Button variant="fab" data-testid={name} StartIcon="plus" size="sm">
+        <Button variant="fab" data-testid="new-schedule" StartIcon="plus" size="sm">
           {t("new")}
         </Button>
       </DialogTrigger>

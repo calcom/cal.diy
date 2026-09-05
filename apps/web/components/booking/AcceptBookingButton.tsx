@@ -10,8 +10,6 @@ interface AcceptBookingButtonProps {
   isRecurring?: boolean;
   isTabRecurring?: boolean;
   isTabUnconfirmed?: boolean;
-  size?: "sm" | "base" | "lg";
-  color?: "primary" | "secondary" | "minimal" | "destructive";
   className?: string;
 }
 
@@ -22,8 +20,6 @@ export function AcceptBookingButton({
   isRecurring = false,
   isTabRecurring = false,
   isTabUnconfirmed = false,
-  size = "base",
-  color = "primary",
   className,
 }: AcceptBookingButtonProps) {
   const { t } = useLocale();
@@ -38,8 +34,6 @@ export function AcceptBookingButton({
 
   return (
     <Button
-      color={color}
-      size={size}
       className={className}
       onClick={() => bookingConfirm({ bookingId, confirmed: true, recurringEventId })}
       disabled={isPending}

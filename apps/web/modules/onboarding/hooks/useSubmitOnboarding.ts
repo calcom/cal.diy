@@ -18,8 +18,7 @@ export const useSubmitOnboarding = () => {
   const submitOnboarding = async (
     store: OnboardingState,
     userEmail: string,
-    invitesToSubmit: OnboardingState["invites"],
-    options?: { billingPeriod?: "MONTHLY" | "ANNUALLY" }
+    invitesToSubmit: OnboardingState["invites"]
   ) => {
     setIsSubmitting(true);
     setError(null);
@@ -97,7 +96,6 @@ export const useSubmitOnboarding = () => {
         creationSource: CreationSource.WEBAPP,
         teams: teamsData,
         invitedMembers: allInvitedMembers,
-        ...(options?.billingPeriod && { billingPeriod: options.billingPeriod }),
       });
 
       // If there's a checkout URL, redirect to Stripe (billing enabled flow)

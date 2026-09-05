@@ -21,7 +21,6 @@ export type PhoneInputProps = {
   name?: string;
   disabled?: boolean;
   onChange: (value: string) => void;
-  defaultCountry?: string;
   inputStyle?: CSSProperties;
   flagButtonStyle?: CSSProperties;
 };
@@ -31,12 +30,11 @@ function BasePhoneInput({
   className = "",
   onChange,
   value,
-  defaultCountry = "us",
   ...rest
 }: PhoneInputProps) {
   const isPlatform = useIsPlatform();
   const defaultPhoneCountryFromStore = useBookerStore((state) => state.defaultPhoneCountry);
-  const effectiveDefaultCountry = defaultPhoneCountryFromStore || defaultCountry;
+  const effectiveDefaultCountry = defaultPhoneCountryFromStore || "us";
 
   // This is to trigger validation on prefill value changes
   useEffect(() => {
@@ -110,7 +108,7 @@ function BasePhoneInputWeb({
   inputStyle,
   flagButtonStyle,
   ...rest
-}: Omit<PhoneInputProps, "defaultCountry">) {
+}: PhoneInputProps) {
   const defaultCountry = useDefaultCountry();
 
   return (

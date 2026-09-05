@@ -479,7 +479,6 @@ const EmailEmbedPreview = ({
   userSettingsTimezone,
 }: {
   eventType: EventType;
-  timezone?: string;
   emailContentRef: RefObject<HTMLDivElement>;
   username?: string;
   month?: string;

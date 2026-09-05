@@ -13,8 +13,6 @@ import type { GridCellToDateProps } from "@calcom/features/calendars/weeklyview/
 import { gridCellToDateTime } from "@calcom/features/calendars/weeklyview/utils";
 
 type EmptyCellProps = GridCellToDateProps & {
-  isDisabled?: boolean;
-  topOffsetMinutes?: number;
 };
 
 export function EmptyCell(props: EmptyCellProps) {
@@ -132,12 +130,11 @@ export function AvailableCellsForDay({ timezone, availableSlots, day, startHour 
 }
 
 type CellProps = {
-  isDisabled?: boolean;
   topOffsetMinutes?: number;
   timeSlot: Dayjs;
 };
 
-function Cell({ isDisabled, topOffsetMinutes, timeSlot }: CellProps) {
+function Cell({ topOffsetMinutes, timeSlot }: CellProps) {
   const { timeFormat } = useTimePreferences();
 
   const { onEmptyCellClick, hoverEventDuration } = useCalendarStore(
@@ -152,11 +149,9 @@ function Cell({ isDisabled, topOffsetMinutes, timeSlot }: CellProps) {
     <div
       className={classNames(
         "group flex w-[calc(100%-1px)] items-center justify-center",
-        isDisabled && "pointer-events-none",
-        !isDisabled && "bg-default dark:bg-cal-muted",
+        "bg-default dark:bg-cal-muted",
         topOffsetMinutes && "absolute"
       )}
-      data-disabled={isDisabled}
       data-slot={timeSlot.toISOString()}
       data-testid="calendar-empty-cell"
       style={{
@@ -167,7 +162,7 @@ function Cell({ isDisabled, topOffsetMinutes, timeSlot }: CellProps) {
       onClick={() => {
         onEmptyCellClick?.(timeSlot.toDate());
       }}>
-      {!isDisabled && hoverEventDuration !== 0 && (
+      {hoverEventDuration !== 0 && (
         <div
           className={classNames(
             "bg-brand-default hover:bg-brand-default text-brand dark:border-emphasis absolute hidden rounded-[4px] p-[6px] text-xs font-semibold leading-5 group-hover:flex group-hover:cursor-pointer",

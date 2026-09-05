@@ -45,9 +45,6 @@ interface EventMetaProps extends React.HTMLAttributes<HTMLDivElement> {
   customIcon?: React.ReactNode;
   icon?: IconName;
   iconUrl?: string;
-  // Emphasises the text in the block. For now only
-  // applying in dark mode.
-  highlight?: boolean;
   contentClassName?: string;
   isDark?: boolean;
 }
@@ -72,7 +69,6 @@ export const EventMetaBlock = ({
   icon,
   iconUrl,
   children,
-  highlight,
   contentClassName,
   className,
   isDark,
@@ -83,8 +79,7 @@ export const EventMetaBlock = ({
   return (
     <div
       className={classNames(
-        "flex items-start justify-start text-sm",
-        highlight ? "text-emphasis" : "text-text",
+        "flex items-start justify-start text-sm text-text",
         className
       )}
       {...rest}>

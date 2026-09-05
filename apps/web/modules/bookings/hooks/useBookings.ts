@@ -50,7 +50,6 @@ export interface IUseBookings {
   bookingForm: UseBookingFormReturnType["bookingForm"];
   metadata: Record<string, string>;
   teamMemberEmail?: string | null;
-  isBookingDryRun?: boolean;
 }
 
 const getBaseBookingEventPayload = (booking: {
@@ -61,7 +60,6 @@ const getBaseBookingEventPayload = (booking: {
   status?: BookingStatus;
   paymentRequired: boolean;
   isRecurring: boolean;
-  videoCallUrl?: string;
 }) => {
   return {
     title: booking.title,
@@ -71,7 +69,6 @@ const getBaseBookingEventPayload = (booking: {
     status: booking.status,
     paymentRequired: booking.paymentRequired,
     isRecurring: booking.isRecurring,
-    videoCallUrl: booking.videoCallUrl,
   };
 };
 
@@ -84,7 +81,6 @@ const getBookingSuccessfulEventPayload = (booking: {
   paymentRequired: boolean;
   uid?: string;
   isRecurring: boolean;
-  videoCallUrl?: string;
 }) => {
   return {
     uid: booking.uid,
@@ -108,7 +104,7 @@ export interface IUseBookingErrors {
 }
 export type UseBookingsReturnType = ReturnType<typeof useBookings>;
 
-export const useBookings = ({ event, hashedLink, bookingForm, metadata, isBookingDryRun }: IUseBookings) => {
+export const useBookings = ({ event, hashedLink, bookingForm, metadata }: IUseBookings) => {
   const router = useRouter();
   const eventSlug = useBookerStoreContext((state) => state.eventSlug);
   const eventTypeId = useBookerStoreContext((state) => state.eventId);
@@ -416,7 +412,6 @@ export const useBookings = ({ event, hashedLink, bookingForm, metadata, isBookin
     metadata,
     handleRecBooking: createRecurringBookingMutation.mutate,
     handleBooking: createBookingMutation.mutate,
-    isBookingDryRun,
   });
 
   const errors = {
