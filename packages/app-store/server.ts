@@ -85,6 +85,8 @@ export async function getLocationGroupedOptions(
 
   const integrations = await getEnabledAppsFromCredentials(credentials, { filterOnCredentials: true });
 
+  const seenOptionsByCategory: Record<string, Set<string>> = {};
+
   integrations.forEach((app) => {
     // All apps that are labeled as a locationOption are video apps.
     if (app.locationOption) {
@@ -94,6 +96,11 @@ export async function getLocationGroupedOptions(
           ? app.categories.find((groupByCategory) => !defaultVideoAppCategories.includes(groupByCategory))
           : app.categories[0] || app.category;
       if (!groupByCategory) groupByCategory = AppCategories.conferencing;
+
+      if (!apps[groupByCategory]) {
+        apps[groupByCategory] = [];
+        seenOptionsByCategory[groupByCategory] = new Set();
+      }
 
       for (const { teamName } of app.credentials.map((credential) => ({
         teamName: credential.team?.name,
@@ -108,13 +115,9 @@ export async function getLocationGroupedOptions(
             ? { credentialId: app.credential.id, teamName: app.credential.team?.name ?? null }
             : {}),
         };
-        if (apps[groupByCategory]) {
-          const existingOption = apps[groupByCategory].find((o) => o.value === option.value);
-          if (!existingOption) {
-            apps[groupByCategory] = [...apps[groupByCategory], option];
-          }
-        } else {
-          apps[groupByCategory] = [option];
+        if (!seenOptionsByCategory[groupByCategory].has(option.value)) {
+          seenOptionsByCategory[groupByCategory].add(option.value);
+          apps[groupByCategory].push(option);
         }
       }
     }
@@ -122,26 +125,15 @@ export async function getLocationGroupedOptions(
 
   defaultLocations.forEach((l) => {
     const category = l.category;
-    if (apps[category]) {
-      apps[category] = [
-        ...apps[category],
-        {
-          label: l.label,
-          value: l.type,
-          icon: l.iconUrl,
-          supportsCustomLabel: l.supportsCustomLabel,
-        },
-      ];
-    } else {
-      apps[category] = [
-        {
-          label: l.label,
-          value: l.type,
-          icon: l.iconUrl,
-          supportsCustomLabel: l.supportsCustomLabel,
-        },
-      ];
+    if (!apps[category]) {
+      apps[category] = [];
     }
+    apps[category].push({
+      label: l.label,
+      value: l.type,
+      icon: l.iconUrl,
+      supportsCustomLabel: l.supportsCustomLabel,
+    });
   });
   const locations = [];
 
