@@ -1,6 +1,7 @@
 import React from "react";
-import { createStore, useStore } from "zustand";
+import { createStore } from "zustand";
 import type { StoreApi } from "zustand";
+import { useStoreWithEqualityFn } from "zustand/traditional";
 
 import dayjs from "@calcom/dayjs";
 import { CURRENT_TIMEZONE } from "@calcom/lib/timezoneConstants";
@@ -101,5 +102,5 @@ export function useCalendarStore<T>(
     throw new Error("useCalendarStore must be used within a CalendarStoreProvider");
   }
 
-  return useStore(store, selector, equalityFn);
+  return useStoreWithEqualityFn(store, selector, equalityFn);
 }

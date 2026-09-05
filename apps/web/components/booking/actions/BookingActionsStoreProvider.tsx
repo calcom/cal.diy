@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useRef, type ReactNode } from "react";
-import { useStore } from "zustand";
 import type { StoreApi } from "zustand";
+import { useStoreWithEqualityFn } from "zustand/traditional";
 
 import { createBookingActionsStore, type BookingActionsStore } from "./store";
 
@@ -35,5 +35,5 @@ export const useBookingActionsStoreContext = <T,>(
     throw new Error("useBookingActionsStoreContext must be used within BookingActionsStoreProvider");
   }
 
-  return useStore(bookingActionsStoreContext, selector, equalityFn);
+  return useStoreWithEqualityFn(bookingActionsStoreContext, selector, equalityFn);
 };
