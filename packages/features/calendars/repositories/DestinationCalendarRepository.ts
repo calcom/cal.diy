@@ -70,6 +70,18 @@ export class DestinationCalendarRepository {
     });
   }
 
+  /**
+   * Idempotent delete — safe when the session still holds a stale destinationCalendar
+   * after the row was already removed (e.g. credential cascade delete).
+   */
+  static async deleteByUserId(userId: number) {
+    return await prisma.destinationCalendar.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  }
+
   static async getByEventTypeId(eventTypeId: number) {
     return await prisma.destinationCalendar.findFirst({
       where: {
@@ -113,6 +125,8 @@ export class DestinationCalendarRepository {
       delegationCredentialId?: string | null;
     };
     create: {
+      userId?: number;
+      eventTypeId?: number;
       integration: string;
       externalId: string;
       credentialId: number | null;
