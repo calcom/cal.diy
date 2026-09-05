@@ -19,6 +19,7 @@ import { describe, expect, vi } from "vitest";
 
 import { processPaymentRefund } from "@calcom/features/bookings/lib/payment/processPaymentRefund";
 import { BookingStatus } from "@calcom/prisma/enums";
+import prismock from "@calcom/testing/lib/__mocks__/prisma";
 import { test } from "@calcom/testing/lib/fixtures/fixtures";
 
 vi.mock("@calcom/features/bookings/lib/payment/processPaymentRefund", () => ({
@@ -1355,6 +1356,104 @@ describe("Cancel Booking", () => {
     expect(result.success).toBe(true);
     expect(result.onlyRemovedAttendee).toBe(false);
     expect(result.bookingId).toBe(idOfBookingToBeCancelled);
+  });
+
+  test("cancelSubsequentBookings must not wipe scheduled triggers of earlier, non-cancelled occurrences", async () => {
+    const handleCancelBooking = (await import("@calcom/features/bookings/lib/handleCancelBooking")).default;
+
+    const booker = getBooker({ email: "booker@example.com", name: "Booker" });
+    const organizer = getOrganizer({
+      name: "Organizer",
+      email: "organizer@example.com",
+      id: 101,
+      schedules: [TestData.schedules.IstWorkHours],
+      credentials: [getGoogleCalendarCredential()],
+      selectedCalendars: [TestData.selectedCalendars.google],
+    });
+
+    const recurringEventId = "rec-sub-series";
+    // getDate resolves against the runner's local date while mkBooking pins the time to
+    // 05:00:00.000Z, so a +1 day occurrence can already be in the past in negative UTC offsets.
+    // The pre-fix cleanup query would then skip it and this test would pass without the fix.
+    const { dateString: plus7DateString } = getDate({ dateIncrement: 7 });
+    const { dateString: plus8DateString } = getDate({ dateIncrement: 8 });
+    const { dateString: plus9DateString } = getDate({ dateIncrement: 9 });
+    const firstId = 6080; // earliest upcoming occurrence — NOT being cancelled
+    const middleId = 6081; // the occurrence we cancel (this + subsequent)
+    const lastId = 6082;
+
+    const mkBooking = (id: number, uid: string, dateString: string) => ({
+      id,
+      uid,
+      recurringEventId,
+      eventTypeId: 1,
+      userId: 101,
+      attendees: [{ email: booker.email }],
+      responses: {
+        email: booker.email,
+        name: booker.name,
+        location: { optionValue: "", value: BookingLocations.CalVideo },
+      },
+      status: BookingStatus.ACCEPTED,
+      startTime: `${dateString}T05:00:00.000Z`,
+      endTime: `${dateString}T05:30:00.000Z`,
+    });
+
+    await createBookingScenario(
+      getScenarioData({
+        eventTypes: [
+          {
+            id: 1,
+            slotInterval: 30,
+            length: 30,
+            recurringEvent: { freq: 2, count: 3, interval: 1 },
+            users: [{ id: 101 }],
+          },
+        ],
+        bookings: [
+          mkBooking(firstId, "rec-sub-1", plus7DateString),
+          mkBooking(middleId, "rec-sub-2", plus8DateString),
+          mkBooking(lastId, "rec-sub-3", plus9DateString),
+        ],
+        organizer,
+        apps: [TestData.apps["daily-video"]],
+      })
+    );
+
+    mockSuccessfulVideoMeetingCreation({
+      metadataLookupKey: "dailyvideo",
+      videoMeetingData: { id: "MOCK_ID", password: "MOCK_PASS", url: `http://mock-dailyvideo.example.com/meeting-sub` },
+    });
+    mockCalendarToHaveNoBusySlots("googlecalendar", { create: { id: "MOCKED_GCAL_EVENT_SUB" } });
+
+    // The earliest occurrence has a scheduled webhook trigger (e.g. MEETING_ENDED). It is NOT being cancelled.
+    await prismock.webhookScheduledTriggers.create({
+      data: {
+        bookingId: firstId,
+        subscriberUrl: "http://my-webhook.example.com",
+        payload: "{}",
+        startAfter: new Date(`${plus7DateString}T05:30:00.000Z`),
+      },
+    });
+
+    await handleCancelBooking({
+      bookingData: {
+        id: middleId,
+        uid: "rec-sub-2",
+        cancelledBy: organizer.email,
+        cancellationReason: "Cancel this and subsequent",
+        cancelSubsequentBookings: true,
+      },
+      userId: organizer.id,
+    });
+
+    // The earliest occurrence must stay ACCEPTED (only middle + last are cancelled)...
+    const first = await prismock.booking.findFirst({ where: { id: firstId }, select: { status: true } });
+    expect(first?.status).toBe(BookingStatus.ACCEPTED);
+
+    // ...and its scheduled webhook trigger must survive, since it was never cancelled.
+    const remainingTriggers = await prismock.webhookScheduledTriggers.findMany({ where: { bookingId: firstId } });
+    expect(remainingTriggers).toHaveLength(1);
   });
 
   test("Should handle booking reference cleanup during cancellation", async () => {

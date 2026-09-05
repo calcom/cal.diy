@@ -380,8 +380,11 @@ async function handler(input: CancelBookingInput, dependencies?: Dependencies) {
     const allUpdatedBookings = await bookingRepository.findManyIncludeReferences({
       where: {
         recurringEventId: bookingToDelete.recurringEventId,
+        // Must match the cancelled set above (gte), not "now": for cancelSubsequentBookings, gte is the
+        // target's startTime, so earlier still-active occurrences aren't included and don't get their
+        // scheduled webhook triggers / no-show tasks wiped.
         startTime: {
-          gte: new Date(),
+          gte,
         },
       },
     });
