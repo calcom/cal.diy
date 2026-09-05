@@ -105,6 +105,41 @@ describe("getBusyTimes", () => {
       }),
     ]);
   });
+  it("should block the original booking slot when rescheduling", async () => {
+    const busyTimesService = getBusyTimesService();
+    const rescheduleUid = "xxxx1";
+
+    const busyTimes = await busyTimesService.getBusyTimes({
+      credentials: [],
+      userId: 1,
+      userEmail: "exampleuser1@example.com",
+      username: "exampleuser1",
+      bypassBusyCalendarTimes: false,
+      selectedCalendars: [],
+      startTime: startOfTomorrow.format(),
+      endTime: startOfTomorrow.endOf("day").format(),
+      currentBookings: mockBookings({}),
+      rescheduleUid,
+    });
+
+    expect(busyTimes).toEqual([
+      expect.objectContaining({
+        start: dayjs(`${tomorrowDate}`).startOf("day").set("hour", 10).toDate(),
+        end: dayjs(`${tomorrowDate}`).startOf("day").set("hour", 11).toDate(),
+        source: "eventType-1-booking-1",
+        title: "Booking Between X and Y",
+      }),
+      expect.objectContaining({
+        start: dayjs(`${tomorrowDate}`).startOf("day").set("hour", 14).toDate(),
+        end: dayjs(`${tomorrowDate}`).startOf("day").set("hour", 15).toDate(),
+        source: "eventType-1-booking-2",
+        title: "Booking Between X and Y",
+      }),
+    ]);
+
+    expect(busyTimes).toHaveLength(2);
+    expect(busyTimes.some((bt) => bt.source === "eventType-1-booking-1")).toBe(true);
+  });
   it("should block before and after buffer times", async () => {
     const busyTimesService = getBusyTimesService();
     const busyTimes = await busyTimesService.getBusyTimes({
