@@ -19,6 +19,7 @@ export const createWebhookProcedure = () => {
         select: {
           id: true,
           userId: true,
+          teamId: true,
           eventTypeId: true,
         },
       });
@@ -42,6 +43,18 @@ export const createWebhookProcedure = () => {
         }
 
         if (eventType.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+      } else if (webhook.teamId) {
+        const membership = await prisma.membership.findFirst({
+          where: {
+            teamId: webhook.teamId,
+            userId: ctx.user.id,
+            accepted: true,
+            role: { in: ["ADMIN", "OWNER"] },
+          },
+        });
+        if (!membership) {
           throw new TRPCError({ code: "FORBIDDEN" });
         }
       } else if (webhook.userId && webhook.userId !== ctx.user.id) {
