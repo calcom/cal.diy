@@ -128,6 +128,8 @@
   "no_available_users_found_error": "No available users found. Could you try another time slot?",
   "timeslot_unavailable_book_a_new_time": "The selected time slot is no longer available. <0>Please select a new time</0>",
   "timeslot_unavailable_short": "Taken",
+  "book_time_slot": "Book {{time}}",
+  "time_slot_unavailable_label": "{{time}}, unavailable",
   "time_shift": "Time shift",
   "just_connected_description": "You've just connected. Please book from above slots or retry later.",
   "please_try_again_later_or_book_another_slot": "You've just tried connecting now. Please try again later in {{remaining}} minutes or book another slot from the booking page.",
