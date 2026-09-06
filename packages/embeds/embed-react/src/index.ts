@@ -8,24 +8,28 @@ import Cal from "./Cal";
 // Exporting for consumption by @calcom/embed-react user
 export type { EmbedEvent } from "@calcom/embed-core";
 
-export function getCalApi(options?: {
+export type GetCalApiOptions = {
   embedJsUrl?: string;
   namespace?: string;
-}): Promise<GlobalCal | GlobalCalWithoutNs>;
+  disableAutofocus?: boolean;
+  autofocus?: boolean;
+  scroll?: boolean;
+  disableScroll?: boolean;
+  disableAutoScroll?: boolean;
+  compact?: boolean;
+  unpadded?: boolean;
+};
+
+export function getCalApi(options?: GetCalApiOptions): Promise<GlobalCal | GlobalCalWithoutNs>;
 export function getCalApi(embedJsUrl: string): Promise<GlobalCal | GlobalCalWithoutNs>;
 
 export function getCalApi(
-  optionsOrEmbedJsUrl?:
-    | {
-        embedJsUrl?: string;
-        namespace?: string;
-      }
-    | string
+  optionsOrEmbedJsUrl?: GetCalApiOptions | string
 ): Promise<GlobalCal | GlobalCalWithoutNs> {
   const options =
     typeof optionsOrEmbedJsUrl === "string" ? { embedJsUrl: optionsOrEmbedJsUrl } : optionsOrEmbedJsUrl ?? {};
 
-  const { namespace = "", embedJsUrl } = options;
+  const { namespace = "", embedJsUrl, disableAutofocus, autofocus, scroll, disableScroll, disableAutoScroll, compact, unpadded } = options;
   return new Promise(function tryReadingFromWindow(resolve) {
     const globalCal = EmbedSnippet(embedJsUrl);
     globalCal("init", namespace);
@@ -36,6 +40,23 @@ export function getCalApi(
       }, 50);
       return;
     }
+
+    const shouldDisableScroll =
+      disableAutoScroll ??
+      disableAutofocus ??
+      (autofocus === false ? true : undefined) ??
+      (scroll === false ? true : undefined) ??
+      disableScroll;
+
+    const isCompact = compact ?? unpadded;
+
+    if (shouldDisableScroll !== undefined || isCompact !== undefined) {
+      api("ui", {
+        ...(shouldDisableScroll !== undefined ? { disableAutoScroll: shouldDisableScroll, disableAutofocus: shouldDisableScroll } : {}),
+        ...(isCompact !== undefined ? { compact: isCompact, unpadded: isCompact } : {}),
+      });
+    }
+
     resolve(api);
   });
 }

@@ -118,7 +118,11 @@ const SlotItem = ({
   const bookingFull = !!(hasTimeSlots && slot.attendees && slot.attendees >= seatsPerTimeSlot);
   const isHalfFull = slot.attendees && seatsPerTimeSlot && slot.attendees / seatsPerTimeSlot >= 0.5;
   const isNearlyFull = slot.attendees && seatsPerTimeSlot && slot.attendees / seatsPerTimeSlot >= 0.83;
-  const colorClass = isNearlyFull ? "bg-rose-600" : isHalfFull ? "bg-yellow-500" : "bg-emerald-400";
+  const colorClass = isNearlyFull
+    ? "bg-rose-600"
+    : isHalfFull
+      ? "bg-yellow-500"
+      : "bg-[var(--cal-availability-dot-color,var(--color-availability-dot,var(--cal-bg-success,#34d399)))]";
 
   const nowDate = dayjs();
   const usersTimezoneDate = nowDate.tz(timezone);

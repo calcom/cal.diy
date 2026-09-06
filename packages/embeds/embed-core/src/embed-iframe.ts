@@ -391,9 +391,62 @@ export const methods = {
       }
     }
 
+    const getExplicitDisableAutoScroll = (config: UiConfig): boolean | undefined => {
+      if (
+        config.disableAutoScroll === true ||
+        config.disableAutofocus === true ||
+        config.disableScroll === true ||
+        config.autofocus === false ||
+        config.scroll === false
+      ) {
+        return true;
+      }
+      if (
+        config.disableAutoScroll === false ||
+        config.disableAutofocus === false ||
+        config.disableScroll === false ||
+        config.autofocus === true ||
+        config.scroll === true
+      ) {
+        return false;
+      }
+      return undefined;
+    };
+
+    const getExplicitCompact = (config: UiConfig): boolean | undefined => {
+      if (
+        config.compact === true ||
+        config.unpadded === true ||
+        config.padding === "none" ||
+        config.padding === "compact" ||
+        config.layout === "compact"
+      ) {
+        return true;
+      }
+      if (
+        config.compact === false ||
+        config.unpadded === false ||
+        config.padding !== undefined ||
+        config.layout !== undefined
+      ) {
+        return false;
+      }
+      return undefined;
+    };
+
+    const disableAutoScroll =
+      getExplicitDisableAutoScroll(uiConfig) ??
+      embedStore.uiConfig?.disableAutoScroll;
+
+    const compact =
+      getExplicitCompact(uiConfig) ??
+      embedStore.uiConfig?.compact;
+
     uiConfig = {
       ...embedStore.uiConfig,
       ...uiConfig,
+      ...(disableAutoScroll !== undefined ? { disableAutoScroll, disableAutofocus: disableAutoScroll } : {}),
+      ...(compact !== undefined ? { compact, unpadded: compact } : {}),
       ...(mergedCssVarsPerTheme
         ? { cssVarsPerTheme: mergedCssVarsPerTheme }
         : {}),
@@ -528,7 +581,30 @@ function main() {
   embedStore.theme = window?.getEmbedTheme?.();
 
   const autoScrollFromParam = url.searchParams.get("ui.autoscroll");
-  const shouldDisableAutoScroll = autoScrollFromParam === "false";
+  const autoFocusFromParam = url.searchParams.get("ui.autofocus");
+  const disableAutoFocusParam = url.searchParams.get("disableAutofocus");
+  const scrollFromParam = url.searchParams.get("ui.scroll");
+  const disableScrollParam = url.searchParams.get("disableScroll");
+
+  const isAutoScrollDisabled =
+    autoScrollFromParam === "false" ||
+    autoFocusFromParam === "false" ||
+    disableAutoFocusParam === "true" ||
+    scrollFromParam === "false" ||
+    disableScrollParam === "true";
+
+  const isAutoScrollEnabled =
+    autoScrollFromParam === "true" ||
+    autoFocusFromParam === "true" ||
+    disableAutoFocusParam === "false" ||
+    scrollFromParam === "true" ||
+    disableScrollParam === "false";
+
+  const shouldDisableAutoScroll = isAutoScrollDisabled && !isAutoScrollEnabled;
+
+  const compactFromParam = url.searchParams.get("ui.compact") ?? url.searchParams.get("compact") ?? url.searchParams.get("ui.unpadded") ?? url.searchParams.get("unpadded");
+  const isCompact = compactFromParam === "true" || url.searchParams.get("layout") === "compact";
+
   const useSlotsViewOnSmallScreenParam = url.searchParams.get(
     "useSlotsViewOnSmallScreen"
   );
@@ -538,6 +614,9 @@ function main() {
     colorScheme: url.searchParams.get("ui.color-scheme"),
     layout: url.searchParams.get("layout") as BookerLayouts,
     disableAutoScroll: shouldDisableAutoScroll,
+    disableAutofocus: shouldDisableAutoScroll,
+    compact: isCompact,
+    unpadded: isCompact,
     // by default useSlotsViewOnSmallScreen should be false
     useSlotsViewOnSmallScreen:
       (useSlotsViewOnSmallScreenParam ?? "false") === "true",

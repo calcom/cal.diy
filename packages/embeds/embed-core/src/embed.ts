@@ -233,6 +233,8 @@ export class Cal {
 
   api: CalApi;
 
+  uiConfig?: UiConfig;
+
   /**
    * Commands for which the queue persists across iframe resets
    */
@@ -478,6 +480,16 @@ export class Cal {
 
     this.actionManager.on("__routeChanged", () => {
       if (!this.inlineEl) {
+        return;
+      }
+      const uiConfig = this.uiConfig;
+      const shouldDisableScroll =
+        uiConfig?.disableAutoScroll ||
+        uiConfig?.disableAutofocus ||
+        uiConfig?.autofocus === false ||
+        uiConfig?.scroll === false ||
+        uiConfig?.disableScroll;
+      if (shouldDisableScroll) {
         return;
       }
       const { top, height } = this.inlineEl.getBoundingClientRect();
@@ -1500,6 +1512,7 @@ class CalApi {
       },
     });
 
+    this.cal.uiConfig = { ...this.cal.uiConfig, ...uiConfig };
     this.cal.doInIframe({ method: "ui", arg: uiConfig });
   }
 }
