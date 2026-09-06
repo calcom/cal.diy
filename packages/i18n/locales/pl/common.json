@@ -196,7 +196,7 @@
   "password_reset_instructions": "Jeśli nie poprosiłeś o to, możesz bezpiecznie zignorować ten e-mail, a Twoje hasło nie zostanie zmienione.",
   "event_awaiting_approval_subject": "Oczekiwanie na zatwierdzenie: {{title}} w {{date}}",
   "event_still_awaiting_approval": "Wydarzenie nadal oczekuje na Twoje zatwierdzenie",
-  "booking_submitted_subject": "Rezerwacja potwierdzona: {{title}} w {{date}}",
+  "booking_submitted_subject": "Rezerwacja złożona: {{title}} w {{date}}",
   "download_recording_subject": "Pobierz nagranie: {{title}} z {{date}}",
   "download_transcript_email_subject": "Pobierz transkrypcję: {{title}} z dnia {{date}}",
   "download_your_recording": "Pobierz nagranie",
