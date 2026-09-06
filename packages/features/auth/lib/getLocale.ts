@@ -25,8 +25,48 @@ export const getLocale = async (
     | {
         cookies: ReadonlyRequestCookies;
         headers: ReadonlyHeaders;
-      }
+      },
+  username?: string
 ): Promise<string> => {
+  // IMPORTANT: For booking pages, the page OWNER's locale takes precedence over the visitor's locale
+  // If username is provided (from pathname), fetch the page owner's locale first
+  if (username) {
+    // Validate username format before database query
+    // Valid usernames follow slugify rules: lowercase alphanumeric + periods + hyphens
+    // Cannot start with dash/period or end with dash/period, max 255 chars (DB limit)
+    const isValidUsername =
+      /^[a-z0-9][a-z0-9.-]{0,253}[a-z0-9]$/.test(username) || /^[a-z0-9]$/.test(username);
+
+    if (!isValidUsername) {
+      // Invalid username format - skip DB lookup and fall back to token/browser locale
+      console.warn("[getLocale] Invalid username format");
+    } else if (typeof window === "undefined") {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mod = (await import("@calcom/prisma")) as any;
+        const serverPrisma = mod.prisma ?? mod.default;
+
+        const user = await serverPrisma.user.findFirst({
+          where: { username, locked: false },
+          select: { locale: true },
+        });
+
+        if (user) {
+          // User found - return their locale or default to "en" if null
+          return user.locale || "en";
+        }
+      } catch (error) {
+        // Silently fail and fallback to token/browser locale
+        // Log only the error message to avoid exposing PII from the query context
+        console.error(
+          "[getLocale] Failed to fetch user locale:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
+      }
+    }
+  }
+
+  // Fallback to authenticated user's token locale (for non-booking pages or when page owner not found)
   const token = await getToken({
     req: req as GetTokenParams["req"],
   });
@@ -37,6 +77,7 @@ export const getLocale = async (
     return tokenLocale;
   }
 
+  // Final fallback: use Accept-Language header from browser
   const acceptLanguage =
     req.headers instanceof Headers ? req.headers.get("accept-language") : req.headers["accept-language"];
 
