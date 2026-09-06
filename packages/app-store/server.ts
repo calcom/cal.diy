@@ -26,6 +26,7 @@ export async function getLocationGroupedOptions(
       supportsCustomLabel?: boolean;
     }[]
   > = {};
+  const seenOptionsByCategory: Record<string, Set<string>> = {};
 
   // don't default to {}, when you do TS no longer determines the right types.
   let idToSearchObject: Prisma.CredentialWhereInput;
@@ -108,13 +109,13 @@ export async function getLocationGroupedOptions(
             ? { credentialId: app.credential.id, teamName: app.credential.team?.name ?? null }
             : {}),
         };
-        if (apps[groupByCategory]) {
-          const existingOption = apps[groupByCategory].find((o) => o.value === option.value);
-          if (!existingOption) {
-            apps[groupByCategory] = [...apps[groupByCategory], option];
-          }
-        } else {
-          apps[groupByCategory] = [option];
+        if (!seenOptionsByCategory[groupByCategory]) {
+          seenOptionsByCategory[groupByCategory] = new Set();
+          apps[groupByCategory] = [];
+        }
+        if (!seenOptionsByCategory[groupByCategory].has(option.value)) {
+          seenOptionsByCategory[groupByCategory].add(option.value);
+          apps[groupByCategory].push(option);
         }
       }
     }
