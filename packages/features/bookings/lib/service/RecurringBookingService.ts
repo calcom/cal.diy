@@ -8,6 +8,21 @@ export type BookingHandlerInput = {
   bookingData: CreateRecurringBookingData;
 } & CreateBookingMeta;
 
+// Every occurrence of a recurring booking must attach to the same third-party
+// (e.g. Google Calendar) recurring series, so we reuse the id from whichever
+// booking first receives one from its calendar references.
+function extractThirdPartyRecurringEventId(booking: BookingResponse): string | null {
+  if (!booking.references || booking.references.length === 0) {
+    return null;
+  }
+  for (const reference of booking.references) {
+    if (reference.thirdPartyRecurringEventId) {
+      return reference.thirdPartyRecurringEventId;
+    }
+  }
+  return null;
+}
+
 export const handleNewRecurringBooking = async function (
   this: RecurringBookingService,
   {
@@ -69,6 +84,7 @@ export const handleNewRecurringBooking = async function (
       },
     });
     luckyUsers = firstBookingResult.luckyUsers;
+    thirdPartyRecurringEventId = extractThirdPartyRecurringEventId(firstBookingResult);
   }
 
   for (let key = isRoundRobin ? 1 : 0; key < data.length; key++) {
@@ -117,14 +133,7 @@ export const handleNewRecurringBooking = async function (
     createdBookings.push(eachRecurringBooking);
 
     if (!thirdPartyRecurringEventId) {
-      if (eachRecurringBooking.references && eachRecurringBooking.references.length > 0) {
-        for (const reference of eachRecurringBooking.references) {
-          if (reference.thirdPartyRecurringEventId) {
-            thirdPartyRecurringEventId = reference.thirdPartyRecurringEventId;
-            break;
-          }
-        }
-      }
+      thirdPartyRecurringEventId = extractThirdPartyRecurringEventId(eachRecurringBooking);
     }
   }
 
