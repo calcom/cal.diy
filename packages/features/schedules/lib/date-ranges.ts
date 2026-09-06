@@ -67,7 +67,7 @@ export function processWorkingHours(
 
     let end = dateInTz.add(item.endTime.getUTCHours(), "hours").add(item.endTime.getUTCMinutes(), "minutes");
 
-    const offsetBeginningOfDay = dayjs(start.format("YYYY-MM-DD hh:mm")).tz(adjustedTimezone).utcOffset();
+    const offsetBeginningOfDay = dayjs(start.format("YYYY-MM-DD HH:mm")).tz(adjustedTimezone).utcOffset();
     const offsetDiff = start.utcOffset() - offsetBeginningOfDay; // there will be 60 min offset on the day day of DST change
 
     start = start.add(offsetDiff, "minute");

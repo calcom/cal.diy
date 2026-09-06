@@ -158,6 +158,69 @@ describe("processWorkingHours", () => {
     vi.useRealTimers();
   });
 
+  it("should return correct working hours with afternoon start time on DST spring-forward date", () => {
+    // 2026-03-08 is when US spring forward happens (America/New_York)
+    vi.useFakeTimers().setSystemTime(new Date("2026-03-07T12:00:00.000Z"));
+
+    const item = {
+      days: [0, 1, 2, 3, 4, 5, 6], // Sunday
+      startTime: new Date(Date.UTC(2023, 5, 12, 13, 0)), // 1 PM
+      endTime: new Date(Date.UTC(2023, 5, 12, 18, 0)), // 6 PM
+    };
+
+    const timeZone = "America/New_York";
+
+    const dateFrom = dayjs();
+    const dateTo = dayjs().add(2, "day");
+
+    const results = Object.values(
+      processWorkingHours({}, { item, timeZone, dateFrom, dateTo, travelSchedules: [] })
+    );
+
+    // On DST transition date (2026-03-08), 1 PM - 6 PM America/New_York is:
+    // - Before transition (EST, UTC-5): 18:00 → 23:00 UTC
+    // - On transition day (EDT, UTC-4): 17:00 → 22:00 UTC
+    // The result should have correct UTC times for each day
+    const march8Result = results.find((r) => r.start.format("YYYY-MM-DD") === "2026-03-08");
+    expect(march8Result).toBeDefined();
+    expect(march8Result!.start.utc().hour()).toBe(17); // 1 PM EDT = 5 PM UTC
+    expect(march8Result!.end.utc().hour()).toBe(22); // 6 PM EDT = 10 PM UTC
+
+    vi.setSystemTime(vi.getRealSystemTime());
+    vi.useRealTimers();
+  });
+
+  it("should return correct working hours with afternoon start time on DST fall-back date", () => {
+    // 2026-11-01 is when US fall back happens (America/New_York)
+    vi.useFakeTimers().setSystemTime(new Date("2026-10-31T12:00:00.000Z"));
+
+    const item = {
+      days: [0, 1, 2, 3, 4, 5, 6], // Sunday
+      startTime: new Date(Date.UTC(2023, 5, 12, 13, 0)), // 1 PM
+      endTime: new Date(Date.UTC(2023, 5, 12, 18, 0)), // 6 PM
+    };
+
+    const timeZone = "America/New_York";
+
+    const dateFrom = dayjs();
+    const dateTo = dayjs().add(2, "day");
+
+    const results = Object.values(
+      processWorkingHours({}, { item, timeZone, dateFrom, dateTo, travelSchedules: [] })
+    );
+
+    // On DST transition date (2026-11-01), 1 PM - 6 PM America/New_York is:
+    // - Before transition (EDT, UTC-4): 17:00 → 22:00 UTC
+    // - On transition day (EST, UTC-5): 18:00 → 23:00 UTC
+    const november1Result = results.find((r) => r.start.format("YYYY-MM-DD") === "2026-11-01");
+    expect(november1Result).toBeDefined();
+    expect(november1Result!.start.utc().hour()).toBe(18); // 1 PM EST = 6 PM UTC
+    expect(november1Result!.end.utc().hour()).toBe(23); // 6 PM EST = 11 PM UTC
+
+    vi.setSystemTime(vi.getRealSystemTime());
+    vi.useRealTimers();
+  });
+
   // TEMPORAIRLY SKIPPING THIS TEST - Started failing after 29th Oct
   it.skip("should return the correct working hours in the month were DST ends", () => {
     const item = {
