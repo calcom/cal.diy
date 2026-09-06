@@ -23,6 +23,8 @@ export const DI_TOKENS = {
   USER_REPOSITORY_MODULE: Symbol("UserRepositoryModule"),
   BOOKING_REPOSITORY: Symbol("BookingRepository"),
   BOOKING_REPOSITORY_MODULE: Symbol("BookingRepositoryModule"),
+  BOOKING_SEAT_REPOSITORY: Symbol("BookingSeatRepository"),
+  BOOKING_SEAT_REPOSITORY_MODULE: Symbol("BookingSeatRepositoryModule"),
   BOOKING_ACCESS_SERVICE: Symbol("BookingAccessService"),
   BOOKING_ACCESS_SERVICE_MODULE: Symbol("BookingAccessServiceModule"),
   EVENT_TYPE_REPOSITORY: Symbol("EventTypeRepository"),

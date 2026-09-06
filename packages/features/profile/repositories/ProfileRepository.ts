@@ -1029,6 +1029,17 @@ export class ProfileRepository implements IProfileRepository {
       select: profileSelect,
     });
   }
+
+  async findOrganizationProfileByUserId({ userId }: { userId: number }) {
+    return this.prismaClient.profile.findFirst({
+      where: { userId },
+      select: {
+        organizationId: true,
+        username: true,
+        organization: { select: { hideBranding: true } },
+      },
+    });
+  }
 }
 
 export const normalizeProfile = <

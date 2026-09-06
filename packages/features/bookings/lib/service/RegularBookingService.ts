@@ -30,6 +30,7 @@ import { isEventTypeLoggingEnabled } from "@calcom/features/bookings/lib/isEvent
 import type { BookingEmailAndSmsTasker } from "@calcom/features/bookings/lib/tasker/BookingEmailAndSmsTasker";
 import type { BuiltCalendarEvent } from "@calcom/features/CalendarEventBuilder";
 import { CalendarEventBuilder } from "@calcom/features/CalendarEventBuilder";
+import type { CredentialRepository } from "@calcom/features/credentials/repositories/CredentialRepository";
 import { getSpamCheckService } from "@calcom/features/di/watchlist/containers/SpamCheckService.container";
 import {
   type EventTypeBrandingData,
@@ -39,7 +40,7 @@ import { getUsernameList } from "@calcom/features/eventtypes/lib/defaultEvents";
 import { getEventName, updateHostInEventName } from "@calcom/features/eventtypes/lib/eventNaming";
 import { getFullName } from "@calcom/features/form-builder/utils";
 import type { HashedLinkService } from "@calcom/features/hashedLink/lib/service/HashedLinkService";
-import { ProfileRepository } from "@calcom/features/profile/repositories/ProfileRepository";
+import type { ProfileRepository } from "@calcom/features/profile/repositories/ProfileRepository";
 import { handleAnalyticsEvents } from "@calcom/features/tasker/tasks/analytics/handleAnalyticsEvents";
 import type { UserRepository } from "@calcom/features/users/repositories/UserRepository";
 import { UsersRepository } from "@calcom/features/users/users.repository";
@@ -67,7 +68,6 @@ import { safeStringify } from "@calcom/lib/safeStringify";
 import { getServerErrorFromUnknown } from "@calcom/lib/server/getServerErrorFromUnknown";
 import { getTimeFormatStringFromUserTimeFormat } from "@calcom/lib/timeFormat";
 import { distributedTracing } from "@calcom/lib/tracing/factory";
-import type { PrismaClient } from "@calcom/prisma";
 import type { AssignmentReasonEnum, DestinationCalendar, Prisma, User } from "@calcom/prisma/client";
 import { BookingStatus, CreationSource, SchedulingType, WebhookTriggerEvents } from "@calcom/prisma/enums";
 import { userMetadata as userMetadataSchema } from "@calcom/prisma/zod-utils";
@@ -82,6 +82,7 @@ import type { EventResult, PartialReference } from "@calcom/types/EventManager";
 import short, { uuid } from "short-uuid";
 import { v5 as uuidv5 } from "uuid";
 import type { BookingRepository } from "../../repositories/BookingRepository";
+import type { BookingSeatRepository } from "../../repositories/BookingSeatRepository";
 import { BookingActionMap, type BookingActionType, BookingEmailSmsHandler } from "../BookingEmailSmsHandler";
 import { getAllCredentialsIncludeServiceAccountKey } from "../getAllCredentialsForUsersOnEvent/getAllCredentials";
 import { refreshCredentials } from "../getAllCredentialsForUsersOnEvent/refreshCredentials";
@@ -422,8 +423,10 @@ function buildBookingCreatedPayload({
 
 export interface IBookingServiceDependencies {
   checkBookingAndDurationLimitsService: CheckBookingAndDurationLimitsService;
-  prismaClient: PrismaClient;
   bookingRepository: BookingRepository;
+  bookingSeatRepository: BookingSeatRepository;
+  profileRepository: ProfileRepository;
+  credentialRepository: CredentialRepository;
   luckyUserService: LuckyUserService;
   userRepository: UserRepository;
   hashedLinkService: HashedLinkService;
@@ -826,16 +829,9 @@ async function handler(
   let availableUsers: IsFixedAwareUser[] = [];
 
   if (eventType.seatsPerTimeSlot) {
-    const booking = await deps.prismaClient.booking.findFirst({
-      where: {
-        eventTypeId: eventType.id,
-        startTime: new Date(dayjs(reqBody.start).utc().format()),
-        status: BookingStatus.ACCEPTED,
-      },
-      select: {
-        userId: true,
-        attendees: { select: { email: true } },
-      },
+    const booking = await deps.bookingRepository.findAcceptedForEventTypeAtStartTime({
+      eventTypeId: eventType.id,
+      startTime: new Date(dayjs(reqBody.start).utc().format()),
     });
 
     if (booking) {
@@ -1309,15 +1305,8 @@ async function handler(
   });
   // For bookings made before introducing iCalSequence, assume that the sequence should start at 1. For new bookings start at 0.
   const iCalSequence = getICalSequence(originalRescheduledBooking);
-  const organizerOrganizationProfile = await deps.prismaClient.profile.findFirst({
-    where: {
-      userId: organizerUser.id,
-    },
-    select: {
-      organizationId: true,
-      username: true,
-      organization: { select: { hideBranding: true } },
-    },
+  const organizerOrganizationProfile = await deps.profileRepository.findOrganizationProfileByUserId({
+    userId: organizerUser.id,
   });
 
   const organizerOrganizationId = organizerOrganizationProfile?.organizationId;
@@ -1774,8 +1763,7 @@ async function handler(
 
         // Save description to bookingSeat
         const uniqueAttendeeId = uuid();
-        await deps.prismaClient.bookingSeat.create({
-          data: {
+        await deps.bookingSeatRepository.create({
             referenceUid: uniqueAttendeeId,
             data: {
               description: additionalNotes,
@@ -1792,8 +1780,7 @@ async function handler(
                 id: currentAttendee?.id,
               },
             },
-          },
-        });
+          }),
         evt.attendeeSeatId = uniqueAttendeeId;
       }
     } else {
@@ -2138,13 +2125,9 @@ async function handler(
 
         if (!isDryRun && evt.iCalUID !== booking.iCalUID) {
           // The eventManager could change the iCalUID. At this point we can update the DB record
-          await deps.prismaClient.booking.update({
-            where: {
-              id: booking.id,
-            },
-            data: {
-              iCalUID: evt.iCalUID || booking.iCalUID,
-            },
+          await deps.bookingRepository.updateICalUID({
+            bookingId: booking.id,
+            iCalUID: evt.iCalUID || booking.iCalUID,
           });
         }
       }
@@ -2255,25 +2238,9 @@ async function handler(
   if (bookingRequiresPayment) {
     tracingLogger.debug(`Booking ${organizerUser.username} requires payment`);
     // Load credentials.app.categories
-    const credentialPaymentAppCategories = await deps.prismaClient.credential.findMany({
-      where: {
-        ...(paymentAppData.credentialId ? { id: paymentAppData.credentialId } : { userId: organizerUser.id }),
-        app: {
-          categories: {
-            hasSome: ["payment"],
-          },
-        },
-      },
-      select: {
-        key: true,
-        appId: true,
-        app: {
-          select: {
-            categories: true,
-            dirName: true,
-          },
-        },
-      },
+    const credentialPaymentAppCategories = await deps.credentialRepository.findPaymentAppCredentials({
+      credentialId: paymentAppData.credentialId,
+      userId: organizerUser.id,
     });
     const eventTypePaymentAppCredential = credentialPaymentAppCategories.find((credential) => {
       return credential.appId === paymentAppData.appId;
@@ -2443,19 +2410,11 @@ async function handler(
 
   try {
     if (!isDryRun) {
-      await deps.prismaClient.booking.update({
-        where: {
-          uid: booking.uid,
-        },
-        data: {
-          location: evt.location,
-          metadata: { ...(typeof booking.metadata === "object" && booking.metadata), ...metadata },
-          references: {
-            createMany: {
-              data: referencesToCreate,
-            },
-          },
-        },
+      await deps.bookingRepository.updateLocationMetadataAndReferences({
+        bookingUid: booking.uid,
+        location: evt.location,
+        metadata: { ...(typeof booking.metadata === "object" && booking.metadata), ...metadata },
+        references: referencesToCreate,
       });
     }
   } catch (error) {

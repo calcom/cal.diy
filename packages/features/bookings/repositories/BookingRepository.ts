@@ -340,6 +340,40 @@ const selectStatementToGetBookingForCalEventBuilder = {
 export class BookingRepository implements IBookingRepository {
   constructor(private prismaClient: PrismaClient) {}
 
+  async findAcceptedForEventTypeAtStartTime({
+    eventTypeId,
+    startTime,
+  }: {
+    eventTypeId: number;
+    startTime: Date;
+  }) {
+    return this.prismaClient.booking.findFirst({
+      where: { eventTypeId, startTime, status: BookingStatus.ACCEPTED },
+      select: { userId: true, attendees: { select: { email: true } } },
+    });
+  }
+
+  async updateICalUID({ bookingId, iCalUID }: { bookingId: number; iCalUID: string | null }) {
+    return this.prismaClient.booking.update({ where: { id: bookingId }, data: { iCalUID } });
+  }
+
+  async updateLocationMetadataAndReferences({
+    bookingUid,
+    location,
+    metadata,
+    references,
+  }: {
+    bookingUid: string;
+    location: string | null | undefined;
+    metadata: Prisma.InputJsonValue;
+    references: Prisma.BookingReferenceCreateManyBookingInput[];
+  }) {
+    return this.prismaClient.booking.update({
+      where: { uid: bookingUid },
+      data: { location, metadata, references: { createMany: { data: references } } },
+    });
+  }
+
   /**
    * Gets the fromReschedule field for a booking by UID
    * Used to identify if this booking was created from a reschedule
