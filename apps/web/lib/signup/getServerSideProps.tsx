@@ -1,5 +1,6 @@
 import process from "node:process";
 import { getServerSession } from "@calcom/features/auth/lib/getServerSession";
+import { IS_OIDC_LOGIN_ENABLED, OIDC_PROVIDER_NAME } from "@calcom/features/auth/lib/oidc";
 import { getOrgUsernameFromEmail } from "@calcom/features/auth/signup/utils/getOrgUsernameFromEmail";
 import { FeaturesRepository } from "@calcom/features/flags/features.repository";
 import { IS_SELF_HOSTED, WEBAPP_URL } from "@calcom/lib/constants";
@@ -56,6 +57,8 @@ export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const props = {
     redirectUrl,
     isGoogleLoginEnabled: IS_GOOGLE_LOGIN_ENABLED,
+    isOidcLoginEnabled: IS_OIDC_LOGIN_ENABLED,
+    oidcProviderName: OIDC_PROVIDER_NAME,
 
     prepopulateFormValues: undefined,
     emailVerificationEnabled,

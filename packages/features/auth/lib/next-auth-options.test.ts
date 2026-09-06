@@ -468,6 +468,7 @@ describe("Azure AD signIn callback", () => {
         saml: "SAML",
         "saml-idp": "SAML",
         cal: "CAL",
+        oidc: "OIDC",
       };
       return map[provider] ?? null;
     });
@@ -861,6 +862,123 @@ describe("Azure AD signIn callback", () => {
       expect(result).toBe("/auth/error?error=unverified-email");
     });
   });
+
+  describe("OIDC identity provider conversion (signIn callback)", () => {
+    type OidcProfileFixture = { sub?: string; email?: string; email_verified?: boolean };
+
+    it("CAL user with verified email converts to OIDC on OIDC login", async () => {
+      mockPrismaUserFindFirst
+        .mockResolvedValueOnce(null) // First call: lookup by identityProvider + providerAccountId
+        .mockResolvedValueOnce(null) // Legacy lookup
+        .mockResolvedValueOnce({
+          // Lookup by email
+          id: 60,
+          email: "user@example.com",
+          emailVerified: new Date(),
+          identityProvider: "CAL",
+          password: { hash: "hashed" },
+          twoFactorEnabled: false,
+        });
+
+      const result = await signInCallback({
+        user: { id: "1", email: "user@example.com", name: "User", emailVerified: null },
+        account: { provider: "oidc", providerAccountId: "oidc-conv-1", type: "oauth" as const },
+        profile: { email_verified: true } satisfies OidcProfileFixture,
+        credentials: undefined,
+        email: undefined,
+      });
+
+      expect(mockPrismaUserUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            identityProvider: "OIDC",
+            identityProviderId: "oidc-conv-1",
+          }),
+        })
+      );
+      expect(result).toBe(true);
+    });
+
+    it("OIDC user auto-merges on Google login when email is verified", async () => {
+      mockPrismaUserFindFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null).mockResolvedValueOnce({
+        id: 61,
+        email: "user@example.com",
+        emailVerified: new Date(),
+        identityProvider: "OIDC",
+        password: null,
+        twoFactorEnabled: false,
+      });
+
+      const result = await signInCallback({
+        user: { id: "1", email: "user@example.com", name: "User", emailVerified: null },
+        account: { provider: "google", providerAccountId: "google-conv-2", type: "oauth" as const },
+        profile: { email_verified: true } satisfies OidcProfileFixture,
+        credentials: undefined,
+        email: undefined,
+      });
+
+      // With isVerified=true and non-CAL provider, auto-merge path is taken (returns true directly)
+      expect(result).toBe(true);
+    });
+
+    it("GOOGLE user auto-merges on OIDC login when email is verified", async () => {
+      mockPrismaUserFindFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null).mockResolvedValueOnce({
+        id: 62,
+        email: "user@example.com",
+        emailVerified: new Date(),
+        identityProvider: "GOOGLE",
+        password: null,
+        twoFactorEnabled: false,
+      });
+
+      const result = await signInCallback({
+        user: { id: "1", email: "user@example.com", name: "User", emailVerified: null },
+        account: { provider: "oidc", providerAccountId: "oidc-conv-2", type: "oauth" as const },
+        profile: { email_verified: true } satisfies OidcProfileFixture,
+        credentials: undefined,
+        email: undefined,
+      });
+
+      // With isVerified=true and non-CAL provider, auto-merge path is taken (returns true directly)
+      expect(result).toBe(true);
+    });
+
+    it("unverified CAL account blocks OIDC linking (anti-hijack)", async () => {
+      mockPrismaUserFindFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: 63,
+          email: "user@example.com",
+          emailVerified: null,
+          identityProvider: "CAL",
+          password: { hash: "hashed" },
+          twoFactorEnabled: false,
+        });
+
+      const result = await signInCallback({
+        user: { id: "1", email: "user@example.com", name: "User", emailVerified: null },
+        account: { provider: "oidc", providerAccountId: "oidc-hijack-1", type: "oauth" as const },
+        profile: { email_verified: true } satisfies OidcProfileFixture,
+        credentials: undefined,
+        email: undefined,
+      });
+
+      expect(result).toBe("/auth/error?error=unverified-email");
+    });
+
+    it("OIDC login without email_verified claim is rejected (no Azure-style carve-out)", async () => {
+      const result = await signInCallback({
+        user: { id: "1", email: "user@example.com", name: "User", emailVerified: null },
+        account: { provider: "oidc", providerAccountId: "oidc-unverified-1", type: "oauth" as const },
+        profile: { sub: "oidc-user-1", email: "user@example.com" } satisfies OidcProfileFixture,
+        credentials: undefined,
+        email: undefined,
+      });
+
+      expect(result).toBe("/auth/error?error=unverified-email");
+    });
+  });
 });
 
 describe("Azure AD JWT callback", () => {
@@ -878,6 +996,7 @@ describe("Azure AD JWT callback", () => {
         saml: "SAML",
         "saml-idp": "SAML",
         cal: "CAL",
+        oidc: "OIDC",
       };
       return map[provider] ?? null;
     });

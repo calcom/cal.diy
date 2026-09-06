@@ -1,5 +1,6 @@
 "use client";
 
+import process from "node:process";
 import getStripe from "@calcom/app-store/stripepayment/lib/client";
 import { getPremiumPlanPriceValue } from "@calcom/app-store/stripepayment/lib/utils";
 import {
@@ -22,6 +23,7 @@ import {
 } from "@calcom/lib/constants";
 import { isENVDev } from "@calcom/lib/env";
 import { fetchUsername } from "@calcom/lib/fetchUsername";
+import { getSafeRedirectUrl } from "@calcom/lib/getSafeRedirectUrl";
 import { pushGTMEvent } from "@calcom/lib/gtm";
 import { useCompatSearchParams } from "@calcom/lib/hooks/useCompatSearchParams";
 import { useDebounce } from "@calcom/lib/hooks/useDebounce";
@@ -195,6 +197,8 @@ export default function Signup({
   orgSlug,
   isGoogleLoginEnabled,
   isOutlookLoginEnabled,
+  isOidcLoginEnabled,
+  oidcProviderName,
   orgAutoAcceptEmail,
   redirectUrl,
   emailVerificationEnabled,
@@ -205,6 +209,7 @@ export default function Signup({
   const [usernameTaken, setUsernameTaken] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isMicrosoftLoading, setIsMicrosoftLoading] = useState(false);
+  const [isOidcLoading, setIsOidcLoading] = useState(false);
   const [accountUnderReview, setAccountUnderReview] = useState(false);
   const [displayEmailForm, setDisplayEmailForm] = useState(token);
   const [turnstileKey, setTurnstileKey] = useState(0);
@@ -511,15 +516,8 @@ export default function Signup({
                           setPremium={(value) => setPremiumUsername(value)}
                           addOnLeading={
                             orgSlug
-                              ? truncateDomain(
-                                  `${WEBAPP_URL.replace(
-                                    URL_PROTOCOL_REGEX,
-                                    ""
-                                  )}/`
-                                )
-                              : truncateDomain(
-                                  `${WEBSITE_URL.replace(URL_PROTOCOL_REGEX, "")}/`
-                                )
+                              ? truncateDomain(`${WEBAPP_URL.replace(URL_PROTOCOL_REGEX, "")}/`)
+                              : truncateDomain(`${WEBSITE_URL.replace(URL_PROTOCOL_REGEX, "")}/`)
                           }
                         />
                       ) : null}
@@ -700,7 +698,44 @@ export default function Signup({
                       </div>
                     )}
 
-                    {(isGoogleLoginEnabled || isOutlookLoginEnabled) && (
+                    {isOidcLoginEnabled && (
+                      <div className="flex flex-col gap-2 md:flex-row">
+                        <Button
+                          color="secondary"
+                          loading={isOidcLoading}
+                          disabled={isGoogleLoading || isMicrosoftLoading}
+                          CustomStartIcon={
+                            <Icon
+                              name="key"
+                              className={classNames(
+                                "mr-2 size-4 text-subtle",
+                                premiumUsername && "opacity-50"
+                              )}
+                            />
+                          }
+                          className={classNames("w-full justify-center rounded-md text-center")}
+                          data-testid="continue-with-oidc-button"
+                          onClick={async () => {
+                            posthog.capture("signup_oidc_button_clicked", {
+                              has_token: !!token,
+                              is_org_invite: isOrgInviteByLink,
+                              org_slug: orgSlug,
+                              has_prepopulated_username: !!prepopulateFormValues?.username,
+                            });
+                            setIsOidcLoading(true);
+                            const callbackUrlParam = searchParams?.get("callbackUrl");
+                            const callbackUrl =
+                              getSafeRedirectUrl(
+                                callbackUrlParam ? `${WEBAPP_URL}/${callbackUrlParam}` : undefined
+                              ) ?? undefined;
+                            await signIn("oidc", { callbackUrl });
+                          }}>
+                          {t("continue_with_oidc", { providerName: oidcProviderName })}
+                        </Button>
+                      </div>
+                    )}
+
+                    {(isGoogleLoginEnabled || isOutlookLoginEnabled || isOidcLoginEnabled) && (
                       <div>
                         <div className="relative flex items-center">
                           <div className="grow border-subtle border-t" />

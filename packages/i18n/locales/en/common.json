@@ -1374,6 +1374,7 @@
   "signin_with_saml_oidc": "Sign in with SAML/OIDC",
   "continue_with_email": "Continue with Email",
   "continue_with_google": "Continue with Google",
+  "continue_with_oidc": "Continue with {{providerName}}",
   "last_used": "Last used",
   "you_will_need_to_generate": "You will need to generate an access token from your old scheduling tool.",
   "import": "Import",

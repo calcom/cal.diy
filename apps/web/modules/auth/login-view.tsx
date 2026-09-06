@@ -1,5 +1,6 @@
 "use client";
 
+import process from "node:process";
 import { ErrorCode } from "@calcom/features/auth/lib/ErrorCode";
 import { HOSTED_CAL_FEATURES, WEBAPP_URL, WEBSITE_URL } from "@calcom/lib/constants";
 import { emailRegex } from "@calcom/lib/emailSchema";
@@ -36,13 +37,9 @@ interface LoginValues {
   csrfToken: string;
 }
 
-const MicrosoftIcon = () => (
-  <img className="size-4" src="/microsoft-logo.svg" alt="" />
-);
+const MicrosoftIcon = () => <img className="size-4" src="/microsoft-logo.svg" alt="" />;
 
-const GoogleIcon = () => (
-  <img className="size-4" src="/google-icon-colored.svg" alt="" />
-);
+const GoogleIcon = () => <img className="size-4" src="/google-icon-colored.svg" alt="" />;
 
 function BackgroundGrid() {
   const rows = 9;
@@ -105,6 +102,8 @@ export default function Login({
   csrfToken,
   isGoogleLoginEnabled,
   isOutlookLoginEnabled,
+  isOidcLoginEnabled,
+  oidcProviderName,
   totpEmail,
 }: PageProps) {
   const searchParams = useCompatSearchParams();
@@ -170,7 +169,7 @@ export default function Login({
     else setErrorMessage(errorMessages[res.error] || t("something_went_wrong"));
   };
 
-  const showSocialLogin = isGoogleLoginEnabled || isOutlookLoginEnabled;
+  const showSocialLogin = isGoogleLoginEnabled || isOutlookLoginEnabled || isOidcLoginEnabled;
   const showSignupLink =
     process.env.NEXT_PUBLIC_DISABLE_SIGNUP !== "true" && searchParams?.get("register") !== "false";
 
@@ -228,6 +227,24 @@ export default function Login({
                       <MicrosoftIcon />
                       <span>{t("signin_with_microsoft")}</span>
                       {lastUsed === "microsoft" && <LastUsed />}
+                    </Button>
+                  )}
+                  {isOidcLoginEnabled && (
+                    <Button
+                      variant="outline"
+                      className="w-full py-1"
+                      disabled={formState.isSubmitting}
+                      data-testid="oidc"
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        setLastUsed("oidc");
+                        await signIn("oidc", {
+                          callbackUrl,
+                        });
+                      }}>
+                      <Icon name="key" className="size-4" />
+                      <span>{t("continue_with_oidc", { providerName: oidcProviderName })}</span>
+                      {lastUsed === "oidc" && <LastUsed />}
                     </Button>
                   )}
                 </div>

@@ -10,6 +10,7 @@ export const NEXTAUTH_TO_IDENTITY_PROVIDER: Record<string, IdentityProvider> = {
   saml: IdentityProvider.SAML,
   "saml-idp": IdentityProvider.SAML,
   cal: IdentityProvider.CAL,
+  oidc: IdentityProvider.OIDC,
 };
 
 /**
