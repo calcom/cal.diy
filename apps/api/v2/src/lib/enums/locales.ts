@@ -17,6 +17,7 @@ export enum Locales {
   CS = "cs",
   EL = "el",
   ES_419 = "es-419",
+  FA = "fa",
   FI = "fi",
   HR = "hr",
   IT = "it",
