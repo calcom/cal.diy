@@ -15,6 +15,7 @@ import {
   submitBatchProcessorTranscriptionJob,
 } from "@calcom/features/conferencing/lib/videoClient";
 import { WEBAPP_URL } from "@calcom/lib/constants";
+import { timingSafeEqualStrings } from "@calcom/lib/crypto";
 import { getTeamIdFromEventType } from "@calcom/lib/getTeamIdFromEventType";
 import { HttpError } from "@calcom/lib/http-error";
 import logger from "@calcom/lib/logger";
@@ -70,7 +71,7 @@ export async function postHandler(request: NextRequest) {
     const webhookTimestamp = headersList.get("x-webhook-timestamp");
     const computed_signature = computeSignature(hmacSecret, body, webhookTimestamp);
 
-    if (headersList.get("x-webhook-signature") !== computed_signature) {
+    if (!timingSafeEqualStrings(headersList.get("x-webhook-signature"), computed_signature)) {
       return NextResponse.json({ message: "Signature does not match" }, { status: 403 });
     }
   }
