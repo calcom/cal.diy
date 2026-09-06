@@ -356,7 +356,6 @@ export const FormBuilder = function FormBuilder({
                       <Button
                         data-testid="delete-field-action"
                         color="destructive"
-                        disabled={!isUserField}
                         variant="icon"
                         onClick={() => {
                           removeField(index);
@@ -445,6 +444,13 @@ export const FormBuilder = function FormBuilder({
           shouldConsiderRequired={shouldConsiderRequired}
           showPriceField={showPriceField}
           paymentCurrency={paymentCurrency}
+          parentFieldOptions={(fieldDialog.fieldIndex === -1
+            ? fields
+            : fields.slice(0, fieldDialog.fieldIndex)
+          ).filter((field) => !field.parentQuestionName && !field.views).map((field) => ({
+            value: field.name,
+            label: field.label?.trim() || (field.defaultLabel ? t(field.defaultLabel) : field.name),
+          }))}
         />
       )}
     </div>
@@ -600,6 +606,7 @@ function FieldEditDialog({
   shouldConsiderRequired,
   showPriceField,
   paymentCurrency,
+  parentFieldOptions,
 }: {
   dialog: { isOpen: boolean; fieldIndex: number; data: RhfFormField | null };
   onOpenChange: (isOpen: boolean) => void;
@@ -607,6 +614,7 @@ function FieldEditDialog({
   shouldConsiderRequired?: (field: RhfFormField) => boolean | undefined;
   showPriceField?: boolean;
   paymentCurrency: string;
+  parentFieldOptions: { value: string; label: string }[];
 }) {
   const { t } = useLocale();
   const isPlatform = useIsPlatform();
@@ -822,6 +830,40 @@ function FieldEditDialog({
                         }}
                       />
                     </div>
+
+                    {parentFieldOptions.length > 0 && fieldForm.getValues("editable") === "user" && (
+                      <div className="mt-6 flex flex-col gap-2">
+                        <Controller
+                          name="parentQuestionName"
+                          control={fieldForm.control}
+                          render={({ field: { value } }) => (
+                            <SelectField
+                              id="parent-question-name"
+                              data-testid="parent-question-name"
+                              label={t("show_only_if_question")}
+                              placeholder={t("conditional_question_placeholder")}
+                              isClearable
+                              value={parentFieldOptions.find((option) => option.value === value) ?? null}
+                              options={parentFieldOptions}
+                              onChange={(option) => {
+                                fieldForm.setValue("parentQuestionName", option?.value, { shouldDirty: true });
+                                if (!option) {
+                                  fieldForm.setValue("triggerValue", undefined, { shouldDirty: true });
+                                }
+                              }}
+                            />
+                          )}
+                        />
+                        {!!fieldForm.watch("parentQuestionName") && (
+                          <InputField
+                            {...fieldForm.register("triggerValue")}
+                            data-testid="trigger-value"
+                            label={t("equals_this_value")}
+                            placeholder={t("conditional_trigger_value_placeholder")}
+                          />
+                        )}
+                      </div>
+                    )}
                   </>
                 );
               }

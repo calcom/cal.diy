@@ -665,6 +665,169 @@ describe("getBookingResponsesSchema", () => {
       expect(parsedResponses.success).toBe(true);
     });
 
+    describe("conditional fields", () => {
+      const buildSchema = () =>
+        getBookingResponsesSchema({
+          bookingFields: [
+            { name: "name", type: "name", required: true },
+            { name: "email", type: "email", required: true },
+            { name: "how-did-you-hear", type: "text", required: false },
+            {
+              name: "referral-name",
+              type: "text",
+              required: true,
+              parentQuestionName: "how-did-you-hear",
+              triggerValue: "Referral",
+            },
+          ] as z.infer<typeof eventTypeBookingFields> & z.BRAND<"HAS_SYSTEM_FIELDS">,
+          view: "ALL_VIEWS",
+        });
+
+      test("does not require a hidden conditional field", async () => {
+        const parsedResponses = await buildSchema().safeParseAsync({
+          name: "John",
+          email: "john@example.com",
+          "how-did-you-hear": "Google",
+          "referral-name": "",
+        });
+
+        expect(parsedResponses.success).toBe(true);
+      });
+
+      test("requires a conditional field when its parent matches", async () => {
+        const parsedResponses = await buildSchema().safeParseAsync({
+          name: "John",
+          email: "john@example.com",
+          "how-did-you-hear": "Referral",
+          "referral-name": "",
+        });
+
+        expect(parsedResponses.success).toBe(false);
+        expect(parsedResponses.error?.issues[0]?.message).toBe(`{referral-name}${CUSTOM_REQUIRED_FIELD_ERROR_MSG}`);
+      });
+
+      test("accepts a conditional field value when its parent matches", async () => {
+        const parsedResponses = await buildSchema().safeParseAsync({
+          name: "John",
+          email: "john@example.com",
+          "how-did-you-hear": "Referral",
+          "referral-name": "Jane Doe",
+        });
+
+        expect(parsedResponses.success).toBe(true);
+      });
+    });
+
+    describe("conditional fields - nesting is out of scope", () => {
+      test("does not require a grandchild when its parent is conditional", async () => {
+        const schema = getBookingResponsesSchema({
+          bookingFields: [
+            { name: "name", type: "name", required: true },
+            { name: "email", type: "email", required: true },
+            { name: "a", type: "text", required: false },
+            { name: "b", type: "text", required: false, parentQuestionName: "a", triggerValue: "yes" },
+            { name: "c", type: "text", required: true, parentQuestionName: "b", triggerValue: "yes" },
+          ] as z.infer<typeof eventTypeBookingFields> & z.BRAND<"HAS_SYSTEM_FIELDS">,
+          view: "ALL_VIEWS",
+        });
+
+        const parsedResponses = await schema.safeParseAsync({
+          name: "John",
+          email: "john@example.com",
+          a: "no",
+          b: "yes",
+          c: "",
+        });
+
+        expect(parsedResponses.success).toBe(true);
+      });
+
+      test("does not require a field with a dangling parent reference", async () => {
+        const schema = getBookingResponsesSchema({
+          bookingFields: [
+            { name: "name", type: "name", required: true },
+            { name: "email", type: "email", required: true },
+            {
+              name: "orphan",
+              type: "text",
+              required: true,
+              parentQuestionName: "does-not-exist",
+              triggerValue: "yes",
+            },
+          ] as z.infer<typeof eventTypeBookingFields> & z.BRAND<"HAS_SYSTEM_FIELDS">,
+          view: "ALL_VIEWS",
+        });
+
+        const parsedResponses = await schema.safeParseAsync({
+          name: "John",
+          email: "john@example.com",
+          orphan: "",
+        });
+
+        expect(parsedResponses.success).toBe(true);
+      });
+
+      test("does not require a child when its parent is scoped to another view", async () => {
+        const schema = getBookingResponsesSchema({
+          bookingFields: [
+            { name: "name", type: "name", required: true },
+            { name: "email", type: "email", required: true },
+            { name: "rescheduleReason", type: "textarea", required: false, views: [{ id: "reschedule" }] },
+            {
+              name: "sick-note",
+              type: "text",
+              required: true,
+              parentQuestionName: "rescheduleReason",
+              triggerValue: "sick",
+            },
+          ] as z.infer<typeof eventTypeBookingFields> & z.BRAND<"HAS_SYSTEM_FIELDS">,
+          view: "",
+        });
+
+        const parsedResponses = await schema.safeParseAsync({
+          name: "John",
+          email: "john@example.com",
+          rescheduleReason: "sick",
+          "sick-note": "",
+        });
+
+        expect(parsedResponses.success).toBe(true);
+      });
+
+      test("does not require a child when its parent has one option", async () => {
+        const schema = getBookingResponsesSchema({
+          bookingFields: [
+            { name: "name", type: "name", required: true },
+            { name: "email", type: "email", required: true },
+            {
+              name: "plan",
+              type: "select",
+              required: false,
+              hideWhenJustOneOption: true,
+              options: [{ label: "Only", value: "only" }],
+            },
+            {
+              name: "plan-detail",
+              type: "text",
+              required: true,
+              parentQuestionName: "plan",
+              triggerValue: "only",
+            },
+          ] as z.infer<typeof eventTypeBookingFields> & z.BRAND<"HAS_SYSTEM_FIELDS">,
+          view: "ALL_VIEWS",
+        });
+
+        const parsedResponses = await schema.safeParseAsync({
+          name: "John",
+          email: "john@example.com",
+          plan: "only",
+          "plan-detail": "",
+        });
+
+        expect(parsedResponses.success).toBe(true);
+      });
+    });
+
     describe("excluded email/domain validation", () => {
       test("should fail if the email is present in excluded emails", async () => {
         const excludedEmails = "spammer@cal.com, hotmail.com, yahoo.com, gmail.com";

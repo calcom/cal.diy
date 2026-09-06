@@ -42,6 +42,7 @@ export const BookingFields = ({
   const { t, i18n } = useLocale();
   const { watch, setValue, formState } = useFormContext();
   const locationResponse = watch("responses.location");
+  const responses = watch("responses");
   const currentView = rescheduleUid ? "reschedule" : "";
   // Identify all phone fields (except location field)
   const otherPhoneFieldNames = useMemo(
@@ -120,6 +121,14 @@ export const BookingFields = ({
     };
   };
 
+  const isParentVisible = (parent: Fields[number]) => {
+    if (parent.views && !parent.views.find((view) => view.id === currentView)) return false;
+    if (parent.hidden) return false;
+    if (parent.hideWhenJustOneOption && (parent.options?.length ?? 0) <= 1) return false;
+    if (parent.name === SystemField.Enum.guests && isDynamicGroupBooking) return false;
+    return true;
+  };
+
   return (
     // TODO: It might make sense to extract this logic into BookingFields config, that would allow to quickly configure system fields and their editability in fresh booking and reschedule booking view
     // The logic here intends to make modifications to booking fields based on the way we want to specifically show Booking Form
@@ -138,6 +147,17 @@ export const BookingFields = ({
 
         let hidden = !!field.hidden;
         const fieldViews = field.views;
+
+        if (field.parentQuestionName && field.triggerValue !== undefined) {
+          const parent = fields.find((parentField) => parentField.name === field.parentQuestionName);
+          const parentValue = responses?.[field.parentQuestionName];
+          hidden =
+            hidden ||
+            !parent ||
+            !!parent.parentQuestionName ||
+            (parent ? !isParentVisible(parent) : false) ||
+            String(parentValue ?? "") !== String(field.triggerValue);
+        }
 
         if (fieldViews && !fieldViews.find((view) => view.id === currentView)) {
           return null;
