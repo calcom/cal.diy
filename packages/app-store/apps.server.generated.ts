@@ -48,6 +48,7 @@ export const apiHandlers = {
   mirotalk: import("./mirotalk/api"),
   "mock-payment-app": import("./mock-payment-app/api"),
   nextcloudtalk: import("./nextcloudtalk/api"),
+  nostrcalendar: import("./nostrcalendar/api"),
   office365calendar: import("./office365calendar/api"),
   office365video: import("./office365video/api"),
   paypal: import("./paypal/api"),
