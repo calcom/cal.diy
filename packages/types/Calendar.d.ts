@@ -64,6 +64,7 @@ export type EventBusyDetails = EventBusyDate & {
   title?: string;
   source: string;
   userId?: number | null;
+  attendeeCount?: number;
 };
 
 export type AdditionalInfo = Record<string, unknown> & { calWarnings?: string[] };
