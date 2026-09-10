@@ -1443,6 +1443,8 @@
   "contact_sales": "Contact sales",
   "error_404": "Error 404",
   "default": "Default",
+  "default_home_view": "Default home page",
+  "default_home_view_description": "Choose which page to show when you open {{appName}}",
   "set_to_default": "Set as default",
   "new_schedule_btn": "New schedule",
   "add_new_schedule": "Add a new schedule",
