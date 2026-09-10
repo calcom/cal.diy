@@ -49,16 +49,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       logger.error("Could not add this caldav account", e);
       if (e instanceof Error) {
         let message = e.message;
-        if (e.message.indexOf("Invalid credentials") > -1 && url.indexOf("dav.php") > -1) {
-          const parsedUrl = new URL(url);
-          const adminUrl = `${parsedUrl.protocol}//${parsedUrl.hostname}${
-            parsedUrl.port ? `:${parsedUrl.port}` : ""
-          }/admin/?/settings/standard/`;
-          message = `Couldn\'t connect to caldav account, please verify WebDAV authentication type is set to "Basic"`;
-          return res.status(500).json({ message, actionUrl: adminUrl });
+        let actionUrl: string | undefined;
+
+        // Handle specific error cases with helpful messages
+        if (e.message.indexOf("Invalid credentials") > -1) {
+          if (url.indexOf("dav.php") > -1) {
+            const parsedUrl = new URL(url);
+            actionUrl = `${parsedUrl.protocol}//${parsedUrl.hostname}${
+              parsedUrl.port ? `:${parsedUrl.port}` : ""
+            }/admin/?/settings/standard/`;
+            message = `Couldn\'t connect to caldav account, please verify WebDAV authentication type is set to "Basic"`;
+          } else {
+            message = `Invalid credentials. Please verify your username and password are correct. Some CalDAV servers require app-specific passwords.`;
+          }
+        } else if (e.message.indexOf("cannot find homeUrl") > -1) {
+          message = `Could not discover calendar home URL. Please try using the full calendar URL (e.g., https://server.com/calendars/username/) instead of the base server URL.`;
+        } else if (e.message.indexOf("PROPFIND") > -1 || e.message.indexOf("fetch") > -1) {
+          message = `Could not connect to the CalDAV server. Please verify the URL is correct and the server is accessible.`;
+        } else if (message && message !== "Could not add this caldav account") {
+          // Pass through the actual error message if it's informative
+          message = `CalDAV connection failed: ${message}`;
+        } else {
+          message = "Could not add this caldav account. Please verify your credentials and URL.";
         }
+
+        return res.status(500).json({ message, ...(actionUrl && { actionUrl }) });
       }
-      return res.status(500).json({ message: "Could not add this caldav account" });
+      return res.status(500).json({ message: "Could not add this caldav account. Please check your connection details." });
     }
 
     return res
