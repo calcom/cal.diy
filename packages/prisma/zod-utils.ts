@@ -873,6 +873,14 @@ export const bookingSeatDataSchema = z.object({
   responses: bookingResponses,
 });
 
+// BookingSeat.metadata is a free-form record. For paid seated bookings we store the uid of the
+// payment created for that specific seat so the confirmation page can show each seat its own price.
+export const bookingSeatMetadataSchema = z
+  .object({
+    paymentUid: z.string().optional(),
+  })
+  .passthrough();
+
 // Schema for decrypted service account key
 export const serviceAccountKeySchema = z
   .object({

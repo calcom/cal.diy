@@ -14,6 +14,7 @@ export async function maybeGetBookingUidFromSeat(prisma: PrismaClient, uid: stri
         },
       },
       data: true,
+      metadata: true,
     },
   });
   if (bookingSeat) return { uid: bookingSeat.booking.uid, seatReferenceUid: uid, bookingSeat };
