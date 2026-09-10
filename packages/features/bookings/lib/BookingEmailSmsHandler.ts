@@ -111,6 +111,7 @@ export class BookingEmailSmsHandler {
   private async _handleRescheduled(data: RescheduleEmailAndSmsPayload) {
     const {
       evt,
+      originalRescheduledBooking,
       eventType: { metadata },
       rescheduleReason,
       additionalNotes,
@@ -121,6 +122,12 @@ export class BookingEmailSmsHandler {
     await sendRescheduledEmailsAndSMS(
       {
         ...evt,
+        previousStartTime: originalRescheduledBooking?.startTime
+        ? dayjs(originalRescheduledBooking.startTime).utc().format()
+        : undefined,
+        previousEndTime: originalRescheduledBooking?.endTime
+        ? dayjs(originalRescheduledBooking.endTime).utc().format()
+        : undefined,
         additionalInformation,
         additionalNotes,
         cancellationReason: `$RCH$${rescheduleReason || ""}`,
@@ -151,6 +158,12 @@ export class BookingEmailSmsHandler {
       additionalInformation,
       additionalNotes,
       cancellationReason: `$RCH$${rescheduleReason || ""}`,
+      previousStartTime: originalRescheduledBooking?.startTime
+          ? dayjs(originalRescheduledBooking.startTime).utc().format()
+          : undefined,
+        previousEndTime: originalRescheduledBooking?.endTime
+          ? dayjs(originalRescheduledBooking.endTime).utc().format()
+          : undefined,
     };
     const cancelledRRHostEvt = cloneDeep(copyEventAdditionalInfo);
     this.log.debug("Emails: Sending rescheduled emails for booking confirmation");
