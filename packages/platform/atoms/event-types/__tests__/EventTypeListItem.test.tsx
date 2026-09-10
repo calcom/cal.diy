@@ -1,8 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { vi } from "vitest";
-
-import type { AtomEventTypeListItem } from "../types";
 import { EventTypeListItem } from "../components/EventTypeListItem";
+import type { AtomEventTypeListItem } from "../types";
 
 // Mock auto-animate
 vi.mock("@formkit/auto-animate/react", () => ({
@@ -18,7 +17,26 @@ vi.mock("next/link", () => ({
 // Mock useLocale
 vi.mock("@calcom/lib/hooks/useLocale", () => ({
   useLocale: () => ({
-    t: (key: string) => key,
+    t: (key: string, options?: { count?: number }) => {
+      const count = options?.count ?? 0;
+
+      switch (key) {
+        case "minute_one_short":
+          return `${count}m`;
+        case "multiple_duration_timeUnit_short":
+          return `${count}${options?.unit === "hour" ? "h" : "m"}`;
+        case "minute_one":
+          return "1 minute";
+        case "minute_other":
+          return `${count} minutes`;
+        case "hour_one":
+          return "1 hour";
+        case "hour_other":
+          return `${count} hours`;
+        default:
+          return key;
+      }
+    },
   }),
 }));
 
@@ -87,6 +105,7 @@ describe("EventTypeListItem", () => {
     expect(screen.getByText("30 Min Meeting")).toBeInTheDocument();
     expect(screen.getByText("Quick meeting")).toBeInTheDocument();
     expect(screen.getByText(/30m/)).toBeInTheDocument();
+    expect(screen.getByLabelText("30 minutes")).toBeInTheDocument();
   });
 
   it("should render as link when getEventTypeUrl is provided", () => {
@@ -144,7 +163,8 @@ describe("EventTypeListItem", () => {
       <EventTypeListItem eventType={longEvent} deleteFunction={mockDeleteFunction} isDeletable={true} />
     );
 
-    expect(screen.getByText(/2h/)).toBeInTheDocument();
+    expect(screen.getByText(/120m/)).toBeInTheDocument();
+    expect(screen.getByLabelText("120 minutes")).toBeInTheDocument();
   });
 
   it("should render event type with long title without breaking layout", () => {

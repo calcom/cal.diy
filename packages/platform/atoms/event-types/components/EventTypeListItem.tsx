@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
-
+import {
+  getDurationMinutesAccessibleLabel,
+  getDurationMinutesFormatted,
+} from "@calcom/lib/formatEventDuration";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Button } from "@calcom/ui/components/button";
-import { Dialog, ConfirmationDialogContent } from "@calcom/ui/components/dialog";
+import { ConfirmationDialogContent, Dialog } from "@calcom/ui/components/dialog";
 import {
   Dropdown,
   DropdownItem,
@@ -15,12 +16,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@calcom/ui/components/dropdown";
+import { DurationText } from "@calcom/ui/components/duration";
 import { showToast } from "@calcom/ui/components/toast";
-
+import Link from "next/link";
+import { useState } from "react";
 import type { AtomEventTypeListItem } from "../types";
-import { formatEventTypeDuration } from "../lib/formatEventTypeDuration";
 
 const EventTypeContent = ({ eventType }: { eventType: AtomEventTypeListItem }) => {
+  const { t } = useLocale();
+
   return (
     <div>
       <div className="space-x-2 rtl:space-x-reverse">
@@ -29,7 +33,9 @@ const EventTypeContent = ({ eventType }: { eventType: AtomEventTypeListItem }) =
       <div className="text-subtle mt-1">
         {eventType.description && <span className="block">{eventType.description}</span>}
         <Badge variant="gray" className="text-xs">
-          {formatEventTypeDuration(eventType.length)}
+          <DurationText label={getDurationMinutesAccessibleLabel(eventType.length, t) ?? ""}>
+            {getDurationMinutesFormatted(eventType.length, t)}
+          </DurationText>
         </Badge>
       </div>
     </div>
