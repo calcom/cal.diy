@@ -203,6 +203,7 @@ export interface CalendarEvent {
   seatsShowAvailabilityCount?: boolean | null;
   attendeeSeatId?: string;
   seatsPerTimeSlot?: number | null;
+  onlyUpdateCalendarAttendees?: boolean;
   schedulingType?: SchedulingType | null;
   iCalUID?: string | null;
   iCalSequence?: number | null;
