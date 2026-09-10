@@ -51,23 +51,23 @@ const makeAbsoluteUrl = (url: string) => (/^https?:\/\//.test(url) ? url : `${CA
 
 const OG_ASSETS = {
   meeting: {
-    id: "meeting-og-image-v1", // Bump version when changing Meeting component structure/styling
+    id: "meeting-og-image-v2", // Bump version when changing Meeting component structure/styling
     logo: LOGO,
-    logoWidth: "350",
-    avatarSize: "160",
+    logoWidth: 350,
+    avatarSize: 160,
     variant: "dark" as const,
   },
   app: {
-    id: "app-og-image-v1", // Bump version when changing App component structure/styling
+    id: "app-og-image-v2", // Bump version when changing App component structure/styling
     logo: LOGO,
-    logoWidth: "150",
-    iconSize: "172",
+    logoWidth: 150,
+    iconSize: 172,
     variant: "light" as const,
   },
   generic: {
-    id: "generic-og-image-v1", // Bump version when changing Generic component structure/styling
+    id: "generic-og-image-v2", // Bump version when changing Generic component structure/styling
     logo: LOGO_DARK,
-    logoWidth: "350",
+    logoWidth: 350,
     variant: "light" as const,
   },
 };
@@ -166,8 +166,8 @@ const Wrapper = ({ children, variant = "light", rotateBackground }: WrapperProps
       style={rotateBackground ? { transform: "rotate(180deg)" } : undefined}
       src={`${WEBAPP_URL}/social-bg-${variant}-lines.jpg`}
       alt="background"
-      width="1200"
-      height="600"
+      width={1200}
+      height={600}
     />
     <div tw="flex flex-col w-full h-full px-[80px] py-[70px] items-start justify-center">{children}</div>
   </div>
