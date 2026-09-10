@@ -131,6 +131,9 @@ const getEventTypesFromDBSelect = {
   },
   enablePerHostLocations: true,
   hosts: {
+    where: {
+      OR: [{ memberId: null }, { member: { status: "ACTIVE" } }],
+    },
     select: {
       isFixed: true,
       priority: true,
