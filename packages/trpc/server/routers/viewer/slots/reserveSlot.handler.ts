@@ -57,9 +57,6 @@ export const reserveSlotHandler = async ({ ctx, input }: ReserveSlotOptions) => 
     if (bookingAttendeesLength) {
       const seatsLeft = eventType.seatsPerTimeSlot - bookingAttendeesLength;
       if (seatsLeft < 1) shouldReserveSlot = false;
-    } else {
-      // If there is no booking yet then don't reserve the slot
-      shouldReserveSlot = false;
     }
   }
 

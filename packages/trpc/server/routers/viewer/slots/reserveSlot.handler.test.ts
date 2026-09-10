@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@calcom/prisma";
 import { vi, describe, it, expect, afterEach } from "vitest";
 
 // We want to test that the UID cookie set by reserveSlotHandler is configured with the correct
@@ -33,7 +34,7 @@ const buildContext = () => {
     selectedSlots: {
       upsert: vi.fn().mockResolvedValue(null),
     },
-  } as unknown as any;
+  } as unknown as PrismaClient;
 
   // Capture header values to assert on.
   let cookieHeaderValue: string | null = null;
@@ -49,6 +50,89 @@ const buildContext = () => {
 
   return { prismaStub, resStub, reqStub, getCookieHeader: () => cookieHeaderValue };
 };
+
+describe("reserveSlotHandler seated event reservation", () => {
+  const originalWebappUrl = process.env.NEXT_PUBLIC_WEBAPP_URL;
+
+  afterEach(() => {
+    vi.resetModules();
+    if (originalWebappUrl === undefined) delete process.env.NEXT_PUBLIC_WEBAPP_URL;
+    else process.env.NEXT_PUBLIC_WEBAPP_URL = originalWebappUrl;
+  });
+
+  it("reserves the slot for the first attendee of a seated event (no existing booking)", async () => {
+    process.env.NEXT_PUBLIC_WEBAPP_URL = "https://example.com";
+    vi.resetModules();
+    const { reserveSlotHandler } = await dynamicImportHandler();
+
+    const upsertMock = vi.fn().mockResolvedValue(null);
+    const prismaStub = {
+      eventType: {
+        findUnique: vi.fn().mockResolvedValue({
+          users: [{ id: 1 }],
+          seatsPerTimeSlot: 5,
+        }),
+      },
+      booking: {
+        // No existing booking — first person to reserve this seated slot
+        findFirst: vi.fn().mockResolvedValue(null),
+      },
+      selectedSlots: {
+        upsert: upsertMock,
+      },
+    } as unknown as PrismaClient;
+
+    await reserveSlotHandler({
+      ctx: { prisma: prismaStub, req: { cookies: {} }, res: { setHeader: vi.fn() } },
+      input: {
+        slotUtcStartDate: new Date().toISOString(),
+        slotUtcEndDate: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        eventTypeId: 1,
+        bookingUid: undefined,
+        _isDryRun: false,
+      },
+    });
+
+    expect(upsertMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks reservation when all seats on a seated event are taken", async () => {
+    process.env.NEXT_PUBLIC_WEBAPP_URL = "https://example.com";
+    vi.resetModules();
+    const { reserveSlotHandler } = await dynamicImportHandler();
+
+    const upsertMock = vi.fn().mockResolvedValue(null);
+    const prismaStub = {
+      eventType: {
+        findUnique: vi.fn().mockResolvedValue({
+          users: [{ id: 1 }],
+          seatsPerTimeSlot: 2,
+        }),
+      },
+      booking: {
+        findFirst: vi.fn().mockResolvedValue({
+          attendees: [{ id: 10 }, { id: 11 }], // 2 attendees = seats full
+        }),
+      },
+      selectedSlots: {
+        upsert: upsertMock,
+      },
+    } as unknown as PrismaClient;
+
+    await reserveSlotHandler({
+      ctx: { prisma: prismaStub, req: { cookies: {} }, res: { setHeader: vi.fn() } },
+      input: {
+        slotUtcStartDate: new Date().toISOString(),
+        slotUtcEndDate: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        eventTypeId: 1,
+        bookingUid: undefined,
+        _isDryRun: false,
+      },
+    });
+
+    expect(upsertMock).not.toHaveBeenCalled();
+  });
+});
 
 describe("reserveSlotHandler cookie settings", () => {
   const originalWebappUrl = process.env.NEXT_PUBLIC_WEBAPP_URL;
