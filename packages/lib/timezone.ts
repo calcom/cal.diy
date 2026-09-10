@@ -1,20 +1,19 @@
-import type { ITimezoneOption } from "react-timezone-select";
-
 import dayjs from "@calcom/dayjs";
-
+import type { ITimezoneOption } from "react-timezone-select";
 import isProblematicTimezone from "./isProblematicTimezone";
 
-export type Timezones = { label: string; timezone: string }[];
+type Timezones = { label: string; timezone: string }[];
 
-const searchTextFilter = (tzOption: Timezones[number], searchText: string) => {
-  return searchText && tzOption.label.toLowerCase().includes(searchText.toLowerCase());
+const searchTextFilter = (tzOption: Timezones[number], searchText: string): boolean => {
+  if (!searchText) return false;
+  return tzOption.label.toLowerCase().includes(searchText.toLowerCase());
 };
 
-export const filterBySearchText = (searchText: string, timezones: Timezones) => {
+const filterBySearchText = (searchText: string, timezones: Timezones): Timezones => {
   return timezones.filter((tzOption) => searchTextFilter(tzOption, searchText));
 };
 
-export const addTimezonesToDropdown = (timezones: Timezones) => {
+const addTimezonesToDropdown = (timezones: Timezones): Record<string, string> => {
   return Object.fromEntries(
     timezones
       .filter(({ timezone }) => {
@@ -24,15 +23,18 @@ export const addTimezonesToDropdown = (timezones: Timezones) => {
   );
 };
 
-const formatOffset = (offset: string) =>
-  offset.replace(/^([-+])(0)(\d):00$/, (_, sign, _zero, hour) => `${sign}${hour}:00`);
+const formatOffset = (offset: string): string =>
+  offset.replace(/^([-+])0(\d):/, (_, sign, hour) => `${sign}${hour}:`);
 
-export const handleOptionLabel = (option: ITimezoneOption, timezones: Timezones) => {
+const handleOptionLabel = (option: ITimezoneOption, timezones: Timezones): string => {
   const offsetUnit = option.label.split(/[-+]/)[0].substring(1);
   const cityName = option.label.split(") ")[1];
 
   const timezoneValue = ` ${offsetUnit} ${formatOffset(dayjs.tz(undefined, option.value).format("Z"))}`;
-  return timezones.length > 0
-    ? `${cityName}${timezoneValue}`
-    : `${option.value.replace(/_/g, " ")}${timezoneValue}`;
+  if (timezones.length > 0) {
+    return `${cityName}${timezoneValue}`;
+  }
+  return `${option.value.replace(/_/g, " ")}${timezoneValue}`;
 };
+
+export { addTimezonesToDropdown, filterBySearchText, handleOptionLabel, type Timezones };
