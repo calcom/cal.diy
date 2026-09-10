@@ -1,6 +1,7 @@
 import type { Prisma } from "../client";
 
 export const paymentDataSelect = {
+  id: true,
   data: true,
   success: true,
   uid: true,
@@ -35,6 +36,7 @@ export const paymentDataSelect = {
       eventTypeId: true,
       location: true,
       status: true,
+      paid: true,
       rejectionReason: true,
       cancellationReason: true,
       eventType: {
