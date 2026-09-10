@@ -17,7 +17,7 @@
       "label": "Signal",
       "linkType": "static",
       "organizerInputPlaceholder": "https://signal.me/#p/+11234567890",
-      "urlRegExp": "^http(s)?:\\/\\/(www\\.)?signal.me\\/[a-zA-Z0-9]*"
+      "urlRegExp": "^http(s)?:\\/\\/(www\\.)?signal\\.me\\/([#?].*|[a-zA-Z0-9+._-]+)*"
     }
   },
   "isOAuth": false
