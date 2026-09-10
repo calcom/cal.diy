@@ -9,6 +9,8 @@ describe("WhatsApp static location", () => {
     expect(guessEventLocationType("https://wa.me/send?phone=4712345678")).toBeUndefined();
     expect(guessEventLocationType("https://wa.me/+4712345678")).toBeUndefined();
     expect(guessEventLocationType("https://wa.me/4712345678?foo=bar")).toBeUndefined();
+    expect(guessEventLocationType("http://wa.me/4712345678")).toBeUndefined();
+    expect(guessEventLocationType("https://www.wa.me/4712345678")).toBeUndefined();
   });
 
   it("exposes the canonical wa.me setup example", () => {
