@@ -6,7 +6,7 @@
   "logo": "icon.svg",
   "url": "https://cal.com/",
   "variant": "messaging",
-  "categories": ["messaging","conferencing"],
+  "categories": ["messaging", "conferencing"],
   "publisher": "Cal.com, Inc.",
   "email": "support@cal.com",
   "description": "Schedule a chat with your guests or have a Signal Video call.",
@@ -17,7 +17,7 @@
       "label": "Signal",
       "linkType": "static",
       "organizerInputPlaceholder": "https://signal.me/#p/+11234567890",
-      "urlRegExp": "^http(s)?:\\/\\/(www\\.)?signal\\.me\\/([#?].*|[a-zA-Z0-9+._-]+)*"
+      "urlRegExp": "^http(s)?:\\/\\/(www\\.)?signal\\.me\\/(#[a-zA-Z0-9+._\\/-]+|\\+?[a-zA-Z0-9._-]+)$"
     }
   },
   "isOAuth": false

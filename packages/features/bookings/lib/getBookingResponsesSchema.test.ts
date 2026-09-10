@@ -1621,6 +1621,42 @@ describe("getBookingResponsesSchema", () => {
         },
       });
     });
+
+    test(`should handle plain string value without JSON parse error and preserve value`, async ({}) => {
+      const schema = getBookingResponsesSchema({
+        bookingFields: [
+          {
+            name: "name",
+            type: "name",
+            required: true,
+          },
+          {
+            name: "email",
+            type: "email",
+            required: true,
+          },
+          {
+            name: "radioInput",
+            type: "radioInput",
+            required: false,
+          },
+        ] as z.infer<typeof eventTypeBookingFields> & z.BRAND<"HAS_SYSTEM_FIELDS">,
+        view: "ALL_VIEWS",
+      });
+      const parsedResponses = await schema.safeParseAsync({
+        email: "test@test.com",
+        name: "test",
+        radioInput: "integrations:signal_video",
+      });
+      expectResponsesToBe(parsedResponses, {
+        email: "test@test.com",
+        name: "test",
+        radioInput: {
+          value: "integrations:signal_video",
+          optionValue: "",
+        },
+      });
+    });
   });
 
   describe("Field Type: url", () => {
