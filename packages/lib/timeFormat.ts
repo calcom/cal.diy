@@ -41,14 +41,12 @@ export const isBrowserLocale24h = () => {
   } else if (localStorageTimeFormat === false) {
     return false;
   }
-  // Intl.DateTimeFormat with value=undefined uses local browser settings.
-  if (!!new Intl.DateTimeFormat(undefined, { hour: "numeric" }).format(0).match(/M/i)) {
-    setIs24hClockInLocalStorage(false);
-    return false;
-  } else {
-    setIs24hClockInLocalStorage(true);
-    return true;
-  }
+  // Use Intl.DateTimeFormat.resolvedOptions().hour12 for accurate locale detection
+  // This correctly handles locales with non-Latin AM/PM markers (ar, el, zh-TW, etc.)
+  const dtf = new Intl.DateTimeFormat(undefined, { hour: "numeric" });
+  const is12h = dtf.resolvedOptions().hour12 === true;
+  setIs24hClockInLocalStorage(!is12h);
+  return !is12h;
 };
 
 /**
