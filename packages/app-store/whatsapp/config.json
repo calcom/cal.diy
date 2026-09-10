@@ -16,8 +16,8 @@
       "type": "integrations:whatsapp_video",
       "label": "WhatsApp",
       "linkType": "static",
-      "organizerInputPlaceholder": "https://wa.me/send?phone=1234567890",
-      "urlRegExp": "^http(s)?:\\/\\/(www\\.)?wa.me\\/[a-zA-Z0-9]*"
+      "organizerInputPlaceholder": "https://wa.me/4712345678",
+      "urlRegExp": "^http(s)?:\\/\\/(www\\.)?wa\\.me\\/[0-9]+$"
     }
   },
   "isAuth": false
