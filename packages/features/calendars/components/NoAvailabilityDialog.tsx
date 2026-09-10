@@ -54,20 +54,65 @@ const NoAvailabilityDialog = ({
   nextMonthButton,
   browsingDate,
   periodData,
+  onJumpToStart,
 }: {
   month: string | null;
   nextMonthButton: () => void;
   browsingDate: Dayjs;
   periodData: PeriodData;
+  onJumpToStart?: () => void;
 }) => {
   const { t } = useLocale();
   const [isOpenDialog, setIsOpenDialog] = useState(true);
+
   const noFutureAvailability = useNoFutureAvailability(browsingDate, periodData);
   const description = useDescription(noFutureAvailability, periodData);
+  const isBeforeBookingWindow =
+    periodData.periodType === "RANGE" &&
+    !!periodData.periodStartDate &&
+    dayjs().isBefore(dayjs(periodData.periodStartDate), "month");
+  const beforeWindowDescription = isBeforeBookingWindow
+    ? t("bookings_open_on_date", { date: dayjs(periodData.periodStartDate).format("MMMM D, YYYY") })
+    : "";
 
   const closeDialog = () => {
     setIsOpenDialog(false);
   };
+
+  const jumpToStartMonth = () => {
+    if (onJumpToStart) {
+      onJumpToStart();
+      setIsOpenDialog(false);
+      return;
+    }
+
+    if (!periodData.periodStartDate) {
+      return;
+    }
+
+    const monthsToJump = dayjs(periodData.periodStartDate)
+      .startOf("month")
+      .diff(browsingDate.startOf("month"), "month");
+
+    if (monthsToJump <= 0) {
+      setIsOpenDialog(false);
+      return;
+    }
+
+    let remainingJumps = monthsToJump;
+    const stepForward = () => {
+      nextMonthButton();
+      remainingJumps -= 1;
+
+      if (remainingJumps > 0) {
+        setTimeout(stepForward, 0);
+      }
+    };
+
+    stepForward();
+    setIsOpenDialog(false);
+  };
+
   return (
     <Dialog
       open={isOpenDialog}
@@ -77,16 +122,23 @@ const NoAvailabilityDialog = ({
       <DialogContent
         title={t("no_availability_in_month", { month: month })}
         type="creation"
-        description={description}
-        preventCloseOnOutsideClick={false}>
+        description={isBeforeBookingWindow ? beforeWindowDescription : description}
+        preventCloseOnOutsideClick={isBeforeBookingWindow}>
         <DialogFooter>
-          <DialogClose
-            color={noFutureAvailability ? "primary" : "secondary"}
-            onClick={closeDialog}
-            data-testid="close_dialog_button">
-            {t("close")}
-          </DialogClose>
-          {!noFutureAvailability && (
+          {!isBeforeBookingWindow && (
+            <DialogClose
+              color={noFutureAvailability ? "primary" : "secondary"}
+              onClick={closeDialog}
+              data-testid="close_dialog_button">
+              {t("close")}
+            </DialogClose>
+          )}
+          {isBeforeBookingWindow && (
+            <Button color="primary" onClick={jumpToStartMonth} data-testid="jump_to_first_available_slot">
+              {t("show_available_slots")}
+            </Button>
+          )}
+          {!isBeforeBookingWindow && !noFutureAvailability && (
             <Button
               color="primary"
               onClick={nextMonthButton}
