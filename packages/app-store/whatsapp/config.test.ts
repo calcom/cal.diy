@@ -10,9 +10,8 @@ describe("WhatsApp location config", () => {
     expect(organizerInputPlaceholder).toBe("https://wa.me/4712345678");
   });
 
-  it("accepts a clean wa.me link with only digits", () => {
+  it("accepts the canonical https://wa.me/<digits> link", () => {
     expect(regex.test("https://wa.me/4712345678")).toBe(true);
-    expect(regex.test("http://www.wa.me/4712345678")).toBe(true);
   });
 
   it("rejects the /send?phone= format and a leading +", () => {
@@ -20,7 +19,9 @@ describe("WhatsApp location config", () => {
     expect(regex.test("https://wa.me/+4712345678")).toBe(false);
   });
 
-  it("rejects a wa.me URL with no phone number", () => {
+  it("rejects non-canonical variants (http, www, no number)", () => {
+    expect(regex.test("http://wa.me/4712345678")).toBe(false);
+    expect(regex.test("https://www.wa.me/4712345678")).toBe(false);
     expect(regex.test("https://wa.me/")).toBe(false);
   });
 });

@@ -17,7 +17,7 @@
       "label": "WhatsApp",
       "linkType": "static",
       "organizerInputPlaceholder": "https://wa.me/4712345678",
-      "urlRegExp": "^http(s)?:\\/\\/(www\\.)?wa\\.me\\/[0-9]+$"
+      "urlRegExp": "^https:\\/\\/wa\\.me\\/[0-9]+$"
     }
   },
   "isAuth": false
