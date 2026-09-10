@@ -31,8 +31,8 @@ import {
   SheetTitle,
 } from "@calcom/ui/components/sheet";
 import { Tooltip } from "@calcom/ui/components/tooltip";
-import { ExternalLinkIcon, RepeatIcon } from "@coss/ui/icons";
 import { BookingHistory } from "@calcom/web/modules/booking-audit/components/BookingHistory";
+import { ExternalLinkIcon, RepeatIcon } from "@coss/ui/icons";
 import assignmentReasonBadgeTitleMap from "@lib/booking/assignmentReasonBadgeTitleMap";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -43,12 +43,13 @@ import { BookingActionsStoreProvider } from "../../../components/booking/actions
 import { RejectBookingButton } from "../../../components/booking/RejectBookingButton";
 import type { BookingListingStatus } from "../../../components/booking/types";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
-import { useBookingDetailsSheetStore } from "../store/bookingDetailsSheetStore";
-import type { BookingOutput } from "../types";
 import {
   checkSheetActive,
   createBookingSheetKeydownHandler,
 } from "../lib/bookingSheetKeyboardHandler";
+import { useBookingDetailsSheetStore } from "../store/bookingDetailsSheetStore";
+import type { BookingOutput } from "../types";
+import { BookingUid } from "./BookingUid";
 import { JoinMeetingButton } from "./JoinMeetingButton";
 
 type BookingMetaData = z.infer<typeof bookingMetadataSchema>;
@@ -390,6 +391,10 @@ function BookingDetailsSheetInner({
                   timeZone={userTimeZone}
                   previousBooking={bookingDetails?.previousBooking}
                 />
+
+                <Section title={t("booking_uid")}>
+                  <BookingUid uid={booking.uid} />
+                </Section>
 
                 <OldRescheduledBookingInfo
                   booking={booking}
