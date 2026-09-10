@@ -299,7 +299,15 @@ export const getPublicEvent = async (
       usernameList,
       orgSlug: org,
     });
-    const users = usersInOrgContext;
+    // The first member of a dynamic group decides which conferencing app is used, so the order
+    // given in the URL has to win here. findUsersByUsername does not guarantee that order, which
+    // means /alice+bob could pick bob's preference. handleNewBooking already sorts for exactly
+    // this reason (sortUsersByDynamicList in getLocationValuesForDb.ts) — without the same sort
+    // here, the booking page can advertise a different location than the one actually booked.
+    const users = [...usersInOrgContext].sort(
+      (a, b) =>
+        usernameList.indexOf(a.username ?? "") - usernameList.indexOf(b.username ?? "")
+    );
 
     const defaultEvent = getDefaultEvent(eventSlug);
     let locations = defaultEvent.locations ? (defaultEvent.locations as LocationObject[]) : [];
