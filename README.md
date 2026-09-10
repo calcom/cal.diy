@@ -68,7 +68,7 @@ To get a local copy up and running, please follow these simple steps.
 
 ### Prerequisites
 
-Here’s what you need to run Cal.diy.
+Here's what you need to run Cal.diy.
 
 - Node.js (Version: >=18.x)
 - PostgreSQL (Version: >=13.x)
@@ -650,6 +650,10 @@ Currently Vercel Pro Plan is required to be able to Deploy this application with
 ### Elestio
 
 [![Deploy on Elestio](https://elest.io/images/logos/deploy-to-elestio-btn.png)](https://elest.io/open-source/cal.com)
+
+### RepoCloud
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/Cal.diy/)
 
 <!-- LICENSE -->
 
