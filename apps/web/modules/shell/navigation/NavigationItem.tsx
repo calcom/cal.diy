@@ -2,11 +2,11 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import useMediaQuery from "@calcom/lib/hooks/useMediaQuery";
 import { sessionStorage } from "@calcom/lib/webstorage";
 import classNames from "@calcom/ui/classNames";
-import { Badge } from "@calcom/ui/components/badge";
 import type { IconName } from "@calcom/ui/components/icon";
 import { Icon } from "@calcom/ui/components/icon";
 import { SkeletonText } from "@calcom/ui/components/skeleton";
 import { Tooltip } from "@calcom/ui/components/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@calcom/ui/components/popover";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import posthog from "posthog-js";
@@ -71,138 +71,149 @@ export const NavigationItem: React.FC<{
   index?: number;
   item: NavigationItemType;
   isChild?: boolean;
+  isCollapsed?: boolean;
 }> = (props) => {
-  const { item, isChild } = props;
+  const { item, isChild, isCollapsed = false } = props;
   const { t, isLocaleReady } = useLocale();
   const pathname = usePathname();
   const isCurrent: NavigationItemType["isCurrent"] = item.isCurrent || defaultIsCurrent;
   const current = isCurrent({ isChild: !!isChild, item, pathname });
   const shouldDisplayNavigationItem = useShouldDisplayNavigationItem(props.item);
   const [isExpanded, setIsExpanded] = usePersistedExpansionState(item.name);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const isTablet = useMediaQuery("(max-width: 1024px)");
-  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
 
   if (!shouldDisplayNavigationItem) return null;
 
   const hasChildren = item.child && item.child.length > 0;
   const hasActiveChild =
     hasChildren && item.child?.some((child) => isCurrent({ isChild: true, item: child, pathname }));
-  const shouldShowChildren = isExpanded || hasActiveChild || isCurrent({ pathname, isChild, item });
+  const shouldShowChildren =
+  !isCollapsed && (isExpanded || hasActiveChild || isCurrent({ pathname, isChild, item })); 
   const shouldShowChevron = hasChildren && !hasActiveChild;
   const isParentNavigationItem = hasChildren && !isChild;
+  const shouldUsePopover = isTablet || isCollapsed;
 
   return (
     <Fragment>
       {isParentNavigationItem ? (
-        <Tooltip
-          side="right"
-          open={isTooltipOpen}
-          content={
-            hasChildren ? (
-              <div className="stack-y-1 pointer-events-auto flex flex-col p-1">
-                <span className="text-subtle px-2 text-xs font-semibold uppercase tracking-wide">
-                  {t(item.name)}
-                </span>
-                <div className="flex flex-col gap-1">
-                  {item.child?.map((childItem) => {
-                    const childIsCurrent =
-                      typeof childItem.isCurrent === "function"
-                        ? childItem.isCurrent({
-                            isChild: true,
-                            item: childItem,
-                            pathname,
-                          })
-                        : defaultIsCurrent({
-                            isChild: true,
-                            item: childItem,
-                            pathname,
-                          });
-                    return (
-                      <Link
-                        key={childItem.name}
-                        href={childItem.href}
-                        aria-current={childIsCurrent ? "page" : undefined}
-                        onClick={() => {
-                          setIsTooltipOpen(false);
-                          trackNavigationClick(childItem.name, item.name);
-                        }}
-                        className={classNames(
-                          "group relative block rounded-md px-3 py-1 text-sm font-medium",
-                          childIsCurrent
-                            ? "bg-emphasis text-white"
-                            : "hover:bg-emphasis text-mute hover:text-emphasis"
-                        )}>
-                        {t(childItem.name)}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              t(item.name)
-            )
-          }
-          className="lg:hidden">
-          <button
-            data-test-id={item.name}
-            aria-label={t(item.name)}
-            aria-expanded={isExpanded}
-            aria-current={current ? "page" : undefined}
-            onClick={() => {
-              if (isTablet && hasChildren) {
-                setIsTooltipOpen(!isTooltipOpen);
-              } else {
-                setIsExpanded(!isExpanded);
-              }
-            }}
-            className={classNames(
-              "todesktop:py-[7px] text-default group relative flex w-full items-center rounded-md px-2 py-1.5 text-sm font-medium transition",
-              "aria-[aria-current='page']:bg-transparent!",
-              "[&[aria-current='page']]:text-emphasis mt-0.5 text-sm",
-              "md:justify-center lg:justify-start",
-              isLocaleReady
-                ? "hover:bg-subtle todesktop:[&[aria-current='page']]:bg-emphasis todesktop:hover:bg-transparent hover:text-emphasis"
-                : ""
-            )}>
-            {item.icon && (
-              <div className="relative">
-                <Icon
-                  name={item.isLoading ? "rotate-cw" : item.icon}
-                  className={classNames(
-                    "todesktop:!text-blue-500 h-4 w-4 shrink-0 lg:ltr:mr-2 lg:rtl:ml-2",
-                    item.isLoading && "animate-spin"
-                  )}
-                  aria-hidden="true"
-                />
-                {shouldShowChevron && (
+        <Popover
+          open={shouldUsePopover && isPopoverOpen}
+          onOpenChange={setIsPopoverOpen}>
+          <Tooltip
+            side="right"
+            content={t(item.name)}
+            className={classNames(!isCollapsed && "lg:hidden")}>
+            <PopoverTrigger asChild>
+              <button
+                data-test-id={item.name}
+                aria-label={t(item.name)}
+                aria-expanded={shouldUsePopover ? isPopoverOpen : isExpanded}
+                aria-current={current ? "page" : undefined}
+                onClick={() => {
+                  if (!shouldUsePopover) {
+                    setIsExpanded(!isExpanded);
+                  }
+                }}
+                className={classNames(
+                  "todesktop:py-[7px] text-default group relative flex w-full items-center rounded-md px-2 py-1.5 text-sm font-medium transition",
+                  "aria-[aria-current='page']:bg-transparent!",
+                  "[&[aria-current='page']]:text-emphasis mt-0.5 text-sm",
+                  "md:justify-center",
+                  isCollapsed
+                    ? "lg:mx-auto lg:h-10 lg:w-10 lg:justify-center lg:px-0"
+                    : "lg:justify-start",
+                  isLocaleReady
+                    ? "hover:bg-subtle todesktop:[&[aria-current='page']]:bg-emphasis todesktop:hover:bg-transparent hover:text-emphasis"
+                    : ""
+                )}>
+                {item.icon && (
+                  <div className="relative">
+                    <Icon
+                      name={item.isLoading ? "rotate-cw" : item.icon}
+                      className={classNames(
+                        "todesktop:!text-blue-500 h-4 w-4 shrink-0",
+                        !isCollapsed && "lg:ltr:mr-2 lg:rtl:ml-2",
+                        item.isLoading && "animate-spin"
+                      )}
+                      aria-hidden="true"
+                    />
+
+                    {shouldShowChevron && (
+                      <Icon
+                        name={isExpanded ? "chevron-up" : "chevron-down"}
+                        className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-subtle p-0.5 lg:hidden"
+                      />
+                    )}
+                  </div>
+                )}
+
+                {isLocaleReady ? (
+                  <span
+                    className={classNames(
+                      "hidden w-full justify-between truncate text-ellipsis",
+                      !isCollapsed && "lg:flex"
+                    )}
+                    data-testid={`${item.name}-test`}>
+                    {t(item.name)}
+                    {item.badge && item.badge}
+                  </span>
+                ) : (
+                  <SkeletonText className="h-[20px] w-full" />
+                )}
+
+                {shouldShowChevron && !isCollapsed && (
                   <Icon
                     name={isExpanded ? "chevron-up" : "chevron-down"}
-                    className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-subtle p-0.5 lg:hidden"
+                    className="ml-auto hidden h-4 w-4 lg:block"
                   />
                 )}
+              </button>
+            </PopoverTrigger>
+          </Tooltip>
+
+          {shouldUsePopover && (
+            <PopoverContent
+              side="right"
+              align="center"
+              sideOffset={8}
+              className="w-auto min-w-36 p-2">
+              <div className="flex flex-col">
+                <span className="text-subtle px-2 pb-1 text-xs font-semibold">
+                  {t(item.name)}
+                </span>
+
+                {item.child?.map((childItem) => {
+                  const resolveIsCurrent = childItem.isCurrent ?? defaultIsCurrent;
+                    const childIsCurrent = resolveIsCurrent({
+                      isChild: true,
+                      item: childItem,
+                      pathname,
+                    });
+
+                  return (
+                    <Link
+                      key={childItem.name}
+                      href={childItem.href}
+                      aria-current={childIsCurrent ? "page" : undefined}
+                      onClick={() => trackNavigationClick(childItem.name, item.name)}
+                      className={classNames(
+                        "relative rounded-md px-2 py-1.5 text-sm font-medium",
+                        childIsCurrent
+                          ? "bg-emphasis text-emphasis"
+                          : "text-emphasis hover:bg-subtle"
+                      )}>
+                      {t(childItem.name)}
+                    </Link>
+                  );
+                })}
               </div>
-            )}
-            {isLocaleReady ? (
-              <span
-                className="hidden w-full justify-between truncate text-ellipsis lg:flex"
-                data-testid={`${item.name}-test`}>
-                {t(item.name)}
-                {item.badge && item.badge}
-              </span>
-            ) : (
-              <SkeletonText className="h-[20px] w-full" />
-            )}
-            {shouldShowChevron && (
-              <Icon
-                name={isExpanded ? "chevron-up" : "chevron-down"}
-                className="ml-auto hidden h-4 w-4 lg:block"
-              />
-            )}
-          </button>
-        </Tooltip>
+            </PopoverContent>
+          )}
+        </Popover>
       ) : (
-        <Tooltip side="right" content={t(item.name)} className="lg:hidden">
+        <Tooltip side="right" content={t(item.name)} className={classNames(!isCollapsed && "lg:hidden")}>
           <Link
             data-test-id={item.name}
             onClick={() => trackNavigationClick(item.name)}
@@ -218,7 +229,12 @@ export const NavigationItem: React.FC<{
                 ? `[&[aria-current='page']]:text-emphasis [&[aria-current='page']]:bg-emphasis hidden h-8 pl-16 lg:flex lg:pl-11 ${
                     props.index === 0 ? "mt-0" : "mt-1  hover:mt-1 [&[aria-current='page']]:mt-1"
                   }`
-                : "[&[aria-current='page']]:text-emphasis mt-0.5 text-sm md:justify-center lg:justify-start",
+                : classNames(
+                  "[&[aria-current='page']]:text-emphasis mt-0.5 text-sm md:justify-center",
+                  isCollapsed
+                    ? "lg:mx-auto lg:h-10 lg:w-10 lg:justify-center lg:px-0"
+                    : "lg:justify-start"
+                ),
               isLocaleReady
                 ? "hover:bg-subtle todesktop:[&[aria-current='page']]:bg-emphasis todesktop:hover:bg-transparent hover:text-emphasis"
                 : ""
@@ -228,7 +244,8 @@ export const NavigationItem: React.FC<{
               <Icon
                 name={item.isLoading ? "rotate-cw" : item.icon}
                 className={classNames(
-                  "todesktop:!text-blue-500 h-4 w-4 shrink-0 aria-[aria-current='page']:text-inherit lg:ltr:mr-2 lg:rtl:ml-2",
+                  "todesktop:!text-blue-500 h-4 w-4 shrink-0 aria-[aria-current='page']:text-inherit",
+                  !isCollapsed && "lg:ltr:mr-2 lg:rtl:ml-2",
                   item.isLoading && "animate-spin"
                 )}
                 aria-hidden="true"
@@ -237,7 +254,8 @@ export const NavigationItem: React.FC<{
             )}
             {isLocaleReady ? (
               <span
-                className="hidden w-full justify-between truncate text-ellipsis lg:flex"
+                className={classNames("hidden w-full justify-between truncate text-ellipsis",     !isCollapsed && "lg:flex"
+                  )}
                 data-testid={`${item.name}-test`}>
                 {t(item.name)}
                 {item.badge && item.badge}
