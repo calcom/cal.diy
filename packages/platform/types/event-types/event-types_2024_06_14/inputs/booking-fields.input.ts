@@ -118,6 +118,7 @@ export class EmailDefaultFieldInput_2024_06_14 {
   @IsBoolean()
   @IsOptional()
   @DocsPropertyOptional({
+    type: Boolean,
     description: `Can be set to false only for organization team event types and if you also pass booking field {type: "phone", slug: "attendeePhoneNumber", required: true, hidden: false, label: "whatever label"} of booking field type PhoneFieldInput_2024_06_14 - this is done
       to enable phone only bookings where during the booking attendee can provide only their phone number and not provide email, so you must pass to the email booking field {hidden: true, required: false}.
       If true show under event type settings but don't show this booking field in the Booker. If false show in both.`,

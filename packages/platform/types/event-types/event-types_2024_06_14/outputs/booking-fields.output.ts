@@ -30,6 +30,7 @@ import {
 export class NameDefaultFieldOutput_2024_06_14 extends NameDefaultFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always true because it's a default field",
     example: true,
     default: true,
@@ -56,6 +57,7 @@ export class NameDefaultFieldOutput_2024_06_14 extends NameDefaultFieldInput_202
 export class SplitNameDefaultFieldOutput_2024_06_14 extends SplitNameDefaultFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always true because it's a default field",
     example: true,
     default: true,
@@ -78,6 +80,7 @@ export class SplitNameDefaultFieldOutput_2024_06_14 extends SplitNameDefaultFiel
 export class EmailDefaultFieldOutput_2024_06_14 extends EmailDefaultFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always true because it's a default field",
     example: true,
     default: true,
@@ -111,6 +114,7 @@ export class EmailDefaultFieldOutput_2024_06_14 extends EmailDefaultFieldInput_2
 export class LocationDefaultFieldOutput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always true because it's a default field",
     example: true,
     default: true,
@@ -151,6 +155,7 @@ export class LocationDefaultFieldOutput_2024_06_14 {
 export class RescheduleReasonDefaultFieldOutput_2024_06_14 extends RescheduleReasonDefaultFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always true because it's a default field",
     example: true,
     default: true,
@@ -204,6 +209,7 @@ export class RescheduleReasonDefaultFieldOutput_2024_06_14 extends RescheduleRea
 export class TitleDefaultFieldOutput_2024_06_14 extends TitleDefaultFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always true because it's a default field",
     example: true,
     default: true,
@@ -257,6 +263,7 @@ export class TitleDefaultFieldOutput_2024_06_14 extends TitleDefaultFieldInput_2
 export class NotesDefaultFieldOutput_2024_06_14 extends NotesDefaultFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always true because it's a default field",
     example: true,
     default: true,
@@ -310,6 +317,7 @@ export class NotesDefaultFieldOutput_2024_06_14 extends NotesDefaultFieldInput_2
 export class GuestsDefaultFieldOutput_2024_06_14 extends GuestsDefaultFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always true because it's a default field",
     example: true,
     default: true,
@@ -363,6 +371,7 @@ export class GuestsDefaultFieldOutput_2024_06_14 extends GuestsDefaultFieldInput
 export class PhoneDefaultFieldOutput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always true because it's a default field",
     example: true,
     default: true,
@@ -416,6 +425,7 @@ export class PhoneDefaultFieldOutput_2024_06_14 {
 export class PhoneFieldOutput_2024_06_14 extends PhoneFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -433,6 +443,7 @@ export class PhoneFieldOutput_2024_06_14 extends PhoneFieldInput_2024_06_14 {
 export class AddressFieldOutput_2024_06_14 extends AddressFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -450,6 +461,7 @@ export class AddressFieldOutput_2024_06_14 extends AddressFieldInput_2024_06_14 
 export class TextFieldOutput_2024_06_14 extends TextFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -467,6 +479,7 @@ export class TextFieldOutput_2024_06_14 extends TextFieldInput_2024_06_14 {
 export class UrlFieldOutput_2024_06_14 extends UrlFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -484,6 +497,7 @@ export class UrlFieldOutput_2024_06_14 extends UrlFieldInput_2024_06_14 {
 export class NumberFieldOutput_2024_06_14 extends NumberFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -501,6 +515,7 @@ export class NumberFieldOutput_2024_06_14 extends NumberFieldInput_2024_06_14 {
 export class TextAreaFieldOutput_2024_06_14 extends TextAreaFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -518,6 +533,7 @@ export class TextAreaFieldOutput_2024_06_14 extends TextAreaFieldInput_2024_06_1
 export class SelectFieldOutput_2024_06_14 extends SelectFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -535,6 +551,7 @@ export class SelectFieldOutput_2024_06_14 extends SelectFieldInput_2024_06_14 {
 export class MultiSelectFieldOutput_2024_06_14 extends MultiSelectFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -552,6 +569,7 @@ export class MultiSelectFieldOutput_2024_06_14 extends MultiSelectFieldInput_202
 export class MultiEmailFieldOutput_2024_06_14 extends MultiEmailFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -569,6 +587,7 @@ export class MultiEmailFieldOutput_2024_06_14 extends MultiEmailFieldInput_2024_
 export class CheckboxGroupFieldOutput_2024_06_14 extends CheckboxGroupFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -586,6 +605,7 @@ export class CheckboxGroupFieldOutput_2024_06_14 extends CheckboxGroupFieldInput
 export class RadioGroupFieldOutput_2024_06_14 extends RadioGroupFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
@@ -603,6 +623,7 @@ export class RadioGroupFieldOutput_2024_06_14 extends RadioGroupFieldInput_2024_
 export class BooleanFieldOutput_2024_06_14 extends BooleanFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
+    type: Boolean,
     description: "This property is always false because it's not default field but custom field",
     example: false,
     default: false,
