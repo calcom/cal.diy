@@ -78,7 +78,9 @@ export class BusyTimesService {
       `Checking Busy time from Cal Bookings in range ${startTime} to ${endTime} for input ${JSON.stringify({
         userId,
         eventTypeId,
-        status: BookingStatus.ACCEPTED,
+        status: {
+        in: [BookingStatus.ACCEPTED, BookingStatus.PENDING],
+      },
       })}`
     );
 
