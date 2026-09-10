@@ -9,6 +9,13 @@ import {
   mockSuccessfulVideoMeetingCreation,
   TestData,
 } from "@calcom/testing/lib/bookingScenario/bookingScenario";
+import process from "node:process";
+import { getRecurringBookingService } from "@calcom/features/bookings/di/RecurringBookingService.container";
+import { RecurringBookingService } from "@calcom/features/bookings/lib/service/RecurringBookingService";
+import type { RegularBookingService } from "@calcom/features/bookings/lib/service/RegularBookingService";
+import { WEBAPP_URL } from "@calcom/lib/constants";
+import logger from "@calcom/lib/logger";
+import { BookingStatus, SchedulingType } from "@calcom/prisma/enums";
 import {
   expectBookingCreatedWebhookToHaveBeenFired,
   expectBookingToBeInDatabase,
@@ -17,15 +24,9 @@ import {
 } from "@calcom/testing/lib/bookingScenario/expects";
 import { getMockRequestDataForBooking } from "@calcom/testing/lib/bookingScenario/getMockRequestDataForBooking";
 import { setupAndTeardown } from "@calcom/testing/lib/bookingScenario/setupAndTeardown";
-
-import { v4 as uuidv4 } from "uuid";
-import { describe, expect } from "vitest";
-
-import { getRecurringBookingService } from "@calcom/features/bookings/di/RecurringBookingService.container";
-import { WEBAPP_URL } from "@calcom/lib/constants";
-import logger from "@calcom/lib/logger";
-import { BookingStatus } from "@calcom/prisma/enums";
 import { test } from "@calcom/testing/lib/fixtures/fixtures";
+import { v4 as uuidv4 } from "uuid";
+import { describe, expect, it, vi } from "vitest";
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
@@ -250,6 +251,81 @@ describe("handleNewRecurringBooking", () => {
               videoCallUrl: "http://mock-dailyvideo.example.com/meeting-1",
             },
           ]);
+        },
+        timeout
+      );
+    });
+
+    describe("Round robin event type:", () => {
+      it(
+        `propagates thirdPartyRecurringEventId from the first (lucky-user) booking to
+          subsequent occurrences, so every occurrence attaches to the same third-party
+          calendar recurring series`,
+        async () => {
+          const createBooking = vi
+            .fn()
+            .mockResolvedValueOnce({
+              luckyUsers: [101],
+              references: [{ type: "google_calendar", thirdPartyRecurringEventId: "SERIES_A" }],
+            })
+            .mockResolvedValueOnce({
+              luckyUsers: [101],
+              references: [],
+            })
+            .mockResolvedValueOnce({
+              luckyUsers: [101],
+              references: [],
+            });
+
+          const regularBookingService = {
+            createBooking,
+          } as unknown as RegularBookingService;
+
+          const recurringBookingService = new RecurringBookingService({ regularBookingService });
+
+          const plus1DateString = getDate({ dateIncrement: 1 }).dateString;
+          const mockBookingData = getMockRequestDataForBooking({
+            data: {
+              eventTypeId: 1,
+              start: `${plus1DateString}T04:00:00.000Z`,
+              end: `${plus1DateString}T04:30:00.000Z`,
+              recurringEventId: uuidv4(),
+              recurringCount: 3,
+              responses: {
+                email: "booker@example.com",
+                name: "Booker",
+                location: { optionValue: "", value: "New York" },
+              },
+            },
+          });
+
+          const bookingDataArray = Array(3)
+            .fill(mockBookingData)
+            .map((data, index) => ({
+              ...data,
+              schedulingType: SchedulingType.ROUND_ROBIN,
+              start: getPlusDayDate(data.start, index).toISOString(),
+              end: getPlusDayDate(data.end, index).toISOString(),
+            }));
+
+          await recurringBookingService.createBooking({
+            bookingData: bookingDataArray,
+            bookingMeta: { userId: -1 },
+            creationSource: "WEBAPP",
+          });
+
+          expect(createBooking).toHaveBeenCalledTimes(3);
+
+          // First (lucky-user) booking has no prior series to attach to.
+          expect(createBooking.mock.calls[0][0].bookingData.thirdPartyRecurringEventId).toBeNull();
+
+          // Occurrence 1 must attach to the series created by the first booking —
+          // this is null on `main` because the first booking's `references` are
+          // never scanned, so occurrence 1 starts a brand-new calendar series.
+          expect(createBooking.mock.calls[1][0].bookingData.thirdPartyRecurringEventId).toBe("SERIES_A");
+
+          // Occurrence 2 must keep using the same series, not overwrite it.
+          expect(createBooking.mock.calls[2][0].bookingData.thirdPartyRecurringEventId).toBe("SERIES_A");
         },
         timeout
       );
