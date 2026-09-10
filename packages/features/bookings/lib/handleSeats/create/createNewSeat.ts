@@ -283,6 +283,18 @@ const createNewSeat = async (
     resultBooking.message = "Payment required";
     resultBooking.paymentUid = payment?.uid;
     resultBooking.id = payment?.id;
+
+    // Persist this seat's payment on its BookingSeat. Payment has no per-seat link (all of a slot's
+    // seats share one bookingId), so the booking-success page needs this to show the correct
+    // per-seat amount instead of falling back to the first seat's payment.
+    if (payment?.uid && newBookingSeat?.referenceUid) {
+      await prisma.bookingSeat.update({
+        where: { referenceUid: newBookingSeat.referenceUid },
+        data: {
+          metadata: { ...((newBookingSeat.metadata as Prisma.JsonObject | null) ?? {}), paymentUid: payment.uid },
+        },
+      });
+    }
   } else {
     resultBooking = { ...foundBooking };
   }
