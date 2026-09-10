@@ -3,7 +3,8 @@ process.env.TZ = "Asia/Dubai";
 import dayjs from "@calcom/dayjs";
 import { PeriodType } from "@calcom/prisma/enums";
 import { describe, expect, it } from "vitest";
-import { calculatePeriodLimits, getRollingWindowEndDate } from "./isOutOfBounds";
+import { ROLLING_WINDOW_PERIOD_MAX_DAYS_TO_CHECK } from "./constants";
+import isOutOfBounds, { calculatePeriodLimits, getRollingWindowEndDate } from "./isOutOfBounds";
 
 const getDayJsTimeWithUtcOffset = ({
   dateStringWithOffset,
@@ -655,5 +656,41 @@ describe("calculatePeriodLimits - PeriodType.RANGE", () => {
       expect(result.startOfRangeStartDayInEventTz!.date()).toBe(19);
       expect(result.endOfRangeEndDayInEventTz!.date()).toBe(19);
     });
+  });
+});
+
+describe("isOutOfBounds - ROLLING_WINDOW enforcement in the booking path", () => {
+  const rollingWindowEventType = {
+    periodType: PeriodType.ROLLING_WINDOW,
+    periodDays: 5,
+    periodStartDate: null,
+    periodEndDate: null,
+    eventUtcOffset: 0,
+    bookerUtcOffset: 0,
+  };
+
+  it("rejects a booking past the furthest the window could reach (calendar days)", () => {
+    const beyondWindow = dayjs()
+      .add(ROLLING_WINDOW_PERIOD_MAX_DAYS_TO_CHECK + 5, "day")
+      .hour(10)
+      .toISOString();
+    expect(isOutOfBounds(beyondWindow, { ...rollingWindowEventType, periodCountCalendarDays: true })).toBe(
+      true
+    );
+  });
+
+  it("rejects a booking past the furthest the window could reach (business days)", () => {
+    // A business-day window spans more calendar days than the step count, so book well past it.
+    const beyondWindow = dayjs().add(150, "day").hour(10).toISOString();
+    expect(isOutOfBounds(beyondWindow, { ...rollingWindowEventType, periodCountCalendarDays: false })).toBe(
+      true
+    );
+  });
+
+  it("still allows a booking that falls inside the window", () => {
+    const withinWindow = dayjs().add(2, "day").hour(10).toISOString();
+    expect(isOutOfBounds(withinWindow, { ...rollingWindowEventType, periodCountCalendarDays: true })).toBe(
+      false
+    );
   });
 });
