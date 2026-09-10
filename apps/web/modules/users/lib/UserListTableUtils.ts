@@ -75,9 +75,9 @@ export const generateCsvRawForMembersTable = (
     );
 
     const requiredColumns = [
-      email, // Members column
-      `${orgDomain}/${username}`, // Link column
-      role, // Role column
+      sanitizeValue(email), // Members column
+      sanitizeValue(`${orgDomain}/${username}`), // Link column
+      sanitizeValue(role), // Role column
       sanitizeValue(teams.map((team: { id: number; name: string }) => team.name).join(",")), // Teams column
     ];
 
