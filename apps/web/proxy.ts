@@ -159,6 +159,8 @@ function responseWithHeaders({ url, res, req }: { url: URL; res: NextResponse; r
 
 function enrichRequestWithHeaders({ req }: { req: NextRequest }) {
   const reqWithCSP = contentSecurityPolicy.addRequestHeaders({ req });
+  // Add pathname as a header for layout.tsx to use for locale detection
+  reqWithCSP.headers.set("x-pathname", req.nextUrl.pathname);
   return reqWithCSP;
 }
 
