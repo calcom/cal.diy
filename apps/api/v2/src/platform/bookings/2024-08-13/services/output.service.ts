@@ -80,6 +80,7 @@ type DatabaseBooking = Booking & {
     phoneNumber?: string | null;
     noShow: boolean | null;
     bookingSeat?: BookingSeat | null;
+    createdAt?: Date | null
   }[];
   user: DatabaseUser | null;
   createdAt: Date;
@@ -389,6 +390,7 @@ export class OutputBookingsService_2024_08_13 {
             absent: !!attendee.noShow,
             seatUid: attendee.bookingSeat?.referenceUid,
             bookingFieldsResponses: {},
+            createdAt: attendee.createdAt ? attendee.createdAt.toISOString() : null,
           };
           const attendeeParsed = plainToClass(SeatedAttendee, attendeeData, { strategy: "excludeAll" });
           attendeeParsed.bookingFieldsResponses = responses || {};
@@ -518,6 +520,7 @@ export class OutputBookingsService_2024_08_13 {
             absent: !!attendee.noShow,
             seatUid: attendee.bookingSeat?.referenceUid,
             bookingFieldsResponses: {},
+            createdAt: attendee.createdAt ? attendee.createdAt.toISOString() : null,
           };
           const attendeeParsed = plainToClass(SeatedAttendee, attendeeData, { strategy: "excludeAll" });
           attendeeParsed.bookingFieldsResponses = responses || {};
