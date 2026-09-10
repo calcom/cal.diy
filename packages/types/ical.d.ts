@@ -101,6 +101,7 @@ declare module "ical.js" {
     public getFirstValue<T = unknown>(): T;
     public getValues<T = unknown>(): T[];
 
+    public getParameter(name: string): string | string[] | undefined;
     public setParameter(name: string, value: string | string[]): void;
     public setValue(value: string | Record<string, unknown>): void;
     public setValues(values: (string | Record<string, unknown>)[]): void;

@@ -678,9 +678,22 @@ export default abstract class BaseCalendarService implements Calendar {
         return;
       }
       const vevents = vcalendar.getAllSubcomponents("vevent");
+      const credentialEmail = this.credential.user?.email?.toLowerCase();
       vevents.forEach((vevent) => {
         // if event status is free or transparent, return
         if (vevent?.getFirstPropertyValue("transp") === "TRANSPARENT") return;
+
+        // Apple/CalDAV servers return invited events as TRANSP:OPAQUE regardless of
+        // the user's response, so we must inspect PARTSTAT to avoid blocking days for
+        // invites the user hasn't accepted (NEEDS-ACTION) or has declined.
+        if (credentialEmail) {
+          const myAttendee = vevent.getAllProperties("attendee").find((prop) => {
+            const value = prop.getFirstValue();
+            return typeof value === "string" && value.toLowerCase() === `mailto:${credentialEmail}`;
+          });
+          const partstat = myAttendee?.getParameter("partstat");
+          if (partstat === "NEEDS-ACTION" || partstat === "DECLINED") return;
+        }
 
         const event = new ICAL.Event(vevent);
         const dtstartProperty = vevent.getFirstProperty("dtstart");
