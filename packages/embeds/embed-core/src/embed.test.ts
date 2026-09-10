@@ -815,6 +815,18 @@ describe("Cal", () => {
     });
   });
 
+  describe("regression: __iframeReady handler should not throw when iframe is absent (#30130)", () => {
+    it("should not throw when __iframeReady fires and this.iframe is null", () => {
+      // Before the fix, __iframeReady set iframeReady=true then called doInIframe()
+      // without guarding on this.iframe. doInIframe's own queue-and-return was disabled
+      // by iframeReady being true, so it fell through to the throw.
+      expect(calInstance.iframe).toBeFalsy();
+      expect(() => {
+        calInstance.actionManager.fire("__iframeReady", { isPrerendering: false });
+      }).not.toThrow("iframe doesn't exist. `createIframe` must be called before `doInIframe`");
+    });
+  });
+
   describe("getNextActionForModal", () => {
     const baseArgs = {
       pathWithQueryToLoad: "john-doe/meeting",
