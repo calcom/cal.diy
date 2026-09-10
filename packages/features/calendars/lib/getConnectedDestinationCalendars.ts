@@ -70,9 +70,9 @@ async function handleNoConnectedCalendars(user: UserWithCalendars) {
   log.debug(`No connected calendars, deleting destination calendar if it exists for user ${user.id}`);
 
   if (!user.destinationCalendar) return user;
-  await prisma.destinationCalendar.delete({
-    where: { userId: user.id },
-  });
+  // deleteMany so a stale session destinationCalendar (already cascade-deleted with the
+  // credential) does not throw Prisma P2025 and break connectedCalendars.
+  await DestinationCalendarRepository.deleteByUserId(user.id);
 
   return {
     ...user,
@@ -178,12 +178,21 @@ async function handleDestinationCalendarNotInConnectedCalendars({
     }
   }
 
-  user.destinationCalendar = await prisma.destinationCalendar.update({
+  // Upsert: the session may still reference a destination calendar that was already
+  // cascade-deleted with a failed/removed credential (Prisma P2025 on plain update).
+  user.destinationCalendar = await DestinationCalendarRepository.upsert({
     where: { userId: user.id },
-    data: {
+    update: {
       integration,
       externalId,
       primaryEmail,
+    },
+    create: {
+      userId: user.id,
+      integration,
+      externalId,
+      primaryEmail,
+      credentialId: null,
     },
   });
 
