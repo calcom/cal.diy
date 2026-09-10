@@ -108,9 +108,21 @@ const TeamsVideoApiAdapter = (credential: CredentialForCalendarServiceWithTenant
         body: new URLSearchParams(params),
       });
     },
-    isTokenObjectUnusable: async function () {
-      // TODO: Implement this. As current implementation of CalendarService doesn't handle it. It hasn't been handled in the OAuthManager implementation as well.
-      // This is a placeholder for future implementation.
+    isTokenObjectUnusable: async function (response) {
+      // Delegation credentials use the client_credentials grant and have no refresh token that
+      // could go stale, so a failure there is a configuration problem rather than a dead
+      // connection. Invalidating would only hide the real cause from the admin.
+      if (credential?.delegatedTo) {
+        return null;
+      }
+
+      if (!response.ok) {
+        const responseBody = await response.json().catch(() => null);
+        if (responseBody?.error === "invalid_grant") {
+          return { reason: "invalid_grant" };
+        }
+      }
+
       return null;
     },
     isAccessTokenUnusable: async function () {
