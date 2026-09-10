@@ -21,8 +21,7 @@ const OLD_TO_NEW_CSS_VAR_MAP: Record<string, string> = {
     "cal-radius-3xl": "radius-3xl",
     "cal-radius-full": "radius-full",
     "cal-radius-none": "radius-none",
-    // We don't intentionally want to support all spacing variables, from just one variable our design system derives all the rest.
-    "cal-spacing-px": "spacing",
+    "cal-availability-dot-color": "availability-dot-color",
     // No need to map the following
     // Colors - Still using the old variable names --cal-bg-* and --cal-brand-*
     // Border colors - Still using the old variable names --cal-border-*

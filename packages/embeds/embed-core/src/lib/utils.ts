@@ -79,6 +79,14 @@ function listKnownConfigProps() {
     "theme",
     "cal.embed.pageType",
     "ui.autoscroll",
+    "ui.autofocus",
+    "ui.scroll",
+    "ui.compact",
+    "ui.unpadded",
+    "disableAutofocus",
+    "disableScroll",
+    "compact",
+    "unpadded",
   ];
   return knownConfigProps;
 }

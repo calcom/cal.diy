@@ -75,6 +75,7 @@
   --color-visualization-7-emphasis: var(--cal-bg-visualization-7-emphasis);
   --color-cal-info: var(--cal-bg-info);
   --color-cal-success: var(--cal-bg-success);
+  --color-availability-dot: var(--availability-dot-color, var(--cal-availability-dot-color, var(--cal-bg-success, #34d399)));
   --color-attention: var(--cal-bg-attention);
   --color-error: var(--cal-bg-error);
   --color-dark-error: var(--cal-bg-dark-error);

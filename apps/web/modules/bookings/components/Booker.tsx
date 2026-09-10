@@ -171,6 +171,21 @@ const BookerComponent = ({
 
   const scrolledToTimeslotsOnce = useRef(false);
   const embedUiConfig = useEmbedUiConfig();
+  const isCompact = Boolean(
+    embedUiConfig.compact ||
+      embedUiConfig.unpadded ||
+      embedUiConfig.padding === "none" ||
+      embedUiConfig.padding === "compact" ||
+      (embedUiConfig.layout as string) === "compact"
+  );
+
+  const shouldDisableScroll =
+    embedUiConfig.disableAutoScroll ||
+    embedUiConfig.disableAutofocus ||
+    embedUiConfig.autofocus === false ||
+    embedUiConfig.scroll === false ||
+    embedUiConfig.disableScroll === true;
+
   const scrollToTimeSlots = () => {
     // Don't scroll if slots view on small screen is enabled
     if (slotsViewOnSmallScreen) {
@@ -181,7 +196,7 @@ const BookerComponent = ({
       isMobile &&
       !scrolledToTimeslotsOnce.current &&
       timeslotsRef.current &&
-      !embedUiConfig.disableAutoScroll
+      !shouldDisableScroll
     ) {
       // eslint-disable-next-line @calcom/eslint/no-scroll-into-view-embed -- We are allowing it here because scrollToTimeSlots is called on explicit user action where it makes sense to scroll, remember that the goal is to not do auto-scroll on embed load because that ends up scrolling the embedding webpage too
       scrollIntoViewSmooth(timeslotsRef.current, isEmbed);
@@ -340,7 +355,7 @@ const BookerComponent = ({
           // In a popup embed, if someone clicks outside the main(having main class or main tag), it closes the embed
           "main",
           "text-default flex min-h-full w-full flex-col items-center",
-          layout === BookerLayouts.MONTH_VIEW && !isEmbed && "my-20 ",
+          layout === BookerLayouts.MONTH_VIEW && !isEmbed && !isCompact && "my-20 ",
           layout === BookerLayouts.MONTH_VIEW ? "overflow-visible" : "overflow-clip",
           `${customClassNames?.bookerWrapper}`
         )}>
@@ -351,10 +366,11 @@ const BookerComponent = ({
             ...getBookerSizeClassNames(layout, bookerState, hideEventTypeDetails),
             `bg-default dark:bg-cal-muted grid max-w-full items-start dark:scheme-dark sm:transition-[width] sm:duration-300 sm:motion-reduce:transition-none md:flex-row`,
             // We remove border only when the content covers entire viewport. Because in embed, it can almost never be the case that it covers entire viewport, we show the border there
-            (layout === BookerLayouts.MONTH_VIEW || isEmbed) && "border-subtle rounded-md",
+            (layout === BookerLayouts.MONTH_VIEW || isEmbed) && !isCompact && "border-subtle rounded-md",
             !isEmbed && "sm:transition-[width] sm:duration-300",
-            isEmbed && layout === BookerLayouts.MONTH_VIEW && "border-booker sm:border-booker-width",
-            !isEmbed && layout === BookerLayouts.MONTH_VIEW && `border-subtle border`,
+            isEmbed && layout === BookerLayouts.MONTH_VIEW && !isCompact && "border-booker sm:border-booker-width",
+            !isEmbed && layout === BookerLayouts.MONTH_VIEW && !isCompact && `border-subtle border`,
+            isCompact && "border-0 rounded-none p-0",
             `${customClassNames?.bookerContainer}`
           )}>
           <AnimatePresence>
@@ -430,7 +446,7 @@ const BookerComponent = ({
                 )}
                 {layout !== BookerLayouts.MONTH_VIEW &&
                   !(layout === "mobile" && bookerState === "booking") && (
-                    <div className="mt-auto px-5 py-3">
+                    <div className={classNames("mt-auto", isCompact ? "px-2 py-1" : "px-5 py-3")}>
                       <DatePicker
                         classNames={customClassNames?.datePickerCustomClassNames}
                         event={event}
@@ -452,7 +468,7 @@ const BookerComponent = ({
             <BookerSection
               key="book-event-form"
               area="main"
-              className="sticky top-0 -ml-px h-full p-6 md:w-(--booker-main-width) md:border-l"
+              className={classNames("sticky top-0 -ml-px h-full md:w-(--booker-main-width) md:border-l", isCompact ? "p-2" : "p-6")}
               {...fadeInLeft}
               visible={bookerState === "booking" && !shouldShowFormInDialog}>
               {EventBooker}
@@ -465,7 +481,8 @@ const BookerComponent = ({
               {...fadeInLeft}
               initial="visible"
               className={classNames(
-                "md:border-subtle -ml-px h-full shrink px-5 py-3  lg:w-(--booker-main-width)",
+                "md:border-subtle -ml-px h-full shrink lg:w-(--booker-main-width)",
+                isCompact ? "px-2 py-1" : "px-5 py-3",
                 hideEventTypeDetails ? "" : "md:border-l"
               )}>
               <DatePicker
@@ -501,7 +518,8 @@ const BookerComponent = ({
                   layout === BookerLayouts.COLUMN_VIEW)
               }
               className={classNames(
-                "border-subtle rtl:border-default flex h-full w-full flex-col overflow-x-auto px-5 py-3 pb-0 rtl:border-r ltr:md:border-l",
+                "border-subtle rtl:border-default flex h-full w-full flex-col overflow-x-auto pb-0 rtl:border-r ltr:md:border-l",
+                isCompact ? "px-2 py-1" : "px-5 py-3",
                 layout === BookerLayouts.MONTH_VIEW &&
                   "h-full overflow-hidden md:w-(--booker-timeslots-width)",
                 layout !== BookerLayouts.MONTH_VIEW && "sticky top-0"
