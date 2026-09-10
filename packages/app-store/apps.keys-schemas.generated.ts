@@ -22,6 +22,7 @@ import { appKeysSchema as insihts_zod_ts } from "./insihts/zod";
 import { appKeysSchema as intercom_zod_ts } from "./intercom/zod";
 import { appKeysSchema as jelly_zod_ts } from "./jelly/zod";
 import { appKeysSchema as jitsivideo_zod_ts } from "./jitsivideo/zod";
+import { appKeysSchema as kyzonspacevideo_zod_ts } from "./kyzonspacevideo/zod";
 import { appKeysSchema as larkcalendar_zod_ts } from "./larkcalendar/zod";
 import { appKeysSchema as lyra_zod_ts } from "./lyra/zod";
 import { appKeysSchema as make_zod_ts } from "./make/zod";
@@ -73,6 +74,7 @@ export const appKeysSchemas = {
   intercom: intercom_zod_ts,
   jelly: jelly_zod_ts,
   jitsivideo: jitsivideo_zod_ts,
+  kyzonspacevideo: kyzonspacevideo_zod_ts,
   larkcalendar: larkcalendar_zod_ts,
   lyra: lyra_zod_ts,
   make: make_zod_ts,
