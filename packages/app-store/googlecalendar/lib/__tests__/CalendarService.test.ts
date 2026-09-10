@@ -866,6 +866,10 @@ describe("createEvent", () => {
     expect(patchCall.requestBody.location).toBe(mockHangoutLink);
     expect(patchCall.requestBody.description).toBeDefined();
 
+    // The insert suppresses Google's invitation (sendUpdates: "none"), so the
+    // follow-up patch must too, otherwise attendees get a phantom "Updated invitation"
+    expect(patchCall.sendUpdates).toBe("none");
+
     log.info("createEvent with hangoutLink patch test passed");
   });
 });
