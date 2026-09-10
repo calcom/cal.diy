@@ -31,6 +31,21 @@ export const updateWrongAssignmentReportStatusHandler = async ({
     });
   }
 
+  const membership = await prisma.membership.findFirst({
+    where: {
+      userId: user.id,
+      teamId: report.teamId,
+      accepted: true,
+    },
+    select: { id: true },
+  });
+
+  if (!membership) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You must be a member of the team that owns this report",
+    });
+  }
 
   const updatedReport = await repo.updateStatus({
     id: reportId,
