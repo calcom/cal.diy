@@ -3,7 +3,7 @@
   "private": true,
   "main": "index.ts",
   "dependencies": {
-    "kysely": "0.28.14",
+    "kysely": "0.28.17",
     "pg": "8.16.0"
   },
   "devDependencies": {

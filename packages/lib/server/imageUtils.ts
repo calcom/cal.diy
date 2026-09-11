@@ -70,14 +70,14 @@ export async function detectContentType(buffer: Buffer): Promise<string | null> 
   try {
     const meta = await sharp(buffer).metadata();
     switch (meta?.format) {
-      case "avif":
-        return AVIF;
+      // libvips reports AVIF as the HEIF container; only the AV1-compressed variant is AVIF
+      case "heif":
+        return meta.compression === "av1" ? AVIF : null;
       case "webp":
         return WEBP;
       case "png":
         return PNG;
       case "jpeg":
-      case "jpg":
         return JPEG;
       case "gif":
         return GIF;
