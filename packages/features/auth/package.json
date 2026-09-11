@@ -19,7 +19,7 @@
     "jose": "4.15.9",
     "lru-cache": "9.0.3",
     "next-auth": "4.24.15",
-    "nodemailer": "9.0.5",
+    "nodemailer": "9.1.1",
     "otplib": "12.0.1"
   }
 }
