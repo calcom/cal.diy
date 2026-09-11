@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Upstream (Cal.com) tracks
 its own versioning under `v6.x`; the fork moves to `v7.x` to mark its independent line.
 
+## [7.5.3] — 2026-09-11
+
+Third attempt at the `PRUNE_DEV_DEPENDENCIES=true` path of the Clever Cloud
+post-build hook, and the first that deploys. The 7.5.1 and 7.5.2 GitHub
+releases are withdrawn — their tags stay, only the release pages are gone —
+and this one is the reference: Docker packaging removed, post-build hook
+working in both modes.
+
+The `prisma generate` added in 7.5.2 failed the deploy: the schema's enum, zod
+and kysely generators run through `ts-node`, a devDependency the prune had just
+removed. It was also unnecessary — the client is generated into
+`packages/prisma/generated` (`output = "./generated/prisma"`), a workspace
+directory the `node_modules` re-link never touches; the zod and kysely outputs
+live in the workspace too. The line is removed.
+
+The default, cache-only path of the hook has been fine since 7.5.1.
+
 ## [7.5.2] — 2026-09-11
 
 Fixes the `PRUNE_DEV_DEPENDENCIES=true` path of the Clever Cloud post-build
