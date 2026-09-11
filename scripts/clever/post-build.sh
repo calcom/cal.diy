@@ -12,14 +12,30 @@ cd "$(dirname "$0")/../.."
 size() { du -sh . 2>/dev/null | cut -f1; }
 echo "post-build: ${PWD} is $(size) before trimming"
 
-# Custom variable, not a Clever Cloud one. Opt-in because it changes what the run command may rely on: turbo, ts-node
-# and every other devDependency disappear, so the app must be started with
-# `yarn workspace @calcom/web start` (or `next start` from apps/web), not through
-# `turbo run`. Lifecycle scripts are disabled: native modules were already built
-# by the main install and the root postinstall needs turbo.
+# Custom variable, not a Clever Cloud one. Opt-in because it changes what the
+# run command may rely on: turbo, ts-node and every other devDependency
+# disappear, so the app must be started with `yarn workspace @calcom/web start`
+# (or `next start` from apps/web), not through `turbo run`.
 if [ "${PRUNE_DEV_DEPENDENCIES:-false}" = "true" ]; then
   echo "post-build: pruning devDependencies"
+  # enableScripts=0 only silences dependency build scripts; the root postinstall
+  # (`husky install && turbo run post-install`) still runs and both binaries are
+  # devDependencies about to be removed, so it is stripped for the duration of
+  # the re-link and restored afterwards.
+  cp package.json package.json.pre-prune
+  trap 'mv package.json.pre-prune package.json' EXIT
+  node -e '
+    const fs = require("fs");
+    const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+    delete pkg.scripts.postinstall;
+    fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
+  '
   YARN_ENABLE_SCRIPTS=0 yarn workspaces focus --all --production
+  mv package.json.pre-prune package.json
+  trap - EXIT
+  # The re-link may re-extract @prisma/client, which is where `prisma generate`
+  # writes the client; regenerate rather than trust it survived.
+  yarn workspace @calcom/prisma prisma generate
 fi
 
 # Sentry uploads source maps during `yarn build` (create-sentry-release.js), so
