@@ -1,9 +1,8 @@
 "use client";
 
+import classNames from "@calcom/ui/classNames";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import React from "react";
-
-import classNames from "@calcom/ui/classNames";
 
 export function Tooltip({
   children,
@@ -40,13 +39,17 @@ export function Tooltip({
     </TooltipPrimitive.Content>
   );
 
+  if (content === undefined || content === null || content === "") return <>{children}</>;
+
+  const trigger = React.isValidElement(children) ? children : <span>{children}</span>;
+
   return (
     <TooltipPrimitive.Root
       delayDuration={delayDuration || 50}
       open={open}
       defaultOpen={defaultOpen}
       onOpenChange={onOpenChange}>
-      <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
+      <TooltipPrimitive.Trigger asChild>{trigger}</TooltipPrimitive.Trigger>
       <TooltipPrimitive.Portal>{Content}</TooltipPrimitive.Portal>
     </TooltipPrimitive.Root>
   );
