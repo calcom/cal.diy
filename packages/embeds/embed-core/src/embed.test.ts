@@ -708,7 +708,7 @@ describe("Cal", () => {
     /**
      * These tests verify that __reloadInitiated is sent correctly via doInIframe,
      * which determines whether bookerViewed or bookerReloaded fires in the iframe.
-     * 
+     *
      * - If __reloadInitiated is sent → iframe sets reloadInitiated=true → bookerReloaded fires
      * - If __reloadInitiated is NOT sent → iframe has reloadInitiated=false → bookerViewed fires
      */
@@ -787,7 +787,7 @@ describe("Cal", () => {
     it("should clear stale __reloadInitiated from queue when loadInIframe is called again", () => {
       // This tests the queue clearing behavior that prevents stale __reloadInitiated
       // from causing bookerReloaded to fire incorrectly
-      
+
       // 1. Create iframe
       const iframe = calInstance.createIframe({
         calLink: "john-doe/meeting",
@@ -812,21 +812,6 @@ describe("Cal", () => {
       // 4. Queue should be cleared - stale __reloadInitiated removed
       // This ensures the new iframe won't receive the old __reloadInitiated
       expect(calInstance.iframeDoQueue).toHaveLength(0);
-    });
-  });
-
-  describe("regression: __iframeReady handler should not throw when iframe is absent (#30130)", () => {
-    it("should not throw when __iframeReady fires and this.iframe is null", () => {
-      // Before the fix, __iframeReady set iframeReady=true then called doInIframe()
-      // without guarding on this.iframe. doInIframe's own queue-and-return was disabled
-      // by iframeReady being true, so it fell through to the throw.
-      expect(calInstance.iframe).toBeFalsy();
-      const queueBefore = [...calInstance.iframeDoQueue];
-      expect(() => {
-        calInstance.actionManager.fire("__iframeReady", { isPrerendering: false });
-      }).not.toThrow();
-      expect(calInstance.iframeReady).toBeFalsy();
-      expect(calInstance.iframeDoQueue).toEqual(queueBefore);
     });
   });
 
@@ -1013,5 +998,16 @@ describe("Cal", () => {
       });
       expect(result).toBe("connect");
     });
+  });
+
+  it("should ignore __iframeReady when no iframe exists (keeps queue, not ready, no throw)", () => {
+    const cal = new CalClass("iframe-ready-no-iframe-test", []);
+    cal.doInIframe({ method: "__reloadInitiated", arg: {} });
+    const doInIframeSpy = vi.spyOn(cal, "doInIframe");
+
+    expect(() => cal.actionManager.fire("__iframeReady", { isPrerendering: false })).not.toThrow();
+    expect(cal.iframeReady).toBeUndefined();
+    expect(doInIframeSpy).not.toHaveBeenCalled();
+    expect(cal.iframeDoQueue).toHaveLength(1);
   });
 });
