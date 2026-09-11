@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Upstream (Cal.com) tracks
 its own versioning under `v6.x`; the fork moves to `v7.x` to mark its independent line.
 
+## [7.5.2] — 2026-09-11
+
+Fixes the `PRUNE_DEV_DEPENDENCIES=true` path of the Clever Cloud post-build
+hook introduced in 7.5.1, which aborted the deploy:
+
+```
+calcom-monorepo@workspace:. STDERR command not found: husky
+[ERROR] POST_BUILD_HOOK failed, aborting
+```
+
+`YARN_ENABLE_SCRIPTS=0` only silences dependency build scripts; the root
+workspace's own `postinstall` (`husky install && turbo run post-install`) still
+ran during `yarn workspaces focus --all --production`, and both `husky` and
+`turbo` are devDependencies the focus had just removed.
+
+The `postinstall` is now stripped from `package.json` for the duration of the
+re-link and restored afterwards — a `trap` on `EXIT` covers a failing focus.
+The Prisma client is regenerated after the prune
+(`yarn workspace @calcom/prisma prisma generate`; `prisma` is a regular
+dependency and survives) rather than trusting that the re-link of
+`@prisma/client` left it in place.
+
+The default path of the hook — caches only, no prune — was unaffected.
+Verified in a sandbox with a stub `yarn`: `package.json` is restored
+identically whether the focus succeeds or fails.
+
 ## [7.5.1] — 2026-09-11
 
 The fork is deployed to Clever Cloud as a Node application, not as a
