@@ -12,12 +12,12 @@ cd "$(dirname "$0")/../.."
 size() { du -sh . 2>/dev/null | cut -f1; }
 echo "post-build: ${PWD} is $(size) before trimming"
 
-# Opt-in because it changes what the run command may rely on: turbo, ts-node
+# Custom variable, not a Clever Cloud one. Opt-in because it changes what the run command may rely on: turbo, ts-node
 # and every other devDependency disappear, so the app must be started with
 # `yarn workspace @calcom/web start` (or `next start` from apps/web), not through
 # `turbo run`. Lifecycle scripts are disabled: native modules were already built
 # by the main install and the root postinstall needs turbo.
-if [ "${CC_PRUNE_DEV_DEPENDENCIES:-false}" = "true" ]; then
+if [ "${PRUNE_DEV_DEPENDENCIES:-false}" = "true" ]; then
   echo "post-build: pruning devDependencies"
   YARN_ENABLE_SCRIPTS=0 yarn workspaces focus --all --production
 fi
