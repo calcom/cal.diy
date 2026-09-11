@@ -821,9 +821,12 @@ describe("Cal", () => {
       // without guarding on this.iframe. doInIframe's own queue-and-return was disabled
       // by iframeReady being true, so it fell through to the throw.
       expect(calInstance.iframe).toBeFalsy();
+      const queueBefore = [...calInstance.iframeDoQueue];
       expect(() => {
         calInstance.actionManager.fire("__iframeReady", { isPrerendering: false });
-      }).not.toThrow("iframe doesn't exist. `createIframe` must be called before `doInIframe`");
+      }).not.toThrow();
+      expect(calInstance.iframeReady).toBeFalsy();
+      expect(calInstance.iframeDoQueue).toEqual(queueBefore);
     });
   });
 

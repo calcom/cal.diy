@@ -462,7 +462,7 @@ export class Cal {
     this.actionManager.on("__iframeReady", (e) => {
       if (!this.iframe) return;
       this.iframeReady = true;
-      if (this.iframe && !e.detail.data.isPrerendering) {
+      if (!e.detail.data.isPrerendering) {
         // It's a bit late to make the iframe visible here. We just needed to wait for the HTML tag of the embedded calLink to be rendered(which then informs the browser of the color-scheme)
         // TODO: Right now it would wait for embed-iframe.js bundle to be loaded as well. We can speed that up by inlining the JS that informs about color-scheme being set in the HTML.
         // But it's okay to do it here for now because the embedded calLink also keeps itself hidden till it receives `parentKnowsIframeReady` message(It has it's own reasons for that)
