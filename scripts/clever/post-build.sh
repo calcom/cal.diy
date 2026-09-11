@@ -33,9 +33,9 @@ if [ "${PRUNE_DEV_DEPENDENCIES:-false}" = "true" ]; then
   YARN_ENABLE_SCRIPTS=0 yarn workspaces focus --all --production
   mv package.json.pre-prune package.json
   trap - EXIT
-  # The re-link may re-extract @prisma/client, which is where `prisma generate`
-  # writes the client; regenerate rather than trust it survived.
-  yarn workspace @calcom/prisma prisma generate
+  # No `prisma generate` here: the client lives in packages/prisma/generated,
+  # outside node_modules, so the re-link cannot touch it — and the schema's
+  # enum/zod/kysely generators need ts-node, which the prune just removed.
 fi
 
 # Sentry uploads source maps during `yarn build` (create-sentry-release.js), so
