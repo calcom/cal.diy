@@ -10,7 +10,7 @@ its own versioning under `v6.x`; the fork moves to `v7.x` to mark its independen
 
 Third attempt at the `PRUNE_DEV_DEPENDENCIES=true` path of the Clever Cloud
 post-build hook, and the first that deploys. The 7.5.1 and 7.5.2 GitHub
-releases are withdrawn — their tags stay, only the release pages are gone —
+releases are withdrawn, tags included —
 and this one is the reference: Docker packaging removed, post-build hook
 working in both modes.
 
