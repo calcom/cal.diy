@@ -6,6 +6,69 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Upstream (Cal.com) tracks
 its own versioning under `v6.x`; the fork moves to `v7.x` to mark its independent line.
 
+## [7.5.0] — 2026-09-11
+
+Fork synchronised with `upstream/main` up to #30124, and the runtime
+dependencies brought back under the `high` advisory line — `next`, `nodemailer`,
+`sharp` and `kysely` all carried an open advisory reachable from a request.
+
+### Upstream sync
+
+Nine commits cherry-picked with `-x`; `git cherry` confirmed the other
+forty-six upstream commits were already applied by v7.3.0, and #29648 was
+already present with the fork's trailing-newline fix. No conflict. Notable
+ones: HitPay (#30039) and PayPal (#29984) no longer scale amounts in
+zero-decimal currencies (JPY, KRW…) — a ¥1000 booking was charged ¥10;
+`updateUser`'s `tempOrgRedirect` rewrite now runs on the transaction client
+instead of the global one (#30096), so a failed rename no longer leaves stale
+redirects behind; dynamic group bookings pick the conferencing app of the
+*first* username in the URL, as `handleNewBooking` already did (#30124) —
+the booking page could advertise a different location than the one booked;
+`Tooltip` wraps non-element children in a `<span>` and renders bare children
+when it has no content, silencing the React 19 ref deprecation warning
+(#30111); `CalVideoSettings` booleans document `default: false` in the v2
+OpenAPI spec (#30088); the unused `TokenHandler` component is removed (#30084);
+Japanese (#29970) and Polish (#30107) translations.
+
+### Security — dependencies
+
+- `next` 16.2.12 → 16.3.4 on `apps/web` — GHSA-2xp9-vwfh-vxw4, unauthenticated
+  RCE through the image optimisation endpoint on a crafted AVIF file. Mitigated
+  on this fork by `images.unoptimized: true`, but the endpoint still exists;
+  also GHSA-p293-qw3h-jr36 (Windows hosts only). Docs and example workspaces
+  aligned on 15.5.25 / 16.3.4.
+- `nodemailer` 9.0.5 → 9.1.1 — GHSA-2x7j-588g-ccc2, quadratic `addressparser`
+  on a crafted address list. Reachable: attendee addresses come from the
+  booker. Aligned in `packages/features/auth` too, which still declared 9.0.5.
+- `sharp` 0.33.5 → 0.35.4 — inherited libvips and libheif CVEs
+  (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c), on the logo/avatar upload path.
+  `metadata().format` is now typed as `keyof FormatEnum`, which exposed two
+  dead branches in `detectImageFormat`: libvips has always reported AVIF as
+  the `heif` container and `jpg` never existed. The fallback now matches
+  `heif` with `compression === "av1"`, so AVIF files without the `ftyp` magic
+  at offset 4 are actually detected.
+- `kysely` 0.28.14 → 0.28.17 — GHSA-pv5w-4p9q-p3v2, JSON-path injection through
+  unsanitised metacharacters in `JSONPathBuilder.key()`/`.at()`.
+- Via `resolutions`: `multer` 2.2.0 → 2.3.0 (three multipart DoS, API v2),
+  `express-rate-limit` 8.2.2 → 8.7.0, `ws` 8.21.3 / 7.5.13 (fragment memory
+  exhaustion), `engine.io` 6.6.10 (polling connection exhaustion, WebTransport
+  SID DoS), `postcss` 8.5.28 (arbitrary file read through `sourceMappingURL`).
+
+Highs on runtime dependencies 29 → 0; the one remaining critical
+(`next` 15.x, Windows-only) sits on the docs workspace. No major-version
+change, no new peer-dependency warning.
+
+### Still open
+
+`ip-address` 9.0.5 (SSRF through leading-zero octets) is reached only through
+`socks` and needs a major bump; `fast-xml-builder` and `vite` (Windows-only
+`server.fs.deny` bypass) are build tooling. None is reachable from a request.
+
+The `apps/web` production build was not run locally; verified with
+`type-check:ci` (9/9), `TZ=UTC yarn vitest run` on HitPay/PayPal (10 green)
+and `packages/lib/server packages/features/auth apps/web/lib` (248 green
+across 20 files), and Biome.
+
 ## [7.4.0] — 2026-08-17
 
 Adds a generic OpenID Connect login provider, so a self-hosted instance can
