@@ -3,6 +3,7 @@
 import { sdkActionManager } from "@calcom/embed-core/embed-iframe";
 import { isCancellationReasonRequired } from "@calcom/features/bookings/lib/cancellationReason";
 import { shouldChargeNoShowCancellationFee } from "@calcom/features/bookings/lib/payment/shouldChargeNoShowCancellationFee";
+import { convertFromSmallestToPresentableCurrencyUnit } from "@calcom/lib/currencyConversions";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { useRefreshData } from "@calcom/lib/hooks/useRefreshData";
 import type { CancellationReasonRequirement } from "@calcom/prisma/enums";
@@ -252,7 +253,10 @@ export default function CancelBooking(props: Props) {
                   description={t("cancel_booking_acknowledge_no_show_fee", {
                     timeValue,
                     timeUnit,
-                    amount: booking.payment.amount / 100,
+                    amount: convertFromSmallestToPresentableCurrencyUnit(
+                      booking.payment.amount,
+                      booking.payment.currency
+                    ),
                     formatParams: { amount: { currency: booking.payment.currency } },
                   })}
                   onChange={(e) => setAcknowledgeCancellationNoShowFee(e.target.checked)}
