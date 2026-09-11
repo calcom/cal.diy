@@ -13,7 +13,7 @@
   "dependencies": {
     "@calcom/atoms": "workspace:*",
     "@prisma/client": "6.16.1",
-    "next": "16.2.12",
+    "next": "16.3.4",
     "prisma": "6.16.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -26,7 +26,7 @@
     "@types/react": "18.0.26",
     "@types/react-dom": "18.2.6",
     "dotenv": "17.2.2",
-    "postcss": "8.5.6",
+    "postcss": "8.5.28",
     "tailwindcss": "4.1.17",
     "typescript": "5.9.3"
   }
