@@ -6,6 +6,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Upstream (Cal.com) tracks
 its own versioning under `v6.x`; the fork moves to `v7.x` to mark its independent line.
 
+## [7.5.1] — 2026-09-11
+
+The fork is deployed to Clever Cloud as a Node application, not as a
+container, and the deployed directory is the whole checkout after
+`yarn build` — 7.8 GB on v7.5.0. This release drops the Docker packaging and
+adds a post-build hook that trims what `next start` never reads.
+
+### Docker packaging removed
+
+`Dockerfile`, `docker-compose.yml`, `.dockerignore`, the `release-docker`
+workflow — which was rebuilding an 8 GB image on every `v*` tag — the
+`docker-build-and-test` action and the three scripts only the Dockerfile used
+(`start.sh`, `replace-placeholder.sh`, `wait-for-it.sh`) are gone. All of it is
+recoverable from `v7.5.0` if a container build is ever wanted again. Dev-only
+compose files (prisma, emails, api v2) stay.
+
+### Clever Cloud post-build trim
+
+`scripts/clever/post-build.sh`, wired through
+`CC_POST_BUILD_HOOK=./scripts/clever/post-build.sh`:
+
+- always removes the build caches — `.turbo` (1.1 GB), `.yarn/cache` and
+  `install-state.gz` (0.8 GB), `apps/web/.next/cache` (~1 GB);
+- deletes the browser source maps once Sentry has them, i.e. when
+  `SENTRY_AUTH_TOKEN` is set and `yarn build` uploaded them; without an upload
+  they stay, being the only way to read a stack trace;
+- prunes devDependencies with `yarn workspaces focus --all --production`
+  (~2 GB of the 3.5 GB `node_modules`) behind `PRUNE_DEV_DEPENDENCIES=true`, a
+  custom variable read by the hook. Opt-in because `turbo`, `ts-node` and every
+  other devDependency disappear: the run command must not go through `turbo`
+  (`yarn workspace @calcom/web start` works) — `prisma` itself stays, being a
+  regular dependency of `packages/prisma`. Lifecycle scripts are disabled
+  during the re-link, since native modules were already built and the root
+  `postinstall` needs `turbo`.
+
+Expected: 7.8 → ~4.5 GB by default, ~2.5 GB with the prune. Verified with a
+dry run of the hook on a mock tree; the first real deploy with the hook is the
+actual validation.
+
 ## [7.5.0] — 2026-09-11
 
 Fork synchronised with `upstream/main` up to #30124, and the runtime
