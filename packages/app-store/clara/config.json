@@ -1,0 +1,20 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "Clara",
+  "slug": "clara",
+  "type": "clara_automation",
+  "logo": "icon.png",
+  "url": "https://claraconverts.com/guide/cal-com",
+  "variant": "automation",
+  "categories": ["automation"],
+  "publisher": "ClaraConverts",
+  "email": "support@claraconverts.com",
+  "description": "Add Cal.com to Clara — the AI website agent that talks to your visitors in 10 languages and books meetings right in the chat.",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "link-as-an-app",
+  "externalLink": {
+    "url": "https://claraconverts.com/guide/cal-com",
+    "newTab": true
+  }
+}

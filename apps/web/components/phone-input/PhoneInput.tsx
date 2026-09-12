@@ -117,7 +117,10 @@ function BasePhoneInputWeb({
     <PhoneInput
       {...rest}
       value={value ? value.trim().replace(/^\+?/, "+") : undefined}
-      country={value ? undefined : defaultCountry}
+      // react-phone-input-2 treats `country` as a fallback. Keeping it stable 
+      // preserves calling-code-only values like `+371` during async updates, 
+      // while full international numbers still resolve their country from `value`.
+      country={defaultCountry}
       enableSearch
       disableSearchIcon
       masks={CUSTOM_PHONE_MASKS}

@@ -9,6 +9,7 @@ export const REDIRECT_APPS = [
   "bolna",
   "caretta",
   "chatbase",
+  "clara",
   "clic",
   "cron",
   "deel",

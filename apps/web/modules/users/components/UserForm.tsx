@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { formatToLocalizedDate } from "@calcom/lib/dayjs";
 import { getUserAvatarUrl } from "@calcom/lib/getAvatarUrl";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
@@ -71,22 +72,25 @@ export function UserForm({
   onSubmit: (data: FormValues) => void;
   submitLabel?: string;
 }) {
-  const { t } = useLocale();
+  const { t, i18n: { language } } = useLocale();
 
   const timeFormatOptions = [
     { value: 12, label: t("12_hour") },
     { value: 24, label: t("24_hour") },
   ];
 
-  const weekStartOptions = [
-    { value: "Sunday", label: nameOfDay(localeProp, 0) },
-    { value: "Monday", label: nameOfDay(localeProp, 1) },
-    { value: "Tuesday", label: nameOfDay(localeProp, 2) },
-    { value: "Wednesday", label: nameOfDay(localeProp, 3) },
-    { value: "Thursday", label: nameOfDay(localeProp, 4) },
-    { value: "Friday", label: nameOfDay(localeProp, 5) },
-    { value: "Saturday", label: nameOfDay(localeProp, 6) },
-  ];
+  const weekStartOptions = useMemo(
+    () => [
+      { value: "Sunday", label: nameOfDay(language || localeProp, 0) },
+      { value: "Monday", label: nameOfDay(language || localeProp, 1) },
+      { value: "Tuesday", label: nameOfDay(language || localeProp, 2) },
+      { value: "Wednesday", label: nameOfDay(language || localeProp, 3) },
+      { value: "Thursday", label: nameOfDay(language || localeProp, 4) },
+      { value: "Friday", label: nameOfDay(language || localeProp, 5) },
+      { value: "Saturday", label: nameOfDay(language || localeProp, 6) },
+    ],
+    [language, localeProp]
+  );
 
   const userRoleOptions = [
     { value: "USER", label: t("user") },
@@ -257,7 +261,7 @@ export function UserForm({
               <>{t("time_format")}</>
             </Label>
             <Select
-              value={value}
+              value={timeFormatOptions.find((option) => option.value === (typeof value === "object" ? value?.value : value)) || value}
               options={timeFormatOptions}
               onChange={(event) => {
                 if (event) form.setValue("timeFormat", { ...event });
@@ -275,7 +279,7 @@ export function UserForm({
               <>{t("start_of_week")}</>
             </Label>
             <Select
-              value={value}
+              value={weekStartOptions.find((option) => option.value === (typeof value === "object" ? value?.value : value)) || value}
               options={weekStartOptions}
               onChange={(event) => {
                 if (event) form.setValue("weekStart", { ...event });
