@@ -5,6 +5,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import getInstalledAppPath from "../../_utils/getInstalledAppPath";
 import createOAuthAppCredential from "../../_utils/oauth/createOAuthAppCredential";
 import { decodeOAuthState } from "../../_utils/oauth/decodeOAuthState";
+import type { IntegrationOAuthCallbackState } from "../../types";
 import { BUBBLAV_URL } from "../lib/constants";
 import { getBubblavAppKeys } from "../lib/getBubblavAppKeys";
 
@@ -28,8 +29,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ message: "You must be logged in to do this" });
   }
 
-  const { client_id: clientId, client_secret: clientSecret } = await getBubblavAppKeys();
+  // Validate the OAuth state before any side effect: it must be present, parse
+  // as JSON, and carry a nonce whose HMAC matches this session's user.
+  // decodeOAuthState returns undefined for missing/invalid state and throws on
+  // malformed JSON, hence the try/catch.
+  let state: IntegrationOAuthCallbackState | undefined;
+  try {
+    state = decodeOAuthState(req);
+  } catch {
+    state = undefined;
+  }
+  if (!state) {
+    return res
+      .status(400)
+      .json({ message: "Invalid or missing OAuth state. Please restart the installation from the app store." });
+  }
 
+  let clientId = "";
+  let clientSecret = "";
+  const appKeys = await getBubblavAppKeys();
+  if (typeof appKeys.client_id === "string") clientId = appKeys.client_id;
+  if (typeof appKeys.client_secret === "string") clientSecret = appKeys.client_secret;
   if (!clientId) return res.status(400).json({ message: "BubblaV client_id missing." });
   if (!clientSecret) return res.status(400).json({ message: "BubblaV client_secret missing." });
 
@@ -133,8 +153,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       )}`
     );
   }
-
-  decodeOAuthState(req);
 
   res.redirect(
     getSafeRedirectUrl(`${WEBAPP_URL}/apps/installed/automation?hl=bubblav`) ??
