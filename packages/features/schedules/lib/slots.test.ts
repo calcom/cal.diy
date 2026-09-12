@@ -328,6 +328,32 @@ describe("Tests the slot logic", () => {
      */
     expect(slots).toHaveLength(4);
   });
+
+  it("supports custom slot intervals (e.g., 35 minutes)", async () => {
+    const nextDay = dayjs.utc().add(1, "day").startOf("day");
+    const dateRanges = [
+      {
+        start: nextDay.hour(9),
+        end: nextDay.hour(12),
+      },
+    ];
+    const result = getSlots({
+      inviteeDate: nextDay,
+      frequency: 35,
+      minimumBookingNotice: 0,
+      dateRanges: dateRanges,
+      eventLength: 20,
+      offsetStart: 0,
+    });
+    // Expected slots: 09:00, 09:35, 10:10, 10:45, 11:20 (slot starting at 11:55 ends at 12:15 and is therefore excluded)
+    expect(result.map((slot) => slot.time.format("HH:mm"))).toEqual([
+      "09:00",
+      "09:35",
+      "10:10",
+      "10:45",
+      "11:20",
+    ]);
+  });
 });
 
 describe("Tests the slot logic with custom env variable", () => {
