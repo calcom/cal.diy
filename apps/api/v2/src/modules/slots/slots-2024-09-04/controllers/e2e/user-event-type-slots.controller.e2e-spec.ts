@@ -76,6 +76,7 @@ describe("Slots 2024-09-04 Endpoints", () => {
     let seatedEventType: EventType;
 
     let variableLengthEventType: EventType;
+    let customScheduledEventType: EventType;
 
     let reservedSlot: ReserveSlotOutputData_2024_09_04;
 
@@ -184,6 +185,33 @@ describe("Slots 2024-09-04 Endpoints", () => {
       );
       variableLengthEventType = variableLengthEvent;
 
+      const customSchedule = await schedulesService.createUserSchedule(user.id, {
+        name: `slots-2024-09-04-custom-schedule-${randomString()}`,
+        timeZone: "Europe/Rome",
+        isDefault: false,
+        schedule: [
+          {
+            days: ["Tuesday", "Thursday"],
+            startTime: "10:00",
+            endTime: "13:00",
+          },
+        ],
+      });
+
+      customScheduledEventType = await eventTypesRepositoryFixture.create(
+        {
+          title: "custom schedule match",
+          slug: `slots-2024-09-04-custom-sched-${randomString()}`,
+          length: 60,
+          schedule: {
+            connect: {
+              id: customSchedule.id,
+            },
+          },
+        },
+        user.id
+      );
+
       team = await teamRepositoryFixture.create({
         name: `slots-2024-09-04-team-${randomString()}`,
         isOrganization: false,
@@ -240,6 +268,36 @@ describe("Slots 2024-09-04 Endpoints", () => {
           const days = Object.keys(slots);
           expect(days.length).toEqual(5);
           expect(slots).toEqual(expectedSlotsRome);
+        });
+    });
+
+    it("should get slots by event type id configured with custom non-default availability schedule", async () => {
+      return request(app.getHttpServer())
+        .get(
+          `/v2/slots?eventTypeId=${customScheduledEventType.id}&start=2050-09-05&end=2050-09-09&timeZone=Europe/Rome`
+        )
+        .set(CAL_API_VERSION_HEADER, VERSION_2024_09_04)
+        .expect(200)
+        .then(async (response) => {
+          const responseBody: GetSlotsOutput_2024_09_04 = response.body;
+          const slots = responseBody.data;
+
+          expect(responseBody.status).toEqual(SUCCESS_STATUS);
+          expect(slots).toBeDefined();
+          const days = Object.keys(slots);
+          expect(days.length).toEqual(2);
+          expect(slots).toEqual({
+            "2050-09-06": [
+              { start: "2050-09-06T10:00:00.000+02:00" },
+              { start: "2050-09-06T11:00:00.000+02:00" },
+              { start: "2050-09-06T12:00:00.000+02:00" },
+            ],
+            "2050-09-08": [
+              { start: "2050-09-08T10:00:00.000+02:00" },
+              { start: "2050-09-08T11:00:00.000+02:00" },
+              { start: "2050-09-08T12:00:00.000+02:00" },
+            ],
+          });
         });
     });
 
