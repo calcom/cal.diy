@@ -325,6 +325,116 @@ describe("Cal", () => {
     });
   });
 
+  describe("iframe readiness", () => {
+    const iframeReadyEvent = { isPrerendering: false } as const;
+
+    it("ignores __iframeReady when no iframe exists", () => {
+      expect(() => calInstance.actionManager.fire("__iframeReady", iframeReadyEvent)).not.toThrow();
+      expect(calInstance.iframeReady).toBeFalsy();
+    });
+
+    it("ignores __iframeReady when the iframe is detached", () => {
+      const iframe = calInstance.createIframe({
+        calLink: "john-doe/meeting",
+        calOrigin: null,
+      });
+      document.body.appendChild(iframe);
+      iframe.remove();
+
+      expect(() => calInstance.actionManager.fire("__iframeReady", iframeReadyEvent)).not.toThrow();
+      expect(calInstance.iframeReady).toBe(false);
+
+      calInstance.iframeReady = true;
+      expect(() => calInstance.doInIframe({ method: "parentKnowsIframeReady" })).not.toThrow();
+    });
+
+    it("ignores __iframeReady without a message source", () => {
+      const iframe = calInstance.createIframe({
+        calLink: "john-doe/meeting",
+        calOrigin: null,
+      });
+      document.body.appendChild(iframe);
+
+      calInstance.actionManager.fire("__iframeReady", iframeReadyEvent);
+
+      expect(calInstance.iframeReady).toBe(false);
+    });
+
+    it("sends the ready message for a connected iframe", () => {
+      const iframe = calInstance.createIframe({
+        calLink: "john-doe/meeting",
+        calOrigin: null,
+      });
+      document.body.appendChild(iframe);
+      const doInIframe = vi.spyOn(calInstance, "doInIframe");
+
+      calInstance.actionManager.fire("__iframeReady", iframeReadyEvent, iframe.contentWindow);
+
+      expect(calInstance.iframeReady).toBe(true);
+      expect(doInIframe).toHaveBeenCalledWith({ method: "parentKnowsIframeReady" });
+    });
+
+    it("ignores a stale iframe readiness event after prerender replacement", () => {
+      const oldIframe = calInstance.createIframe({
+        calLink: "john-doe/meeting",
+        calOrigin: null,
+      });
+      calInstance.modalBox = document.createElement("div");
+      calInstance.modalBox.appendChild(oldIframe);
+      document.body.appendChild(calInstance.modalBox);
+      const oldSource = oldIframe.contentWindow;
+
+      calInstance.prepareForPrerender({
+        calLink: "jane-doe/meeting",
+        calOrigin: "https://app.cal.com",
+        previousEmbedRenderStartTime: null,
+        prerenderOptions: {},
+        isHeadlessRouterPath: false,
+      });
+
+      expect(calInstance.iframe).toBeUndefined();
+      expect(calInstance.iframeReady).toBe(false);
+
+      const newIframe = calInstance.createIframe({
+        calLink: "jane-doe/meeting",
+        calOrigin: null,
+      });
+      document.body.appendChild(newIframe);
+
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            fullType: "CAL:test-namespace:__iframeReady",
+            data: iframeReadyEvent,
+          },
+          source: oldSource,
+        })
+      );
+
+      expect(calInstance.iframeReady).toBe(false);
+
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            fullType: "CAL:test-namespace:__iframeReady",
+            data: iframeReadyEvent,
+          },
+          source: newIframe.contentWindow,
+        })
+      );
+
+      expect(calInstance.iframeReady).toBe(true);
+    });
+
+    it("queues commands while the iframe is not ready", () => {
+      const command = { method: "parentKnowsIframeReady" } as const;
+
+      calInstance.doInIframe(command);
+
+      expect(calInstance.iframeDoQueue).toContainEqual(command);
+    });
+  });
+
   /**
    * We don't mock the createIframe method as it could update the 'this' objects which could affect the test, so we avoid mocking it
    */

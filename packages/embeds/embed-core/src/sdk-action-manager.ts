@@ -1,10 +1,11 @@
 type Namespace = string;
 type CustomEventDetail = Record<string, unknown>;
 
-function _fireEvent(fullName: string, detail: CustomEventDetail) {
+function _fireEvent(fullName: string, detail: CustomEventDetail, source: MessageEventSource | null) {
   const event = new window.CustomEvent(fullName, {
     detail: detail,
   });
+  Object.defineProperty(event, "source", { value: source });
 
   window.dispatchEvent(event);
 }
@@ -306,7 +307,9 @@ export type EventData<T extends keyof EventDataMap> = {
   };
 }[T];
 
-export type EmbedEvent<T extends keyof EventDataMap> = CustomEvent<EventData<T>>;
+export type EmbedEvent<T extends keyof EventDataMap> = CustomEvent<EventData<T>> & {
+  source: MessageEventSource | null;
+};
 
 export class SdkActionManager {
   namespace: Namespace;
@@ -330,7 +333,7 @@ export class SdkActionManager {
     return this.namespace ? `CAL:${this.namespace}:${name}` : `CAL::${name}`;
   }
 
-  fire<T extends keyof EventDataMap>(name: T, data: EventDataMap[T]) {
+  fire<T extends keyof EventDataMap>(name: T, data: EventDataMap[T], source: MessageEventSource | null = null) {
     const fullName = this.getFullActionName(name);
     const detail = {
       type: name,
@@ -339,18 +342,18 @@ export class SdkActionManager {
       data,
     };
 
-    _fireEvent(fullName, detail);
+    _fireEvent(fullName, detail, source);
 
     // Wildcard Event
-    _fireEvent(this.getFullActionName("*"), detail);
+    _fireEvent(this.getFullActionName("*"), detail, source);
   }
 
-  on<T extends keyof EventDataMap>(name: T, callback: (arg0: CustomEvent<EventData<T>>) => void) {
+  on<T extends keyof EventDataMap>(name: T, callback: (arg0: EmbedEvent<T>) => void) {
     const fullName = this.getFullActionName(name);
     window.addEventListener(fullName, callback as EventListener);
   }
 
-  off<T extends keyof EventDataMap>(name: T, callback: (arg0: CustomEvent<EventData<T>>) => void) {
+  off<T extends keyof EventDataMap>(name: T, callback: (arg0: EmbedEvent<T>) => void) {
     const fullName = this.getFullActionName(name);
     window.removeEventListener(fullName, callback as EventListener);
   }
