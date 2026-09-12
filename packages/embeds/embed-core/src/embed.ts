@@ -25,6 +25,7 @@ import { SdkActionManager } from "./sdk-action-manager";
 import tailwindCss from "./tailwindCss";
 import type { EmbedPageType, ModalPrerenderOptions, PrefillAndIframeAttrsConfig, UiConfig } from "./types";
 import { getMaxHeightForModal } from "./ui-utils";
+import { validate } from "./validate";
 
 // Exporting for consumption by @calcom/embed-core user
 export type { EmbedEvent } from "./sdk-action-manager";
@@ -86,61 +87,6 @@ initializeGlobalCalProps();
 
 document.head.appendChild(document.createElement("style")).innerHTML = css;
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-type ValidationSchemaPropType = string | Function;
-
-type ValidationSchema = {
-  required?: boolean;
-  props?: Record<
-    string,
-    ValidationSchema & {
-      type: ValidationSchemaPropType | ValidationSchemaPropType[];
-    }
-  >;
-};
-/**
- * //TODO: Warn about extra properties not part of schema. Helps in fixing wrong expectations
- * A very simple data validator written with intention of keeping payload size low.
- * Extend the functionality of it as required by the embed.
- * @param data
- * @param schema
- */
-function validate(data: Record<string, unknown>, schema: ValidationSchema) {
-  function checkType(value: unknown, expectedType: ValidationSchemaPropType) {
-    if (typeof expectedType === "string") {
-      return typeof value == expectedType;
-    } else {
-      return value instanceof expectedType;
-    }
-  }
-
-  function isUndefined(data: unknown) {
-    return typeof data === "undefined";
-  }
-
-  if (schema.required && isUndefined(data)) {
-    throw new Error("Argument is required");
-  }
-
-  for (const [prop, propSchema] of Object.entries(schema.props || {})) {
-    if (propSchema.required && isUndefined(data[prop])) {
-      throw new Error(`"${prop}" is required`);
-    }
-    let typeCheck = true;
-    if (propSchema.type && !isUndefined(data[prop])) {
-      if (propSchema.type instanceof Array) {
-        propSchema.type.forEach((type) => {
-          typeCheck = typeCheck || checkType(data[prop], type);
-        });
-      } else {
-        typeCheck = checkType(data[prop], propSchema.type);
-      }
-    }
-    if (!typeCheck) {
-      throw new Error(`"${prop}" is of wrong type.Expected type "${propSchema.type}"`);
-    }
-  }
-}
 
 function getColorScheme(el: Element) {
   const pageColorScheme = getComputedStyle(el).colorScheme;
@@ -908,9 +854,8 @@ class CalApi {
       required: true,
       props: {
         calLink: {
-          // TODO: Add a special type calLink for it and validate that it doesn't start with / or https?://
           required: true,
-          type: "string",
+          type: "calLink",
         },
         elementOrSelector: {
           required: true,
@@ -996,15 +941,15 @@ class CalApi {
     calOrigin?: string;
     config?: PrefillAndIframeAttrsConfig;
   }) {
-    // validate(arguments[0], {
-    //   required: true,
-    //   props: {
-    //     calLink: {
-    //       required: true,
-    //       type: "string",
-    //     },
-    //   },
-    // });
+    validate(arguments[0], {
+      required: true,
+      props: {
+        calLink: {
+          required: true,
+          type: "calLink",
+        },
+      },
+    });
     let existingEl: HTMLElement | null = null;
 
     if (attributes?.id) {
@@ -1050,6 +995,16 @@ class CalApi {
     __prerender?: boolean;
     prerenderOptions?: ModalPrerenderOptions;
   }) {
+   
+    validate(arguments[0], {
+      required: true,
+      props: {
+        calLink: {
+          required: true,
+          type: "calLink",
+        },
+      },
+    });
     const isPrerendering = !!__prerender;
     if (typeof config.iframeAttrs === "string" || config.iframeAttrs instanceof Array) {
       throw new Error("iframeAttrs should be an object");
@@ -1368,7 +1323,7 @@ class CalApi {
       required: true,
       props: {
         calLink: {
-          type: "string",
+          type: "calLink",
           required: true,
         },
         type: {
