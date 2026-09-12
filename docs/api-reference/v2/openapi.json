@@ -1949,7 +1949,7 @@
       "get": {
         "operationId": "CalUnifiedCalendarsController_getCalendarEventDetails",
         "summary": "Get meeting details from calendar",
-        "description": "Returns detailed information about a meeting including attendance metrics. The singular /event/ path is deprecated — use /events/ (plural) instead. For connection-scoped access use GET /connections/{connectionId}/events/{eventId}.",
+        "description": "Returns detailed information about a meeting including attendance metrics. For connection-scoped access use GET /connections/{connectionId}/events/{eventId}.",
         "parameters": [
           {
             "name": "calendar",
@@ -1996,7 +1996,7 @@
       "patch": {
         "operationId": "CalUnifiedCalendarsController_updateCalendarEvent",
         "summary": "Update meeting details in calendar",
-        "description": "Updates event information in the specified calendar provider. The singular /event/ path is deprecated — use /events/ (plural) instead. For connection-scoped access use PATCH /connections/{connectionId}/events/{eventId}.",
+        "description": "Updates event information in the specified calendar provider. For connection-scoped access use PATCH /connections/{connectionId}/events/{eventId}.",
         "parameters": [
           {
             "name": "calendar",
@@ -2093,9 +2093,10 @@
     },
     "/v2/calendars/{calendar}/event/{eventUid}": {
       "get": {
-        "operationId": "CalUnifiedCalendarsController_getCalendarEventDetails",
-        "summary": "Get meeting details from calendar",
-        "description": "Returns detailed information about a meeting including attendance metrics. The singular /event/ path is deprecated — use /events/ (plural) instead. For connection-scoped access use GET /connections/{connectionId}/events/{eventId}.",
+        "operationId": "CalUnifiedCalendarsController_getCalendarEventDetailsByDeprecatedPath",
+        "summary": "Get meeting details from calendar (deprecated path)",
+        "deprecated": true,
+        "description": "Deprecated singular alias of GET /v2/calendars/{calendar}/events/{eventUid} — use the plural /events/ path instead.",
         "parameters": [
           {
             "name": "calendar",
@@ -2140,9 +2141,10 @@
         "tags": ["Cal Unified Calendars"]
       },
       "patch": {
-        "operationId": "CalUnifiedCalendarsController_updateCalendarEvent",
-        "summary": "Update meeting details in calendar",
-        "description": "Updates event information in the specified calendar provider. The singular /event/ path is deprecated — use /events/ (plural) instead. For connection-scoped access use PATCH /connections/{connectionId}/events/{eventId}.",
+        "operationId": "CalUnifiedCalendarsController_updateCalendarEventByDeprecatedPath",
+        "summary": "Update meeting details in calendar (deprecated path)",
+        "deprecated": true,
+        "description": "Deprecated singular alias of PATCH /v2/calendars/{calendar}/events/{eventUid} — use the plural /events/ path instead.",
         "parameters": [
           {
             "name": "calendar",
