@@ -127,7 +127,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (_err) {
     const err = getServerErrorFromUnknown(_err);
     console.error(`Webhook Error: ${err.message}`);
-    return res.status(200).send({
+    return res.status(err.statusCode).send({
       message: err.message,
       stack: IS_PRODUCTION ? undefined : err.cause?.stack,
     });
