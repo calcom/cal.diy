@@ -28,6 +28,10 @@ export const WEBAPP_URL =
   RENDER_URL ||
   "http://localhost:3000";
 
+export const WEBAPP_URL_INTERNAL = process.env.WEBAPP_URL_INTERNAL
+  ? ensureProtocol(process.env.WEBAPP_URL_INTERNAL)
+  : undefined;
+
 // OAuth needs to have HTTPS(which is not generally setup locally) and a valid tld(*.local isn't a valid tld)
 // So for development purpose, we would stick to localhost only
 export const WEBAPP_URL_FOR_OAUTH = IS_PRODUCTION || IS_DEV ? WEBAPP_URL : "http://localhost:3000";
