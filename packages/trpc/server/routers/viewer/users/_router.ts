@@ -1,3 +1,4 @@
+import { getUserRepository } from "@calcom/features/di/containers/UserRepository";
 import { WEBAPP_URL } from "@calcom/lib/constants";
 import { CreationSource, RedirectType } from "@calcom/prisma/enums";
 import { UserSchema } from "@calcom/prisma/zod/modelSchema/UserSchema";
@@ -6,6 +7,7 @@ import { router } from "@calcom/trpc/server/trpc";
 import type { inferRouterOutputs } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { listUsersSchema } from "./listUsers.schema";
 
 export type UserAdminRouter = typeof userAdminRouter;
 export type UserAdminRouterOutputs = inferRouterOutputs<UserAdminRouter>;
@@ -54,11 +56,22 @@ export const userAdminRouter = router({
     const { requestedUser } = ctx;
     return { user: requestedUser };
   }),
-  list: authedAdminProcedure.query(async ({ ctx }) => {
-    const { prisma } = ctx;
-    // TODO: Add search, pagination, etc.
-    const users = await prisma.user.findMany();
-    return users;
+  list: authedAdminProcedure.input(listUsersSchema).query(async ({ input }) => {
+    const userRepository = getUserRepository()
+
+    const { cursor, limit, searchTerm } = input
+
+    const { users, total, nextCursor } = await userRepository.listUsers({
+      searchTerm,
+      limit,
+      cursor
+    });
+
+    return {
+      rows: users,
+      nextCursor,
+      meta: { totalRowCount: total },
+    };
   }),
   add: authedAdminProcedure.input(userBodySchema).mutation(async ({ ctx, input }) => {
     const { prisma } = ctx;
