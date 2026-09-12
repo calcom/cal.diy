@@ -1,3 +1,4 @@
+import { timingSafeEqualStrings } from "@calcom/lib/crypto";
 import logger from "@calcom/lib/logger";
 import type { SelectedCalendar } from "@calcom/prisma/client";
 
@@ -97,7 +98,7 @@ export class Office365CalendarSubscriptionAdapter implements ICalendarSubscripti
       log.warn("MICROSOFT_WEBHOOK_TOKEN missing");
       return false;
     }
-    if (clientState !== this.webhookToken) {
+    if (!timingSafeEqualStrings(clientState, this.webhookToken)) {
       log.warn("Invalid clientState");
       return false;
     }
