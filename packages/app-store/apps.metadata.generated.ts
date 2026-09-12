@@ -52,6 +52,7 @@ import { metadata as huddle01video__metadata_ts } from "./huddle01video/_metadat
 import ics_feedcalendar_config_json from "./ics-feedcalendar/config.json";
 import insihts_config_json from "./insihts/config.json";
 import intercom_config_json from "./intercom/config.json";
+import issuebadge_config_json from "./issuebadge/config.json";
 import jelly_config_json from "./jelly/config.json";
 import { metadata as jitsivideo__metadata_ts } from "./jitsivideo/_metadata";
 import { metadata as larkcalendar__metadata_ts } from "./larkcalendar/_metadata";
@@ -165,6 +166,7 @@ export const appStoreMetadata = {
   "ics-feedcalendar": ics_feedcalendar_config_json,
   insihts: insihts_config_json,
   intercom: intercom_config_json,
+  issuebadge: issuebadge_config_json,
   jelly: jelly_config_json,
   jitsivideo: jitsivideo__metadata_ts,
   larkcalendar: larkcalendar__metadata_ts,
