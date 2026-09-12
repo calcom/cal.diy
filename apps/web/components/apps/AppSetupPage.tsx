@@ -15,6 +15,7 @@ export const AppSetupMap = {
   paypal: dynamic(() => import("@calcom/web/components/apps/paypal/Setup")),
   hitpay: dynamic(() => import("@calcom/web/components/apps/hitpay/Setup")),
   btcpayserver: dynamic(() => import("@calcom/web/components/apps/btcpayserver/Setup")),
+  squadcast: dynamic(() => import("@calcom/web/components/apps/squadcast/Setup")),
 };
 
 export const AppSetupPage = (props: { slug: string }) => {
