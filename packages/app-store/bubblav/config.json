@@ -1,0 +1,18 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "BubblaV",
+  "slug": "bubblav",
+  "type": "bubblav_automation",
+  "logo": "icon.png",
+  "url": "https://www.bubblav.com",
+  "variant": "automation",
+  "categories": ["automation"],
+  "publisher": "BubblaV",
+  "email": "support@bubblav.com",
+  "description": "Allow visitors to schedule meetings directly through the AI chatbot.",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "basic",
+  "dirName": "bubblav",
+  "isOAuth": true
+}
