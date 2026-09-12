@@ -1,14 +1,12 @@
-import type { TFunction } from "i18next";
-
 import { enrichUserWithDelegationConferencingCredentialsWithoutOrgId } from "@calcom/app-store/delegationCredential";
 import { defaultVideoAppCategories } from "@calcom/app-store/utils";
 import { prisma } from "@calcom/prisma";
 import type { Prisma } from "@calcom/prisma/client";
 import { AppCategories } from "@calcom/prisma/enums";
-import { PrismaCredentialRepository } from "./repositories/PrismaCredentialRepository";
-
+import type { TFunction } from "i18next";
 import getEnabledAppsFromCredentials from "./_utils/getEnabledAppsFromCredentials";
 import { defaultLocations } from "./locations";
+import { PrismaCredentialRepository } from "./repositories/PrismaCredentialRepository";
 
 export async function getLocationGroupedOptions(
   userOrTeamId: { userId: number } | { teamId: number },
@@ -61,10 +59,10 @@ export async function getLocationGroupedOptions(
     });
   }
 
-  const credentialRepository = new PrismaCredentialRepository(prisma);  
-  const nonDelegationCredentials = await credentialRepository.findNonDelegationCredentialsByAppCategories({  
+  const credentialRepository = new PrismaCredentialRepository(prisma);
+  const nonDelegationCredentials = await credentialRepository.findNonDelegationCredentialsByAppCategories({
     idToSearchObject,
-    appCategories: defaultVideoAppCategories,  
+    appCategories: defaultVideoAppCategories,
   });
 
   let credentials;
@@ -80,42 +78,47 @@ export async function getLocationGroupedOptions(
     );
     credentials = allCredentials;
   } else {
-    credentials = nonDelegationCredentials;  
+    credentials = nonDelegationCredentials;
   }
 
   const integrations = await getEnabledAppsFromCredentials(credentials, { filterOnCredentials: true });
 
-  integrations.forEach((app) => {
-    // All apps that are labeled as a locationOption are video apps.
-    if (app.locationOption) {
-      // All apps that are labeled as a locationOption are video apps. Extract the secondary category if available
-      let groupByCategory =
-        app.categories.length >= 2
-          ? app.categories.find((groupByCategory) => !defaultVideoAppCategories.includes(groupByCategory))
-          : app.categories[0] || app.category;
-      if (!groupByCategory) groupByCategory = AppCategories.conferencing;
+  const seenValuesByCategory = new Map<string, Set<string>>();
 
-      for (const { teamName } of app.credentials.map((credential) => ({
-        teamName: credential.team?.name,
-      }))) {
-        const label = `${app.locationOption.label} ${teamName ? `(${teamName})` : ""}`;
-        const option = {
-          ...app.locationOption,
-          label,
-          icon: app.logo,
-          slug: app.slug,
-          ...(app.credential
-            ? { credentialId: app.credential.id, teamName: app.credential.team?.name ?? null }
-            : {}),
-        };
-        if (apps[groupByCategory]) {
-          const existingOption = apps[groupByCategory].find((o) => o.value === option.value);
-          if (!existingOption) {
-            apps[groupByCategory] = [...apps[groupByCategory], option];
-          }
-        } else {
-          apps[groupByCategory] = [option];
-        }
+  integrations.forEach((app) => {
+    if (!app.locationOption) return;
+
+    // All apps that are labeled as a locationOption are video apps. Extract the secondary category if available
+    let groupByCategory =
+      app.categories.length >= 2
+        ? app.categories.find((groupByCategory) => !defaultVideoAppCategories.includes(groupByCategory))
+        : app.categories[0] || app.category;
+    if (!groupByCategory) groupByCategory = AppCategories.conferencing;
+
+    for (const { teamName } of app.credentials.map((credential) => ({
+      teamName: credential.team?.name,
+    }))) {
+      const label = `${app.locationOption.label} ${teamName ? `(${teamName})` : ""}`;
+      const option = {
+        ...app.locationOption,
+        label,
+        icon: app.logo,
+        slug: app.slug,
+        ...(app.credential
+          ? { credentialId: app.credential.id, teamName: app.credential.team?.name ?? null }
+          : {}),
+      };
+      let seen = seenValuesByCategory.get(groupByCategory);
+      if (!seen) {
+        seen = new Set<string>();
+        seenValuesByCategory.set(groupByCategory, seen);
+      }
+      if (seen.has(option.value)) continue;
+      seen.add(option.value);
+      if (apps[groupByCategory]) {
+        apps[groupByCategory].push(option);
+      } else {
+        apps[groupByCategory] = [option];
       }
     }
   });
