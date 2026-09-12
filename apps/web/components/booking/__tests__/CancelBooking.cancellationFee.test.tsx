@@ -274,4 +274,43 @@ describe("CancelBooking Cancellation Fee Warning", () => {
 
     expect(screen.queryByText(/I acknowledge that cancelling within/)).not.toBeInTheDocument();
   });
+
+  it("should not scale the fee for zero-decimal currencies", () => {
+    vi.mocked(shouldChargeModule.shouldChargeNoShowCancellationFee).mockReturnValue(true);
+
+    // JPY is stored unscaled (convertToSmallestCurrencyUnit is a no-op for it), so
+    // 5000 means ¥5000 and must not be presented as ¥50.
+    render(
+      <CancelBooking
+        booking={{
+          ...mockBookingWithCancellationFee,
+          payment: { amount: 5000, currency: "jpy", appId: "stripe" },
+        }}
+        profile={{ name: "Test User", slug: "test-user" }}
+        team={null}
+        isHost={false}
+        eventTypeMetadata={mockEventTypeMetadataWithFee}
+        {...mockProps}
+      />
+    );
+
+    expect(screen.getByText(/will result in a 5000 jpy cancellation fee/)).toBeInTheDocument();
+  });
+
+  it("should still scale the fee for two-decimal currencies", () => {
+    vi.mocked(shouldChargeModule.shouldChargeNoShowCancellationFee).mockReturnValue(true);
+
+    render(
+      <CancelBooking
+        booking={mockBookingWithCancellationFee}
+        profile={{ name: "Test User", slug: "test-user" }}
+        team={null}
+        isHost={false}
+        eventTypeMetadata={mockEventTypeMetadataWithFee}
+        {...mockProps}
+      />
+    );
+
+    expect(screen.getByText(/will result in a 10 usd cancellation fee/)).toBeInTheDocument();
+  });
 });
