@@ -25,10 +25,10 @@ import {
   handleCustomInputs,
   handlePeriodType,
 } from "../util";
+import handleChildrenEventTypes from "./handleChildrenEventTypes";
 import type { TUpdateInputSchema } from "./update.schema";
 
 const isUrlScanningEnabled = (..._args: unknown[]) => false;
-const updateChildrenEventTypes = async (..._args: unknown[]) => {};
 const allowDisablingHostConfirmationEmails = (..._args: unknown[]): boolean => false;
 const allowDisablingAttendeeConfirmationEmails = (..._args: unknown[]): boolean => false;
 
@@ -722,35 +722,15 @@ export const updateHandler = async ({ ctx, input }: UpdateOptions) => {
     });
   }
 
-  const updatedValues = Object.entries(data).reduce<Record<string, unknown>>((acc, [key, value]) => {
-    if (value !== undefined) {
-      acc[key] = value;
-    }
-    return acc;
-  }, {});
-
-  // Determine calVideoSettings to pass to children:
-  // - If calVideoSettings provided in input, sync to children
-  // - If Cal Video location removed, delete from children (pass null)
-  // - Otherwise, leave children's settings untouched (pass undefined)
-  let calVideoSettingsForChildren: typeof calVideoSettings | null | undefined;
-  if (calVideoSettings !== undefined) {
-    calVideoSettingsForChildren = calVideoSettings;
-  } else if (eventType.calVideoSettings && !isCalVideoLocationActive) {
-    calVideoSettingsForChildren = null;
-  }
-
-  // Handling updates to children event types (managed events types)
-  await updateChildrenEventTypes({
+  // Handling updates to children event types (managed events types).
+  // Propagates the parent's locked managed props (including the `hidden` /
+  // "Hide from profile" toggle) to the assigned child event types.
+  await handleChildrenEventTypes({
     eventTypeId: id,
-    currentUserId: ctx.user.id,
-    oldEventType: eventType,
     updatedEventType,
+    oldEventType: eventType,
     children,
-    profileId: ctx.user.profile.id,
     prisma: ctx.prisma,
-    updatedValues,
-    calVideoSettings: calVideoSettingsForChildren,
   });
 
   // Clean up empty host groups
