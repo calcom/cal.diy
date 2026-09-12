@@ -10,6 +10,30 @@ import type { appDataSchemas } from "./apps.schemas.generated";
 
 const PushEventPrefix = "cal_analytics_app_";
 
+const JS_STRING_LITERAL_ESCAPES: Record<string, string> = {
+  "\\": "\\\\",
+  "'": "\\'",
+  '"': '\\"',
+  "`": "\\`",
+  "$": "\\$",
+  "<": "\\x3C",
+  ">": "\\x3E",
+  "\r": "\\r",
+  "\n": "\\n",
+  "\u2028": "\\u2028",
+  "\u2029": "\\u2029",
+};
+
+/**
+ * Escapes a value that is substituted into a JS string literal inside an inline <script>.
+ * Quotes and backslashes keep the value inside its literal, `$` keeps it from starting an
+ * interpolation when the literal is delimited by backticks, and `<`/`>` keep it from ending
+ * the script element. A backslash before `$` is a no-op in every literal form, so values that
+ * analytics apps legitimately hold (ids, hostnames, URLs, amounts) render unchanged.
+ */
+const escapeJsStringLiteral = (value: string) =>
+  value.replace(/[\\'"`<>$\r\n\u2028\u2029]/g, (char) => JS_STRING_LITERAL_ESCAPES[char]);
+
 // AnalyticApp has appData.tag always set
 type AnalyticApp = Omit<AppMeta, "appData"> & {
   appData: Omit<NonNullable<AppMeta["appData"]>, "tag"> & {
@@ -99,7 +123,10 @@ export default function BookingPageTagManager({
     <>
       {Object.entries(analyticsApps).map(([appId, { meta: app, eventTypeAppData }]) => {
         const tag = app.appData.tag;
-        const parseValue = <T extends string | undefined>(val: T): T => {
+        const parseValue = <T extends string | undefined>(
+          val: T,
+          escapeSubstitution: (value: string) => string = (value) => value
+        ): T => {
           if (!val) {
             return val;
           }
@@ -111,11 +138,10 @@ export default function BookingPageTagManager({
           while ((matches = regex.exec(val))) {
             const variableName = matches[1];
             if (appDataRecord[variableName]) {
+              const substitution = escapeSubstitution(String(appDataRecord[variableName]));
               // Replace if value is available. It can possible not be a template variable that just matches the regex.
-              val = val.replace(
-                new RegExp(`{${variableName}}`, "g"),
-                String(appDataRecord[variableName])
-              ) as NonNullable<T>;
+              // The replacement is a function so that `$&` and friends in the value stay literal.
+              val = val.replace(new RegExp(`{${variableName}}`, "g"), () => substitution) as NonNullable<T>;
             }
           }
           return val;
@@ -143,7 +169,10 @@ export default function BookingPageTagManager({
               // And we don't want it to error here anyways
               // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{
-                __html: parseValue(script.content) || "",
+                // The content is inline script source, so substituted values are escaped for the
+                // JS string literals they land in. `src` and `attrs` are React props and stay
+                // unescaped because React escapes attribute values itself.
+                __html: parseValue(script.content, escapeJsStringLiteral) || "",
               }}
               {...parsedAttributes}
               defer
