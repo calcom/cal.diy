@@ -1,4 +1,7 @@
 import dayjs from "@calcom/dayjs";
+import { CheckBookingLimitsService } from "@calcom/features/bookings/lib/checkBookingLimits";
+import { CheckBookingAndDurationLimitsService } from "@calcom/features/bookings/lib/handleNewBooking/checkBookingAndDurationLimits";
+import { BookingRepository } from "@calcom/features/bookings/repositories/BookingRepository";
 import { isPrismaObjOrUndefined } from "@calcom/lib/isPrismaObj";
 import { withReporting } from "@calcom/lib/sentryWrapper";
 import prisma from "@calcom/prisma";
@@ -87,7 +90,11 @@ const _createBooking = async ({
     bookingAndAssociatedData,
     originalRescheduledBooking,
     eventType.paymentAppData,
-    eventType.organizerUser
+    eventType.organizerUser,
+    eventType.eventTypeData,
+    eventType.id,
+    evt.startTime,
+    originalRescheduledBooking?.uid
   );
 };
 
@@ -97,7 +104,11 @@ async function saveBooking(
   bookingAndAssociatedData: ReturnType<typeof buildNewBookingData>,
   originalRescheduledBooking: OriginalRescheduledBooking,
   paymentAppData: PaymentAppData,
-  organizerUser: CreateBookingParams["eventType"]["organizerUser"]
+  organizerUser: CreateBookingParams["eventType"]["organizerUser"],
+  eventTypeData: NewBookingEventType,
+  eventTypeId: EventTypeId,
+  evtStartTime: string,
+  rescheduleUid: string | undefined
 ) {
   const { newBookingData, originalBookingUpdateDataForCancellation } = bookingAndAssociatedData;
   const createBookingObj = {
@@ -137,6 +148,25 @@ async function saveBooking(
   }
 
   return prisma.$transaction(async (tx) => {
+    if (eventTypeId) {
+      // Row-level lock the EventType to serialize concurrent booking requests for this event type
+      await tx.$queryRaw`SELECT id FROM "EventType" WHERE id = ${eventTypeId} FOR UPDATE`;
+    }
+
+    if (eventTypeId && eventTypeData) {
+      const txBookingRepo = new BookingRepository(tx);
+      const txCheckBookingLimitsService = new CheckBookingLimitsService({ bookingRepo: txBookingRepo });
+      const txCheckBookingAndDurationLimitsService = new CheckBookingAndDurationLimitsService({
+        checkBookingLimitsService: txCheckBookingLimitsService,
+      });
+
+      await txCheckBookingAndDurationLimitsService.checkBookingAndDurationLimits({
+        eventType: eventTypeData,
+        reqBodyStart: evtStartTime,
+        reqBodyRescheduleUid: rescheduleUid,
+      });
+    }
+
     if (originalBookingUpdateDataForCancellation) {
       await tx.booking.update(originalBookingUpdateDataForCancellation);
     }
