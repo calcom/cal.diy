@@ -53,6 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // intercepting the server-to-server call (e.g. Vercel Deployment
       // Protection / SSO), which can't be completed headlessly. Surface it.
       redirect: "manual",
+      signal: AbortSignal.timeout(10_000),
     });
   } catch (err) {
     log.error("BubblaV token request failed (network)", { tokenUrl, err: String(err) });
@@ -105,8 +106,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (response.status !== 200 || !responseBody.access_token) {
-    log.error("BubblaV token exchange failed", responseBody);
-    return res.redirect(`/apps/installed?error=${encodeURIComponent(JSON.stringify(responseBody))}`);
+    const { error, error_description } = responseBody;
+    log.error("BubblaV token exchange failed", { status: response.status, error, error_description });
+    return res.redirect(
+      `/apps/installed?error=${encodeURIComponent(error_description || error || "BubblaV token exchange failed")}`
+    );
   }
 
   // Store the BubblaV tokens as the app credential (keyed to the user/team).

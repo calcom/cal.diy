@@ -21,15 +21,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { client_id } = await getBubblavAppKeys();
-  if (!client_id) {
+  let clientId = "";
+  const appKeys = await getBubblavAppKeys();
+  if (typeof appKeys.client_id === "string") clientId = appKeys.client_id;
+  if (!clientId) {
     return res.status(400).json({ message: "BubblaV client_id missing." });
   }
 
   const state = encodeOAuthState(req);
 
   const params = {
-    client_id,
+    client_id: clientId,
     redirect_uri: `${WEBAPP_URL_FOR_OAUTH}/api/integrations/bubblav/callback`,
     state,
     response_type: "code",
