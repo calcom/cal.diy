@@ -6,6 +6,7 @@ import campfire_config_json from "./campfire/config.json";
 import { metadata as dailyvideo__metadata_ts } from "./dailyvideo/_metadata";
 import databuddy_config_json from "./databuddy/config.json";
 import demodesk_config_json from "./demodesk/config.json";
+import descript_config_json from "./descript/config.json";
 import dialpad_config_json from "./dialpad/config.json";
 import discord_config_json from "./discord/config.json";
 import eightxeight_config_json from "./eightxeight/config.json";
@@ -52,6 +53,7 @@ export const appStoreMetadata = {
   dailyvideo: dailyvideo__metadata_ts,
   databuddy: databuddy_config_json,
   demodesk: demodesk_config_json,
+  descript: descript_config_json,
   dialpad: dialpad_config_json,
   discord: discord_config_json,
   eightxeight: eightxeight_config_json,
