@@ -30,7 +30,7 @@ export function bookingIdempotencyKeyExtension() {
               startTime: args.data.startTime,
               endTime: args.data.endTime,
               userId: args.data.user?.connect?.id,
-              reassignedById: args.data.reassignById,
+              reassignedById: args.data.reassignedById,
             });
             args.data.idempotencyKey = idempotencyKey;
           }
@@ -39,6 +39,15 @@ export function bookingIdempotencyKeyExtension() {
         async update({ args, query }) {
           if (args.data.status === BookingStatus.CANCELLED || args.data.status === BookingStatus.REJECTED) {
             args.data.idempotencyKey = null;
+          } else if (args.data.status === BookingStatus.ACCEPTED) {
+            if (args.data.startTime && args.data.endTime) {
+              args.data.idempotencyKey = generateIdempotencyKey({
+                startTime: args.data.startTime,
+                endTime: args.data.endTime,
+                userId: args.data.userId ?? args.data.user?.connect?.id,
+                reassignedById: args.data.reassignedById,
+              });
+            }
           }
           return query(args);
         },
