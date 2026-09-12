@@ -399,8 +399,8 @@ export class Cal {
       this.iframeDoQueue.push(doInIframeArg);
       return;
     }
-    if (!this.iframe) {
-      throw new Error("iframe doesn't exist. `createIframe` must be called before `doInIframe`");
+    if (!this.iframe || !this.iframe.isConnected) {
+      return;
     }
     if (this.iframe.contentWindow) {
       // TODO: Ensure that targetOrigin is as defined by user(and not *). Generally it would be cal.com but in case of self hosting it can be anything.
@@ -460,7 +460,9 @@ export class Cal {
     });
 
     this.actionManager.on("__iframeReady", (e) => {
-      if (!this.iframe) return;
+      if (!this.iframe || !this.iframe.isConnected || e.source !== this.iframe.contentWindow) {
+        return;
+      }
       this.iframeReady = true;
       if (!e.detail.data.isPrerendering) {
         // It's a bit late to make the iframe visible here. We just needed to wait for the HTML tag of the embedded calLink to be rendered(which then informs the browser of the color-scheme)
@@ -792,6 +794,9 @@ export class Cal {
       log("Destroying previous prerendered modalbox");
       // If we are re-prerendering, we destroy the previous modalbox, allowing user to prerender as many times as they want
       this.modalBox.remove();
+      this.modalBox = undefined;
+      this.iframeReset();
+      this.iframe = undefined;
     }
 
     const DEFAULT_BACKGROUND_SLOTS_FETCH = isHeadlessRouterPath ? true : false;
@@ -1579,7 +1584,7 @@ window.addEventListener("message", (e) => {
     throw new Error(`Unhandled Action ${parsedAction}`);
   }
   // @ts-expect-error
-  actionManager.fire(parsedAction.type, detail.data);
+  actionManager.fire(parsedAction.type, detail.data, e.source);
 });
 
 document.addEventListener("click", (e) => {
