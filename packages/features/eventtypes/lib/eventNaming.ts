@@ -1,8 +1,7 @@
-import type { TFunction } from "i18next";
-import z from "zod";
-
 import { guessEventLocationType } from "@calcom/app-store/locations";
 import type { Prisma } from "@calcom/prisma/client";
+import type { TFunction } from "i18next";
+import z from "zod";
 
 export const nameObjectSchema = z.object({
   firstName: z.string(),
@@ -76,19 +75,23 @@ export function getEventName(eventNameObj: EventNameObjectType, forAttendeeView 
     dynamicEventName = dynamicEventName.replaceAll("{Scheduler last name}", name.lastName.toString());
   }
 
-  const customInputvariables = dynamicEventName.match(/\{(.+?)}/g)?.map((variable) => {
+  return replaceCustomInputVariables(dynamicEventName, eventNameObj.bookingFields);
+}
+
+export function replaceCustomInputVariables(text: string, bookingFields?: Prisma.JsonObject | null): string {
+  if (!text || !bookingFields) return text;
+  let dynamicText = text;
+  const customInputVariables = dynamicText.match(/\{(.+?)}/g)?.map((variable) => {
     return variable.replace("{", "").replace("}", "");
   });
 
-  customInputvariables?.forEach((variable) => {
-    if (!eventNameObj.bookingFields) return;
+  customInputVariables?.forEach((variable) => {
+    const bookingFieldValue = bookingFields[variable as keyof typeof bookingFields];
 
-    const bookingFieldValue = eventNameObj.bookingFields[variable as keyof typeof eventNameObj.bookingFields];
+    if (bookingFieldValue !== undefined && bookingFieldValue !== null) {
+      let fieldValue: string | undefined;
 
-    if (bookingFieldValue) {
-      let fieldValue;
-
-      if (typeof bookingFieldValue === "object") {
+      if (typeof bookingFieldValue === "object" && !Array.isArray(bookingFieldValue)) {
         if ("value" in bookingFieldValue) {
           const valueAsString = bookingFieldValue.value?.toString();
           fieldValue =
@@ -103,13 +106,13 @@ export function getEventName(eventNameObj: EventNameObjectType, forAttendeeView 
         fieldValue = bookingFieldValue.toString();
       }
 
-      dynamicEventName = dynamicEventName.replace(`{${variable}}`, fieldValue || "");
+      dynamicText = dynamicText.replace(`{${variable}}`, fieldValue || "");
     } else {
-      dynamicEventName = dynamicEventName.replace(`{${variable}}`, "");
+      dynamicText = dynamicText.replace(`{${variable}}`, "");
     }
   });
 
-  return dynamicEventName;
+  return dynamicText;
 }
 
 export function updateHostInEventName(eventName: string, oldHost: string, newHost: string) {

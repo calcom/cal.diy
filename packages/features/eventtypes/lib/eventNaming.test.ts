@@ -1,6 +1,5 @@
 import type { TFunction } from "i18next";
 import { describe, expect, it, vi } from "vitest";
-
 import * as event from "./eventNaming";
 import { updateHostInEventName } from "./eventNaming";
 
@@ -546,6 +545,24 @@ describe("event tests", () => {
       const eventName = "John and John.Doe and John_Doe";
       const result = updateHostInEventName(eventName, oldHost, newHost);
       expect(result).toBe("John and Jane.Smith and John_Doe");
+    });
+  });
+
+  describe("fn: replaceCustomInputVariables", () => {
+    it("should substitute custom booking field placeholders in subject/body", () => {
+      const text = "Booking confirmed for {company} with {customField}";
+      const bookingFields = {
+        company: { label: "Company", value: "Acme Corp" },
+        customField: "Test Value",
+      };
+      const result = event.replaceCustomInputVariables(text, bookingFields);
+      expect(result).toBe("Booking confirmed for Acme Corp with Test Value");
+    });
+
+    it("should return unchanged text if bookingFields is missing", () => {
+      const text = "Booking confirmed for {company}";
+      const result = event.replaceCustomInputVariables(text, null);
+      expect(result).toBe(text);
     });
   });
 });

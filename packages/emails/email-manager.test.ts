@@ -1,8 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-
 import type { EventTypeMetadata } from "@calcom/prisma/zod-utils";
 import type { CalendarEvent, Person } from "@calcom/types/Calendar";
-
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { shouldSkipAttendeeEmailWithSettings } from "./email-manager";
 import AttendeeScheduledEmail from "./templates/attendee-scheduled-email";
 
@@ -115,6 +113,7 @@ describe("AttendeeScheduledEmail - Privacy fix for seated events", () => {
       seatsPerTimeSlot?: number | null;
       seatsShowAttendees?: boolean | null;
       attendees?: Person[];
+      [key: string]: unknown;
     } = {}
   ): CalendarEvent => {
     const attendees = options.attendees || [
@@ -132,6 +131,7 @@ describe("AttendeeScheduledEmail - Privacy fix for seated events", () => {
       attendees,
       seatsPerTimeSlot: options.seatsPerTimeSlot ?? null,
       seatsShowAttendees: options.seatsShowAttendees ?? null,
+      ...options,
     } as CalendarEvent;
   };
 
@@ -317,6 +317,21 @@ describe("AttendeeScheduledEmail - Privacy fix for seated events", () => {
         "attendee1@example.com",
         "attendee2@example.com",
       ]);
+    });
+
+    it("should substitute custom booking field placeholders in subject (Issue #29658)", async () => {
+      const calEvent = createMockCalendarEvent({
+        title: "Meeting with {company} and {customField}",
+        responses: {
+          company: { label: "Company", value: "Acme Corp" },
+          customField: "Test Value",
+        },
+      });
+      const recipient = calEvent.attendees[0];
+
+      const email = new AttendeeScheduledEmail(calEvent, recipient);
+      const payload = await email["getNodeMailerPayload"]();
+      expect(payload.subject).toBe("Meeting with Acme Corp and Test Value");
     });
   });
 });
