@@ -1,54 +1,49 @@
+import { CAL_VIDEO, GOOGLE_MEET, OFFICE_365_VIDEO, SUCCESS_STATUS, ZOOM } from "@calcom/platform-constants";
+import { HttpService } from "@nestjs/axios";
+import {
+  BadRequestException,
+  Controller,
+  Delete,
+  Get,
+  Headers,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Query,
+  Redirect,
+  Req,
+  UseGuards,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { ApiHeader, ApiOperation, ApiParam, ApiTags as DocsTags } from "@nestjs/swagger";
+import { plainToInstance } from "class-transformer";
+import type { Request } from "express";
+import { getSafeConferencingRedirectUrl } from "../utils/get-safe-conferencing-redirect-url";
 import { API_VERSIONS_VALUES } from "@/lib/api-versions";
 import { API_KEY_OR_ACCESS_TOKEN_HEADER } from "@/lib/docs/headers";
 import { GetUser } from "@/modules/auth/decorators/get-user/get-user.decorator";
 import { ApiAuthGuard } from "@/modules/auth/guards/api-auth/api-auth.guard";
 import {
+  ConferencingAppOutputResponseDto,
+  ConferencingAppsOutputDto,
+  ConferencingAppsOutputResponseDto,
+  DisconnectConferencingAppOutputResponseDto,
+} from "@/modules/conferencing/outputs/get-conferencing-apps.output";
+import {
   ConferencingAppsOauthUrlOutputDto,
   GetConferencingAppsOauthUrlResponseDto,
 } from "@/modules/conferencing/outputs/get-conferencing-apps-oauth-url";
-import {
-  ConferencingAppsOutputResponseDto,
-  ConferencingAppOutputResponseDto,
-  ConferencingAppsOutputDto,
-  DisconnectConferencingAppOutputResponseDto,
-} from "@/modules/conferencing/outputs/get-conferencing-apps.output";
 import { GetDefaultConferencingAppOutputResponseDto } from "@/modules/conferencing/outputs/get-default-conferencing-app.output";
 import { SetDefaultConferencingAppOutputResponseDto } from "@/modules/conferencing/outputs/set-default-conferencing-app.output";
 import { ConferencingService } from "@/modules/conferencing/services/conferencing.service";
-import { UserWithProfile } from "@/modules/users/users.repository";
-import { HttpService } from "@nestjs/axios";
-import { Logger } from "@nestjs/common";
-import {
-  Controller,
-  Get,
-  Query,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-  Post,
-  Param,
-  BadRequestException,
-  Delete,
-  Headers,
-  Redirect,
-  Req,
-  HttpException,
-} from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { ApiHeader, ApiOperation, ApiParam, ApiTags as DocsTags } from "@nestjs/swagger";
-import { plainToInstance } from "class-transformer";
-import { Request } from "express";
+import type { UserWithProfile } from "@/modules/users/users.repository";
 
-import { GOOGLE_MEET, ZOOM, SUCCESS_STATUS, OFFICE_365_VIDEO, CAL_VIDEO } from "@calcom/platform-constants";
-
-export type OAuthCallbackState = {
-  accessToken: string;
-  teamId?: string;
-  orgId?: string;
-  fromApp?: boolean;
-  returnTo?: string;
-  onErrorReturnTo?: string;
-};
+function isPlainObject(value: unknown): value is OAuthCallbackState {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 @Controller({
   path: "/v2/conferencing",
@@ -148,7 +143,20 @@ export class ConferencingController {
       throw new BadRequestException("Missing `state` query param");
     }
 
-    const decodedCallbackState: OAuthCallbackState = JSON.parse(state);
+    const webappUrl = this.config.get("app.baseUrl");
+    const fallbackRedirectUrl = `${webappUrl}/apps/installed/conferencing`;
+    let decodedCallbackState: OAuthCallbackState;
+
+    try {
+      decodedCallbackState = JSON.parse(state);
+    } catch {
+      throw new BadRequestException("Invalid `state` query param");
+    }
+
+    if (!isPlainObject(decodedCallbackState)) {
+      throw new BadRequestException("Invalid `state` query param");
+    }
+
     try {
       if (error) {
         throw new BadRequestException(error_description);
@@ -163,10 +171,18 @@ export class ConferencingController {
         };
         try {
           const response = await this.httpService.axiosRef.get(url, { params, headers });
-          const redirectUrl = response.data?.url || decodedCallbackState.onErrorReturnTo || "";
+          const redirectUrl = getSafeConferencingRedirectUrl(
+            response.data?.url ?? decodedCallbackState.onErrorReturnTo,
+            fallbackRedirectUrl,
+            webappUrl
+          );
           return { url: redirectUrl };
-        } catch (err) {
-          const fallbackUrl = decodedCallbackState.onErrorReturnTo || "";
+        } catch {
+          const fallbackUrl = getSafeConferencingRedirectUrl(
+            decodedCallbackState.onErrorReturnTo,
+            fallbackRedirectUrl,
+            webappUrl
+          );
           return { url: fallbackUrl };
         }
       }
@@ -177,7 +193,11 @@ export class ConferencingController {
         this.logger.error(error.message);
       }
       return {
-        url: decodedCallbackState.onErrorReturnTo ?? "",
+        url: getSafeConferencingRedirectUrl(
+          decodedCallbackState.onErrorReturnTo,
+          fallbackRedirectUrl,
+          webappUrl
+        ),
       };
     }
   }
@@ -245,3 +265,12 @@ export class ConferencingController {
     return { status: SUCCESS_STATUS };
   }
 }
+
+export type OAuthCallbackState = {
+  accessToken: string;
+  teamId?: string;
+  orgId?: string;
+  fromApp?: boolean;
+  returnTo?: string;
+  onErrorReturnTo?: string;
+};
