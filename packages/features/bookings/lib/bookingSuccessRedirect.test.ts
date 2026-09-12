@@ -4,7 +4,8 @@ import { useIsEmbed } from "@calcom/embed-core/embed-iframe";
 import { useCompatSearchParams } from "@calcom/lib/hooks/useCompatSearchParams";
 import { navigateInTopWindow } from "@calcom/lib/navigateInTopWindow";
 
-import { useBookingSuccessRedirect, getNewSearchParams } from "./bookingSuccessRedirect";
+import { getBookingRedirectExtraParams, useBookingSuccessRedirect, getNewSearchParams } from "./bookingSuccessRedirect";
+import type { BookingResponse } from "@calcom/features/bookings/types";
 
 const mockPush = vi.fn();
 
@@ -516,5 +517,102 @@ describe("useBookingSuccessRedirect", () => {
 
       expect(navigateInTopWindow).toHaveBeenCalledWith("https://example.com/success");
     });
+  });
+});
+
+describe("getBookingRedirectExtraParams", () => {
+  it("includescustom booking field responses in redirect params", () => {
+    const booking = createMockBooking({
+      responses: {
+        name: "John Doe",
+        email: "john@example.com",
+        phone: "+1234567890",
+        companyName: "Acme Corp",
+        jobTitle: "Engineer",
+        customTextField: "Custom value",
+      },
+    });
+
+    const result = getBookingRedirectExtraParams(booking);
+
+    expect(result.companyName).toBe("Acme Corp");
+    expect(result.jobTitle).toBe("Engineer");
+    expect(result.customTextField).toBe("Custom value");
+  });
+  it("handles array values from multi-select fields", () => {
+    const booking = createMockBooking({
+      responses: {
+        name: "John Doe",
+        email: "john@example.com",
+        interests: ["Technology", "Sports", "Music"],
+      },
+    });
+
+    const result = getBookingRedirectExtraParams(booking);
+
+    expect(result.interests).toBe("Technology, Sports, Music");
+  });
+  it("handles boolean values from checkbox fields", () => {
+    const booking = createMockBooking({
+      responses: {
+        name: "John Doe",
+        email: "john@example.com",
+        agreeToTerms: true,
+        subscribeNewsletter: false,
+      },
+    });
+
+    const result = getBookingRedirectExtraParams(booking);
+
+    expect(result.agreeToTerms).toBe(true);
+    expect(result.subscribeNewsletter).toBe(false);
+  });
+  it("handles numeric values from number fields", () => {
+    const booking = createMockBooking({
+      responses: {
+        name: "John Doe",
+        email: "john@example.com",
+        numberOfAttendees: 5,
+        budget: 1000,
+      },
+    });
+
+    const result = getBookingRedirectExtraParams(booking);
+
+    expect(result.numberOfAttendees).toBe(5);
+    expect(result.budget).toBe(1000);
+  });
+  it("skips system fields that are handled elsewhere", () => {
+    const booking = createMockBooking({
+      responses: {
+        name: "John Doe",
+        email: "john@example.com",
+        guests: ["guest1@example.com"],
+        location: { optionValue: "Office" },
+        notes: "Some notes",
+        rescheduleReason: "Schedule conflict",
+        customField: "Custom value",
+      },
+    });
+
+    const result = getBookingRedirectExtraParams(booking);
+
+    expect(result.guests).toBeUndefined();
+    expect(result.notes).toBeUndefined();
+    expect(result.rescheduleReason).toBeUndefined();
+    expect(result.customField).toBe("Custom value");
+  });
+  it("handles object values with optionValue", () => {
+    const booking = createMockBooking({
+      responses: {
+        name: "John Doe",
+        email: "john@example.com",
+        preferredLocation: { optionValue: "Conference Room A" },
+      },
+    });
+
+    const result = getBookingRedirectExtraParams(booking);
+
+    expect(result.preferredLocation).toBe("Conference Room A");
   });
 });

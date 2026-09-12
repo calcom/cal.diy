@@ -72,6 +72,7 @@ type ResultType = {
   phone?: string | null;
   attendeeFirstName?: string | null;
   attendeeLastName?: string | null;
+  [key: string]: unknown;
 };
 
 export const getBookingRedirectExtraParams = (booking: SuccessRedirectBookingType) => {
@@ -86,18 +87,56 @@ export const getBookingRedirectExtraParams = (booking: SuccessRedirectBookingTyp
     "responses",
   ];
 
-  // Helper function to extract response details (e.g., phone, attendee's first and last name)
   function extractResponseDetails(booking: SuccessRedirectBookingType, obj: ResultType): ResultType {
     const result: ResultType = { ...obj };
-    const phone = getSafe<string>(booking.responses, ["phone"]);
-    const firstName = getSafe<string>(booking.responses, ["name", "firstName"]);
-    const lastName = getSafe<string>(booking.responses, ["name", "lastName"]);
-    const name = getSafe<string>(booking.responses, ["name"]);
+    const responses = booking.responses;
+
+    if (!responses || typeof responses !== "object") {
+      return result;
+    }
+
+    const phone = getSafe<string>(responses, ["phone"]);
+    const firstName = getSafe<string>(responses, ["name", "firstName"]);
+    const lastName = getSafe<string>(responses, ["name", "lastName"]);
+    const name = getSafe<string>(responses, ["name"]);
 
     if (phone) result.phone = phone;
     if (firstName) result.attendeeFirstName = firstName;
     if (lastName) result.attendeeLastName = lastName;
-    else if (name && typeof name === "string") result.attendeeName = name; // Fallback if `name` is a string instead of an object
+    else if (name && typeof name === "string") result.attendeeName = name;
+
+    const systemFields = new Set([
+      "name",
+      "email",
+      "guests",
+      "location",
+      "notes",
+      "rescheduleReason",
+      "phone",
+      "title",
+    ]);
+
+    for (const [key, value] of Object.entries(responses as Record<string, unknown>)) {
+      if (systemFields.has(key)) continue;
+      if (value === null || value === undefined) continue;
+
+      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+        result[key] = value;
+      } else if (Array.isArray(value)) {
+        result[key] = value.join(", ");
+      } else if (typeof value === "object" && value !== null) {
+        if ("value" in value && typeof value.value === "string") {
+          result[key] = value.value;
+        } else if ("optionValue" in value && typeof value.optionValue === "string") {
+          result[key] = value.optionValue;
+        } else {
+          try {
+            result[key] = JSON.stringify(value);
+          } catch {
+          }
+        }
+      }
+    }
 
     return result;
   }
