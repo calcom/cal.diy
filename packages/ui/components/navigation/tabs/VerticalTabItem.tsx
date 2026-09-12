@@ -54,7 +54,10 @@ const VerticalTabItem = ({
           <Link
             onClick={(e) => {
               if (props.trackingMetadata) {
-                posthog.capture("settings_sidebar_button_clicked", props.trackingMetadata);
+                posthog.capture(
+                  "settings_sidebar_button_clicked",
+                  props.trackingMetadata,
+                );
               }
               if (props.onClick) {
                 e.preventDefault();
@@ -68,14 +71,16 @@ const VerticalTabItem = ({
             aria-disabled={props.disabled ? "true" : undefined}
             target={props.isExternalLink ? "_blank" : "_self"}
             className={classNames(
-              props.textClassNames || "text-default text-sm font-medium leading-none",
+              props.textClassNames ||
+                "text-default text-sm font-medium leading-none",
               "hover:bg-subtle [&[aria-current='page']]:bg-subtle [&[aria-current='page']]:text-emphasis group-hover:text-default group flex w-full flex-row items-center rounded-md p-2 transition ",
               props.disabled && "pointer-events-none opacity-30!",
               (isChild || !props.icon) && "ml-7",
-              props.className
+              props.className,
             )}
             data-testid={`vertical-tab-${props["data-testid"]}`}
-            aria-current={isCurrent ? "page" : undefined}>
+            aria-current={isCurrent ? "page" : undefined}
+          >
             {props.icon && (
               <Icon
                 name={props.icon}
@@ -86,11 +91,19 @@ const VerticalTabItem = ({
             <div className="h-fit min-w-0 flex-1">
               <span className="flex items-center gap-2">
                 {t(name)}
-                {props.isExternalLink ? <Icon name="external-link" data-testid="external-link" /> : null}
+                {props.isExternalLink ? (
+                  <Icon name="external-link" data-testid="external-link" />
+                ) : null}
               </span>
               {info && (
-                // TODO: I don't think having apps-info as a data-test-id is right here as this is meant to be dumb component.
-                <p data-testid="apps-info" className="mt-1 text-xs font-normal">
+                <p
+                  data-testid={
+                    props["data-testid"]
+                      ? `${props["data-testid"]}-info`
+                      : "vertical-tab-info"
+                  }
+                  className="mt-1 text-xs font-normal"
+                >
                   {info}
                 </p>
               )}
