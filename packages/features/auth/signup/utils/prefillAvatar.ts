@@ -1,7 +1,7 @@
-import fetch from "node-fetch";
-
+import process from "node:process";
 import { uploadAvatar } from "@calcom/lib/server/avatar";
 import { resizeBase64Image } from "@calcom/lib/server/resizeBase64Image";
+import { fetchWithSSRFProtection } from "@calcom/lib/ssrfProtection";
 import prisma from "@calcom/prisma";
 import type { Prisma } from "@calcom/prisma/client";
 
@@ -9,26 +9,25 @@ interface IPrefillAvatar {
   email: string;
 }
 
-async function downloadImageDataFromUrl(url: string) {
+async function downloadImageDataFromUrl(url: string): Promise<string | null> {
   try {
-    const response = await fetch(url);
+    const response = await fetchWithSSRFProtection(url);
 
     if (!response.ok) {
-      console.log("Error fetching image from: ", url);
+      console.log("Error fetching avatar image");
       return null;
     }
 
-    const imageBuffer = await response.buffer();
+    const imageBuffer = Buffer.from(await response.arrayBuffer());
     const base64Image = `data:image/png;base64,${imageBuffer.toString("base64")}`;
 
     return base64Image;
-  } catch (error) {
-    console.log(error);
+  } catch {
     return null;
   }
 }
 
-export const prefillAvatar = async ({ email }: IPrefillAvatar) => {
+export const prefillAvatar = async ({ email }: IPrefillAvatar): Promise<void> => {
   const imageUrl = await getImageUrlAvatarAPI(email);
   if (!imageUrl) return;
 
@@ -54,7 +53,7 @@ export const prefillAvatar = async ({ email }: IPrefillAvatar) => {
   });
 };
 
-const getImageUrlAvatarAPI = async (email: string) => {
+const getImageUrlAvatarAPI = async (email: string): Promise<string | null> => {
   if (!process.env.AVATARAPI_USERNAME || !process.env.AVATARAPI_PASSWORD) {
     console.info("No avatar api credentials found");
     return null;

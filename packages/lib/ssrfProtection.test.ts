@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const lookupMock = vi.hoisted(() => vi.fn());
+
+vi.mock("node:dns/promises", () => ({
+  default: {
+    lookup: lookupMock,
+  },
+}));
+
 // Default mock for Cal.diy SaaS (IS_SELF_HOSTED = false)
 vi.mock("@calcom/lib/constants", () => ({
   IS_SELF_HOSTED: false,
@@ -7,11 +15,107 @@ vi.mock("@calcom/lib/constants", () => ({
 }));
 
 import {
+  fetchWithSSRFProtection,
   isBlockedHostname,
   isPrivateIP,
   isTrustedInternalUrl,
   validateUrlForSSRFSync,
 } from "./ssrfProtection";
+
+describe("fetchWithSSRFProtection", () => {
+  beforeEach(() => {
+    lookupMock.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it.each([
+    "https://127.0.0.1/calendar.ics",
+    "https://[::1]/calendar.ics",
+    "https://10.0.0.1/calendar.ics",
+    "https://169.254.169.254/latest/meta-data/",
+    "http://example.com/calendar.ics",
+    "not-a-url",
+  ])("blocks an unsafe destination before fetching: %s", async (url) => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchWithSSRFProtection(url)).rejects.toThrow("URL blocked by SSRF protection");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks a hostname resolving to a private address before fetching", async () => {
+    lookupMock.mockResolvedValue([{ address: "192.168.1.10", family: 4 }]);
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchWithSSRFProtection("https://calendar.example/feed.ics")).rejects.toThrow(
+      "URL blocked by SSRF protection"
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("fetches valid public HTTPS destinations", async () => {
+    const response = new Response("ok");
+    const fetchMock = vi.fn().mockResolvedValue(response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchWithSSRFProtection("https://calendar.example/feed.ics")).resolves.toBe(response);
+    expect(fetchMock).toHaveBeenCalledWith("https://calendar.example/feed.ics", { redirect: "manual" });
+  });
+
+  it("blocks a redirect to a prohibited destination before the second request", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(null, {
+        status: 302,
+        headers: { location: "https://169.254.169.254/latest/meta-data/" },
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchWithSSRFProtection("https://calendar.example/feed.ics")).rejects.toThrow(
+      "URL blocked by SSRF protection"
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("resolves relative redirects and rejects excessive redirects", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(null, {
+        status: 302,
+        headers: { location: "/next" },
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchWithSSRFProtection("https://calendar.example/start", 1)).rejects.toThrow(
+      "Too many redirects"
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "https://calendar.example/next", { redirect: "manual" });
+  });
+
+  it("rejects redirects without a location header", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 302 })));
+
+    await expect(fetchWithSSRFProtection("https://calendar.example/start")).rejects.toThrow(
+      "missing a location header"
+    );
+  });
+
+  it("rejects redirects with an invalid location header", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(null, { status: 302, headers: { location: "http://[" } }))
+    );
+
+    await expect(fetchWithSSRFProtection("https://calendar.example/start")).rejects.toThrow(
+      "invalid location header"
+    );
+  });
+});
 
 describe("isPrivateIP", () => {
   it.each([
