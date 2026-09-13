@@ -24,11 +24,28 @@ describe("WhatsApp location configuration and URL validation", () => {
     it("matches http URL", () => {
       expect(regex.test("http://wa.me/1234567890")).toBe(true);
     });
+
+    it("matches www.wa.me URL", () => {
+      expect(regex.test("https://www.wa.me/1234567890")).toBe(true);
+    });
   });
 
   describe("invalid WhatsApp URLs", () => {
     it("rejects legacy send format with query params", () => {
       expect(regex.test("https://wa.me/send?phone=1234567890")).toBe(false);
+    });
+
+    it("rejects trailing path segments", () => {
+      expect(regex.test("https://wa.me/1234567890/extra")).toBe(false);
+    });
+
+    it("rejects non-numeric suffixes", () => {
+      expect(regex.test("https://wa.me/1234567890abc")).toBe(false);
+    });
+
+    it("rejects malformed hostnames", () => {
+      expect(regex.test("https://waxme/1234567890")).toBe(false);
+      expect(regex.test("https://wa.com/1234567890")).toBe(false);
     });
 
     it("rejects + prefix", () => {
