@@ -999,4 +999,35 @@ describe("Cal", () => {
       expect(result).toBe("connect");
     });
   });
+
+  describe("__iframeReady guard (#30130)", () => {
+    it("should safely ignore __iframeReady event when iframe does not exist", () => {
+      expect(calInstance.iframe).toBeFalsy();
+      expect(() => {
+        calInstance.actionManager.fire("__iframeReady", {
+          isPrerendering: false,
+        });
+      }).not.toThrow();
+      expect(calInstance.iframeReady).toBe(false);
+    });
+
+    it("should process __iframeReady and set iframeReady when iframe exists", () => {
+      const mockIframe = document.createElement("iframe");
+      mockIframe.style.visibility = "hidden";
+      calInstance.iframe = mockIframe;
+      vi.spyOn(calInstance, "doInIframe").mockImplementation(() => {});
+
+      expect(() => {
+        calInstance.actionManager.fire("__iframeReady", {
+          isPrerendering: false,
+        });
+      }).not.toThrow();
+
+      expect(calInstance.iframeReady).toBe(true);
+      expect(mockIframe.style.visibility).toBe("");
+      expect(calInstance.doInIframe).toHaveBeenCalledWith({
+        method: "parentKnowsIframeReady",
+      });
+    });
+  });
 });

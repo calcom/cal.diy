@@ -53,6 +53,9 @@ const Cal = function Cal(props: CalProps) {
         config,
       });
     }
+    return () => {
+      initializedRef.current = false;
+    };
   }, [Cal, calLink, config, namespace, calOrigin, initConfig]);
 
   if (!Cal) {
