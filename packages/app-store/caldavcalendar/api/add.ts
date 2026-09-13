@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      let existingCredentialId: number | null = null;
+      const existingCredentialIds: number[] = [];
 
       for (const credential of existingCredentials) {
         try {
@@ -63,18 +63,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           );
 
           if (decrypted.url === url && decrypted.username === username) {
-            existingCredentialId = credential.id;
-            break;
+            existingCredentialIds.push(credential.id);
           }
         } catch {
-          // Ignore credentials that cannot be decrypted.
+          // Continue checking credentials so one unreadable stored credential does not block adding this account.
         }
       }
 
-      if (existingCredentialId !== null) {
-        await prisma.credential.update({
+      if (existingCredentialIds.length > 0) {
+        await prisma.credential.updateMany({
           where: {
-            id: existingCredentialId,
+            id: {
+              in: existingCredentialIds,
+            },
           },
           data,
         });
@@ -92,7 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (e.message.indexOf("Invalid credentials") > -1 && url.indexOf("dav.php") > -1) {
           const parsedUrl = new URL(url);
 
-          const adminUrl = `${parsedUrl.protocol}//${parsedUrl.hostname}${
+          const adminUrl = `\({parsedUrl.protocol}//\){parsedUrl.hostname}${
             parsedUrl.port ? `:${parsedUrl.port}` : ""
           }/admin/?/settings/standard/`;
 
