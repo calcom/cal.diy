@@ -242,7 +242,7 @@ export default function Login({
                   {isOidcLoginEnabled && (
                     <Button
                       variant="outline"
-                      className="w-full py-1"
+                      className="h-auto w-full whitespace-normal py-1 text-center"
                       disabled={formState.isSubmitting}
                       data-testid="oidc"
                       onClick={async (e) => {
