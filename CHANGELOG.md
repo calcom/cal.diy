@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Upstream (Cal.com) tracks
 its own versioning under `v6.x`; the fork moves to `v7.x` to mark its independent line.
 
+## [7.5.4] — 2026-09-14
+
+### Fixed
+
+- Login page: the OIDC button label (`Sign in with <provider>`) overflowed the
+  card on mobile. The `Button` component forces `whitespace-nowrap`; the OIDC
+  button now wraps its label and grows in height when needed. Desktop rendering
+  is unchanged.
+
 ## [7.5.3] — 2026-09-11
 
 Third attempt at the `PRUNE_DEV_DEPENDENCIES=true` path of the Clever Cloud
