@@ -253,8 +253,10 @@ export default function Login({
                         });
                       }}>
                       <Icon name="key" className="size-4" />
-                      <span>{t("signin_with_provider", { provider: oidcProviderName })}</span>
-                      {lastUsed === "oidc" && <LastUsed />}
+                      <span className="flex flex-col items-center">
+                        <span>{t("signin_with_provider", { provider: oidcProviderName })}</span>
+                        {lastUsed === "oidc" && <LastUsed className="static" />}
+                      </span>
                     </Button>
                   )}
                 </div>
