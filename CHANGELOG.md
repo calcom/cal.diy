@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Upstream (Cal.com) tracks
 its own versioning under `v6.x`; the fork moves to `v7.x` to mark its independent line.
 
+## [7.5.5] — 2026-09-14
+
+### Removed
+
+- Login page: the "last used" badge shown on the sign-in method used last
+  time (`localStorage` key `last_cal_login`). It was absolutely positioned at
+  the right edge of the button and overlapped a long OIDC provider label, both
+  on the second line once the label wrapped (7.5.4) and on a single line when
+  the label filled the button. The `useLastUsed` hook is removed with it.
+
 ## [7.5.4] — 2026-09-14
 
 ### Fixed

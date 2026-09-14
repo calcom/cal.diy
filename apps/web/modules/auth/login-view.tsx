@@ -8,7 +8,6 @@ import { useCompatSearchParams } from "@calcom/lib/hooks/useCompatSearchParams";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Alert } from "@calcom/ui/components/alert";
 import { Icon } from "@calcom/ui/components/icon";
-import { LastUsed, useLastUsed } from "@calcom/web/modules/auth/hooks/useLastUsed";
 import AddToHomescreen from "@components/AddToHomescreen";
 import BackupCode from "@components/auth/BackupCode";
 import TwoFactor from "@components/auth/TwoFactor";
@@ -131,7 +130,6 @@ export default function Login({
   const [twoFactorRequired, setTwoFactorRequired] = useState(!!totpEmail || false);
   const [twoFactorLostAccess, setTwoFactorLostAccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [lastUsed, setLastUsed] = useLastUsed();
   const [showPassword, setShowPassword] = useState(false);
 
   const errorMessages: { [key: string]: string } = {
@@ -170,7 +168,6 @@ export default function Login({
     if (!res) setErrorMessage(errorMessages[ErrorCode.InternalServerError]);
     // we're logged in! let's do a hard refresh to the desired url
     else if (!res.error) {
-      setLastUsed("credentials");
       router.push(callbackUrl);
     } else if (res.error === ErrorCode.SecondFactorRequired) setTwoFactorRequired(true);
     else if (res.error === ErrorCode.IncorrectBackupCode) setErrorMessage(t("incorrect_backup_code"));
@@ -212,14 +209,12 @@ export default function Login({
                       data-testid="google"
                       onClick={async (e) => {
                         e.preventDefault();
-                        setLastUsed("google");
                         await signIn("google", {
                           callbackUrl,
                         });
                       }}>
                       <GoogleIcon />
                       <span>{t("signin_with_google")}</span>
-                      {lastUsed === "google" && <LastUsed />}
                     </Button>
                   )}
                   {isOutlookLoginEnabled && (
@@ -229,14 +224,12 @@ export default function Login({
                       data-testid="microsoft"
                       onClick={async (e) => {
                         e.preventDefault();
-                        setLastUsed("microsoft");
                         await signIn("azure-ad", {
                           callbackUrl,
                         });
                       }}>
                       <MicrosoftIcon />
                       <span>{t("signin_with_microsoft")}</span>
-                      {lastUsed === "microsoft" && <LastUsed />}
                     </Button>
                   )}
                   {isOidcLoginEnabled && (
@@ -247,16 +240,12 @@ export default function Login({
                       data-testid="oidc"
                       onClick={async (e) => {
                         e.preventDefault();
-                        setLastUsed("oidc");
                         await signIn("oidc", {
                           callbackUrl,
                         });
                       }}>
                       <Icon name="key" className="size-4" />
-                      <span className="flex flex-col items-center">
-                        <span>{t("signin_with_provider", { provider: oidcProviderName })}</span>
-                        {lastUsed === "oidc" && <LastUsed className="static" />}
-                      </span>
+                      <span>{t("signin_with_provider", { provider: oidcProviderName })}</span>
                     </Button>
                   )}
                 </div>
