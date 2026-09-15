@@ -369,7 +369,7 @@ The Docker image can be found on DockerHub at [https://hub.docker.com/r/calcom/c
 
 **Note for ARM Users**: Use the {version}-arm suffix for pulling images. Example: `docker pull calcom/cal.diy:v5.6.19-arm`.
 
-You can also deploy Cal.diy with one click using the official [Easypanel](https://easypanel.io/) template, which provisions the required PostgreSQL database automatically: https://easypanel.io/templates/calcom
+You can also deploy Cal.com with one click using the official [Easypanel](https://easypanel.io/) template, which provisions the required PostgreSQL database automatically: https://easypanel.io/templates/calcom (the template currently runs the `calcom/cal.com` image; we'll update it once official `calcom/cal.diy` images are published).
 
 #### Requirements
 
