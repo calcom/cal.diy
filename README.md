@@ -369,8 +369,6 @@ The Docker image can be found on DockerHub at [https://hub.docker.com/r/calcom/c
 
 **Note for ARM Users**: Use the {version}-arm suffix for pulling images. Example: `docker pull calcom/cal.diy:v5.6.19-arm`.
 
-You can also deploy Cal.com with one click using the official [Easypanel](https://easypanel.io/) template, which provisions the required PostgreSQL database automatically: https://easypanel.io/templates/calcom (the template currently runs the `calcom/cal.com` image; we'll update it once official `calcom/cal.diy` images are published).
-
 #### Requirements
 
 Make sure you have `docker` & `docker compose` installed on the server / system. Both are installed by most docker utilities, including Docker Desktop and Rancher Desktop.
@@ -652,6 +650,15 @@ Currently Vercel Pro Plan is required to be able to Deploy this application with
 ### Elestio
 
 [![Deploy on Elestio](https://elest.io/images/logos/deploy-to-elestio-btn.png)](https://elest.io/open-source/cal.com)
+
+### Easypanel
+
+[![Deploy on Easypanel][easypanel-btn]][easypanel-deploy]
+
+[easypanel-btn]: https://easypanel.io/img/deploy-on-easypanel-40.svg
+[easypanel-deploy]: https://easypanel.io/templates/calcom
+
+You can deploy Cal.com on [Easypanel](https://easypanel.io), which provisions the required PostgreSQL database automatically. The template currently runs the `calcom/cal.com` image; we'll switch it to `calcom/cal.diy` once official images are published there.
 
 <!-- LICENSE -->
 
