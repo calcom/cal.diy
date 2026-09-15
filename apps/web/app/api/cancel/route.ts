@@ -8,7 +8,7 @@ import handleCancelBooking from "@calcom/features/bookings/lib/handleCancelBooki
 import { checkRateLimitAndThrowError } from "@calcom/lib/checkRateLimitAndThrowError";
 import getIP from "@calcom/lib/getIP";
 import { piiHasher } from "@calcom/lib/server/PiiHasher";
-import { bookingCancelWithCsrfSchema } from "@calcom/prisma/zod-utils";
+import { bookingCancelWithCsrfUidOnlySchema } from "@calcom/prisma/zod-utils";
 import { validateCsrfToken } from "@calcom/web/lib/validateCsrfToken";
 
 import { buildLegacyRequest } from "@lib/buildLegacyCtx";
@@ -20,10 +20,11 @@ async function handler(req: NextRequest) {
   } catch {
     return NextResponse.json({ success: false, message: "Invalid JSON" }, { status: 400 });
   }
-  const bookingData = bookingCancelWithCsrfSchema.parse(appDirRequestBody);
-
-  // Integer IDs are sequential/guessable — only accept high-entropy UIDs on this route
-  if (!bookingData.uid) {
+  let bookingData;
+  try {
+    // The uid-only schema rejects sequential/guessable integer ids outright
+    bookingData = bookingCancelWithCsrfUidOnlySchema.parse(appDirRequestBody);
+  } catch {
     return NextResponse.json(
       { success: false, message: "uid is required for booking cancellation" },
       { status: 400 }
@@ -46,11 +47,9 @@ async function handler(req: NextRequest) {
     identifier,
   });
 
-  // Strip integer id to ensure lookup is always by uid
-  const { id: _id, ...safeBookingData } = bookingData;
-
+  // id is rejected by the uid-only schema, so lookup is always by uid
   const result = await handleCancelBooking({
-    bookingData: safeBookingData,
+    bookingData,
     userId: session?.user?.id || -1,
   });
 
