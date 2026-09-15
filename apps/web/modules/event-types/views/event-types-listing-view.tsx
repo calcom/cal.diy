@@ -930,9 +930,7 @@ const CTA = ({ profileOptions }: { profileOptions: ProfileOption[] }) => {
         }}
         placeholder={t("search")}
       />
-      <Button
-        data-testid="new-event-type"
-        href={`?dialog=new&eventPage=${profileOptions[0]?.slug ?? ""}`}>
+      <Button data-testid="new-event-type" href={`?dialog=new&eventPage=${profileOptions[0]?.slug ?? ""}`}>
         {t("new")}
       </Button>
       <CreateEventTypeDialog profileOptions={profileOptions} />
@@ -970,6 +968,7 @@ const InfiniteScrollMain = ({
   eventTypeGroups: GetUserEventGroupsResponse["eventTypeGroups"];
   profiles: GetUserEventGroupsResponse["profiles"];
 }) => {
+  const { t } = useLocale();
   const searchParams = useSearchParams();
   const { data } = useTypedQuery(querySchema);
   const tabs = eventTypeGroups.map((item) => ({
@@ -985,7 +984,22 @@ const InfiniteScrollMain = ({
 
   return (
     <>
-      {eventTypeGroups.length > 1 && <HorizontalTabs tabs={tabs} />}
+      <div className="mb-4 flex items-start gap-2 lg:mb-5">
+        {eventTypeGroups.length > 1 && (
+          <div className="min-w-0 flex-1 *:mb-0">
+            <HorizontalTabs tabs={tabs} />
+          </div>
+        )}
+        <Button
+          href="/settings/teams/new"
+          color="minimal"
+          size="sm"
+          StartIcon="plus"
+          data-testid="create-team-from-event-types"
+          className="shrink-0">
+          {t("new_team")}
+        </Button>
+      </div>
       {eventTypeGroups.length >= 1 && <InfiniteTeamsTab activeEventTypeGroup={activeEventTypeGroup[0]} />}
       {eventTypeGroups.length === 0 && <CreateFirstEventTypeView slug={profiles[0].slug ?? ""} />}
       <EventTypeEmbedDialog />
