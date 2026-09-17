@@ -20,7 +20,7 @@ import type { CredentialPayload } from "@calcom/types/Credential";
 import ICAL from "ical.js";
 import type { Attendee, DateArray, DurationObject } from "ics";
 import { createEvent } from "ics";
-import type { DAVAccount, DAVCalendar, DAVObject } from "tsdav";
+import type { DAVAccount, DAVCalendar, DAVCredentials, DAVObject } from "tsdav";
 import {
   createAccount,
   createCalendarObject,
@@ -34,6 +34,16 @@ import { v4 as uuidv4 } from "uuid";
 import { getLocation, getRichDescription } from "./CalEventParser";
 import { symmetricDecrypt } from "./crypto";
 import logger from "./logger";
+
+export type CalendarServiceCredentialPayload = Omit<CredentialPayload, "key"> &
+  (
+    | {
+        key: CredentialPayload["key"];
+      }
+    | {
+        credentials: DAVCredentials;
+      }
+  );
 
 const TIMEZONE_FORMAT = "YYYY-MM-DDTHH:mm:ss[Z]";
 const DEFAULT_CALENDAR_TYPE = "caldav";
@@ -387,25 +397,40 @@ const mapAttendees = (attendees: AttendeeInCalendarEvent[] | TeamMember[]): Atte
 
 export default abstract class BaseCalendarService implements Calendar {
   private url = "";
-  private credentials: Record<string, string> = {};
+  protected credentials: Record<string, string> = {};
   private headers: Record<string, string> = {};
   protected integrationName = "";
   private log: typeof logger;
   private credential: CredentialPayload;
 
-  constructor(credential: CredentialPayload, integrationName: string, url?: string) {
+  constructor(credential: CalendarServiceCredentialPayload, integrationName: string, url?: string) {
     this.integrationName = integrationName;
 
+    let finalCredentials = this.credentials;
+    if ("key" in credential) {
+      if (typeof credential.key === "string") {
+        finalCredentials = JSON.parse(symmetricDecrypt(credential.key as string, CALENDSO_ENCRYPTION_KEY));
+      } else if (typeof credential.key === "object" && credential.key && !Array.isArray(credential.key)) {
+        // We assume the key has already been decoded into a json object
+        finalCredentials = credential.key as Record<string, string>;
+      }
+    } else if ("credentials" in credential) {
+      finalCredentials = credential.credentials as Record<string, string>;
+    }
+
     const {
-      username,
-      password,
       url: credentialURL,
-    } = JSON.parse(symmetricDecrypt(credential.key as string, CALENDSO_ENCRYPTION_KEY));
+      // DAVCredentials accepts other properties than only username and password
+      ...davCredentials
+    } = finalCredentials;
 
     this.url = url || credentialURL;
 
-    this.credentials = { username, password };
-    this.headers = getBasicAuthHeaders({ username, password });
+    this.credentials = davCredentials;
+    this.headers = getBasicAuthHeaders({
+      username: davCredentials.username,
+      password: davCredentials.password,
+    });
     this.credential = credential;
 
     this.log = logger.getSubLogger({ prefix: [`[[lib] ${this.integrationName}`] });
@@ -684,6 +709,7 @@ export default abstract class BaseCalendarService implements Calendar {
 
         const event = new ICAL.Event(vevent);
         const dtstartProperty = vevent.getFirstProperty("dtstart");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const tzidFromDtstart = dtstartProperty ? (dtstartProperty as any).jCal[1].tzid : undefined;
         const dtstart: { [key: string]: string } | undefined = vevent?.getFirstPropertyValue("dtstart");
         // biome-ignore lint/complexity/useLiteralKeys: accessing dynamic property from ICAL.js object
@@ -1010,7 +1036,7 @@ export default abstract class BaseCalendarService implements Calendar {
     return events;
   }
 
-  private async getAccount(): Promise<DAVAccount> {
+  protected async getAccount(): Promise<DAVAccount> {
     return createAccount({
       account: {
         serverUrl: this.url,

@@ -3493,6 +3493,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@calcom/yandex-calendar@workspace:packages/app-store/yandex-calendar":
+  version: 0.0.0-use.local
+  resolution: "@calcom/yandex-calendar@workspace:packages/app-store/yandex-calendar"
+  dependencies:
+    "@calcom/lib": "workspace:*"
+    "@calcom/types": "workspace:*"
+    zod: "npm:^3.22.4"
+  languageName: unknown
+  linkType: soft
+
 "@calcom/zapier@workspace:packages/app-store/zapier":
   version: 0.0.0-use.local
   resolution: "@calcom/zapier@workspace:packages/app-store/zapier"
@@ -42328,7 +42338,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:3.25.76, zod@npm:^3.20.0, zod@npm:^3.20.2, zod@npm:^3.24.1":
+"zod@npm:3.25.76, zod@npm:^3.20.0, zod@npm:^3.20.2, zod@npm:^3.22.4, zod@npm:^3.24.1":
   version: 3.25.76
   resolution: "zod@npm:3.25.76"
   checksum: 10/f0c963ec40cd96858451d1690404d603d36507c1fc9682f2dae59ab38b578687d542708a7fdbf645f77926f78c9ed558f57c3d3aa226c285f798df0c4da16995

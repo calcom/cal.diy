@@ -16,5 +16,6 @@ export const CalendarServiceMap =
         "ics-feedcalendar": import("./ics-feedcalendar/lib/CalendarService"),
         larkcalendar: import("./larkcalendar/lib/CalendarService"),
         office365calendar: import("./office365calendar/lib/CalendarService"),
+        "yandex-calendar": import("./yandex-calendar/lib/CalendarService"),
         zohocalendar: import("./zohocalendar/lib/CalendarService"),
       };
