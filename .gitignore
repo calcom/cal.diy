@@ -104,7 +104,7 @@ apps/auth
 i18n.cache
 packages/**/.yarn/ci-cache/
 
-# AI - session/user specific files (keep CLAUDE.md and .cursor/skills tracked)
+# AI - session/user specific files (keep AGENTS.md and .cursor/skills tracked)
 .claude/plans/
 .claude/settings.local.json
 
