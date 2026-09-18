@@ -1,10 +1,12 @@
 import { prisma } from "@calcom/prisma/__mocks__/prisma";
 import { getCalendar } from "@calcom/app-store/_utils/getCalendar";
-import type { CalendarEvent } from "@calcom/types/Calendar";
+import type { Calendar } from "@calcom/types/Calendar";
+import type { CredentialForCalendarService } from "@calcom/types/Credential";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   deduplicateCredentialsBasedOnSelectedCalendars,
   deleteEvent,
+  getBusyCalendarTimes,
   getCalendarCredentials,
   processEvent,
 } from "./CalendarManager";
@@ -266,6 +268,50 @@ describe("CalendarManager tests", () => {
       const calendarCredentials = getCalendarCredentials(credentials);
       expect(calendarCredentials).toHaveLength(1);
       expect(calendarCredentials[0].credential).toEqual(googleCalendarCredentials);
+    });
+  });
+
+  describe("fn: getBusyCalendarTimes", () => {
+    it("should report a failure instead of no busy times when a calendar can't be read", async () => {
+      const unreachableCalendar: Calendar = {
+        createEvent: vi.fn(),
+        updateEvent: vi.fn(),
+        deleteEvent: vi.fn(),
+        listCalendars: vi.fn(),
+        getAvailability: vi.fn().mockRejectedValue(new Error("CalDAV server returned 401 Unauthorized")),
+      };
+      vi.mocked(getCalendar).mockResolvedValue(unreachableCalendar);
+      const appleCalendarCredential: CredentialForCalendarService = {
+        id: 1,
+        type: "apple_calendar",
+        appId: "apple-calendar",
+        key: { username: "user@example.com", password: "app-specific-password" },
+        encryptedKey: null,
+        userId: 10000,
+        teamId: null,
+        user: { email: "user@example.com" },
+        invalid: false,
+        delegationCredentialId: null,
+        delegatedTo: null,
+      };
+
+      const result = await getBusyCalendarTimes(
+        [appleCalendarCredential],
+        "2023-01-01T00:00:00Z",
+        "2023-01-02T00:00:00Z",
+        [
+          {
+            userId: 10000,
+            integration: "apple_calendar",
+            externalId: "https://caldav.icloud.com/123/calendars/home/",
+            credentialId: 1,
+          },
+        ],
+        "booking"
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.data).toEqual([expect.objectContaining({ source: "error-placeholder" })]);
     });
   });
 
