@@ -27,6 +27,7 @@ export function Providers({ isEmbed, children, country }: ProvidersProps) {
         <TrpcProvider>
           <ToastProvider position="bottom-center">
             {!isEmbed && !isBookingPage && <NotificationSoundHandler />}
+            {/* @ts-expect-error react-inlinesvg declares ReactNode, incompatible with this repo's React types */}
             <CacheProvider>
               <WebPushProvider>{children}</WebPushProvider>
             </CacheProvider>

@@ -17,6 +17,7 @@ function MyApp(props: AppProps) {
   return (
     <SessionProvider session={pageProps.session ?? undefined}>
       <WebPushProvider>
+        {/* @ts-expect-error react-inlinesvg declares ReactNode, incompatible with this repo's React types */}
         <CacheProvider>
           {Component.PageWrapper ? <Component.PageWrapper {...props} /> : <Component {...pageProps} />}
         </CacheProvider>
