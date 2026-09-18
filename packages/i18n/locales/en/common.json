@@ -2516,7 +2516,7 @@
   "recommended_next_steps": "Recommended next steps",
   "create_a_managed_event": "Create a managed event type",
   "meetings_are_better_with_the_right": "Meetings are better with the right team members there. Invite them now.",
-  "create_a_one_one_template": "Create a one-one one template for an event type and distribute it to multiple members.",
+  "create_a_one_one_template": "Create a one-on-one template for an event type and distribute it to multiple members.",
   "collective_or_roundrobin": "Collective or round-robin",
   "book_your_team_members": "Book your team members together with collective events or cycle through to get the right person with round-robin.",
   "event_no_longer_attending_subject": "No longer attending {{title}} at {{date}}",
