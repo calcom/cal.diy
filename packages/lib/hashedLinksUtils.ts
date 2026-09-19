@@ -124,7 +124,11 @@ export function isLinkExpired(
   },
   timezone?: string | null
 ): boolean {
-  if (link.expiresAt) return hasExpiryTimePassed(link.expiresAt, timezone);
+  // A link can be constrained by BOTH a date and a usage limit, and is expired
+  // when either one is exceeded (matching validateHashedLinkData). Previously
+  // this returned early on expiresAt and never checked the usage limit for links
+  // that had both, so a usage-exhausted link with a future expiry looked active.
+  if (link.expiresAt && hasExpiryTimePassed(link.expiresAt, timezone)) return true;
   return isUsageBasedExpired(link.usageCount || 0, link.maxUsageCount);
 }
 
