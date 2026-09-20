@@ -6,6 +6,7 @@ export const REDIRECT_APPS = [
   "amie",
   "autocheckin",
   "baa-for-hipaa",
+  "bold-ai",
   "bolna",
   "caretta",
   "chatbase",
