@@ -396,6 +396,22 @@ export class CreateBookingInput_2024_08_13 {
   @IsString()
   emailVerificationCode?: string;
 
+  @ApiPropertyOptional({
+    type: Boolean,
+    description:
+      "When true, skips host availability and calendar conflict checks. Only permitted when the request is authenticated as the event type owner, a host, or a team or organization administrator. Use for organizer overrides (double bookings, administrative sessions) or integration tests.",
+    example: false,
+    default: false,
+  })
+  @Transform(({ value }) => {
+    if (value === null || value === undefined) return undefined;
+    if (value === true || value === "true") return true;
+    if (value === false || value === "false") return false;
+    return value;
+  })
+  @IsOptional()
+  @IsBoolean()
+  overrideAvailability?: boolean;
   /* @ApiPropertyOptional({
     type: [Number],
     description:
