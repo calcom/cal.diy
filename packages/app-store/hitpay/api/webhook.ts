@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
 import type z from "zod";
 
@@ -104,7 +104,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { saltKey } = keyObj;
     const signed = generateSignatureArray(saltKey, excluded as ExcludedWebhookReturn);
-    if (signed !== obj.hmac) {
+    if (
+      typeof obj.hmac !== "string" ||
+      Buffer.byteLength(signed) !== Buffer.byteLength(obj.hmac) ||
+      !timingSafeEqual(Buffer.from(signed), Buffer.from(obj.hmac))
+    ) {
       throw new HttpCode({ statusCode: 400, message: "Bad Request" });
     }
 
@@ -123,7 +127,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (_err) {
     const err = getServerErrorFromUnknown(_err);
     console.error(`Webhook Error: ${err.message}`);
-    return res.status(200).send({
+    return res.status(err.statusCode).send({
       message: err.message,
       stack: IS_PRODUCTION ? undefined : err.cause?.stack,
     });
