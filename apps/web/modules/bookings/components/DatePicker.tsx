@@ -1,4 +1,5 @@
 import { shallow } from "zustand/shallow";
+import { useEffect, useRef } from "react";
 
 import type { Dayjs } from "@calcom/dayjs";
 import dayjs from "@calcom/dayjs";
@@ -58,7 +59,7 @@ export const DatePicker = ({
   isLoading,
   classNames,
   scrollToTimeSlots,
-  showNoAvailabilityDialog,
+  showNoAvailabilityDialog = true,
   onDateChange,
 }: {
   event: {
@@ -99,6 +100,43 @@ export const DatePicker = ({
     setDayCount(null); // Whenever the month is changed, we nullify getting X days
   };
 
+  // ✅ FIX: when the booking window is a future RANGE, jump to its start month
+  const periodStartDate = event?.data?.periodStartDate;
+  const periodEndDate = event?.data?.periodEndDate;
+  const periodType = event?.data?.periodType;
+  const isBeforeWindowRangeWithDialog =
+    showNoAvailabilityDialog !== false &&
+    periodType === "RANGE" &&
+    !!periodStartDate &&
+    dayjs().isBefore(dayjs(periodStartDate), "day");
+  const hasSelectedDateOutsideCurrentMonth =
+    !!selectedDate && dayjs(selectedDate).isValid() && !dayjs(selectedDate).isSame(dayjs(), "month");
+  const hasSyncedCurrentMonthForDialog = useRef(false);
+
+  useEffect(() => {
+    if (!isBeforeWindowRangeWithDialog) return;
+    if (hasSyncedCurrentMonthForDialog.current) return;
+    if (hasSelectedDateOutsideCurrentMonth) {
+      hasSyncedCurrentMonthForDialog.current = true;
+      return;
+    }
+
+    const currentMonth = dayjs().startOf("month").format("YYYY-MM");
+    hasSyncedCurrentMonthForDialog.current = true;
+    if (month !== currentMonth) {
+      setMonth(currentMonth);
+    }
+  }, [hasSelectedDateOutsideCurrentMonth, isBeforeWindowRangeWithDialog, month, setMonth]);
+
+  useEffect(() => {
+    if (showNoAvailabilityDialog !== false) return;
+    if (periodType !== "RANGE" || !periodStartDate) return;
+    const periodStart = dayjs(periodStartDate);
+    if (dayjs().isBefore(periodStart, "month")) {
+      setMonth(periodStart.format("YYYY-MM"));
+    }
+  }, [periodType, periodStartDate?.toString(), setMonth, showNoAvailabilityDialog]);
+
   const nonEmptyScheduleDays = useNonEmptyScheduleDays(slots);
   const browsingDate = month ? dayjs(month) : dayjs().startOf("month");
 
@@ -108,7 +146,9 @@ export const DatePicker = ({
     onMonthChange,
     isLoading: isLoading ?? true,
   });
-  moveToNextMonthOnNoAvailability();
+  if (!isBeforeWindowRangeWithDialog) {
+    moveToNextMonthOnNoAvailability();
+  }
 
   // Determine if this is a compact sidebar view based on layout
   const isCompact = layout !== "month_view" && layout !== "mobile";
@@ -129,6 +169,7 @@ export const DatePicker = ({
       periodCountCalendarDays: event.data.periodCountCalendarDays,
     }),
   };
+
   return (
     <DatePickerComponent
       customClassNames={{
@@ -166,6 +207,8 @@ export const DatePicker = ({
       periodData={periodData}
       isCompact={isCompact}
       showNoAvailabilityDialog={showNoAvailabilityDialog}
+      minDate={periodType === "RANGE" && periodStartDate ? periodStartDate : undefined}
+      maxDate={periodType === "RANGE" && periodEndDate ? periodEndDate : undefined}
     />
   );
 };
