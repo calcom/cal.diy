@@ -27,7 +27,6 @@ export function Providers({ isEmbed, children, country }: ProvidersProps) {
         <TrpcProvider>
           <ToastProvider position="bottom-center">
             {!isEmbed && !isBookingPage && <NotificationSoundHandler />}
-            {/* @ts-expect-error FIXME remove this comment when upgrading typescript to v5 */}
             <CacheProvider>
               <WebPushProvider>{children}</WebPushProvider>
             </CacheProvider>

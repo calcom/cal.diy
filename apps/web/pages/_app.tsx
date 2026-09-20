@@ -17,7 +17,6 @@ function MyApp(props: AppProps) {
   return (
     <SessionProvider session={pageProps.session ?? undefined}>
       <WebPushProvider>
-        {/* @ts-expect-error FIXME remove this comment when upgrading typescript to v5 */}
         <CacheProvider>
           {Component.PageWrapper ? <Component.PageWrapper {...props} /> : <Component {...pageProps} />}
         </CacheProvider>
