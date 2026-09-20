@@ -28,8 +28,6 @@ export class SlotsService_2024_04_15 {
       if (bookingAttendeesLength) {
         const seatsLeft = eventType.seatsPerTimeSlot - bookingAttendeesLength;
         if (seatsLeft < 1) shouldReserveSlot = false;
-      } else {
-        shouldReserveSlot = false;
       }
     }
 
