@@ -2,7 +2,7 @@
 
 import { isSupportedCountry } from "libphonenumber-js";
 import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
@@ -11,6 +11,7 @@ import { type CountryCode, useBookerStore } from "@calcom/features/bookings/Book
 import { trpc } from "@calcom/trpc/react";
 import classNames from "@calcom/ui/classNames";
 import { CUSTOM_PHONE_MASKS } from "./phone-masks";
+import { sanitizePhonePrefillValue } from "./sanitize-phone-prefill";
 
 export type PhoneInputProps = {
   value?: string;
@@ -38,22 +39,20 @@ function BasePhoneInput({
   const defaultPhoneCountryFromStore = useBookerStore((state) => state.defaultPhoneCountry);
   const effectiveDefaultCountry = defaultPhoneCountryFromStore || defaultCountry;
 
-  // This is to trigger validation on prefill value changes
+  // This is to trigger validation on prefill value changes, including
+  // values synced in after mount (e.g. browser autofill or phone location
+  // auto-fill). The ref guard prevents re-emitting when the parent
+  // recreates onChange on every render.
+  const lastSanitizedPrefill = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!value) return;
 
-    const sanitized = value
-      .trim()
-      .replace(/[^\d+]/g, "")
-      .replace(/^\+?/, "+");
+    const sanitized = sanitizePhonePrefillValue(value);
+    if (sanitized == null || lastSanitizedPrefill.current === sanitized) return;
 
-    if (sanitized === "+" || sanitized === "") return;
-
-    if (value !== sanitized) {
-      onChange(sanitized);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    lastSanitizedPrefill.current = sanitized;
+    onChange(sanitized);
+  }, [value, onChange]);
 
   if (!isPlatform) {
     return (
