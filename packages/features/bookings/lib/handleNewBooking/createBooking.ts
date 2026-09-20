@@ -1,4 +1,6 @@
 import dayjs from "@calcom/dayjs";
+import { ErrorCode } from "@calcom/lib/errorCodes";
+import { HttpError } from "@calcom/lib/http-error";
 import { isPrismaObjOrUndefined } from "@calcom/lib/isPrismaObj";
 import { withReporting } from "@calcom/lib/sentryWrapper";
 import prisma from "@calcom/prisma";
@@ -7,6 +9,7 @@ import type { CreationSource } from "@calcom/prisma/enums";
 import { BookingStatus } from "@calcom/prisma/enums";
 import type { CalendarEvent } from "@calcom/types/Calendar";
 import type short from "short-uuid";
+
 import type { TgetBookingDataSchema } from "../getBookingDataSchema";
 import type { AwaitedBookingData, EventTypeId } from "./getBookingData";
 import type { NewBookingEventType } from "./getEventTypesFromDB";
@@ -87,7 +90,8 @@ const _createBooking = async ({
     bookingAndAssociatedData,
     originalRescheduledBooking,
     eventType.paymentAppData,
-    eventType.organizerUser
+    eventType.organizerUser,
+    !!evt.seatsPerTimeSlot
   );
 };
 
@@ -97,7 +101,8 @@ async function saveBooking(
   bookingAndAssociatedData: ReturnType<typeof buildNewBookingData>,
   originalRescheduledBooking: OriginalRescheduledBooking,
   paymentAppData: PaymentAppData,
-  organizerUser: CreateBookingParams["eventType"]["organizerUser"]
+  organizerUser: CreateBookingParams["eventType"]["organizerUser"],
+  isSeatedEvent: boolean
 ) {
   const { newBookingData, originalBookingUpdateDataForCancellation } = bookingAndAssociatedData;
   const createBookingObj = {
@@ -136,7 +141,27 @@ async function saveBooking(
     });
   }
 
+  /**
+   * The FOR UPDATE lock prevents TOCTOU race conditions where concurrent requests pass
+   * the availability check but create overlapping bookings for the same organizer.
+   */
   return prisma.$transaction(async (tx) => {
+    if (!isSeatedEvent) {
+      const excludeBookingId = originalRescheduledBooking?.id ?? 0;
+      const conflicting = await tx.$queryRaw<{ id: number }[]>`
+        SELECT id FROM "Booking"
+        WHERE "userId" = ${organizerUser.id}
+          AND "startTime" < ${newBookingData.endTime}
+          AND "endTime" > ${newBookingData.startTime}
+          AND "status" IN ('accepted'::"BookingStatus", 'pending'::"BookingStatus", 'awaiting_host'::"BookingStatus")
+          AND "id" != ${excludeBookingId}
+        FOR UPDATE
+      `;
+      if (conflicting.length > 0) {
+        throw new HttpError({ statusCode: 409, message: ErrorCode.BookingConflict });
+      }
+    }
+
     if (originalBookingUpdateDataForCancellation) {
       await tx.booking.update(originalBookingUpdateDataForCancellation);
     }
