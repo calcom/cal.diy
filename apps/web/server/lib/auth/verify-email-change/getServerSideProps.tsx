@@ -1,7 +1,7 @@
 import type { GetServerSidePropsContext } from "next";
 import { z } from "zod";
 
-import { WEBAPP_URL } from "@calcom/lib/constants";
+import { WEBAPP_URL, WEBAPP_URL_INTERNAL } from "@calcom/lib/constants";
 
 const tokenSchema = z.object({
   token: z.string(),
@@ -26,7 +26,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     token,
   });
 
-  const response = await fetch(`${WEBAPP_URL}/api/auth/verify-email?${params.toString()}`, {
+  const response = await fetch(`${WEBAPP_URL_INTERNAL || WEBAPP_URL}/api/auth/verify-email?${params.toString()}`, {
     method: "POST",
   });
 

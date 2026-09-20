@@ -49,6 +49,7 @@ declare namespace NodeJS {
     /** @deprecated use `NEXT_PUBLIC_WEBAPP_URL` */
     readonly NEXT_PUBLIC_APP_BASE_URL: string;
     readonly NEXT_PUBLIC_WEBAPP_URL: string;
+    readonly WEBAPP_URL_INTERNAL: string | undefined;
     /** The Environment that the app is deployed an running on. */
     readonly VERCEL_ENV: "production" | "preview" | "development" | undefined;
     /** The URL of the deployment. Example: my-site-7q03y4pi5.vercel.app. */
