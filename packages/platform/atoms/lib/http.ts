@@ -48,11 +48,11 @@ const http = (function () {
     getPlatformEmbedHeader: () => {
       return instance.defaults.headers.common?.[X_CAL_PLATFORM_EMBED]?.toString() ?? "";
     },
-    setVersionHeader: (clientId: string) => {
-      instance.defaults.headers.common[CAL_API_VERSION_HEADER] = clientId;
+    setVersionHeader: (version: string) => {
+      instance.defaults.headers.common[CAL_API_VERSION_HEADER] = version;
     },
     getVersionHeader: () => {
-      return instance.defaults.headers.common?.[X_CAL_CLIENT_ID]?.toString() ?? "";
+      return instance.defaults.headers.common?.[CAL_API_VERSION_HEADER]?.toString() ?? "";
     },
     refreshTokens: async (refreshUrl: string): Promise<string> => {
       const response = await fetch(`${refreshUrl}`, {
