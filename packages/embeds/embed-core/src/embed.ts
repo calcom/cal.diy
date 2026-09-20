@@ -463,7 +463,6 @@ export class Cal {
       if (!this.iframe) {
         return;
       }
-      
       this.iframeReady = true;
       if (!e.detail.data.isPrerendering) {
         // It's a bit late to make the iframe visible here. We just needed to wait for the HTML tag of the embedded calLink to be rendered(which then informs the browser of the color-scheme)
