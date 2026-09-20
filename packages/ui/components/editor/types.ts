@@ -16,4 +16,5 @@ export type TextEditorProps = {
   editable?: boolean;
   plainText?: boolean;
   label?: string;
+  id?: string;
 };
