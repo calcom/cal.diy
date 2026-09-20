@@ -164,6 +164,11 @@ const SlotItem = ({
           data-testid="time"
           data-disabled={bookingFull}
           data-time={slot.time}
+          aria-label={
+            bookingFull || isTimeslotUnavailable
+              ? t("time_slot_unavailable_label", { time: computedDateWithUsersTimezone.format(timeFormat) })
+              : t("book_time_slot", { time: computedDateWithUsersTimezone.format(timeFormat) })
+          }
           onClick={onButtonClick}
           className={classNames(
             `hover:border-brand-default min-h-9 mb-2 flex h-auto w-full grow flex-col justify-center py-2`,

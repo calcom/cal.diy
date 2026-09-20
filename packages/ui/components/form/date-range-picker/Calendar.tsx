@@ -3,6 +3,7 @@
 import dayjs from "@calcom/dayjs";
 import cn from "@calcom/ui/classNames";
 import { ChevronLeftIcon, ChevronRightIcon } from "@coss/ui/icons";
+import { format } from "date-fns";
 import type * as React from "react";
 import { DayPicker } from "react-day-picker";
 import { buttonClasses } from "../../button/Button";
@@ -49,6 +50,18 @@ function Calendar({
         day_range_middle: "aria-selected:bg-emphasis aria-selected:text-emphasis",
         day_hidden: "invisible",
         ...classNames,
+      }}
+      labels={{
+        labelDay: (day, activeModifiers) => {
+          const base = format(day, "MMMM d, yyyy");
+          if (activeModifiers?.disabled) {
+            return `${base}, unavailable`;
+          }
+          return base;
+        },
+        labelWeekday: (day, options) => {
+          return new Intl.DateTimeFormat(options?.locale?.code ?? "en", { weekday: "long" }).format(day);
+        },
       }}
       components={{
         CaptionLabel: (capLabelProps) => (
