@@ -274,15 +274,15 @@ export const Button = forwardRef<HTMLAnchorElement | HTMLButtonElement, ButtonPr
             )}
           </>
         ))}
-      <div
+      <span
         className={classNames(
-          "contents", // This makes the div behave like it doesn't exist in the layout
-          loading ? "invisible" : "visible",
-          variant === "fab" ? "hidden md:contents" : "",
+          "inline-flex items-center justify-center gap-1", 
+          loading ? "opacity-0" : "opacity-100",
+          variant === "fab" ? "hidden md:inline-flex" : "",
           "group-[:not(div):active]:translate-y-[0.5px]"
         )}>
         {props.children}
-      </div>
+      </span>
       {loading && (
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform">
           <svg
