@@ -57,6 +57,7 @@ export class CheckBookingLimitsService {
     teamId,
     user,
     includeManagedEvents = false,
+    offset = 0,
   }: {
     eventStartDate: Date;
     eventId?: number;
@@ -67,6 +68,8 @@ export class CheckBookingLimitsService {
     teamId?: number;
     user?: { id: number; email: string };
     includeManagedEvents?: boolean;
+    // Number of other bookings from the same in-flight request that fall in this period.
+    offset?: number;
   }) {
     const eventDateInOrganizerTz = timeZone ? dayjs(eventStartDate).tz(timeZone) : dayjs(eventStartDate);
 
@@ -98,7 +101,7 @@ export class CheckBookingLimitsService {
       });
     }
 
-    if (bookingsInPeriod < limitingNumber) return;
+    if (bookingsInPeriod + offset < limitingNumber) return;
 
     throw new HttpError({
       message: `booking_limit_reached`,
@@ -107,4 +110,53 @@ export class CheckBookingLimitsService {
   }
 
   checkBookingLimit = withReporting(this._checkBookingLimit.bind(this), "checkBookingLimit");
+
+  private async _checkBookingLimitsForRecurringBooking(
+    bookingLimits: IntervalLimit,
+    eventStartDates: Date[],
+    eventId: number,
+    rescheduleUid?: string | undefined,
+    timeZone?: string | null
+  ) {
+    const parsedBookingLimits = parseBookingLimit(bookingLimits);
+    if (!parsedBookingLimits) return false;
+
+    // A single recurring request creates several occurrences at once. Counting only
+    // already-persisted bookings per occurrence lets the request bypass the limit, so we
+    // also account for the other requested occurrences that fall in the same period.
+    const limitChecks = ascendingLimitKeys.flatMap((key) => {
+      const limitingNumber = parsedBookingLimits[key];
+      if (!limitingNumber) return [];
+
+      const unit = intervalLimitKeyToUnit(key);
+      const periodStarts = eventStartDates.map((eventStartDate) => {
+        const eventDateInOrganizerTz = timeZone ? dayjs(eventStartDate).tz(timeZone) : dayjs(eventStartDate);
+        return dayjs(eventDateInOrganizerTz).startOf(unit).valueOf();
+      });
+
+      return [...new Set(periodStarts)].map((periodStart) => {
+        const requestedInPeriod = periodStarts.filter((start) => start === periodStart).length;
+        return this.checkBookingLimit({
+          key,
+          limitingNumber,
+          eventStartDate: new Date(periodStart),
+          eventId,
+          timeZone,
+          rescheduleUid,
+          offset: requestedInPeriod - 1,
+        });
+      });
+    });
+
+    try {
+      return !!(await Promise.all(limitChecks));
+    } catch (error) {
+      throw new HttpError({ message: getErrorFromUnknown(error).message, statusCode: 401 });
+    }
+  }
+
+  checkBookingLimitsForRecurringBooking = withReporting(
+    this._checkBookingLimitsForRecurringBooking.bind(this),
+    "checkBookingLimitsForRecurringBooking"
+  );
 }
