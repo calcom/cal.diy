@@ -1,0 +1,18 @@
+{
+  "name": "Stablezact",
+  "slug": "stablezact",
+  "type": "stablezact_payment",
+  "logo": "icon.png",
+  "url": "https://stablezact.com",
+  "variant": "payment",
+  "categories": ["payment"],
+  "publisher": "Stablezact Labs",
+  "email": "info@stablezact.com",
+  "description": "Accept cryptocurrency payments directly to your wallet. Support for USDT, USDC, and more across multiple blockchains.",
+  "extendsFeature": "EventType",
+  "isTemplate": false,
+  "__createdUsingCli": false,
+  "imageSrc": "icon.png",
+  "dirName": "stablezact",
+  "isOAuth": false
+}

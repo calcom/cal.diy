@@ -3090,6 +3090,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@calcom/stablezact@workspace:packages/app-store/stablezact":
+  version: 0.0.0-use.local
+  resolution: "@calcom/stablezact@workspace:packages/app-store/stablezact"
+  dependencies:
+    "@calcom/lib": "workspace:*"
+    "@calcom/prisma": "workspace:*"
+    "@calcom/tsconfig": "npm:*"
+    "@calcom/types": "workspace:*"
+    "@calcom/ui": "workspace:*"
+    axios: "npm:^1.6.0"
+    react: "npm:^18.2.0"
+    typescript: "npm:^5.3.0"
+    zod: "npm:3.25.76"
+  languageName: unknown
+  linkType: soft
+
 "@calcom/stripepayment@workspace:packages/app-store/stripepayment":
   version: 0.0.0-use.local
   resolution: "@calcom/stripepayment@workspace:packages/app-store/stripepayment"
@@ -3179,7 +3195,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@calcom/tsconfig@workspace:*, @calcom/tsconfig@workspace:packages/tsconfig":
+"@calcom/tsconfig@npm:*, @calcom/tsconfig@workspace:*, @calcom/tsconfig@workspace:packages/tsconfig":
   version: 0.0.0-use.local
   resolution: "@calcom/tsconfig@workspace:packages/tsconfig"
   dependencies:
@@ -35603,6 +35619,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react@npm:^18.2.0":
+  version: 18.3.1
+  resolution: "react@npm:18.3.1"
+  dependencies:
+    loose-envify: "npm:^1.1.0"
+  checksum: 10/261137d3f3993eaa2368a83110466fc0e558bc2c7f7ae7ca52d94f03aac945f45146bd85e5f481044db1758a1dbb57879e2fcdd33924e2dde1bdc550ce73f7bf
+  languageName: node
+  linkType: hard
+
 "react@npm:^19.0.0":
   version: 19.2.5
   resolution: "react@npm:19.2.5"
@@ -40249,7 +40274,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.9.3, typescript@npm:^5.0.0":
+"typescript@npm:5.9.3, typescript@npm:^5.0.0, typescript@npm:^5.3.0":
   version: 5.9.3
   resolution: "typescript@npm:5.9.3"
   bin:
@@ -40289,7 +40314,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.0.0#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.0.0#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.3.0#optional!builtin<compat/typescript>":
   version: 5.9.3
   resolution: "typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=5786d5"
   bin:
