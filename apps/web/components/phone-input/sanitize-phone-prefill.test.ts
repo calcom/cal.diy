@@ -26,6 +26,11 @@ describe("sanitizePhonePrefillValue", () => {
     expect(sanitizePhonePrefillValue("")).toBeNull();
     expect(sanitizePhonePrefillValue("   ")).toBeNull();
   });
+
+  it("collapses embedded and repeated plus signs to a single leading plus", () => {
+    expect(sanitizePhonePrefillValue("1+4155551234")).toBe("+14155551234");
+    expect(sanitizePhonePrefillValue("++14155551234")).toBe("+14155551234");
+  });
 });
 
 describe("resolvePrefillEmission", () => {
