@@ -1,10 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { isLinkExpired, isUsageBasedExpired } from "./hashedLinksUtils";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const FIXED_NOW = new Date("2026-01-01T00:00:00.000Z");
 const inFuture = () => new Date(Date.now() + DAY_IN_MS);
 const inPast = () => new Date(Date.now() - DAY_IN_MS);
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(FIXED_NOW);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("hashedLinksUtils", () => {
   describe("fn: isUsageBasedExpired", () => {
