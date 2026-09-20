@@ -82,6 +82,7 @@ export type EventPayloadType = Omit<CalendarEvent, "assignmentReason"> &
   TranscriptionGeneratedPayload &
   EventTypeInfo & {
     uid?: string | null;
+    rootBookingUid?: string | null;
     metadata?: { [key: string]: string | number | boolean | null };
     bookingId?: number;
     status?: string;
@@ -144,6 +145,7 @@ function getZapierPayload(data: WithUTCOffsetType<EventPayloadType & { createdAt
 
   const body = {
     uid: data.uid,
+    rootBookingUid: data.rootBookingUid || data.uid,
     title: data.title,
     description: data.description,
     customInputs: data.customInputs,

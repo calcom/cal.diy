@@ -282,8 +282,10 @@ describe("handleNewBooking", () => {
             videoCallUrl: `${WEBAPP_URL}/video/${createdBooking.uid}`,
             payload: {
               rescheduledBy: organizer.email,
+              rootBookingUid: uidOfBookingToBeRescheduled,
             },
           });
+          expect(createdBooking.rootBookingUid).toBe(uidOfBookingToBeRescheduled);
         },
         timeout
       );

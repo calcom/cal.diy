@@ -25,6 +25,7 @@ import EventManager, { placeholderCreatedEvent } from "@calcom/features/bookings
 import { getAssignmentReasonCategory } from "@calcom/features/bookings/lib/getAssignmentReasonCategory";
 import type { CheckBookingAndDurationLimitsService } from "@calcom/features/bookings/lib/handleNewBooking/checkBookingAndDurationLimits";
 import { handlePayment } from "@calcom/features/bookings/lib/handlePayment";
+import { getRootBookingUid } from "@calcom/features/bookings/lib/getRootBookingUid";
 import { handleWebhookTrigger } from "@calcom/features/bookings/lib/handleWebhookTrigger";
 import { isEventTypeLoggingEnabled } from "@calcom/features/bookings/lib/isEventTypeLoggingEnabled";
 import type { BookingEmailAndSmsTasker } from "@calcom/features/bookings/lib/tasker/BookingEmailAndSmsTasker";
@@ -213,6 +214,7 @@ export const buildDryRunBooking = ({
     dynamicEventSlugRef: null,
     dynamicGroupSlugRef: null,
     fromReschedule: null,
+    rootBookingUid: "DRY_RUN_UID",
     recurringEventId: null,
     scheduledJobs: [],
     rescheduledBy: null,
@@ -1548,6 +1550,7 @@ async function handler(
       dynamicEventSlugRef: null,
       dynamicGroupSlugRef: null,
       fromReschedule: null,
+      rootBookingUid: uid,
       recurringEventId: null,
       scheduledJobs: [],
       rescheduledBy: null,
@@ -1748,6 +1751,7 @@ async function handler(
 
       evt = CalendarEventBuilder.fromEvent(evt)
         .withUid(booking.uid ?? null)
+        .withRootBookingUid(getRootBookingUid(booking))
         .build();
 
       evt = CalendarEventBuilder.fromEvent(evt)
@@ -2235,6 +2239,7 @@ async function handler(
     ...evt,
     ...eventTypeInfo,
     bookingId: booking?.id,
+    rootBookingUid: getRootBookingUid(booking),
     rescheduleId: originalRescheduledBooking?.id || undefined,
     rescheduleUid,
     rescheduleStartTime: originalRescheduledBooking?.startTime

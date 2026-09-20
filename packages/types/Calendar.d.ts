@@ -185,6 +185,8 @@ export interface CalendarEvent {
   conferenceData?: ConferenceData;
   additionalInformation?: AdditionalInformation;
   uid?: string | null;
+  /** Stable identity across reschedules; equals the original booking uid. */
+  rootBookingUid?: string | null;
   existingRecurringEvent?: ExistingRecurringEvent | null;
   bookingId?: number;
   videoCallData?: VideoCallData;
