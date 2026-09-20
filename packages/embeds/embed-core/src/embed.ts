@@ -557,13 +557,13 @@ export class Cal {
 
     const searchParams = new URLSearchParams();
     for (const [key, value] of Object.entries(mergedQueryParams)) {
-      if (value === undefined) {
+      if (value === undefined || value === null) {
         continue;
       }
       if (value instanceof Array) {
-        value.forEach((val) => searchParams.append(key, val));
-      } else {
-        searchParams.set(key, value as string);
+        value.forEach((val) => searchParams.append(key, String(val)));
+      } else if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+        searchParams.set(key, String(value));
       }
     }
 

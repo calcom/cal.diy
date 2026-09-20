@@ -189,9 +189,9 @@ export function buildSearchParamsFromConfig(config: PrefillAndIframeAttrsConfig)
   const searchParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value instanceof Array) {
-      value.forEach((val) => searchParams.append(key, val));
-    } else if (typeof value === "string") {
-      searchParams.set(key, value);
+      value.forEach((val) => searchParams.append(key, String(val)));
+    } else if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      searchParams.set(key, String(value));
     }
   }
   return searchParams;

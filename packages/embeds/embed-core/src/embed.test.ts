@@ -258,6 +258,27 @@ describe("Cal", () => {
         expect(iframe.src).toContain("email=test%40example.com");
       });
 
+      it("should support number and boolean values in config including 0 and false", () => {
+        const iframe = calInstance.createIframe({
+          calLink: "john-doe/meeting",
+          config: {
+            seats: 0,
+            flag: false,
+            count: 2,
+            enabled: true,
+            list: [0, false, "test"],
+          },
+          calOrigin: null,
+        });
+
+        const url = new URL(iframe.src);
+        expect(url.searchParams.get("seats")).toBe("0");
+        expect(url.searchParams.get("flag")).toBe("false");
+        expect(url.searchParams.get("count")).toBe("2");
+        expect(url.searchParams.get("enabled")).toBe("true");
+        expect(url.searchParams.getAll("list")).toEqual(["0", "false", "test"]);
+      });
+
       it("should set allow='payment' attribute by default to allow Payment Apps to acccept payments", () => {
         const iframe = calInstance.createIframe({
           calLink: "john-doe/meeting",
