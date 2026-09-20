@@ -1,0 +1,22 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "Elfsight AI Chatbot",
+  "slug": "elfsight-ai-chatbot",
+  "type": "elfsight-ai-chatbot_other",
+  "logo": "icon-dark.svg",
+  "url": "https://www.elfchatbot.com/integrations/cal-com",
+  "variant": "other",
+  "categories": [
+    "other"
+  ],
+  "publisher": "Elfsight",
+  "email": "support@elfsight.com",
+  "description": "Add [Cal.diy](https://cal.com/) to your Elfsight AI Chatbot and let visitors book meetings directly in chat.",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "externalLink": {
+    "url": "https://www.elfchatbot.com/integrations/cal-com",
+    "newTab": true
+  },
+  "__template": "link-as-an-app"
+}

@@ -14,6 +14,7 @@ export const REDIRECT_APPS = [
   "cron",
   "deel",
   "elevenlabs",
+  "elfsight-ai-chatbot",
   "famulor",
   "fonio-ai",
   "framer",
