@@ -11,7 +11,7 @@ import { type CountryCode, useBookerStore } from "@calcom/features/bookings/Book
 import { trpc } from "@calcom/trpc/react";
 import classNames from "@calcom/ui/classNames";
 import { CUSTOM_PHONE_MASKS } from "./phone-masks";
-import { sanitizePhonePrefillValue } from "./sanitize-phone-prefill";
+import { resolvePrefillEmission } from "./sanitize-phone-prefill";
 
 export type PhoneInputProps = {
   value?: string;
@@ -47,11 +47,11 @@ function BasePhoneInput({
   useEffect(() => {
     if (!value) return;
 
-    const sanitized = sanitizePhonePrefillValue(value);
-    if (sanitized == null || lastSanitizedPrefill.current === sanitized) return;
-
-    lastSanitizedPrefill.current = sanitized;
-    onChange(sanitized);
+    const emission = resolvePrefillEmission(value, lastSanitizedPrefill.current);
+    lastSanitizedPrefill.current = emission.nextGuard;
+    if (emission.sanitized != null) {
+      onChange(emission.sanitized);
+    }
   }, [value, onChange]);
 
   if (!isPlatform) {

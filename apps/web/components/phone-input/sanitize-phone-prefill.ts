@@ -16,3 +16,22 @@ export function sanitizePhonePrefillValue(value: string): string | null {
   if (value === sanitized) return null;
   return sanitized;
 }
+
+/**
+ * Decides whether a prefill value needs normalizing, given the value
+ * already emitted for it.
+ *
+ * The guard must reset once the value no longer needs sanitizing: otherwise
+ * a previously-seen dirty value supplied again later (form reset, undo,
+ * re-sync from a dirty source) would be suppressed forever and the input
+ * would stay unnormalized.
+ */
+export function resolvePrefillEmission(
+  value: string,
+  lastEmitted: string | undefined
+): { sanitized: string | null; nextGuard: string | undefined } {
+  const sanitized = sanitizePhonePrefillValue(value);
+  if (sanitized == null) return { sanitized: null, nextGuard: undefined };
+  if (lastEmitted === sanitized) return { sanitized: null, nextGuard: lastEmitted };
+  return { sanitized, nextGuard: sanitized };
+}
