@@ -27,7 +27,10 @@ const log = logger.getSubLogger({ prefix: ["[api]", "[delegation]", "[selected-c
 const validateRequest = (req: NextRequest) => {
   const url = new URL(req.url);
   const apiKey = req.headers.get("authorization") || url.searchParams.get("apiKey");
-  if (![process.env.CRON_API_KEY, `Bearer ${process.env.CRON_SECRET}`].includes(`${apiKey}`)) {
+  const validKeys: string[] = [];
+  if (process.env.CRON_API_KEY) validKeys.push(process.env.CRON_API_KEY);
+  if (process.env.CRON_SECRET) validKeys.push(`Bearer ${process.env.CRON_SECRET}`);
+  if (!validKeys.length || !validKeys.includes(`${apiKey}`)) {
     throw new HttpError({ statusCode: 401, message: "Unauthorized" });
   }
 };
