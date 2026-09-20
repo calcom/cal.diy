@@ -737,7 +737,6 @@ export default abstract class BaseCalendarService implements Calendar {
         applyTravelDuration(event, getTravelDurationInSeconds(vevent, this.log));
 
         if (event.isRecurring()) {
-          let maxIterations = 365;
           if (["HOURLY", "SECONDLY", "MINUTELY"].includes(event.getRecurrenceTypes())) {
             logger.warn(`Won't handle [${event.getRecurrenceTypes()}] recurrence`);
             return;
@@ -745,25 +744,19 @@ export default abstract class BaseCalendarService implements Calendar {
 
           const start = dayjs(dateFrom);
           const end = dayjs(dateTo);
-          const startDate = ICAL.Time.fromDateTimeString(startISOString);
-          startDate.hour = event.startDate.hour;
-          startDate.minute = event.startDate.minute;
-          startDate.second = event.startDate.second;
-          const iterator = event.iterator(startDate);
+          // Anchor iterator at event's true DTSTART so weekday and frequency rules
+          // (such as FREQ=WEEKLY without explicit BYDAY) evaluate correctly per RFC 5545
+          const iterator = event.iterator();
           let current: ICAL.Time;
           let currentEvent: ReturnType<typeof event.getOccurrenceDetails> | undefined;
           let currentStart: ReturnType<typeof dayjs> | null = null;
           let currentError: string | undefined;
+          let maxOccurrences = 5000;
 
           while (
-            maxIterations > 0 &&
-            (currentStart === null || currentStart.isAfter(end) === false) &&
-            // this iterator was poorly implemented, normally done is expected to be
-            // returned
+            maxOccurrences > 0 &&
             (current = iterator.next())
           ) {
-            maxIterations -= 1;
-
             try {
               // @see https://github.com/mozilla-comm/ical.js/issues/514
               currentEvent = event.getOccurrenceDetails(current);
@@ -773,7 +766,8 @@ export default abstract class BaseCalendarService implements Calendar {
                 this.log.error("error", error);
               }
             }
-            if (!currentEvent) return;
+            if (!currentEvent) break;
+
             // do not mix up caldav and icalendar! For the recurring events here, the timezone
             // provided is relevant, not as pointed out in https://datatracker.ietf.org/doc/html/rfc4791#section-9.6.5
             // where recurring events are always in utc (in caldav!). Thus, apply the time zone here.
@@ -784,15 +778,21 @@ export default abstract class BaseCalendarService implements Calendar {
             }
             currentStart = dayjs(currentEvent.startDate.toJSDate());
 
-            if (currentStart.isBetween(start, end) === true) {
+            if (currentStart.isAfter(end)) {
+              break;
+            }
+
+            const currentEnd = dayjs(currentEvent.endDate.toJSDate());
+            if (currentStart.isBefore(end) && currentEnd.isAfter(start)) {
+              maxOccurrences -= 1;
               events.push({
                 start: currentStart.toISOString(),
-                end: dayjs(currentEvent.endDate.toJSDate()).toISOString(),
+                end: currentEnd.toISOString(),
               });
             }
           }
-          if (maxIterations <= 0) {
-            logger.warn("Could not find any occurrence for recurring event in 365 iterations");
+          if (maxOccurrences <= 0) {
+            logger.warn("Exceeded max occurrences limit for recurring event within query window");
           }
           return;
         }
