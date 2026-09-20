@@ -167,6 +167,10 @@ export interface CalendarEvent {
   hashedLink?: string | null;
   type: string;
   title: string;
+  // Transient (not persisted): true when a custom event name was configured for the event type,
+  // so emails use the resolved `title` (booking-field placeholders already interpolated) as the
+  // subject instead of the default templated subject. See BaseScheduledEmail.
+  hasCustomEventName?: boolean;
   startTime: string;
   endTime: string;
   organizer: Person;

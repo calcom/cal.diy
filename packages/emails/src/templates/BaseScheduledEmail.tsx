@@ -40,14 +40,20 @@ export const BaseScheduledEmail = (
     return dayjs(props.calEvent.endTime).tz(timeZone).format(format);
   }
 
-  const subject = t(props.subject || "confirmed_event_type_subject", {
-    eventType: props.calEvent.type,
-    name: props.calEvent.team?.name || props.calEvent.organizer.name,
-    date: `${getRecipientStart("h:mma")} - ${getRecipientEnd("h:mma")}, ${t(
-      getRecipientStart("dddd").toLowerCase()
-    )}, ${t(getRecipientStart("MMMM").toLowerCase())} ${getRecipientStart("D, YYYY")}`,
-    interpolation: { escapeValue: false },
-  });
+  // When a custom event name is configured, calEvent.title already resolves booking-field
+  // placeholders (e.g. "{company}"), so prefer it over the default templated subject. An explicit
+  // props.subject still wins to preserve existing per-template overrides.
+  const subject =
+    !props.subject && props.calEvent.hasCustomEventName
+      ? props.calEvent.title
+      : t(props.subject || "confirmed_event_type_subject", {
+          eventType: props.calEvent.type,
+          name: props.calEvent.team?.name || props.calEvent.organizer.name,
+          date: `${getRecipientStart("h:mma")} - ${getRecipientEnd("h:mma")}, ${t(
+            getRecipientStart("dddd").toLowerCase()
+          )}, ${t(getRecipientStart("MMMM").toLowerCase())} ${getRecipientStart("D, YYYY")}`,
+          interpolation: { escapeValue: false },
+        });
 
   let rescheduledBy = props.calEvent.rescheduledBy;
   if (
