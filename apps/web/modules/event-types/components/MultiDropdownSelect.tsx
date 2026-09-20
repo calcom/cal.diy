@@ -3,6 +3,7 @@ import { components } from "react-select";
 
 import { Icon } from "@calcom/ui/components/icon";
 import { Select } from "@calcom/ui/components/form";
+import React from 'react';
 
 // Helper to merge react-select styles with type safety
 const mergeStyles = (base: CSSObjectWithLabel, overrides: Record<string, unknown>): CSSObjectWithLabel => {
@@ -17,10 +18,7 @@ const LimitedChipsContainer = <Option, IsMulti extends boolean, Group extends Gr
     return <components.ValueContainer {...props}>{children as React.ReactNode[]}</components.ValueContainer>;
   }
   const CHIPS_LIMIT = 2;
-  // TODO:: fix the following ts error
-  // @ts-expect-error: @see children is an array but identified as object resulting in the error
-  const [chips, other] = children;
-  const overflowCounter = chips.slice(CHIPS_LIMIT).length;
+  const [chips, other] = children as React.ReactNode[];
   const displayChips = chips.slice(overflowCounter, overflowCounter + CHIPS_LIMIT);
 
   return (
