@@ -11,6 +11,7 @@ import logger from "@calcom/lib/logger";
 import type { BufferedBusyTime } from "@calcom/types/BufferedBusyTime";
 import type {
   Calendar,
+  CalendarEvent,
   CalendarServiceEvent,
   EventBusyDate,
   GetAvailabilityParams,
@@ -318,22 +319,118 @@ class Office365CalendarService implements Calendar {
     }
   }
 
-  async updateEvent(uid: string, event: CalendarServiceEvent): Promise<NewCalendarEventType> {
+  /**
+   * Seated bookings split event-detail and attendee patches because Exchange can turn combined
+   * attendee-list mutations into organizer-level updates for everyone on the event.
+   */
+  async updateEvent(
+    uid: string,
+    event: CalendarServiceEvent,
+    externalCalendarId?: string | null
+  ): Promise<NewCalendarEventType> {
     try {
       let rescheduledEvent: Event | undefined;
-      if (event.location === MSTeamsLocationType) {
-        // Extract the existing body content to preserve the meeting blob, otherwise it breaks and converts it into non-onlineMeeting
-        const response = await this.fetcher(`${await this.getUserEndpoint()}/calendar/events/${uid}`, {
+      const onlyUpdateCalendarAttendees =
+        event.onlyUpdateCalendarAttendees && typeof event.seatsPerTimeSlot === "number";
+      const endpoint = await this.getUserEndpoint();
+      const eventEndpoint = this.getEventEndpoint(endpoint, uid, externalCalendarId);
+
+      // For MS Teams meetings, we must first GET the existing event to
+      // preserve the online meeting blob — otherwise it breaks the Teams link
+      if (!onlyUpdateCalendarAttendees && event.location === MSTeamsLocationType) {
+        const response = await this.fetcher(eventEndpoint, {
           method: "GET",
         });
-
         rescheduledEvent = await handleErrorsJson<Event>(response);
       }
 
-      const response = await this.fetcher(`${await this.getUserEndpoint()}/calendar/events/${uid}`, {
-        method: "PATCH",
-        body: JSON.stringify(this.translateEvent(event, rescheduledEvent)),
-      });
+      const translatedEvent = this.translateEvent(event, rescheduledEvent);
+
+      let response: Response;
+
+      if (onlyUpdateCalendarAttendees) {
+        response = await this.fetcher(eventEndpoint, {
+          method: "PATCH",
+          body: JSON.stringify({ attendees: translatedEvent.attendees }),
+        });
+      } else if (typeof event.seatsPerTimeSlot === "number") {
+        const { attendees, ...eventWithoutAttendees } = translatedEvent;
+
+        const patch1Response = await this.fetcher(eventEndpoint, {
+          method: "PATCH",
+          body: JSON.stringify(eventWithoutAttendees),
+        });
+        await handleErrorsJson(patch1Response);
+
+        const MAX_RETRIES = 3;
+        const BACKOFF_MS = 500;
+        let patch2Response: Response | undefined;
+        let lastError: Error | undefined;
+
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+          try {
+            patch2Response = await this.fetcher(eventEndpoint, {
+              method: "PATCH",
+              body: JSON.stringify({ attendees }),
+            });
+
+            await handleErrorsJson(patch2Response.clone());
+            lastError = undefined;
+            break;
+          } catch (err) {
+            lastError = err instanceof Error ? err : new Error(String(err));
+
+            if (attempt < MAX_RETRIES) {
+              // Exchange can lag after the first seated-booking patch, so retry attendee sync briefly.
+              const backoff = BACKOFF_MS * 2 ** (attempt - 1);
+              this.log.warn(
+                `PATCH_ATTENDEES attempt ${attempt}/${MAX_RETRIES} failed for event uid=${uid}, retrying in ${backoff}ms`,
+                { err }
+              );
+              await new Promise((resolve) => setTimeout(resolve, backoff));
+            }
+          }
+        }
+
+        if (lastError) {
+          let httpStatus: number | undefined;
+          let httpBody: unknown;
+
+          if (patch2Response) {
+            httpStatus = patch2Response.status;
+            try {
+              httpBody = await patch2Response.json();
+            } catch {
+              httpBody = await patch2Response.text().catch(() => "unable to read response body");
+            }
+          }
+
+          this.log.error("PATCH_ATTENDEES final failure after all retries", {
+            operation: "PATCH_ATTENDEES",
+            uid,
+            endpoint: eventEndpoint,
+            httpStatus,
+            httpBody,
+            attempts: MAX_RETRIES,
+          });
+
+          throw new Error(
+            `PATCH_ATTENDEES failed for event uid=${uid} at endpoint=${eventEndpoint} ` +
+              `after ${MAX_RETRIES} attempts. ` +
+              `HTTP status=${httpStatus ?? "unknown"}, ` +
+              `body=${JSON.stringify(httpBody ?? "unknown")}. ` +
+              `Event details were updated (PATCH 1 succeeded) but attendee list may be stale. ` +
+              `Original error: ${lastError.message}`
+          );
+        }
+
+        response = patch2Response!;
+      } else {
+        response = await this.fetcher(eventEndpoint, {
+          method: "PATCH",
+          body: JSON.stringify(translatedEvent),
+        });
+      }
 
       const responseJson = await handleErrorsJson<
         NewCalendarEventType & { iCalUId: string; onlineMeeting?: { joinUrl?: string } }
@@ -346,14 +443,18 @@ class Office365CalendarService implements Calendar {
       return { ...responseJson, iCalUID: responseJson.iCalUId };
     } catch (error) {
       this.log.error(error);
-
       throw error;
     }
   }
 
-  async deleteEvent(uid: string): Promise<void> {
+  /**
+   * Selected Outlook calendars require their own Graph delete path; the default-calendar path
+   * cannot remove events created outside the primary calendar.
+   */
+  async deleteEvent(uid: string, _event: CalendarEvent, externalCalendarId?: string | null): Promise<void> {
     try {
-      const response = await this.fetcher(`${await this.getUserEndpoint()}/calendar/events/${uid}`, {
+      const endpoint = await this.getUserEndpoint();
+      const response = await this.fetcher(this.getEventEndpoint(endpoint, uid, externalCalendarId), {
         method: "DELETE",
       });
 
@@ -363,6 +464,15 @@ class Office365CalendarService implements Calendar {
 
       throw error;
     }
+  }
+
+  /**
+   * Graph separates default-calendar events from explicitly selected calendar events at the URL level.
+   */
+  private getEventEndpoint(endpoint: string, uid: string, externalCalendarId?: string | null) {
+    return externalCalendarId
+      ? `${endpoint}/calendars/${externalCalendarId}/events/${uid}`
+      : `${endpoint}/calendar/events/${uid}`;
   }
 
   async getAvailability(params: GetAvailabilityParams): Promise<EventBusyDate[]> {

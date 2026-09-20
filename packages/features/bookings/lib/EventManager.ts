@@ -1,14 +1,11 @@
-import { cloneDeep, merge } from "lodash";
-import { v5 as uuidv5 } from "uuid";
-import type { z } from "zod";
-
+import process from "node:process";
 import { getCalendar } from "@calcom/app-store/_utils/getCalendar";
 import { FAKE_DAILY_CREDENTIAL } from "@calcom/app-store/dailyvideo/lib/VideoApiAdapter";
 import { appKeysSchema as calVideoKeysSchema } from "@calcom/app-store/dailyvideo/zod";
 import { getLocationFromApp, MeetLocationType, MSTeamsLocationType } from "@calcom/app-store/locations";
 import getApps from "@calcom/app-store/utils";
-import { createEvent, updateEvent, deleteEvent } from "@calcom/features/calendars/lib/CalendarManager";
-import { createMeeting, updateMeeting, deleteMeeting } from "@calcom/features/conferencing/lib/videoClient";
+import { createEvent, deleteEvent, updateEvent } from "@calcom/features/calendars/lib/CalendarManager";
+import { createMeeting, deleteMeeting, updateMeeting } from "@calcom/features/conferencing/lib/videoClient";
 import { CredentialRepository } from "@calcom/features/credentials/repositories/CredentialRepository";
 import CrmManager from "@calcom/features/crmManager/crmManager";
 import CRMScheduler from "@calcom/features/crmManager/crmScheduler";
@@ -18,14 +15,14 @@ import { symmetricDecrypt } from "@calcom/lib/crypto";
 import { isDelegationCredential } from "@calcom/lib/delegationCredential";
 import logger from "@calcom/lib/logger";
 import {
+  getPiiFreeCalendarEvent,
+  getPiiFreeCredential,
   getPiiFreeDestinationCalendar,
   getPiiFreeUser,
-  getPiiFreeCredential,
-  getPiiFreeCalendarEvent,
 } from "@calcom/lib/piiFreeData";
 import { safeStringify } from "@calcom/lib/safeStringify";
 import { prisma } from "@calcom/prisma";
-import type { DestinationCalendar, BookingReference } from "@calcom/prisma/client";
+import type { DestinationCalendar } from "@calcom/prisma/client";
 import { createdEventSchema } from "@calcom/prisma/zod-utils";
 import type { AdditionalInformation, CalendarEvent, NewCalendarEventType } from "@calcom/types/Calendar";
 import type { CredentialForCalendarService } from "@calcom/types/Credential";
@@ -36,10 +33,17 @@ import type {
   PartialBooking,
   PartialReference,
 } from "@calcom/types/EventManager";
+import { cloneDeep, merge } from "lodash";
+import { v5 as uuidv5 } from "uuid";
+import type { z } from "zod";
+import { OFFICE365_CALENDAR_TYPE } from "./handleSeats/lib/seatCalendarReferences";
 
 const log = logger.getSubLogger({ prefix: ["EventManager"] });
 const CALENDSO_ENCRYPTION_KEY = process.env.CALENDSO_ENCRYPTION_KEY || "";
 const CALDAV_CALENDAR_TYPE = "caldav_calendar";
+const isOffice365CalendarCredential = (
+  credential: Pick<CredentialForCalendarService, "type"> | null | undefined
+): boolean => credential?.type === OFFICE365_CALENDAR_TYPE;
 export const isDedicatedIntegration = (location: string): boolean => {
   return location !== MeetLocationType && location.includes("integrations:");
 };
@@ -109,9 +113,12 @@ export const processLocation = (event: CalendarEvent): CalendarEvent => {
 };
 
 /**
- * Ensures invalid non-delegationCredentialId isn't returned
+ * Builds a safe credential payload for storing calendar references.
+ *
+ * @param result - Calendar event result carrying credential identifiers.
+ * @returns Credential identifiers with invalid regular credential IDs removed.
  */
-function getCredentialPayload(result: EventResult<Exclude<Event, AdditionalInformation>>) {
+function getCredentialPayload(result: Pick<EventResult<unknown>, "credentialId" | "delegatedToId">) {
   return {
     credentialId: result?.credentialId && result.credentialId > 0 ? result.credentialId : undefined,
     delegationCredentialId: result?.delegatedToId || undefined,
@@ -774,12 +781,17 @@ export default class EventManager {
     };
   }
 
+  /**
+   * Deletes external calendar, video, and CRM records for booking references.
+   *
+   * @param event - Calendar event associated with the booking cancellation.
+   * @param bookingReferences - Integration references to delete.
+   * @param isBookingInRecurringSeries - Whether the booking belongs to a recurring series.
+   * @returns A promise that resolves after deletion attempts complete.
+   */
   public async cancelEvent(
     event: CalendarEvent,
-    bookingReferences: Pick<
-      BookingReference,
-      "uid" | "type" | "externalCalendarId" | "credentialId" | "thirdPartyRecurringEventId"
-    >[],
+    bookingReferences: PartialReference[],
     isBookingInRecurringSeries?: boolean
   ) {
     await this.deleteEventsAndMeetings({
@@ -850,12 +862,179 @@ export default class EventManager {
     }
   }
 
-  public async updateCalendarAttendees(event: CalendarEvent, booking: PartialBooking) {
+  /**
+   * Updates attendee lists across calendar references for a booking.
+   *
+   * @param event - Calendar event containing the latest attendee list.
+   * @param booking - Booking whose calendar references should be updated.
+   * @param options - Optional calendar types to exclude from attendee updates.
+   * @returns A promise that resolves after matching calendar events are updated.
+   */
+  public async updateCalendarAttendees(
+    event: CalendarEvent,
+    booking: PartialBooking,
+    options?: { excludedCalendarTypes?: string[] }
+  ) {
     if (booking.references.length === 0) {
       console.error("Tried to update references but there wasn't any.");
       return;
     }
-    await this.updateAllCalendarEvents(event, booking);
+    await this.updateAllCalendarEvents(
+      { ...event, onlyUpdateCalendarAttendees: true },
+      booking,
+      undefined,
+      options
+    );
+  }
+
+  /**
+   * Creates Office365 calendar events scoped to a single seated attendee.
+   *
+   * @param event - Calendar event containing the seated attendee to invite.
+   * @returns Calendar creation results and references for the seated attendee.
+   */
+  public async createCalendarEventForSeatedAttendee(event: CalendarEvent): Promise<CreateUpdateResult> {
+    const eventForSeat = cloneDeep(event);
+    const office365DestinationCalendars = eventForSeat.destinationCalendar?.filter(
+      /**
+       * Keeps only Office365 destination calendars for seated attendee event creation.
+       *
+       * @param destination - Destination calendar configured for the event.
+       * @returns Whether the destination calendar is Office365.
+       */
+      (destination) => destination.integration === OFFICE365_CALENDAR_TYPE
+    );
+    const hasExplicitDestinationCalendar = !!eventForSeat.destinationCalendar?.length;
+
+    if (hasExplicitDestinationCalendar && !office365DestinationCalendars?.length) {
+      return {
+        results: [],
+        referencesToCreate: [],
+      };
+    }
+
+    if (office365DestinationCalendars?.length) {
+      eventForSeat.destinationCalendar = office365DestinationCalendars;
+    } else {
+      eventForSeat.destinationCalendar = null;
+    }
+
+    const results: Array<EventResult<NewCalendarEventType>> = [];
+
+    /**
+     * Creates one Office365 event for the prepared seated attendee event.
+     *
+     * @param credential - Office365 calendar credential to use.
+     * @param destination - Optional destination calendar for the created event.
+     * @returns A promise that resolves after the created event result is stored.
+     */
+    const createOffice365CalendarEvent = async (
+      credential: CredentialForCalendarService,
+      destination?: NonNullable<CalendarEvent["destinationCalendar"]>[number]
+    ) => {
+      const createdEvent = await createEvent(credential, eventForSeat, destination?.externalId);
+      results.push(createdEvent);
+    };
+
+    if (office365DestinationCalendars?.length) {
+      for (const destination of office365DestinationCalendars) {
+        if (!destination.credentialId && !destination.delegationCredentialId) {
+          continue;
+        }
+
+        let credential = getCredential({
+          id: {
+            credentialId: destination.credentialId,
+            delegationCredentialId: destination.delegationCredentialId,
+          },
+          allCredentials: this.calendarCredentials,
+        });
+
+        if (credential && !isOffice365CalendarCredential(credential)) {
+          credential = undefined;
+        }
+
+        if (!credential) {
+          if (destination.credentialId) {
+            const credentialFromDB = await CredentialRepository.findCredentialForCalendarServiceById({
+              id: destination.credentialId,
+            });
+
+            if (
+              credentialFromDB &&
+              credentialFromDB.appId &&
+              isOffice365CalendarCredential(credentialFromDB)
+            ) {
+              credential = {
+                id: credentialFromDB.id,
+                type: credentialFromDB.type,
+                key: credentialFromDB.key,
+                userId: credentialFromDB.userId,
+                teamId: credentialFromDB.teamId,
+                invalid: credentialFromDB.invalid,
+                appId: credentialFromDB.appId,
+                user: credentialFromDB.user,
+                encryptedKey: credentialFromDB.encryptedKey,
+                delegatedToId: credentialFromDB.delegatedToId,
+                delegatedTo: credentialFromDB.delegatedTo,
+                delegationCredentialId: credentialFromDB.delegationCredentialId,
+              };
+            }
+          } else if (destination.delegationCredentialId) {
+            log.warn(
+              "DelegationCredential: DelegationCredential seems to be disabled, falling back to first non-delegationCredential"
+            );
+            credential = this.calendarCredentials.find(
+              (cred) => isOffice365CalendarCredential(cred) && !cred.delegatedToId
+            );
+          }
+        }
+
+        if (credential && isOffice365CalendarCredential(credential)) {
+          await createOffice365CalendarEvent(credential, destination);
+        }
+      }
+    } else {
+      const credential = this.calendarCredentials.find(
+        /**
+         * Finds the first Office365 calendar credential for seated attendee creation.
+         *
+         * @param credential - Calendar credential available to the event manager.
+         * @returns Whether the credential belongs to Office365.
+         */
+        (credential) => credential.type === OFFICE365_CALENDAR_TYPE
+      );
+      if (credential) {
+        await createOffice365CalendarEvent(credential);
+      }
+    }
+
+    const referencesToCreate = results.map(
+      /**
+       * Converts an Office365 creation result into a booking reference.
+       *
+       * @param result - Office365 calendar creation result.
+       * @returns Booking reference for the created seated attendee event.
+       */
+      (result) => {
+        const createdEvent = result.createdEvent;
+        return {
+          type: result.type,
+          uid: createdEvent?.id?.toString() ?? "",
+          thirdPartyRecurringEventId: createdEvent?.thirdPartyRecurringEventId,
+          meetingId: createdEvent?.id?.toString(),
+          meetingPassword: createdEvent?.password,
+          meetingUrl: createdEvent?.url,
+          externalCalendarId: result.externalId,
+          ...getCredentialPayload(result),
+        };
+      }
+    );
+
+    return {
+      results,
+      referencesToCreate,
+    };
   }
 
   /**
@@ -1088,22 +1267,21 @@ export default class EventManager {
   }
 
   /**
-   * Updates the event entries for all calendar integrations given in the credentials.
-   * When noMail is true, no mails will be sent. This is used when the event is
-   * a video meeting because then the mail containing the video credentials will be
-   * more important than the mails created for these bare calendar events.
+   * Updates calendar events for a booking and optionally skips selected calendar types.
    *
-   * @param event
-   * @param booking
-   * @private
+   * @param event - Calendar event data to apply to the external calendar entries.
+   * @param booking - Booking whose calendar references should be updated.
+   * @param newBookingId - Optional replacement booking ID to source references from.
+   * @param options - Optional calendar types to exclude from updates.
+   * @returns Calendar update results for all updated references.
    */
   private async updateAllCalendarEvents(
     event: CalendarEvent,
     booking: PartialBooking,
-    newBookingId?: number
+    newBookingId?: number,
+    options?: { excludedCalendarTypes?: string[] }
   ): Promise<Array<EventResult<NewCalendarEventType>>> {
-    let calendarReference: PartialReference[] | undefined = undefined,
-      credential;
+    let calendarReference: PartialReference[] | undefined, credential;
     log.silly("updateAllCalendarEvents", JSON.stringify({ event, booking, newBookingId }));
     try {
       // If a newBookingId is given, update that calendar event
@@ -1122,6 +1300,17 @@ export default class EventManager {
       calendarReference = newBooking?.references.length
         ? newBooking.references.filter((reference) => reference.type.includes("_calendar"))
         : booking.references.filter((reference) => reference.type.includes("_calendar"));
+      if (options?.excludedCalendarTypes?.length) {
+        calendarReference = calendarReference.filter(
+          /**
+           * Removes calendar references that should not receive this update.
+           *
+           * @param reference - Calendar reference being considered for update.
+           * @returns Whether the calendar reference should still be updated.
+           */
+          (reference) => !options.excludedCalendarTypes?.includes(reference.type)
+        );
+      }
 
       if (calendarReference.length === 0) {
         return [];
