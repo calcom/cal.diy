@@ -400,6 +400,9 @@ export const getOptions = ({
           if (metadata?.sessionTimeout) {
             maxAge = metadata.sessionTimeout * 60;
           }
+          if (metadata?.defaultHomeView && token) {
+            token.defaultHomeView = metadata.defaultHomeView;
+          }
         }
       }
       return encode({ secret, token, maxAge });
@@ -451,6 +454,7 @@ export const getOptions = ({
             email: true,
             role: true,
             locale: true,
+            metadata: true,
             movedToProfileId: true,
             teams: {
               include: {
@@ -471,7 +475,9 @@ export const getOptions = ({
 
         // Check if the existingUser has any active teams
         const belongsToActiveTeam = checkIfUserBelongsToActiveTeam(existingUser);
-        const { teams: _teams, ...existingUserWithoutTeamsField } = existingUser;
+        const { teams: _teams, metadata: userMeta, ...existingUserWithoutTeamsField } = existingUser;
+        const parsedMetadata = userMetadata.safeParse(userMeta);
+        const defaultHomeView = parsedMetadata.success ? parsedMetadata.data?.defaultHomeView : undefined;
         const allProfiles = await ProfileRepository.findAllProfilesForUserIncludingMovedUser(existingUser);
         log.debug(
           "callbacks:jwt:autoMergeIdentities",
@@ -508,6 +514,7 @@ export const getOptions = ({
           upId,
           belongsToActiveTeam,
           orgAwareUsername: profileOrg ? profile.username : existingUser.username,
+          defaultHomeView: defaultHomeView ?? undefined,
           // All organizations in the token would be too big to store. It breaks the sessions request.
           // So, we just set the currently switched organization only here.
           // platform org user don't need profiles nor domains
@@ -781,6 +788,7 @@ export const getOptions = ({
           org: token?.org,
           locale: token.locale,
           inactiveAdminReason: token.inactiveAdminReason,
+          defaultHomeView: token.defaultHomeView,
         },
       };
       return calendsoSession;
