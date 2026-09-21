@@ -1,5 +1,5 @@
 import { createEvent as createIcsEvent } from "ics";
-import { createCalendarObject, updateCalendarObject } from "tsdav";
+import { createCalendarObject, updateCalendarObject, fetchCalendarObjects } from "tsdav";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("ics", () => ({
@@ -16,15 +16,16 @@ vi.mock("tsdav", () => ({
   getBasicAuthHeaders: vi.fn().mockReturnValue({}),
 }));
 
-vi.mock("@calcom/lib/logger", () => ({
-  default: {
-    getSubLogger: () => ({
-      debug: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
-    }),
-  },
-}));
+vi.mock("@calcom/lib/logger", () => {
+  const mockFn = vi.fn();
+  return {
+    default: {
+      getSubLogger: () => ({ debug: mockFn, error: mockFn, warn: mockFn }),
+      error: mockFn,
+      warn: mockFn,
+    },
+  };
+});
 
 vi.mock("@calcom/lib/crypto", () => ({
   symmetricDecrypt: vi.fn().mockImplementation((text) => {
@@ -38,6 +39,10 @@ vi.mock("@calcom/lib/crypto", () => ({
 vi.mock("./CalEventParser", () => ({
   getLocation: vi.fn().mockReturnValue("Test Location"),
   getRichDescription: vi.fn().mockReturnValue("Test Description"),
+}));
+
+vi.mock("@calcom/lib/sanitizeCalendarObject", () => ({
+  default: vi.fn().mockImplementation((obj) => obj.data),
 }));
 
 import type { CalendarServiceEvent } from "@calcom/types/Calendar";
@@ -746,5 +751,227 @@ describe("CalendarService - SCHEDULE-AGENT injection", () => {
 
       await expect(service.createEvent(event, 1)).rejects.toThrow();
     });
+  });
+});
+
+/**
+ * Regression tests for RRULE expansion in getAvailability()
+ *
+ * Bug: The iterator was started from the query date instead of the event's start date,
+ * causing FREQ=WEEKLY events to appear on the wrong weekday.
+ *
+ * Fixes: https://github.com/calcom/cal.com/issues/5749
+ */
+describe("CalendarService - RRULE expansion", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  /**
+   * Main regression test: FREQ=WEEKLY without BYDAY
+   *
+   * Event: Weekly on Tuesday (Jan 13, 2026)
+   * Query: Feb 16-18, 2026 (Mon-Wed)
+   *
+   * Bug: Found Monday Feb 16 (query start date with event time)
+   * Fixed: Finds Tuesday Feb 17 (correct weekday from RRULE)
+   */
+  it("should expand FREQ=WEEKLY to correct weekday when query starts on different day", async () => {
+    const service = new TestCalendarService();
+
+    // Weekly event starting Tuesday Jan 13, 2026 at 09:00-17:00 Europe/Amsterdam
+    const weeklyTuesdayEvent = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VTIMEZONE
+TZID:Europe/Amsterdam
+BEGIN:STANDARD
+TZOFFSETTO:+0100
+TZOFFSETFROM:+0200
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+BEGIN:DAYLIGHT
+TZOFFSETTO:+0200
+TZOFFSETFROM:+0100
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:test-weekly-tuesday
+SUMMARY:Weekly Tuesday Meeting
+RRULE:FREQ=WEEKLY
+DTSTART;TZID=Europe/Amsterdam:20260113T090000
+DTEND;TZID=Europe/Amsterdam:20260113T170000
+END:VEVENT
+END:VCALENDAR`;
+
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: "https://caldav.example.com/calendar/test.ics",
+        etag: '"etag123"',
+        data: weeklyTuesdayEvent,
+      },
+    ]);
+
+    // Query Mon Feb 16 to Wed Feb 18 - should find Tue Feb 17
+    const result = await service.getAvailability({
+      dateFrom: "2026-02-16",
+      dateTo: "2026-02-18",
+      selectedCalendars: [
+        {
+          externalId: "https://caldav.example.com/calendar/",
+          integration: "caldav",
+          credentialId: 1,
+        },
+      ],
+    });
+
+    expect(result.length).toBe(1);
+
+    const eventStart = new Date(result[0].start);
+    expect(eventStart.getUTCDay()).toBe(2); // Tuesday
+    expect(eventStart.getUTCDate()).toBe(17); // Feb 17, not Feb 16
+  });
+
+  /**
+   * Regression test: FREQ=WEEKLY;INTERVAL=2 (bi-weekly)
+   *
+   * Event: Bi-weekly on Monday starting Jan 12, 2026
+   * Occurrences: Jan 12, Jan 26, Feb 9, Feb 23...
+   * Query: Feb 16-24, 2026
+   *
+   * Bug: Found Feb 16 (query start)
+   * Fixed: Finds Feb 23 (correct bi-weekly occurrence)
+   */
+  it("should expand FREQ=WEEKLY;INTERVAL=2 to correct bi-weekly occurrence", async () => {
+    const service = new TestCalendarService();
+
+    const biweeklyEvent = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:test-biweekly
+SUMMARY:Bi-weekly Meeting
+RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO
+DTSTART:20260112T140000Z
+DTEND:20260112T150000Z
+END:VEVENT
+END:VCALENDAR`;
+
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: "https://caldav.example.com/calendar/test.ics",
+        etag: '"etag123"',
+        data: biweeklyEvent,
+      },
+    ]);
+
+    // Query Feb 16-24 - bi-weekly from Jan 12 hits Feb 23, not Feb 16
+    const result = await service.getAvailability({
+      dateFrom: "2026-02-16",
+      dateTo: "2026-02-24",
+      selectedCalendars: [
+        {
+          externalId: "https://caldav.example.com/calendar/",
+          integration: "caldav",
+          credentialId: 1,
+        },
+      ],
+    });
+
+    expect(result.length).toBe(1);
+
+    const eventStart = new Date(result[0].start);
+    expect(eventStart.getUTCDate()).toBe(23); // Feb 23, not Feb 16
+  });
+
+  /**
+   * Regression test: FREQ=MONTHLY
+   *
+   * Event: Monthly on the 15th
+   * Query: Feb 10-20, 2026
+   *
+   * Bug: Found Feb 10 (query start)
+   * Fixed: Finds Feb 15 (correct day of month)
+   */
+  it("should expand FREQ=MONTHLY to correct day of month", async () => {
+    const service = new TestCalendarService();
+
+    const monthlyEvent = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:test-monthly
+SUMMARY:Monthly Review
+RRULE:FREQ=MONTHLY
+DTSTART:20260115T100000Z
+DTEND:20260115T110000Z
+END:VEVENT
+END:VCALENDAR`;
+
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: "https://caldav.example.com/calendar/test.ics",
+        etag: '"etag123"',
+        data: monthlyEvent,
+      },
+    ]);
+
+    // Query Feb 10-20 - monthly on 15th should find Feb 15
+    const result = await service.getAvailability({
+      dateFrom: "2026-02-10",
+      dateTo: "2026-02-20",
+      selectedCalendars: [
+        {
+          externalId: "https://caldav.example.com/calendar/",
+          integration: "caldav",
+          credentialId: 1,
+        },
+      ],
+    });
+
+    expect(result.length).toBe(1);
+
+    const eventStart = new Date(result[0].start);
+    expect(eventStart.getUTCDate()).toBe(15); // Feb 15, not Feb 10
+  });
+
+  it("should include long-running daily recurrences when query window is years later", async () => {
+    const service = new TestCalendarService();
+
+    const dailyEvent = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:test-daily-long-running
+SUMMARY:Daily Standup
+RRULE:FREQ=DAILY
+DTSTART:20200101T090000Z
+DTEND:20200101T093000Z
+END:VEVENT
+END:VCALENDAR`;
+
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: "https://caldav.example.com/calendar/test.ics",
+        etag: '"etag123"',
+        data: dailyEvent,
+      },
+    ]);
+
+    const result = await service.getAvailability({
+      dateFrom: "2026-02-17T00:00:00Z",
+      dateTo: "2026-02-17T23:59:59Z",
+      selectedCalendars: [
+        {
+          externalId: "https://caldav.example.com/calendar/",
+          integration: "caldav",
+          credentialId: 1,
+        },
+      ],
+    });
+
+    expect(result.length).toBe(1);
+
+    const eventStart = new Date(result[0].start);
+    expect(eventStart.toISOString()).toBe("2026-02-17T09:00:00.000Z");
   });
 });
