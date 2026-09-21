@@ -11,6 +11,7 @@ import prisma from "@calcom/prisma";
 
 import appConfig from "../config.json";
 import type { hitpayCredentialKeysSchema } from "../lib/hitpayCredentialKeysSchema";
+import { safeStringEqual } from "@calcom/lib/crypto";
 
 export const config = {
   api: {
@@ -104,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { saltKey } = keyObj;
     const signed = generateSignatureArray(saltKey, excluded as ExcludedWebhookReturn);
-    if (signed !== obj.hmac) {
+    if (!safeStringEqual(signed, obj.hmac)) {
       throw new HttpCode({ statusCode: 400, message: "Bad Request" });
     }
 
