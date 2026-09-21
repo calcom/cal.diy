@@ -46,6 +46,16 @@ async function postHandler(request: NextRequest, ctx: { params: Promise<Params> 
     return NextResponse.json({ message: "Unsupported provider" }, { status: 400 });
   }
 
+  if (providerFromParams === "office365_calendar") {
+    const validationToken = request.nextUrl.searchParams.get("validationToken");
+    if (validationToken !== null) {
+      return new Response(validationToken, {
+        status: 200,
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+  }
+
   try {
     // instantiate dependencies
     const bookingRepository = new BookingRepository(prisma);
