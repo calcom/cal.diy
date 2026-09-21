@@ -9,7 +9,6 @@ import type { Ensure, Optional } from "@calcom/types/utils";
 import type { TFunction } from "i18next";
 import { isValidPhoneNumber } from "libphonenumber-js/max";
 import { z } from "zod";
-
 import type { EventLocationTypeFromAppMeta } from "../types/App";
 import {
   DailyLocationType as importedDailyLocationType,
@@ -429,6 +428,18 @@ export const getLocationValueForDB = (
       }
 
       bookingLocation = location[eventLocationType.defaultValueVariable] || bookingLocation;
+    } else {
+      // Also match against the resolved value (e.g. a URL like "https://signal.me/...")
+      // so that confirm.handler and other callers passing already-resolved values can
+      // correctly map back to the location entry and its credentialId
+      const eventLocationType = getLocationByType(location.type);
+      if (
+        eventLocationType?.defaultValueVariable &&
+        location[eventLocationType.defaultValueVariable] === bookingLocationTypeOrValue
+      ) {
+        conferenceCredentialId = location.credentialId;
+        bookingLocation = bookingLocationTypeOrValue;
+      }
     }
   });
 
