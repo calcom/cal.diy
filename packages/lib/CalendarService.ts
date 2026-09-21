@@ -745,12 +745,15 @@ export default abstract class BaseCalendarService implements Calendar {
 
           const start = dayjs(dateFrom);
           const end = dayjs(dateTo);
-          const startDate = ICAL.Time.fromDateTimeString(startISOString);
-          startDate.hour = event.startDate.hour;
-          startDate.minute = event.startDate.minute;
-          startDate.second = event.startDate.second;
-          const iterator = event.iterator(startDate);
-          let current: ICAL.Time;
+          const iterator = event.iterator();
+          let current = iterator.next();
+
+          // RecurExpansion uses the supplied start time as DTSTART. Starting it at
+          // the query range silently re-anchors rules such as FREQ=WEEKLY without
+          // BYDAY. Advance from the event's real DTSTART instead.
+          while (current && dayjs(current.toJSDate()).isBefore(start)) {
+            current = iterator.next();
+          }
           let currentEvent: ReturnType<typeof event.getOccurrenceDetails> | undefined;
           let currentStart: ReturnType<typeof dayjs> | null = null;
           let currentError: string | undefined;
@@ -784,7 +787,10 @@ export default abstract class BaseCalendarService implements Calendar {
             }
             currentStart = dayjs(currentEvent.startDate.toJSDate());
 
-            if (currentStart.isBetween(start, end) === true) {
+            if (
+              currentStart.isBefore(end) &&
+              dayjs(currentEvent.endDate.toJSDate()).isAfter(start)
+            ) {
               events.push({
                 start: currentStart.toISOString(),
                 end: dayjs(currentEvent.endDate.toJSDate()).toISOString(),
