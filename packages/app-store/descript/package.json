@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "private": true,
+  "name": "@calcom/descript",
+  "version": "0.0.0",
+  "main": "./index.ts",
+  "dependencies": {
+    "@calcom/lib": "workspace:*"
+  },
+  "devDependencies": {
+    "@calcom/types": "workspace:*"
+  },
+  "description": "Make Videos, Podcasts & Short Clips For Social Fast With Descript's Powerful AI Tools. One Tool To Create Anything You Want. Get AI Superpowers At Every Step With Descript. All-In-One Tool."
+}

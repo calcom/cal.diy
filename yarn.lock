@@ -2275,6 +2275,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@calcom/descript@workspace:packages/app-store/descript":
+  version: 0.0.0-use.local
+  resolution: "@calcom/descript@workspace:packages/app-store/descript"
+  dependencies:
+    "@calcom/lib": "workspace:*"
+    "@calcom/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@calcom/dialpad@workspace:packages/app-store/dialpad":
   version: 0.0.0-use.local
   resolution: "@calcom/dialpad@workspace:packages/app-store/dialpad"
