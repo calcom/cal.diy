@@ -1,11 +1,10 @@
-import type { Logger } from "tslog";
-
-import dayjs from "@calcom/dayjs";
 import type { Dayjs } from "@calcom/dayjs";
+import dayjs from "@calcom/dayjs";
 import { checkForConflicts } from "@calcom/features/bookings/lib/conflictChecker/checkForConflicts";
 import { getBusyTimesService } from "@calcom/features/di/containers/BusyTimes";
 import { getUserAvailabilityService } from "@calcom/features/di/containers/GetUserAvailability";
 import { buildDateRanges } from "@calcom/features/schedules/lib/date-ranges";
+import getSlots from "@calcom/features/schedules/lib/slots";
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import { parseBookingLimit } from "@calcom/lib/intervalLimits/isBookingLimits";
 import { parseDurationLimit } from "@calcom/lib/intervalLimits/isDurationLimits";
@@ -14,7 +13,7 @@ import { safeStringify } from "@calcom/lib/safeStringify";
 import { withReporting } from "@calcom/lib/sentryWrapper";
 import prisma from "@calcom/prisma";
 import type { CalendarFetchMode } from "@calcom/types/Calendar";
-
+import type { Logger } from "tslog";
 import type { getEventTypeResponse } from "./getEventTypesFromDB";
 import type { BookingType } from "./originalRescheduledBookingUtils";
 import type { IsFixedAwareUser } from "./types";
@@ -52,6 +51,34 @@ const hasDateRangeForBooking = (
   }
 
   return dateRangeForBooking;
+};
+
+const hasSlotForBookingStart = ({
+  dateRanges,
+  eventType,
+  startDateTimeUtc,
+  duration,
+  timeZone,
+}: {
+  dateRanges: DateRange[];
+  eventType: Omit<getEventTypeResponse, "users">;
+  startDateTimeUtc: dayjs.Dayjs;
+  duration: number;
+  timeZone: string;
+}) => {
+  const frequency = eventType.slotInterval ?? eventType.length;
+
+  const slots = getSlots({
+    inviteeDate: startDateTimeUtc.tz(timeZone),
+    eventLength: duration,
+    offsetStart: eventType.offsetStart,
+    dateRanges,
+    minimumBookingNotice: eventType.minimumBookingNotice,
+    frequency,
+    showOptimizedSlots: eventType.showOptimizedSlots,
+  });
+
+  return slots.some((slot) => slot.time.utc().isSame(startDateTimeUtc));
 };
 
 const _ensureAvailableUsers = async (
@@ -236,6 +263,19 @@ const _ensureAvailableUsers = async (
     //check if event time is within the date range
     if (!hasDateRangeForBooking(dateRanges, startDateTimeUtc, endDateTimeUtc)) {
       loggerWithEventDetails.error(`No date range for booking.`, piiFreeInputDataForLogging);
+      return;
+    }
+
+    if (
+      !hasSlotForBookingStart({
+        dateRanges,
+        eventType,
+        startDateTimeUtc,
+        duration,
+        timeZone: input.timeZone,
+      })
+    ) {
+      loggerWithEventDetails.error(`No slot for booking start time.`, piiFreeInputDataForLogging);
       return;
     }
 
