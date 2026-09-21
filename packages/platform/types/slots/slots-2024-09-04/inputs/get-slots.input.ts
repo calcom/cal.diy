@@ -176,7 +176,7 @@ export class ByTeamSlugAndEventTypeSlug_2024_09_04 extends GetAvailableSlotsInpu
   @ApiProperty({
     type: String,
     description:
-      "When searching by eventTypeSlug a teamSlug must be provided too aka team who owns the the event type.",
+      "When searching by eventTypeSlug a teamSlug must be provided too aka team who owns the event type.",
     example: "bob",
   })
   teamSlug!: string;
