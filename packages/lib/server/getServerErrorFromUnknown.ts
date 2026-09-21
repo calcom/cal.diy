@@ -1,10 +1,8 @@
-import type { ZodIssue } from "zod";
-import { ZodError } from "zod";
-
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import { ErrorWithCode } from "@calcom/lib/errors";
 import { Prisma } from "@calcom/prisma/client";
-
+import type { ZodIssue } from "zod";
+import { ZodError } from "zod";
 import { HttpError } from "../http-error";
 import { redactError } from "../redactError";
 import { stripeInvalidRequestErrorSchema } from "../stripe-error";
@@ -206,6 +204,15 @@ function getServerErrorFromPrismaError(
 ) {
   if (cause.code === "P2025") {
     return getHttpError({ statusCode: 404, cause, traceId, tracedData });
+  }
+  // P2002 is a unique-constraint violation — semantically a conflict with the
+  // current state of the resource, not a malformed request. Mapping to 409
+  // here (rather than the default 400) also closes a production gap: callers
+  // that try to recover P2002 by inspecting `.code` on the rethrown error
+  // can't, because `redactError` strips Prisma details from `cause` in
+  // production. The status code must be decided before redaction runs.
+  if (cause.code === "P2002") {
+    return getHttpError({ statusCode: 409, cause, traceId, tracedData });
   }
   return getHttpError({ statusCode: 400, cause, traceId, tracedData });
 }
