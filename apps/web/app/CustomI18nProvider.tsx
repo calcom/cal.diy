@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useMemo } from "react";
+import { dir } from "i18next";
+import { createContext, useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 
 type CustomI18nContextType = {
@@ -19,7 +20,33 @@ export function CustomI18nProvider({
 }: CustomI18nContextType & {
   children: ReactNode;
 }) {
-  // Memoize the value to prevent re-renders unless the data changes
+  const originalDirRef = useRef<string | null>(null);
+  const originalLangRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (originalDirRef.current === null) {
+      originalDirRef.current = document.documentElement.dir || "ltr";
+    }
+    if (originalLangRef.current === null) {
+      originalLangRef.current = document.documentElement.lang || "en";
+    }
+
+    const direction = dir(locale) ?? "ltr";
+    document.documentElement.dir = direction;
+    document.documentElement.lang = locale;
+
+    return () => {
+      if (originalDirRef.current !== null) {
+        document.documentElement.dir = originalDirRef.current;
+      }
+      if (originalLangRef.current !== null) {
+        document.documentElement.lang = originalLangRef.current;
+      }
+    };
+  }, [locale]);
+
   const value = useMemo(
     () => ({
       translations,
