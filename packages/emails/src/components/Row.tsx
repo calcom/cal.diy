@@ -1,5 +1,4 @@
 import type { ComponentProps } from "react";
-
 import BaseTable from "./BaseTable";
 
 const Row = ({

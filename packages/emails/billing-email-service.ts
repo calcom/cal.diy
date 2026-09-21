@@ -1,7 +1,6 @@
 import type BaseEmail from "@calcom/emails/templates/_base-email";
 import type { EventTypeMetadata } from "@calcom/prisma/zod-utils";
 import type { CalendarEvent, Person } from "@calcom/types/Calendar";
-
 import NoShowFeeChargedEmail from "./templates/no-show-fee-charged-email";
 import OrganizerPaymentRefundFailedEmail from "./templates/organizer-payment-refund-failed-email";
 

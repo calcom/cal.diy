@@ -1,10 +1,9 @@
 import type BaseEmail from "@calcom/emails/templates/_base-email";
-
+import type { MonthlyDigestEmailData } from "./src/templates/MonthlyDigestEmail";
 import type { IBookingRedirect } from "./templates/booking-redirect-notification";
 import BookingRedirectEmailNotification from "./templates/booking-redirect-notification";
 import type { Feedback } from "./templates/feedback-email";
 import FeedbackEmail from "./templates/feedback-email";
-import type { MonthlyDigestEmailData } from "./src/templates/MonthlyDigestEmail";
 import MonthlyDigestEmail from "./templates/monthly-digest-email";
 
 const sendEmail = (prepare: () => BaseEmail) => {

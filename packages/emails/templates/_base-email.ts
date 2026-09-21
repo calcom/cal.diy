@@ -1,14 +1,13 @@
-import { decodeHTML } from "entities";
-import { z } from "zod";
-
+import process from "node:process";
 import dayjs from "@calcom/dayjs";
 import { FeaturesRepository } from "@calcom/features/flags/features.repository";
 import isSmsCalEmail from "@calcom/lib/isSmsCalEmail";
-import { serverConfig } from "@calcom/lib/serverConfig";
 import { getServerErrorFromUnknown } from "@calcom/lib/server/getServerErrorFromUnknown";
+import { serverConfig } from "@calcom/lib/serverConfig";
 import { setTestEmail } from "@calcom/lib/testEmails";
 import { prisma } from "@calcom/prisma";
-
+import { decodeHTML } from "entities";
+import { z } from "zod";
 import { sanitizeDisplayName } from "../lib/sanitizeDisplayName";
 
 export default class BaseEmail {
@@ -23,7 +22,31 @@ export default class BaseEmail {
   }
 
   protected getFormattedRecipientTime({ time, format }: { time: string; format: string }) {
-    return dayjs(time).tz(this.getTimezone()).locale(this.getLocale()).format(format);
+    return this.getFormattedDate(time, format);
+  }
+
+  protected getFormattedDate(time: string, format: string) {
+    const date = new Date(time);
+    if (isNaN(date.getTime())) {
+      return dayjs(time).tz(this.getTimezone()).locale(this.getLocale()).format(format);
+    }
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: this.getTimezone(),
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).formatToParts(date);
+      const getPart = (type: string) => parts.find((p) => p.type === type)?.value;
+      const localString = `${getPart("year")}-${getPart("month")}-${getPart("day")}T${getPart("hour")}:${getPart("minute")}:${getPart("second")}.000`;
+      return dayjs.utc(localString).locale(this.getLocale()).format(format);
+    } catch (e) {
+      return dayjs(time).tz(this.getTimezone()).locale(this.getLocale()).format(format);
+    }
   }
 
   protected async getNodeMailerPayload(): Promise<Record<string, unknown>> {

@@ -1,9 +1,7 @@
-import type { TFunction } from "i18next";
-
 import type BaseEmail from "@calcom/emails/templates/_base-email";
-import type { CalendarEvent } from "@calcom/types/Calendar";
 import { formatCalEvent } from "@calcom/lib/formatCalendarEvent";
-
+import type { CalendarEvent } from "@calcom/types/Calendar";
+import type { TFunction } from "i18next";
 import BrokenIntegrationEmail from "./templates/broken-integration-email";
 import DisabledAppEmail from "./templates/disabled-app-email";
 import SlugReplacementEmail from "./templates/slug-replacement-email";

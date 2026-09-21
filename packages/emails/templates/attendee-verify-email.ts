@@ -1,5 +1,4 @@
 import { APP_NAME, COMPANY_NAME, EMAIL_FROM_NAME } from "@calcom/lib/constants";
-
 import type { EmailVerifyCode } from "../lib/types/email-types";
 import renderEmail from "../src/renderEmail";
 import BaseEmail from "./_base-email";

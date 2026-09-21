@@ -6,7 +6,7 @@ type BaseTableProps = Omit<
 
 const BaseTable = ({ children, ...rest }: BaseTableProps) => (
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+  // @ts-expect-error
   <table cellPadding="0" cellSpacing="0" role="presentation" {...rest}>
     {children}
   </table>

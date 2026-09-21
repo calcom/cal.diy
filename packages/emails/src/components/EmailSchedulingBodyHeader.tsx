@@ -1,7 +1,5 @@
-import type { CSSProperties } from "react";
-
 import { BASE_URL } from "@calcom/lib/constants";
-
+import type { CSSProperties } from "react";
 import EmailCommonDivider from "./EmailCommonDivider";
 import Row from "./Row";
 

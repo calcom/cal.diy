@@ -1,7 +1,5 @@
+import { COMPANY_NAME, WEBAPP_URL } from "@calcom/lib/constants";
 import type { TFunction } from "i18next";
-
-import { WEBAPP_URL, COMPANY_NAME } from "@calcom/lib/constants";
-
 import { V2BaseEmailHtml } from "../components";
 
 interface DailyVideoDownloadTranscriptEmailProps {

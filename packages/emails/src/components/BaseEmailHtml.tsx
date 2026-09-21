@@ -197,7 +197,7 @@ export const BaseEmailHtml = (props: {
               </Row>
             </div>
           </div>
-          {!Boolean(props.hideLogo) && <EmailBodyLogo />}
+          {!props.hideLogo && <EmailBodyLogo />}
           <RawHtml html="<!--[if mso | IE]></td></tr></table><![endif]-->" />
         </div>
       </body>
