@@ -1,11 +1,11 @@
 "use client";
 
+import { useHitPayDropIn } from "@calcom/app-store/hitpay/components/HitPayDropIn";
+import { getCheckoutIframeDomain } from "@calcom/app-store/hitpay/lib/getCheckoutIframeDomain";
 import { useRouter } from "next/navigation";
 import qs from "qs";
 import { useEffect, useRef } from "react";
 import { z } from "zod";
-
-import { useHitPayDropIn } from "@calcom/app-store/hitpay/components/HitPayDropIn";
 
 const PaymentHitpayDataSchema = z.object({
   id: z.string(),
@@ -41,9 +41,7 @@ export const HitpayPaymentComponent = (props: IPaymentComponentProps) => {
     if (parsedData.success) {
       if (window.self !== window.top && window.top) {
         if (!isInitialized) {
-          const subUrl = parsedData.data.url.substring("https://securecheckout.".length);
-          const arr = subUrl.split("/");
-          const domain = arr[0];
+          const domain = getCheckoutIframeDomain(parsedData.data.url);
 
           init(
             parsedData.data.defaultLink || "",
