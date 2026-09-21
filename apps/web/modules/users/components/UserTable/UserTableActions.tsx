@@ -42,6 +42,22 @@ export function TableActions({
     isPending: false,
   };
 
+  const utils = trpc.useUtils();
+  const updateMembershipStatusMutation = trpc.viewer.users.updateMembershipStatus.useMutation({
+    onSuccess: () => {
+      showToast(
+        user.status === "PAUSED"
+          ? t("membership_unpaused_successfully")
+          : t("membership_paused_successfully"),
+        "success"
+      );
+      utils.viewer.users.get.invalidate();
+    },
+    onError: (err) => {
+      showToast(err.message || t("error_updating_membership"), "error");
+    },
+  });
+
   const sendPasswordResetMutation = {
     mutate: (..._args: unknown[]) => {},
     mutateAsync: async () => ({}),
@@ -94,6 +110,22 @@ export function TableActions({
                       }
                       StartIcon="pencil">
                       {t("edit")}
+                    </DropdownItem>
+                  </DropdownMenuItem>
+                )}
+                {permissionsForUser.canEdit && (
+                  <DropdownMenuItem>
+                    <DropdownItem
+                      type="button"
+                      onClick={() => {
+                        updateMembershipStatusMutation.mutate({
+                          userId: user.id,
+                          teamId: orgId,
+                          status: user.status === "PAUSED" ? "ACTIVE" : "PAUSED",
+                        });
+                      }}
+                      StartIcon={user.status === "PAUSED" ? "play" : "pause"}>
+                      {user.status === "PAUSED" ? t("unpause_membership") : t("pause_membership")}
                     </DropdownItem>
                   </DropdownMenuItem>
                 )}
@@ -197,6 +229,22 @@ export function TableActions({
                     }
                     StartIcon="pencil">
                     {t("edit")}
+                  </DropdownItem>
+                </DropdownMenuItem>
+              )}
+              {permissionsForUser.canEdit && (
+                <DropdownMenuItem>
+                  <DropdownItem
+                    type="button"
+                    onClick={() => {
+                      updateMembershipStatusMutation.mutate({
+                        userId: user.id,
+                        teamId: orgId,
+                        status: user.status === "PAUSED" ? "ACTIVE" : "PAUSED",
+                      });
+                    }}
+                    StartIcon={user.status === "PAUSED" ? "play" : "pause"}>
+                    {user.status === "PAUSED" ? t("unpause_membership") : t("pause_membership")}
                   </DropdownItem>
                 </DropdownMenuItem>
               )}

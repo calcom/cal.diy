@@ -9,6 +9,8 @@ export type UserTableUser = {
   avatarUrl: string | null;
   accepted: boolean;
   completedOnboarding: boolean;
+  status?: "ACTIVE" | "PAUSED";
+  membershipId?: number;
   lastActiveAt: Date | null;
   createdAt?: Date | null;
   updatedAt?: Date | null;
