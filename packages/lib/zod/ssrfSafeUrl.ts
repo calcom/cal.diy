@@ -1,6 +1,5 @@
 import type { z } from "zod";
 import { z as zod } from "zod";
-
 import { validateUrlForSSRFSync } from "../ssrfProtection";
 
 const SSRF_ERROR = "URL is not allowed for security reasons";

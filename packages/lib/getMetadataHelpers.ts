@@ -1,5 +1,4 @@
 import type { SomeZodObject, z } from "zod";
-
 import objectKeys from "./objectKeys";
 
 /**

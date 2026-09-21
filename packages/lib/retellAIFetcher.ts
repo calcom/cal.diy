@@ -1,3 +1,4 @@
+import process from "node:process";
 import { handleErrorsJson } from "@calcom/lib/errors";
 
 export const fetcher = async (endpoint: string, init?: RequestInit | undefined) => {

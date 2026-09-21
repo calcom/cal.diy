@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-
 import { applyStyleToMultipleVariants } from "./cva";
 
 describe("CVA Utils", () => {

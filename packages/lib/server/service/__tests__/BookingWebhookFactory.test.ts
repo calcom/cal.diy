@@ -1,7 +1,5 @@
-import { describe, it, expect } from "vitest";
-
 import type { Person } from "@calcom/types/Calendar";
-
+import { describe, expect, it } from "vitest";
 import { BookingWebhookFactory } from "../BookingWebhookFactory";
 
 const createTestOrganizer = (overrides?: Partial<Person>): Person => ({

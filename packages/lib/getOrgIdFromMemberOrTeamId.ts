@@ -1,4 +1,4 @@
-import { prisma, type PrismaTransaction } from "@calcom/prisma";
+import { type PrismaTransaction, prisma } from "@calcom/prisma";
 import type { Prisma } from "@calcom/prisma/client";
 
 const getOrgMemberOrTeamWhere = (memberId?: number | null, teamId?: number | null) => {

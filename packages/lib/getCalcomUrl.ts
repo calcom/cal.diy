@@ -1,4 +1,4 @@
-import { WEBAPP_URL, IS_CALCOM } from "./constants";
+import { IS_CALCOM, WEBAPP_URL } from "./constants";
 
 export const getCalcomUrl = () => {
   if (IS_CALCOM) {

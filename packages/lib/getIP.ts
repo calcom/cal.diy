@@ -8,7 +8,6 @@ export function parseIpFromHeaders(value: string | string[]) {
   return rawIp?.trim() ?? "";
 }
 
-
 /**
  * Tries to extract IP address from a request.
  *

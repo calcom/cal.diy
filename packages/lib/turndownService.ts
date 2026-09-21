@@ -14,28 +14,18 @@ function turndown(html: string | TurndownService.Node): string {
 }
 
 turndownService.addRule("shiftEnter", {
-  filter: function (node) {
-    return node.nodeName === "BR" && !!isShiftEnter(node);
-  },
-  replacement: function () {
-    return "<br>";
-  },
+  filter: (node) => node.nodeName === "BR" && !!isShiftEnter(node),
+  replacement: () => "<br>",
 });
 
 turndownService.addRule("enter", {
-  filter: function (node) {
-    return node.nodeName === "BR" && !isShiftEnter(node);
-  },
-  replacement: function () {
-    return "<p><br></p>";
-  },
+  filter: (node) => node.nodeName === "BR" && !isShiftEnter(node),
+  replacement: () => "<p><br></p>",
 });
 
 turndownService.addRule("ignoreEmphasized", {
   filter: "em",
-  replacement: function (content) {
-    return content;
-  },
+  replacement: (content) => content,
 });
 
 function isShiftEnter(node: HTMLElement) {

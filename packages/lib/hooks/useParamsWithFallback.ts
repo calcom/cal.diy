@@ -1,8 +1,8 @@
 "use client";
 
+import type { ParsedUrlQuery } from "node:querystring";
 import { useRouter as useCompatRouter } from "next/compat/router";
 import { useParams } from "next/navigation";
-import type { ParsedUrlQuery } from "node:querystring";
 
 interface Params {
   [key: string]: string | string[];

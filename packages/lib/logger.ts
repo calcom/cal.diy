@@ -1,5 +1,5 @@
-import { Logger, ISettingsParam } from "tslog";
-
+import process from "node:process";
+import { type ISettingsParam, Logger } from "tslog";
 import { IS_PRODUCTION } from "./constants";
 
 export const loggerConfig: ISettingsParam<unknown> = {

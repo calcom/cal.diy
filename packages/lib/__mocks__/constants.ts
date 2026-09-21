@@ -1,6 +1,5 @@
-import { vi, beforeEach } from "vitest";
-
 import type * as constants from "@calcom/lib/constants";
+import { beforeEach, vi } from "vitest";
 
 const initialConstants = {
   IS_PRODUCTION: false,

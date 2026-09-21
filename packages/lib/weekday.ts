@@ -1,4 +1,4 @@
-import { getWeekdayNames, formatWeekday } from "./dateTimeFormatter";
+import { formatWeekday, getWeekdayNames } from "./dateTimeFormatter";
 
 type WeekdayFormat = "short" | "long";
 

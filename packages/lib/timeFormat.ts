@@ -42,7 +42,7 @@ export const isBrowserLocale24h = () => {
     return false;
   }
   // Intl.DateTimeFormat with value=undefined uses local browser settings.
-  if (!!new Intl.DateTimeFormat(undefined, { hour: "numeric" }).format(0).match(/M/i)) {
+  if (new Intl.DateTimeFormat(undefined, { hour: "numeric" }).format(0).match(/M/i)) {
     setIs24hClockInLocalStorage(false);
     return false;
   } else {

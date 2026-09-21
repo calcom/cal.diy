@@ -2,7 +2,6 @@ import type { ConfigType } from "@calcom/dayjs";
 import dayjs from "@calcom/dayjs";
 import type { Availability } from "@calcom/prisma/client";
 import type { Schedule, TimeRange, WorkingHours } from "@calcom/types/schedule";
-
 import { nameOfDay } from "./weekday";
 
 // sets the desired time in current date, needs to be current date for proper DST translation

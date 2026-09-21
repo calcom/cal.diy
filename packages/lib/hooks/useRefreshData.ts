@@ -1,5 +1,4 @@
 import { useRouter } from "next/navigation";
-
 import { useAsPath } from "./useAsPath";
 
 /** @see https://www.joshwcomeau.com/nextjs/refreshing-server-side-props/ */

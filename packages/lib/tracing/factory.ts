@@ -1,5 +1,4 @@
 import { nanoid } from "nanoid";
-
 import logger from "../logger";
 import { DistributedTracing, type IdGenerator } from "./index";
 

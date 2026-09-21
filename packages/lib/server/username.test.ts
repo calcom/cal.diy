@@ -1,7 +1,5 @@
 import prismaMock from "@calcom/testing/lib/__mocks__/prismaMock";
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 import { generateUsernameSuggestion, usernameCheckForSignup } from "./username";
 
 describe("usernameCheckForSignup ", async () => {

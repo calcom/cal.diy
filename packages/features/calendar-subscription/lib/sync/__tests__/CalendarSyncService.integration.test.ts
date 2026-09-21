@@ -1,14 +1,12 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
-
 import type { CalendarSubscriptionEventItem } from "@calcom/features/calendar-subscription/lib/CalendarSubscriptionPort.interface";
 import type { BookingRepository } from "@calcom/lib/server/repository/booking";
 import type { SelectedCalendar } from "@calcom/prisma/client";
-
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   type BookingWithEventType,
-  CalendarSyncService,
   buildMetadataFromCalendarEvent,
   buildRescheduleBookingData,
+  CalendarSyncService,
   extractBookingResponses,
   hasStartTimeChanged,
   mergeBookingResponsesWithEventData,
@@ -69,7 +67,9 @@ const makeBooking = (overrides: Partial<BookingWithEventType> = {}): BookingWith
     ...overrides,
   }) as unknown as BookingWithEventType;
 
-const makeEvent = (overrides: Partial<CalendarSubscriptionEventItem> = {}): CalendarSubscriptionEventItem => ({
+const makeEvent = (
+  overrides: Partial<CalendarSubscriptionEventItem> = {}
+): CalendarSubscriptionEventItem => ({
   id: "gcal-event-1",
   iCalUID: "booking-uid-123@cal.com",
   start: new Date("2024-01-15T14:00:00Z"),
