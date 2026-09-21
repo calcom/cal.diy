@@ -86,6 +86,10 @@ import { VercelWebhookController } from "@/vercel-webhook.controller";
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer
+      .apply(RewriterMiddleware)
+      .forRoutes("*")
+      .apply(RedirectsMiddleware)
+      .forRoutes("*")
       .apply(RawBodyMiddleware)
       .forRoutes(
         {
@@ -117,10 +121,6 @@ export class AppModule implements NestModule {
       .apply(RequestIdMiddleware)
       .forRoutes("*")
       .apply(AppLoggerMiddleware)
-      .forRoutes("*")
-      .apply(RedirectsMiddleware)
-      .forRoutes("/")
-      .apply(RewriterMiddleware)
-      .forRoutes("/");
+      .forRoutes("*");
   }
 }
