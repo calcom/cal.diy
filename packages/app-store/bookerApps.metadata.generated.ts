@@ -36,6 +36,7 @@ import shimmervideo_config_json from "./shimmervideo/config.json";
 import signal_config_json from "./signal/config.json";
 import sirius_video_config_json from "./sirius_video/config.json";
 import skype_config_json from "./skype/config.json";
+import squadcast_config_json from "./squadcast/config.json";
 import sylapsvideo_config_json from "./sylapsvideo/config.json";
 import { metadata as tandemvideo__metadata_ts } from "./tandemvideo/_metadata";
 import telegram_config_json from "./telegram/config.json";
@@ -82,6 +83,7 @@ export const appStoreMetadata = {
   signal: signal_config_json,
   sirius_video: sirius_video_config_json,
   skype: skype_config_json,
+  squadcast: squadcast_config_json,
   sylapsvideo: sylapsvideo_config_json,
   tandemvideo: tandemvideo__metadata_ts,
   telegram: telegram_config_json,
