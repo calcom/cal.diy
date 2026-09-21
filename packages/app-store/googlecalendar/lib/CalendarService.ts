@@ -22,7 +22,6 @@ import type { CredentialForCalendarServiceWithEmail } from "@calcom/types/Creden
 import type { calendar_v3 } from "@googleapis/calendar";
 import type { GaxiosResponse } from "googleapis-common";
 import { RRule } from "rrule";
-
 import { AxiosLikeResponseToFetchResponse } from "../../_utils/oauth/AxiosLikeResponseToFetchResponse";
 import { CalendarAuth } from "./CalendarAuth";
 
@@ -268,6 +267,7 @@ class GoogleCalendarService implements Calendar {
           await calendar.events.patch({
             calendarId: selectedCalendar,
             eventId: event.id || "",
+            sendUpdates: "none",
             requestBody: {
               location: getLocation({
                 videoCallData: calEvent.videoCallData,
@@ -300,6 +300,7 @@ class GoogleCalendarService implements Calendar {
           // Update the same event but this time we know the hangout link
           calendarId: selectedCalendar,
           eventId: event.id || "",
+          sendUpdates: "none",
           requestBody: {
             description: getRichDescription({
               ...calEvent,
@@ -421,6 +422,7 @@ class GoogleCalendarService implements Calendar {
           // Update the same event but this time we know the hangout link
           calendarId: selectedCalendar,
           eventId: evt.data.id || "",
+          sendUpdates: "none",
           requestBody: {
             description: getRichDescription({
               ...event,
