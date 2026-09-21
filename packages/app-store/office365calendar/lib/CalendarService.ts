@@ -20,6 +20,7 @@ import type {
 import type { CredentialForCalendarServiceWithTenantId } from "@calcom/types/Credential";
 import type { Event, Calendar as OfficeCalendar, User } from "@microsoft/microsoft-graph-types-beta";
 import type { DefaultBodyType } from "msw";
+import pLimit from "p-limit";
 import { findIana } from "windows-iana";
 import { getTokenObjectFromCredential } from "../../_utils/oauth/getTokenObjectFromCredential";
 import { OAuthManager } from "../../_utils/oauth/OAuthManager";
@@ -52,6 +53,9 @@ interface BodyValue {
   evt: { showAs: string };
   start: { dateTime: string };
 }
+
+const MS_GRAPH_CONCURRENCY_LIMIT = 15;
+const msGraphRateLimiter = pLimit(MS_GRAPH_CONCURRENCY_LIMIT);
 
 class Office365CalendarService implements Calendar {
   private url = "";
@@ -366,63 +370,84 @@ class Office365CalendarService implements Calendar {
   }
 
   async getAvailability(params: GetAvailabilityParams): Promise<EventBusyDate[]> {
-    const { dateFrom, dateTo, selectedCalendars } = params;
-    const dateFromParsed = new Date(dateFrom);
-    const dateToParsed = new Date(dateTo);
+    return msGraphRateLimiter(async () => {
+      const { dateFrom, dateTo, selectedCalendars } = params;
+      const dateFromParsed = new Date(dateFrom);
+      const dateToParsed = new Date(dateTo);
 
-    const filter = `?startDateTime=${encodeURIComponent(
-      dateFromParsed.toISOString()
-    )}&endDateTime=${encodeURIComponent(dateToParsed.toISOString())}`;
+      const filter = `?startDateTime=${encodeURIComponent(
+        dateFromParsed.toISOString()
+      )}&endDateTime=${encodeURIComponent(dateToParsed.toISOString())}`;
 
-    // Request maximum page size (999) to minimize pagination rounds
-    // Microsoft Graph allows up to 999 items per page for calendarView
-    const calendarSelectParams = "$select=showAs,start,end&$top=999";
+      // Request maximum page size (999) to minimize pagination rounds
+      // Microsoft Graph allows up to 999 items per page for calendarView
+      const calendarSelectParams = "$select=showAs,start,end&$top=999";
 
-    try {
-      const selectedCalendarIds = selectedCalendars.reduce((calendarIds, calendar) => {
-        if (calendar.integration === this.integrationName && calendar.externalId)
-          calendarIds.push(calendar.externalId);
+      try {
+        const selectedCalendarIds = selectedCalendars.reduce((calendarIds, calendar) => {
+          if (calendar.integration === this.integrationName && calendar.externalId)
+            calendarIds.push(calendar.externalId);
 
-        return calendarIds;
-      }, [] as string[]);
+          return calendarIds;
+        }, [] as string[]);
 
-      if (selectedCalendarIds.length === 0 && selectedCalendars.length > 0) {
-        // Only calendars of other integrations selected
-        return Promise.resolve([]);
+        if (selectedCalendarIds.length === 0 && selectedCalendars.length > 0) {
+          // Only calendars of other integrations selected
+          return Promise.resolve([]);
+        }
+
+        const ids = await (selectedCalendarIds.length === 0
+          ? this.listCalendars().then((cals) => cals.map((e_2) => e_2.externalId).filter(Boolean) || [])
+          : Promise.resolve(selectedCalendarIds));
+        const requestsPromises = ids.map(async (calendarId, id) => ({
+          id,
+          method: "GET",
+          url: `${await this.getUserEndpoint()}/calendars/${calendarId}/calendarView${filter}&${calendarSelectParams}`,
+        }));
+        const requests = await Promise.all(requestsPromises);
+
+        // Microsoft Graph batch API limit is 20 requests per batch
+        const MS_GRAPH_BATCH_LIMIT = 20;
+        let allResponses: ISettledResponse[] = [];
+
+        // Process requests in chunks of 20
+        for (let i = 0; i < requests.length; i += MS_GRAPH_BATCH_LIMIT) {
+          const chunk = requests.slice(i, i + MS_GRAPH_BATCH_LIMIT);
+          // Use chunk-local ids so retry mapping matches this batch
+          const chunkWithLocalIds = chunk.map((request, index) => ({ ...request, id: index }));
+          const response = await this.apiGraphBatchCall(chunkWithLocalIds);
+          const responseBody = await this.handleErrorJsonOffice365Calendar(response);
+          let responseBatchApi: IBatchResponse = { responses: [] };
+          if (typeof responseBody === "string") {
+            responseBatchApi = this.handleTextJsonResponseWithHtmlInBody(responseBody);
+          } else {
+            responseBatchApi = responseBody as IBatchResponse;
+          }
+
+          // Validate if any 429 status Retry-After is present
+          const retryAfter =
+            !!responseBatchApi?.responses && this.findRetryAfterResponse(responseBatchApi.responses);
+
+          if (retryAfter && responseBatchApi.responses) {
+            responseBatchApi = await this.fetchRequestWithRetryAfter(
+              chunkWithLocalIds,
+              responseBatchApi.responses,
+              2
+            );
+          }
+
+          // Recursively fetch nextLink responses for this chunk
+          const chunkResponses = await this.fetchResponsesWithNextLink(responseBatchApi.responses);
+          allResponses = allResponses.concat(chunkResponses);
+        }
+
+        const alreadySuccessResponse = allResponses;
+
+        return alreadySuccessResponse ? this.processBusyTimes(alreadySuccessResponse) : [];
+      } catch {
+        return Promise.reject([]);
       }
-
-      const ids = await (selectedCalendarIds.length === 0
-        ? this.listCalendars().then((cals) => cals.map((e_2) => e_2.externalId).filter(Boolean) || [])
-        : Promise.resolve(selectedCalendarIds));
-      const requestsPromises = ids.map(async (calendarId, id) => ({
-        id,
-        method: "GET",
-        url: `${await this.getUserEndpoint()}/calendars/${calendarId}/calendarView${filter}&${calendarSelectParams}`,
-      }));
-      const requests = await Promise.all(requestsPromises);
-      const response = await this.apiGraphBatchCall(requests);
-      const responseBody = await this.handleErrorJsonOffice365Calendar(response);
-      let responseBatchApi: IBatchResponse = { responses: [] };
-      if (typeof responseBody === "string") {
-        responseBatchApi = this.handleTextJsonResponseWithHtmlInBody(responseBody);
-      }
-      let alreadySuccessResponse = [] as ISettledResponse[];
-
-      // Validate if any 429 status Retry-After is present
-      const retryAfter =
-        !!responseBatchApi?.responses && this.findRetryAfterResponse(responseBatchApi.responses);
-
-      if (retryAfter && responseBatchApi.responses) {
-        responseBatchApi = await this.fetchRequestWithRetryAfter(requests, responseBatchApi.responses, 2);
-      }
-
-      // Recursively fetch nextLink responses
-      alreadySuccessResponse = await this.fetchResponsesWithNextLink(responseBatchApi.responses);
-
-      return alreadySuccessResponse ? this.processBusyTimes(alreadySuccessResponse) : [];
-    } catch {
-      return Promise.reject([]);
-    }
+    });
   }
 
   async listCalendars(): Promise<IntegrationCalendar[]> {
