@@ -1,7 +1,56 @@
 import { describe, it, expect } from "vitest";
 import z from "zod";
 
-import { excludeOrRequireEmailSchema } from "./zod-utils";
+import { excludeOrRequireEmailSchema, signupSchema } from "./zod-utils";
+
+describe("signupSchema password validation (isPasswordValid duplicate)", () => {
+  const parsePassword = (password: string) =>
+    signupSchema.safeParse({ email: "test@example.com", password });
+
+  describe("ASCII passwords", () => {
+    it("accepts a valid ASCII password", () => {
+      expect(parsePassword("Abcdefg1").success).toBe(true);
+    });
+
+    it("rejects a password missing uppercase", () => {
+      expect(parsePassword("abcdefg1").success).toBe(false);
+    });
+
+    it("rejects a password missing lowercase", () => {
+      expect(parsePassword("ABCDEFG1").success).toBe(false);
+    });
+
+    it("rejects a password missing a digit", () => {
+      expect(parsePassword("Abcdefgh").success).toBe(false);
+    });
+
+    it("rejects a password that is too short", () => {
+      expect(parsePassword("Abcde1").success).toBe(false);
+    });
+  });
+
+  describe("Unicode uppercase and lowercase recognition", () => {
+    it("accepts Cyrillic uppercase and lowercase letters", () => {
+      expect(parsePassword("Абвгдеж1").success).toBe(true);
+    });
+
+    it("accepts Greek uppercase and lowercase letters", () => {
+      expect(parsePassword("Ωαβγδεζ1").success).toBe(true);
+    });
+
+    it("accepts accented Latin uppercase and lowercase", () => {
+      expect(parsePassword("Éñabcde1").success).toBe(true);
+    });
+
+    it("rejects password with only Unicode lowercase and digits", () => {
+      expect(parsePassword("абвгдеж1").success).toBe(false);
+    });
+
+    it("rejects password with only Unicode uppercase and digits", () => {
+      expect(parsePassword("ΑΒΓΔΕΖΗ1").success).toBe(false);
+    });
+  });
+});
 
 describe("excludeOrRequireEmailSchema", () => {
   const parse = (input: string) => z.object({ v: excludeOrRequireEmailSchema }).safeParse({ v: input });
