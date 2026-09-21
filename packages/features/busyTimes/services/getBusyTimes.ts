@@ -169,10 +169,6 @@ export class BusyTimesService {
         // doing this allows using the map later to remove the ranges from calendar busy times.
         delete bookingSeatCountMap[bookedAt];
       }
-      // rescheduling the same booking to the same time should be possible. Why?
-      if (rest.uid === rescheduleUid) {
-        return aggregate;
-      }
       aggregate.push({
         start: dayjs(startTime).subtract(minutesToBlockBeforeEvent, "minute").toDate(),
         end: dayjs(endTime).add(minutesToBlockAfterEvent, "minute").toDate(),
