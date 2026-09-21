@@ -7,6 +7,7 @@ export const REDIRECT_APPS = [
   "autocheckin",
   "baa-for-hipaa",
   "bolna",
+  "bots4you",
   "caretta",
   "chatbase",
   "clara",

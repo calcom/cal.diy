@@ -1,0 +1,20 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "Bots4You",
+  "slug": "bots4you",
+  "type": "bots4you_automation",
+  "logo": "logo.svg",
+  "url": "https://bots4you.de/telefon",
+  "variant": "automation",
+  "categories": ["automation"],
+  "publisher": "Bots4You GmbH",
+  "email": "info@bots4you.de",
+  "description": "Unser KI-Helfer am Telefon vereinbart direkt im Gespräch passende Termine und trägt sie automatisch in Ihren Cal.com-Kalender ein.",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "link-as-an-app",
+  "externalLink": {
+    "url": "https://bots4you.de/telefon",
+    "newTab": true
+  }
+}
