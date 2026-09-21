@@ -27,6 +27,11 @@ export async function getLocationGroupedOptions(
     }[]
   > = {};
 
+  // Mirrors the option values already collected per category. Without it the
+  // dedupe below rescans the whole category array on every credential, which is
+  // quadratic once an account has many installed apps.
+  const seenValuesByCategory: Record<string, Set<string>> = {};
+
   // don't default to {}, when you do TS no longer determines the right types.
   let idToSearchObject: Prisma.CredentialWhereInput;
   let user = null;
@@ -108,13 +113,16 @@ export async function getLocationGroupedOptions(
             ? { credentialId: app.credential.id, teamName: app.credential.team?.name ?? null }
             : {}),
         };
-        if (apps[groupByCategory]) {
-          const existingOption = apps[groupByCategory].find((o) => o.value === option.value);
-          if (!existingOption) {
-            apps[groupByCategory] = [...apps[groupByCategory], option];
+        const categoryOptions = apps[groupByCategory];
+        const seenValues = seenValuesByCategory[groupByCategory];
+        if (categoryOptions && seenValues) {
+          if (!seenValues.has(option.value)) {
+            seenValues.add(option.value);
+            categoryOptions.push(option);
           }
         } else {
           apps[groupByCategory] = [option];
+          seenValuesByCategory[groupByCategory] = new Set([option.value]);
         }
       }
     }
