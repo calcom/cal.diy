@@ -92,9 +92,18 @@ export class SlotsWorkerService_2024_04_15 implements OnModuleDestroy {
    * @param failedWorker The worker that failed or exited.
    */
   private handleWorkerFailure(failedWorker: Worker): void {
+    const poolIndex = this.workerPool.indexOf(failedWorker);
+    // A crashing worker commonly emits both "error" and "exit", so this can be
+    // invoked twice for the same worker. If it has already been handled it is no
+    // longer in the pool, in which case bail out: otherwise splice(-1, 1) would
+    // drop a healthy worker and createNewWorker() would over-inflate the pool.
+    if (poolIndex === -1) {
+      return;
+    }
+
     // Remove the failed worker from both pools
     this.logger.error(`Handling Worker ${failedWorker.threadId} failure`);
-    this.workerPool.splice(this.workerPool.indexOf(failedWorker), 1);
+    this.workerPool.splice(poolIndex, 1);
     this.availableWorkers = this.availableWorkers.filter((w) => w !== failedWorker);
 
     try {
