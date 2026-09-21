@@ -96,6 +96,35 @@ describe("/api/webhooks/calendar-subscription/[provider]", () => {
       expect(mockProcessWebhook).toHaveBeenCalledWith("office365_calendar", request);
     });
 
+    test("should return Office365 validation token without processing the webhook", async () => {
+      const request = new NextRequest(
+        "http://localhost/api/webhooks/calendar-subscription/office365_calendar?validationToken=Validation%3A%20Testing",
+        {
+          method: "POST",
+        }
+      );
+      const mockIsCacheEnabled = vi.fn();
+      const mockIsSyncEnabled = vi.fn();
+      const mockProcessWebhook = vi.fn();
+
+      mockCalendarSubscriptionService.prototype.isCacheEnabled = mockIsCacheEnabled;
+      mockCalendarSubscriptionService.prototype.isSyncEnabled = mockIsSyncEnabled;
+      mockCalendarSubscriptionService.prototype.processWebhook = mockProcessWebhook;
+
+      const { POST } = await import("../route");
+      const response = await POST(request, {
+        params: Promise.resolve({ provider: "office365_calendar" }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe("text/plain");
+      expect(await response.text()).toBe("Validation: Testing");
+      expect(mockCalendarSubscriptionService).not.toHaveBeenCalled();
+      expect(mockIsCacheEnabled).not.toHaveBeenCalled();
+      expect(mockIsSyncEnabled).not.toHaveBeenCalled();
+      expect(mockProcessWebhook).not.toHaveBeenCalled();
+    });
+
     test("should reject unsupported provider", async () => {
       const request = new NextRequest(
         "http://localhost/api/webhooks/calendar-subscription/unsupported_calendar",
