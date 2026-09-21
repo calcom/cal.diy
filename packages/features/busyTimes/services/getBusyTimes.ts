@@ -493,9 +493,30 @@ export class BusyTimesService {
         eventTypeId: true,
         title: true,
         userId: true,
+        _count: {
+          select: {
+            attendees: true,
+          },
+        },
       },
     });
 
-    return bookings;
+    busyTimes = bookings.map(({ id, startTime, endTime, title, userId, _count }) => ({
+      start: dayjs(startTime).toDate(),
+      end: dayjs(endTime).toDate(),
+      title,
+      source: `eventType-${eventTypeId}-booking-${id}`,
+      userId,
+      attendeeCount: _count?.attendees || 1,
+    }));
+
+    logger.silly(`Fetch limit checks bookings for eventId: ${eventTypeId} ${JSON.stringify(busyTimes)}`);
+    performance.mark("getBusyTimesForLimitChecksEnd");
+    performance.measure(
+      `prisma booking get for limits took $1'`,
+      "getBusyTimesForLimitChecksStart",
+      "getBusyTimesForLimitChecksEnd"
+    );
+    return busyTimes;
   }
 }
