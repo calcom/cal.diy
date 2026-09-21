@@ -71,6 +71,19 @@ interface Option {
   subtitle: string;
 }
 
+const formatCalendarDetails = (...parts: (string | null | undefined)[]): string => {
+  const details = parts
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(" - ");
+  return details ? `(${details})` : "";
+};
+
+const formatCalendarLabel = (
+  name: string | null | undefined,
+  ...details: (string | null | undefined)[]
+): string => [name?.trim(), formatCalendarDetails(...details)].filter(Boolean).join(" ");
+
 export const SingleValueComponent = ({ ...props }: SingleValueProps<Option>) => {
   const { label, subtitle } = props.data;
   return (
@@ -142,9 +155,10 @@ const DestinationCalendarSelector = ({
       setSelectedOption({
         value: `${selected.integration}:${selected.externalId}`,
         label: selected.name ? `${selected.name} ` : "",
-        subtitle: `(${selectedIntegration?.integration.title?.replace(/calendar/i, "")} - ${
+        subtitle: formatCalendarDetails(
+          selectedIntegration?.integration.name.replace(/calendar/i, ""),
           selectedIntegration?.primary?.name
-        })`,
+        ),
       });
     }
   }, [connectedCalendarsList]);
@@ -155,18 +169,20 @@ const DestinationCalendarSelector = ({
   const options =
     connectedCalendarsList?.map((selectedCalendar) => ({
       key: selectedCalendar.credentialId,
-      label: `${selectedCalendar.integration.title?.replace(/calendar/i, "")} (${
+      label: formatCalendarLabel(
+        selectedCalendar.integration.name.replace(/calendar/i, ""),
         selectedCalendar.primary?.integration === "office365_calendar"
           ? selectedCalendar.primary?.email
           : selectedCalendar.primary?.name
-      })`,
+      ),
       options: (selectedCalendar.calendars ?? [])
         .filter((cal) => cal.readOnly === false)
         .map((cal) => ({
-          label: ` ${cal.name} `,
-          subtitle: `(${selectedCalendar?.integration.title?.replace(/calendar/i, "")} - ${
-            selectedCalendar?.primary?.name
-          })`,
+          label: cal.name?.trim() ?? "",
+          subtitle: formatCalendarDetails(
+            selectedCalendar.integration.name.replace(/calendar/i, ""),
+            selectedCalendar.primary?.name
+          ),
           value: `${cal.integration}:${cal.externalId}`,
         })),
     })) ?? [];
@@ -183,8 +199,11 @@ const DestinationCalendarSelector = ({
           ) : (
             <span className="text-default min-w-0 overflow-hidden truncate whitespace-nowrap">
               <Badge variant="blue">{t("default")}</Badge>{" "}
-              {destinationCalendar?.name &&
-                `${destinationCalendar.name} (${destinationCalendar?.integrationTitle} - ${destinationCalendar.primaryEmail})`}
+              {formatCalendarLabel(
+                destinationCalendar?.name,
+                destinationCalendar?.integrationTitle,
+                destinationCalendar?.primaryEmail
+              )}
             </span>
           )
         }

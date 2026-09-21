@@ -1,11 +1,13 @@
 import { prisma } from "@calcom/prisma/__mocks__/prisma";
 import { getCalendar } from "@calcom/app-store/_utils/getCalendar";
-import type { CalendarEvent } from "@calcom/types/Calendar";
+import type { Calendar, CalendarEvent } from "@calcom/types/Calendar";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockDeep } from "vitest-mock-extended";
 import {
   deduplicateCredentialsBasedOnSelectedCalendars,
   deleteEvent,
   getCalendarCredentials,
+  getConnectedCalendars,
   processEvent,
 } from "./CalendarManager";
 
@@ -97,6 +99,46 @@ function buildCalendarEvent(overrides = {}) {
 }
 
 describe("CalendarManager tests", () => {
+  it("uses the app name for the destination calendar when the deprecated title is absent", async () => {
+    const calendar = mockDeep<Calendar>();
+    calendar.listCalendars.mockResolvedValue([
+      {
+        externalId: "owner@example.com",
+        integration: "google_calendar",
+        name: "Personal",
+        email: "owner@example.com",
+        primary: true,
+      },
+    ]);
+    vi.mocked(getCalendar).mockResolvedValue(calendar);
+    const credentials = getCalendarCredentials([
+      {
+        ...buildCredential({
+          type: "google_calendar",
+          appId: "google-calendar",
+          id: 1,
+          delegatedToId: null,
+          user: { email: "owner@example.com" },
+        }),
+        encryptedKey: null,
+        delegationCredentialId: null,
+      },
+    ]).map((entry) => {
+      const integration = { ...entry.integration, name: "Google Calendar" };
+      delete integration.title;
+      return { ...entry, integration };
+    });
+
+    expect(credentials).toHaveLength(1);
+    const result = await getConnectedCalendars(credentials, [], "owner@example.com");
+
+    expect(result.destinationCalendar).toMatchObject({
+      integrationTitle: "Google Calendar",
+      primaryEmail: "owner@example.com",
+      externalId: "owner@example.com",
+    });
+  });
+
   describe("fn: processEvent", () => {
     it("should clear attendees when hideOrganizerEmail is true and no Zoho Calendar destination", () => {
       const calEvent = buildCalendarEvent({

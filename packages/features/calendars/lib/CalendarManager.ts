@@ -227,7 +227,7 @@ export const getConnectedCalendars = async (
           ...calendar,
           primary: calendar.primary ?? undefined,
           primaryEmail: connectedCalendar.primary?.email,
-          integrationTitle: connectedCalendar.integration?.title,
+          integrationTitle: connectedCalendar.integration.name,
         };
         break;
       }
