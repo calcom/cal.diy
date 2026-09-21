@@ -669,8 +669,8 @@ async function handler(
     eventType,
     bookingStartTime: reqBody.start,
     userId,
-    originalRescheduledBookingOrganizerId: originalRescheduledBooking?.user?.id,
     paymentAppData,
+    originalRescheduledBooking,
     bookerEmail,
   });
 
@@ -2187,11 +2187,31 @@ async function handler(
     !!booking;
 
   if (!isConfirmedByDefault && noEmail !== true && !bookingRequiresPayment) {
+
+    if (!!originalRescheduledBooking && originalRescheduledBooking.status === BookingStatus.PENDING) {
+    tracingLogger.debug(
+      `Emails: Pending reschedule by owner, sending rescheduled pending emails`,
+      safeStringify({ calEvent: getPiiFreeCalendarEvent(evt) })
+    );
+
+    if (!isDryRun) {
+      await emailsAndSmsHandler.send({
+        action: BookingActionMap.requested,
+        data: {
+          evt,
+          eventType,
+          attendees: attendeesList,
+          additionalNotes,
+          originalRescheduledBooking,
+          rescheduleReason
+        },
+      });
+      bookingEmailsAndSmsTaskerAction = BookingActionMap.requested;
+    }
+  } else {
     tracingLogger.debug(
       `Emails: Booking ${organizerUser.username} requires confirmation, sending request emails`,
-      safeStringify({
-        calEvent: getPiiFreeCalendarEvent(evt),
-      })
+      safeStringify({ calEvent: getPiiFreeCalendarEvent(evt) })
     );
     if (!isDryRun) {
       await emailsAndSmsHandler.send({
@@ -2200,6 +2220,7 @@ async function handler(
       });
       bookingEmailsAndSmsTaskerAction = BookingActionMap.requested;
     }
+  }
   }
 
   if (booking.location?.startsWith("http")) {
