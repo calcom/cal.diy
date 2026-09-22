@@ -124,8 +124,9 @@ export function isLinkExpired(
   },
   timezone?: string | null
 ): boolean {
-  if (link.expiresAt) return hasExpiryTimePassed(link.expiresAt, timezone);
-  return isUsageBasedExpired(link.usageCount || 0, link.maxUsageCount);
+  const isTimeExpired = link.expiresAt ? hasExpiryTimePassed(link.expiresAt, timezone) : false;
+  const isUsageExpired = isUsageBasedExpired(link.usageCount || 0, link.maxUsageCount);
+  return isTimeExpired || isUsageExpired;
 }
 
 /**
