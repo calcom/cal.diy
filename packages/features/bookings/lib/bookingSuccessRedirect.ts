@@ -8,7 +8,7 @@ import type { EventType } from "@calcom/prisma/client";
 import { useRouter } from "next/navigation";
 
 export function getNewSearchParams(args: {
-  query: Record<string, string | null | undefined | boolean>;
+  query: Record<string, string | string[] | null | undefined | boolean>;
   searchParams?: URLSearchParams;
   filterInternalParams?: boolean;
 }) {
@@ -38,6 +38,13 @@ export function getNewSearchParams(args: {
     }
 
     if (shouldExcludeParam(key)) {
+      return;
+    }
+
+    if (Array.isArray(value)){
+      value.forEach((item) => {
+        newSearchParams.append(key,String(item))
+      });
       return;
     }
 
@@ -72,6 +79,7 @@ type ResultType = {
   phone?: string | null;
   attendeeFirstName?: string | null;
   attendeeLastName?: string | null;
+  [key: string] : unknown;
 };
 
 export const getBookingRedirectExtraParams = (booking: SuccessRedirectBookingType) => {
@@ -99,6 +107,30 @@ export const getBookingRedirectExtraParams = (booking: SuccessRedirectBookingTyp
     if (lastName) result.attendeeLastName = lastName;
     else if (name && typeof name === "string") result.attendeeName = name; // Fallback if `name` is a string instead of an object
 
+    const responses = booking.responses || {};
+    const all = Object.keys(responses);
+    const ignoreList = [
+      "name",
+      "firstName",
+      "lastName",
+      "email",
+      "phone",
+      "attendeePhoneNumber",
+      "location",
+      "guests",
+      "notes",
+      "smsReminderNumber",
+      "rescheduleReason",
+    ];
+    all.forEach((currKey) => {
+      const shouldInclude = ignoreList.includes(currKey);
+      if(!shouldInclude){
+        result[currKey] = (responses as Record<string, unknown>)[currKey];
+      }
+    });
+
+    
+    
     return result;
   }
 
@@ -156,11 +188,16 @@ export const getBookingRedirectExtraParams = (booking: SuccessRedirectBookingTyp
       { uid: booking.uid }
     );
 
-  const queryCompatibleParams: Record<string, string | boolean | null | undefined> = {
+  const queryCompatibleParams: Record<string, string | string[] | boolean | null | undefined> = {
     ...Object.fromEntries(
       Object.entries(bookingParams).map(([key, value]) => {
         if (Array.isArray(value)) {
-          return [key, value.join(", ")];
+          
+          if(key == "hostName" || key == "guestEmails" ){
+            return [key,value.join(", ")];
+          }
+          
+          return [key, value];
         }
         if (typeof value === "object" && value !== null) {
           // Skip complex objects (user, attendees) as we are extracting only needed fields
@@ -169,7 +206,6 @@ export const getBookingRedirectExtraParams = (booking: SuccessRedirectBookingTyp
         return [key, value];
       })
     ),
-    hostName: bookingParams.hostName?.join(", "),
     attendeeName: bookingParams.attendeeName || undefined,
     hostStartTime: bookingParams.hostStartTime || undefined,
     attendeeStartTime: bookingParams.attendeeStartTime || undefined,
