@@ -750,26 +750,37 @@ export default abstract class BaseCalendarService implements Calendar {
 
           // RecurExpansion uses the supplied start time as DTSTART. Starting it at
           // the query range silently re-anchors rules such as FREQ=WEEKLY without
-          // BYDAY. Advance from the event's real DTSTART instead.
-          while (current && dayjs(current.toJSDate()).isBefore(start)) {
-            current = iterator.next();
-          }
+          // BYDAY. Advance from the event's real DTSTART instead, but keep the
+          // first occurrence that overlaps the requested range.
           let currentEvent: ReturnType<typeof event.getOccurrenceDetails> | undefined;
           let currentStart: ReturnType<typeof dayjs> | null = null;
           let currentError: string | undefined;
 
+          while (current) {
+            currentEvent = undefined;
+            try {
+              currentEvent = event.getOccurrenceDetails(current);
+            } catch (error) {
+              if (error instanceof Error && error.message !== currentError) {
+                currentError = error.message;
+                this.log.error("error", error);
+              }
+            }
+
+            if (!currentEvent || dayjs(currentEvent.endDate.toJSDate()).isAfter(start)) break;
+            current = iterator.next();
+          }
+
           while (
             maxIterations > 0 &&
-            (currentStart === null || currentStart.isAfter(end) === false) &&
-            // this iterator was poorly implemented, normally done is expected to be
-            // returned
-            (current = iterator.next())
+            current &&
+            (currentStart === null || currentStart.isAfter(end) === false)
           ) {
             maxIterations -= 1;
 
             try {
               // @see https://github.com/mozilla-comm/ical.js/issues/514
-              currentEvent = event.getOccurrenceDetails(current);
+              currentEvent = currentEvent ?? event.getOccurrenceDetails(current);
             } catch (error) {
               if (error instanceof Error && error.message !== currentError) {
                 currentError = error.message;
@@ -796,6 +807,9 @@ export default abstract class BaseCalendarService implements Calendar {
                 end: dayjs(currentEvent.endDate.toJSDate()).toISOString(),
               });
             }
+
+            current = iterator.next();
+            currentEvent = undefined;
           }
           if (maxIterations <= 0) {
             logger.warn("Could not find any occurrence for recurring event in 365 iterations");

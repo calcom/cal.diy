@@ -1,5 +1,5 @@
 import { createEvent as createIcsEvent } from "ics";
-import { createCalendarObject, updateCalendarObject } from "tsdav";
+import { createCalendarObject, fetchCalendarObjects, updateCalendarObject } from "tsdav";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("ics", () => ({
@@ -40,7 +40,7 @@ vi.mock("./CalEventParser", () => ({
   getRichDescription: vi.fn().mockReturnValue("Test Description"),
 }));
 
-import type { CalendarServiceEvent } from "@calcom/types/Calendar";
+import type { CalendarServiceEvent, IntegrationCalendar } from "@calcom/types/Calendar";
 import BaseCalendarService from "./CalendarService";
 
 const createMockEvent = (overrides: Partial<CalendarServiceEvent> = {}): CalendarServiceEvent => ({
@@ -100,6 +100,73 @@ class TestCalendarService extends BaseCalendarService {
     return this.updateEvent(uid, event);
   }
 }
+
+const selectedCalendars: IntegrationCalendar[] = [
+  {
+    externalId: "https://caldav.example.com/calendar/",
+    name: "Test Calendar",
+    primary: true,
+    readOnly: false,
+    email: "test@example.com",
+    integration: "caldav",
+    credentialId: 1,
+  },
+];
+
+const mockCalendarObjects = (iCalString: string) => {
+  vi.mocked(fetchCalendarObjects).mockResolvedValue([
+    {
+      url: "https://caldav.example.com/calendar/event.ics",
+      data: iCalString,
+    },
+  ] as never);
+};
+
+describe("CalendarService - recurring availability", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("includes a recurrence that starts exactly at the query start", async () => {
+    const service = new TestCalendarService();
+    mockCalendarObjects(
+      `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:weekly\r\nDTSTART:20240101T100000Z\r\nDTEND:20240101T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nEND:VCALENDAR`
+    );
+
+    const events = await service.getAvailability({
+      dateFrom: "2024-01-15T10:00:00.000Z",
+      dateTo: "2024-01-15T12:00:00.000Z",
+      selectedCalendars,
+    });
+
+    expect(events).toEqual([
+      {
+        start: "2024-01-15T10:00:00.000Z",
+        end: "2024-01-15T11:00:00.000Z",
+      },
+    ]);
+  });
+
+  it("includes a recurrence that starts before the query start and overlaps it", async () => {
+    const service = new TestCalendarService();
+    mockCalendarObjects(
+      `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:weekly-overlap\r\nDTSTART:20240101T090000Z\r\nDTEND:20240101T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nEND:VCALENDAR`
+    );
+
+    const events = await service.getAvailability({
+      dateFrom: "2024-01-15T10:00:00.000Z",
+      dateTo: "2024-01-15T12:00:00.000Z",
+      selectedCalendars,
+    });
+
+    expect(events).toEqual([
+      {
+        start: "2024-01-15T09:00:00.000Z",
+        end: "2024-01-15T11:00:00.000Z",
+      },
+    ]);
+  });
+});
 
 describe("CalendarService - UID Consistency", () => {
   beforeEach(() => {
