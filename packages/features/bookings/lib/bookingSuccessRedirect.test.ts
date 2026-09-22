@@ -63,7 +63,7 @@ const createMockBooking = (overrides: Partial<MockBooking> = {}): MockBooking =>
   },
   responses: {
     name: "John Doe",
-    phone: "+1234567890",
+    attendeePhoneNumber: "+1234567890",
   },
   ...overrides,
 });
@@ -390,6 +390,22 @@ describe("useBookingSuccessRedirect", () => {
 
         const calledUrl = vi.mocked(navigateInTopWindow).mock.calls[0][0];
         assertUrlSearchParams(calledUrl, { "cal.rerouting": "true" });
+      });
+
+      it("includes attendeePhoneNumber param from booking responses", () => {
+        vi.mocked(useCompatSearchParams).mockReturnValue(new URLSearchParams() as any);
+
+        const bookingSuccessRedirect = useBookingSuccessRedirect();
+
+        bookingSuccessRedirect({
+          successRedirectUrl: "https://example.com/success",
+          forwardParamsSuccessRedirect: true,
+          query: {},
+          booking: mockBooking,
+        });
+
+        const calledUrl = vi.mocked(navigateInTopWindow).mock.calls[0][0];
+        assertUrlSearchParams(calledUrl, { attendeePhoneNumber: "+1234567890" });
       });
     });
   });
