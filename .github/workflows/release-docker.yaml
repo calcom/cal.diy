@@ -94,7 +94,7 @@ jobs:
         uses: ./.github/actions/docker-build-and-test
         with:
           platform: "linux/amd64"
-          platform-suffix: ""
+          platform-suffix: "-amd64"
           dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -103,7 +103,6 @@ jobs:
           postgres-db: ${{ env.POSTGRES_DB }}
           database-host: ${{ env.DATABASE_HOST }}
           push-image: ${{ (github.event_name == 'push' || inputs.PUSH_IMAGE) && 'true' || 'false' }}
-          use-as-latest: "true"
 
       - name: Notify Slack on Success
         if: success() && secrets.CI_SLACK_WEBHOOK_URL != ''
@@ -171,6 +170,74 @@ jobs:
           payload: |
             {
               "text": ":red_circle: Workflow *${{ github.workflow }}* (ARM) failed in job *${{ github.job }}*.\nSee: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+
+  create-manifest:
+    name: "Create Multi-Arch Manifest"
+    needs: [prepare, release-amd64, release-arm]
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    if: ${{ github.event_name == 'push' || inputs.PUSH_IMAGE }}
+    env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+    steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push multi-arch manifests
+        run: |
+          REGISTRIES=(
+            "docker.io/calcom/cal.com"
+            "docker.io/calendso/calendso"
+            "ghcr.io/calcom/cal.com"
+          )
+
+          for registry in "${REGISTRIES[@]}"; do
+            amd64_image="$registry:$RELEASE_TAG-amd64"
+            arm64_image="$registry:$RELEASE_TAG-arm"
+
+            echo "Creating manifest for $registry:$RELEASE_TAG"
+            docker manifest create "$registry:$RELEASE_TAG" \
+              "$amd64_image" \
+              "$arm64_image"
+            docker manifest push "$registry:$RELEASE_TAG"
+
+            echo "Creating manifest for $registry:latest"
+            docker manifest create --amend "$registry:latest" \
+              "$amd64_image" \
+              "$arm64_image"
+            docker manifest push "$registry:latest"
+          done
+
+      - name: Notify Slack on Success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": ":large_green_circle: Workflow *${{ github.workflow }}* (Multi-Arch Manifest) succeeded.\nSee: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+
+      - name: Notify Slack on Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": ":red_circle: Workflow *${{ github.workflow }}* (Multi-Arch Manifest) failed.\nSee: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
