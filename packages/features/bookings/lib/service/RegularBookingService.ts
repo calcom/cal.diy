@@ -68,8 +68,8 @@ import { getServerErrorFromUnknown } from "@calcom/lib/server/getServerErrorFrom
 import { getTimeFormatStringFromUserTimeFormat } from "@calcom/lib/timeFormat";
 import { distributedTracing } from "@calcom/lib/tracing/factory";
 import type { PrismaClient } from "@calcom/prisma";
-import type { AssignmentReasonEnum, DestinationCalendar, Prisma, User } from "@calcom/prisma/client";
-import { BookingStatus, CreationSource, SchedulingType, WebhookTriggerEvents } from "@calcom/prisma/enums";
+import {  type AssignmentReasonEnum, type DestinationCalendar, type Prisma, type User } from "@calcom/prisma/client";
+import { BookingStatus, CreationSource, SchedulingType, WebhookTriggerEvents , DisableCancelling} from "@calcom/prisma/enums";
 import { userMetadata as userMetadataSchema } from "@calcom/prisma/zod-utils";
 import type {
   AdditionalInformation,
@@ -1392,7 +1392,7 @@ async function handler(
       seatsShowAvailabilityCount: eventType.seatsPerTimeSlot ? eventType.seatsShowAvailabilityCount : true,
       customReplyToEmail: eventType.customReplyToEmail,
       disableRescheduling: eventType.disableRescheduling ?? false,
-      disableCancelling: eventType.disableCancelling ?? false,
+      disableCancelling: eventType.disableCancelling ?? DisableCancelling.NOBODY,
     })
     .withMetadataAndResponses({
       additionalNotes,

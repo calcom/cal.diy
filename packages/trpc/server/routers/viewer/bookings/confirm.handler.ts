@@ -27,7 +27,7 @@ import { getTimeFormatStringFromUserTimeFormat } from "@calcom/lib/timeFormat";
 import type { TraceContext } from "@calcom/lib/tracing";
 import { prisma } from "@calcom/prisma";
 import { Prisma } from "@calcom/prisma/client";
-import { BookingStatus, WebhookTriggerEvents } from "@calcom/prisma/enums";
+import { BookingStatus, WebhookTriggerEvents, DisableCancelling } from "@calcom/prisma/enums";
 import type { EventTypeMetadata } from "@calcom/prisma/zod-utils";
 import type { CalendarEvent } from "@calcom/types/Calendar";
 import { TRPCError } from "@trpc/server";
@@ -269,7 +269,7 @@ export const confirmHandler = async ({ ctx, input }: ConfirmOptions) => {
     customReplyToEmail: booking.eventType?.customReplyToEmail,
     seatsPerTimeSlot: booking.eventType?.seatsPerTimeSlot,
     seatsShowAttendees: booking.eventType?.seatsShowAttendees,
-    disableCancelling: booking.eventType?.disableCancelling ?? false,
+    disableCancelling: booking.eventType?.disableCancelling ?? DisableCancelling.NOBODY,
     disableRescheduling: booking.eventType?.disableRescheduling ?? false,
     team: booking.eventType?.team
       ? {

@@ -19,6 +19,7 @@ import {
   rrSegmentQueryValueSchema,
 } from "@calcom/prisma/zod-utils";
 import { z } from "zod";
+import {DisableCancelling} from "@calcom/prisma/enums";
 
 export type TUpdateInputSchema = EventTypeUpdateInput;
 
@@ -148,7 +149,14 @@ const BaseEventTypeUpdateInput: z.ZodType<TUpdateInputSchema> = z
     seatsPerTimeSlot: z.number().min(1).max(MAX_SEATS_PER_TIME_SLOT).nullable().optional(),
     onlyShowFirstAvailableSlot: z.boolean().optional(),
     showOptimizedSlots: z.boolean().nullable().optional(),
-    disableCancelling: z.boolean().nullable().optional(),
+    disableCancelling: z
+      .enum([
+        DisableCancelling.NOBODY,
+        DisableCancelling.GUESTS,
+        DisableCancelling.BOTH_HOST_GUESTS,
+      ])
+      .nullable()
+      .optional(),
     disableRescheduling: z.boolean().nullable().optional(),
     requiresCancellationReason: z
       .enum(["MANDATORY_BOTH", "MANDATORY_HOST_ONLY", "MANDATORY_ATTENDEE_ONLY", "OPTIONAL_BOTH"])
