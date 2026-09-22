@@ -8,6 +8,7 @@ export const apiHandlers = {
   attio: import("./attio/api"),
   basecamp3: import("./basecamp3/api"),
   btcpayserver: import("./btcpayserver/api"),
+  bubblav: import("./bubblav/api"),
   caldavcalendar: import("./caldavcalendar/api"),
   campfire: import("./campfire/api"),
   closecom: import("./closecom/api"),

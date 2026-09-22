@@ -2186,6 +2186,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@calcom/bubblav@workspace:packages/app-store/bubblav":
+  version: 0.0.0-use.local
+  resolution: "@calcom/bubblav@workspace:packages/app-store/bubblav"
+  dependencies:
+    "@calcom/lib": "workspace:*"
+    "@calcom/prisma": "workspace:*"
+    "@calcom/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@calcom/caldavcalendar@workspace:packages/app-store/caldavcalendar":
   version: 0.0.0-use.local
   resolution: "@calcom/caldavcalendar@workspace:packages/app-store/caldavcalendar"
