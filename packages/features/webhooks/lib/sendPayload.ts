@@ -6,6 +6,7 @@ import { getHumanReadableLocationValue } from "@calcom/app-store/locations";
 import type { WebhookSubscriber, PaymentData } from "@calcom/features/webhooks/lib/dto/types";
 import { getUTCOffsetByTimezone } from "@calcom/lib/dayjs";
 import type { CalendarEvent, Person } from "@calcom/types/Calendar";
+import { getVideoCallUrlFromCalEvent, isDailyVideoCall } from "@calcom/lib/CalEventParser";
 
 // Minimal webhook shape for sending payloads (subset of WebhookSubscriber)
 type WebhookForPayload = Pick<WebhookSubscriber, "subscriberUrl" | "appId" | "payloadTemplate" | "version">;
@@ -109,6 +110,22 @@ export type WebhookPayloadType =
   | BookingNoShowUpdatedPayload;
 
 type WebhookDataType = WebhookPayloadType & { triggerEvent: string; createdAt: string };
+
+function withPublicVideoUrl(data: EventPayloadType): EventPayloadType {
+  if (!data.videoCallData) return data;
+  if (!isDailyVideoCall(data?.videoCallData)) return data;
+
+  const publicUrl = getVideoCallUrlFromCalEvent(data);
+  if (!publicUrl || publicUrl === data.videoCallData.url) return data;
+
+  return {
+    ...data,
+    videoCallData: {
+      ...data.videoCallData,
+      url: publicUrl,
+    },
+  };
+}
 
 function addUTCOffset(data: WebhookPayloadType): WithUTCOffsetType<WebhookPayloadType> {
   if (isEventPayload(data)) {
@@ -225,6 +242,10 @@ const sendPayload = async (
 
   const contentType =
     !template || jsonParse(template) ? "application/json" : "application/x-www-form-urlencoded";
+
+  if (isEventPayload(data)) {
+    data = withPublicVideoUrl(data);
+  }
 
   data = addUTCOffset(data);
 
