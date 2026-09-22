@@ -27,8 +27,11 @@ const BLOCKED_IP_RANGES: readonly string[] = [
 const CLOUD_METADATA_ENDPOINTS: string[] = [
   "169.254.169.254", // AWS/Azure/DigitalOcean/Oracle metadata
   "169.254.169.253", // Azure alternate
+  "169.254.170.2", // AWS ECS container metadata
+  "100.100.100.200", // Alibaba Cloud metadata
   "metadata.google.internal", // GCP metadata
   "metadata.google.com", // GCP alternate
+  "fd00:ec2::254", // AWS IPv6 IMDSv2 metadata
 ];
 
 const LOOPBACK_HOSTNAMES: string[] = ["localhost", "127.0.0.1", "::1", "[::1]", "0.0.0.0"];
