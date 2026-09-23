@@ -1,7 +1,9 @@
 import dns from "node:dns/promises";
-import ipaddr from "ipaddr.js";
+import process from "node:process";
 import { IS_SELF_HOSTED } from "@calcom/lib/constants";
+import { ErrorWithCode } from "@calcom/lib/errors";
 import logger from "@calcom/lib/logger";
+import ipaddr from "ipaddr.js";
 
 const log: ReturnType<typeof logger.getSubLogger> = logger.getSubLogger({ prefix: ["ssrf-protection"] });
 
@@ -47,6 +49,9 @@ const ERRORS = {
   INVALID_URL: "Invalid URL format",
   NON_IMAGE_DATA_URL: "Non-image data URL",
 } as const;
+
+const REDIRECT_STATUS_CODES: ReadonlySet<number> = new Set([301, 302, 303, 307, 308]);
+const DEFAULT_MAX_REDIRECTS: number = 5;
 
 function normalizeHostname(hostname: string): string {
   return hostname.toLowerCase().replace(/\.$/, "");
@@ -189,6 +194,43 @@ export async function validateUrlForSSRF(urlString: string): Promise<SSRFValidat
   }
 
   return { isValid: true };
+}
+
+/**
+ * Fetches a URL while applying SSRF validation to the initial destination and every redirect hop.
+ */
+export async function fetchWithSSRFProtection(
+  urlString: string,
+  maxRedirects: number = DEFAULT_MAX_REDIRECTS
+): Promise<Response> {
+  let currentUrl = urlString;
+
+  for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
+    const validation = await validateUrlForSSRF(currentUrl);
+    if (!validation.isValid) {
+      throw ErrorWithCode.Factory.BadRequest("URL blocked by SSRF protection");
+    }
+
+    const response = await fetch(currentUrl, { redirect: "manual" });
+    if (!REDIRECT_STATUS_CODES.has(response.status)) return response;
+
+    if (redirectCount === maxRedirects) {
+      throw ErrorWithCode.Factory.BadRequest("Too many redirects");
+    }
+
+    const location = response.headers.get("location");
+    if (!location) {
+      throw ErrorWithCode.Factory.BadRequest("Redirect response is missing a location header");
+    }
+
+    try {
+      currentUrl = new URL(location, currentUrl).toString();
+    } catch {
+      throw ErrorWithCode.Factory.BadRequest("Redirect response has an invalid location header");
+    }
+  }
+
+  throw ErrorWithCode.Factory.BadRequest("Too many redirects");
 }
 
 /**
