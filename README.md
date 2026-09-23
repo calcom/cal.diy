@@ -651,6 +651,15 @@ Currently Vercel Pro Plan is required to be able to Deploy this application with
 
 [![Deploy on Elestio](https://elest.io/images/logos/deploy-to-elestio-btn.png)](https://elest.io/open-source/cal.com)
 
+### Easypanel
+
+[![Deploy on Easypanel][easypanel-btn]][easypanel-deploy]
+
+[easypanel-btn]: https://easypanel.io/img/deploy-on-easypanel-40.svg
+[easypanel-deploy]: https://easypanel.io/templates/calcom
+
+You can deploy Cal.com on [Easypanel](https://easypanel.io), which provisions the required PostgreSQL database automatically. The template currently runs the `calcom/cal.com` image; we'll switch it to `calcom/cal.diy` once official images are published there.
+
 <!-- LICENSE -->
 
 ## License
