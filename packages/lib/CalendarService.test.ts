@@ -166,6 +166,21 @@ describe("CalendarService - recurring availability", () => {
       },
     ]);
   });
+
+  it("does not move a weekly recurrence to a different query weekday", async () => {
+    const service = new TestCalendarService();
+    mockCalendarObjects(
+      `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:weekly-anchor\r\nDTSTART:20240101T100000Z\r\nDTEND:20240101T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nEND:VCALENDAR`
+    );
+
+    const events = await service.getAvailability({
+      dateFrom: "2024-01-17T10:00:00.000Z",
+      dateTo: "2024-01-17T12:00:00.000Z",
+      selectedCalendars,
+    });
+
+    expect(events).toEqual([]);
+  });
 });
 
 describe("CalendarService - UID Consistency", () => {
