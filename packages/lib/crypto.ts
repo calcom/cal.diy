@@ -1,5 +1,24 @@
 import crypto from "node:crypto";
 
+export function timingSafeEqualStrings(
+  actual: string | null | undefined,
+  expected: string | null | undefined
+): boolean {
+  if (typeof actual !== "string" || typeof expected !== "string") return false;
+
+  const actualBuffer = Buffer.from(actual, "utf8");
+  const expectedBuffer = Buffer.from(expected, "utf8");
+  const length = Math.max(actualBuffer.length, expectedBuffer.length);
+  const paddedActual = Buffer.alloc(length);
+  const paddedExpected = Buffer.alloc(length);
+
+  actualBuffer.copy(paddedActual);
+  expectedBuffer.copy(paddedExpected);
+
+  const isEqual = crypto.timingSafeEqual(paddedActual, paddedExpected);
+  return actualBuffer.length === expectedBuffer.length && isEqual;
+}
+
 const ALGORITHM = "aes256";
 const INPUT_ENCODING = "utf8";
 const OUTPUT_ENCODING = "hex";
