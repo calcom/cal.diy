@@ -1,13 +1,16 @@
+import process from "node:process";
+import { appStoreMetadata } from "@calcom/app-store/appStoreMetaData";
+import {
+  APP_CREDENTIAL_SHARING_ENABLED,
+  CREDENTIAL_SYNC_SECRET,
+  CREDENTIAL_SYNC_SECRET_HEADER_NAME,
+} from "@calcom/lib/constants";
+import { safeCompare, symmetricDecrypt } from "@calcom/lib/crypto";
+import prisma from "@calcom/prisma";
 import { defaultResponderForAppDir } from "app/api/defaultResponderForAppDir";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import z from "zod";
-
-import { appStoreMetadata } from "@calcom/app-store/appStoreMetaData";
-import { CREDENTIAL_SYNC_SECRET, CREDENTIAL_SYNC_SECRET_HEADER_NAME } from "@calcom/lib/constants";
-import { APP_CREDENTIAL_SHARING_ENABLED } from "@calcom/lib/constants";
-import { symmetricDecrypt } from "@calcom/lib/crypto";
-import prisma from "@calcom/prisma";
 
 const appCredentialWebhookRequestBodySchema = z.object({
   // UserId of the cal.com user
@@ -23,7 +26,7 @@ async function postHandler(request: NextRequest) {
   }
 
   const secretHeader = request.headers.get(CREDENTIAL_SYNC_SECRET_HEADER_NAME);
-  if (secretHeader !== CREDENTIAL_SYNC_SECRET) {
+  if (!safeCompare(secretHeader, CREDENTIAL_SYNC_SECRET)) {
     return NextResponse.json({ message: "Invalid credential sync secret" }, { status: 403 });
   }
 
