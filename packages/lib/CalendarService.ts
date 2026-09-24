@@ -782,12 +782,16 @@ export default abstract class BaseCalendarService implements Calendar {
               // @see https://github.com/mozilla-comm/ical.js/issues/514
               currentEvent = currentEvent ?? event.getOccurrenceDetails(current);
             } catch (error) {
+              currentEvent = undefined;
               if (error instanceof Error && error.message !== currentError) {
                 currentError = error.message;
                 this.log.error("error", error);
               }
             }
-            if (!currentEvent) return;
+            if (!currentEvent) {
+              current = iterator.next();
+              continue;
+            }
             // do not mix up caldav and icalendar! For the recurring events here, the timezone
             // provided is relevant, not as pointed out in https://datatracker.ietf.org/doc/html/rfc4791#section-9.6.5
             // where recurring events are always in utc (in caldav!). Thus, apply the time zone here.
@@ -808,6 +812,8 @@ export default abstract class BaseCalendarService implements Calendar {
               });
             }
 
+            // Advance only after processing the current occurrence. Advancing in the
+            // loop condition skipped an occurrence exactly at the query start.
             current = iterator.next();
             currentEvent = undefined;
           }
