@@ -76,6 +76,7 @@ function BasePhoneInput({
         autoComplete: "tel",
       }}
       onChange={(val: string) => {
+        if (typeof val !== "string") return;
         onChange(val.startsWith("+") ? val : `+${val}`);
       }}
       containerClass={classNames(
@@ -131,6 +132,7 @@ function BasePhoneInputWeb({
         autoComplete: "tel",
       }}
       onChange={(val: string) => {
+        if (typeof val !== "string") return;
         onChange(val.startsWith("+") ? val : `+${val}`);
       }}
       containerClass={classNames(
