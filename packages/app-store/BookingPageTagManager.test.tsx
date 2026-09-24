@@ -56,6 +56,65 @@ describe("BookingPageTagManager", () => {
     expect(pushEventScript.innerHTML).toContain("cal_analytics_app__gtm");
   });
 
+  const renderApp = (appId: string, appData: Record<string, unknown>) => {
+    render(
+      <BookingPageTagManager
+        eventType={{
+          metadata: {
+            apps: {
+              [appId]: { enabled: true, ...appData },
+            },
+          },
+          price: 0,
+          currency: "USD",
+        }}
+      />
+    );
+    return screen
+      .getAllByTestId(`cal-analytics-app-${appId}`)
+      .map((script) => script.textContent)
+      .join("\n");
+  };
+
+  // posthog is covered by the same code path but is not asserted through the DOM here: its
+  // template contains a bare `<` (`n<o.length`), which the div that stands in for next/script
+  // in this file parses as markup, so textContent stops before the substituted value.
+  it.each([
+    ["gtm", { trackingId: "GTM-X');alert(1);//" }, "GTM-X');alert(1);//"],
+    ["ga4", { trackingId: "G-X'});alert(1);gtag('config',('" }, "G-X'});alert(1);gtag('config',('"],
+    ["matomo", { MATOMO_URL: "https://x", SITE_ID: "1'-alert(1)-'" }, "1'-alert(1)-'"],
+    ["metapixel", { trackingId: "1');alert(1);//" }, "1');alert(1);//"],
+  ])("%s keeps app data inside the JS string literal it is substituted into", (appId, appData, value) => {
+    const source = renderApp(appId, appData);
+
+    // The raw value would close the literal; only its escaped form may appear.
+    expect(source).not.toContain(value);
+    expect(source).toContain(value.replace(/'/g, "\\'"));
+  });
+
+  it("escapes characters that would end the inline script element", () => {
+    const source = renderApp("gtm", { trackingId: "GTM-X</script><script>alert(1)</script>" });
+
+    expect(source).not.toContain("</script>");
+    expect(source).toContain("\\x3C/script\\x3E");
+  });
+
+  it("escapes the interpolation opener so a value cannot interpolate in a template literal", () => {
+    const source = renderApp("gtm", { trackingId: "GTM-X${alert(1)}" });
+
+    // No shipped template delimits its literals with backticks today, but a value that carries
+    // the opener must not become active interpolation if one ever does.
+    expect(source).not.toContain("GTM-X${alert(1)}");
+    expect(source).toContain("GTM-X\\${alert(1)}");
+  });
+
+  it("leaves a legitimate tracking id untouched", () => {
+    const source = renderApp("gtm", { trackingId: "GTM-ABC123" });
+
+    expect(source).toContain("'GTM-ABC123'");
+    expect(source).not.toContain("\\");
+  });
+
   it("GTM App when disabled should not have its scripts added", () => {
     const GTM_CONFIG = {
       enabled: false,
