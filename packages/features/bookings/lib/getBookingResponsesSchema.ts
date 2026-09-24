@@ -448,6 +448,15 @@ function preprocess<T extends z.ZodType>({
         responses["email"] = "";
       }
 
+      const isFieldVisible = (field: (typeof bookingFields)[number]) => {
+        const isApplicableToCurrentView =
+          currentView === "ALL_VIEWS" ? true : field.views ? !!field.views.find((view) => view.id === currentView) : true;
+        if (!isApplicableToCurrentView) return false;
+        if (field.hidden) return false;
+        if (field.hideWhenJustOneOption && (field.options?.length ?? 0) <= 1) return false;
+        return true;
+      };
+
       for (const bookingField of bookingFields) {
         const value = responses[bookingField.name];
         const views = bookingField.views;
@@ -457,6 +466,16 @@ function preprocess<T extends z.ZodType>({
         const numOptions = bookingField.options?.length ?? 0;
         if (bookingField.hideWhenJustOneOption) {
           hidden = hidden || numOptions <= 1;
+        }
+        if (bookingField.parentQuestionName && bookingField.triggerValue !== undefined) {
+          const parent = bookingFields.find((field) => field.name === bookingField.parentQuestionName);
+          const parentValue = responses[bookingField.parentQuestionName];
+          hidden =
+            hidden ||
+            !parent ||
+            !!parent.parentQuestionName ||
+            (parent ? !isFieldVisible(parent) : false) ||
+            String(parentValue ?? "") !== String(bookingField.triggerValue);
         }
         let isRequired = false;
         // If the field is hidden, then it can never be required
