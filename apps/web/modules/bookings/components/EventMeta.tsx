@@ -43,6 +43,8 @@ const getTranslatedField = (
   )?.translatedText;
 };
 
+import { useEmbedUiConfig } from "@calcom/embed-core/embed-iframe";
+
 export const EventMeta = ({
   event,
   isPending,
@@ -98,6 +100,14 @@ export const EventMeta = ({
   hideOrgTeamAvatar?: boolean;
   hideEventTypeDetails?: boolean;
 }) => {
+  const embedUiConfig = useEmbedUiConfig();
+  const isCompact = Boolean(
+    embedUiConfig?.compact ||
+      embedUiConfig?.unpadded ||
+      embedUiConfig?.padding === "none" ||
+      embedUiConfig?.padding === "compact" ||
+      (embedUiConfig?.layout as string) === "compact"
+  );
   const { timeFormat, timezone } = useBookerTime();
   const [setTimezone] = useTimePreferences((state) => [state.setTimezone]);
   const [setBookerStoreTimezone] = useBookerStoreContext((state) => [state.setTimezone], shallow);
@@ -156,7 +166,7 @@ export const EventMeta = ({
   );
 
   return (
-    <div className={`${classNames?.eventMetaContainer || ""} relative z-10 p-6`} data-testid="event-meta">
+    <div className={`${classNames?.eventMetaContainer || ""} relative z-10 ${isCompact ? "p-2" : "p-6"}`} data-testid="event-meta">
       {isPending && (
         <m.div {...fadeInUp} initial="visible" layout>
           <EventMetaSkeleton />
