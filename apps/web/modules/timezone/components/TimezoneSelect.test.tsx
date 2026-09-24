@@ -171,6 +171,20 @@ describe("Test TimezoneSelect", () => {
 
       expect(onChangeMock).toBeCalled();
     });
+
+    test("Should render with cursor-pointer by default on control and option", async () => {
+      renderSelect({ value: timezoneMockValues[0] });
+      openMenu();
+
+      const dawsonEl = screen.getByText(timezoneMockValues[0]);
+      const singleValueEl = dawsonEl.parentElement;
+      const valueContainerEl = singleValueEl?.parentElement;
+      const controlEl = valueContainerEl?.parentElement;
+      const optionEl = screen.getByText(optionMockValues[0]).parentElement?.parentElement;
+
+      expect(controlEl).toHaveClass("cursor-pointer");
+      expect(optionEl).toHaveClass("cursor-pointer");
+    });
   });
 
   describe("Test TimezoneSelect with isPending = true", () => {
