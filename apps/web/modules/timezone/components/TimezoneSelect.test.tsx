@@ -174,7 +174,7 @@ describe("Test TimezoneSelect", () => {
 
     test("Should render with cursor-pointer by default on control and option", async () => {
       renderSelect({ value: timezoneMockValues[0] });
-      openMenu();
+      await openMenu();
 
       const dawsonEl = screen.getByText(timezoneMockValues[0]);
       const singleValueEl = dawsonEl.parentElement;
