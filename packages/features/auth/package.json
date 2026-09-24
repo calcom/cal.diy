@@ -18,7 +18,7 @@
     "handlebars": "4.7.9",
     "jose": "4.15.9",
     "lru-cache": "9.0.3",
-    "next-auth": "4.24.13",
+    "next-auth": "4.24.15",
     "nodemailer": "7.0.12",
     "otplib": "12.0.1"
   }
