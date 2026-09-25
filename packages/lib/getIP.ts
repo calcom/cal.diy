@@ -4,9 +4,10 @@ import z from "zod";
 import logger from "./logger";
 
 export function parseIpFromHeaders(value: string | string[]) {
-  const rawIp = Array.isArray(value) ? value[0] : value.split(",")[0];
-  return rawIp?.trim() ?? "";
+  const first = Array.isArray(value) ? value[0] : value;
+  return first?.split(",")[0]?.trim() ?? "";
 }
+
 
 
 /**
