@@ -3,6 +3,17 @@ import type { NextApiRequest } from "next";
 import z from "zod";
 import logger from "./logger";
 
+/**
+ * Extracts the first IP address from a header value.
+ *
+ * Handles both string and array header values. When the value is an array
+ * (as Node.js/Next.js may present multiple forwarded headers), it takes the
+ * first element and then splits on comma to get the leftmost IP — the one
+ * added by the most recent trusted proxy.
+ *
+ * @param value - The raw header value, either a plain string or an array of strings.
+ * @returns The trimmed first IP address, or an empty string if the input is empty.
+ */
 export function parseIpFromHeaders(value: string | string[]) {
   const first = Array.isArray(value) ? value[0] : value;
   return first?.split(",")[0]?.trim() ?? "";
