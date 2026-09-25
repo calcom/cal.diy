@@ -51,13 +51,14 @@ export class SlotsInputService_2024_09_04 {
     }
     const isTeamEvent = !!eventType?.teamId;
 
-    const startTime = this.adjustStartTime(query.start);
-    const endTime = this.adjustEndTime(query.end);
+    const timeZone = query.timeZone || eventType.timeZone || eventType.schedule?.timeZone || undefined;
+
+    const startTime = this.adjustStartTime(query.start, timeZone);
+    const endTime = this.adjustEndTime(query.end, timeZone);
     const duration = query.duration;
     const eventTypeId = eventType.id;
     const eventTypeSlug = eventType.slug;
     const usernameList = "usernames" in query ? query.usernames : [];
-    const timeZone = query.timeZone;
     const orgSlug = "organizationSlug" in query ? query.organizationSlug : null;
     const rescheduleUid = query.bookingUidToReschedule || null;
 
@@ -123,13 +124,19 @@ export class SlotsInputService_2024_09_04 {
     return await this.teamsRepository.findTeamBySlug(input.teamSlug);
   }
 
-  private adjustStartTime(startTime: string) {
-    let dateTime = DateTime.fromISO(startTime, { zone: "utc" });
+  private adjustStartTime(startTime: string, timeZone?: string) {
+    const zone = timeZone || "utc";
+    let dateTime = DateTime.fromISO(startTime, { zone });
+
+    if (!dateTime.isValid) {
+      throw new BadRequestException("Invalid start date");
+    }
+
     if (dateTime.hour === 0 && dateTime.minute === 0 && dateTime.second === 0) {
       dateTime = dateTime.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
     }
 
-    const ISOStartTime = dateTime.toISO();
+    const ISOStartTime = dateTime.toUTC().toISO();
     if (ISOStartTime === null) {
       throw new BadRequestException("Invalid start date");
     }
@@ -137,13 +144,18 @@ export class SlotsInputService_2024_09_04 {
     return ISOStartTime;
   }
 
-  private adjustEndTime(endTime: string) {
-    let dateTime = DateTime.fromISO(endTime, { zone: "utc" });
+  private adjustEndTime(endTime: string, timeZone?: string) {
+    const zone = timeZone || "utc";
+    let dateTime = DateTime.fromISO(endTime, { zone });
+
+    if (!dateTime.isValid) {
+      throw new BadRequestException("Invalid end date");
+    }
     if (dateTime.hour === 0 && dateTime.minute === 0 && dateTime.second === 0) {
       dateTime = dateTime.set({ hour: 23, minute: 59, second: 59 });
     }
 
-    const ISOEndTime = dateTime.toISO();
+    const ISOEndTime = dateTime.toUTC().toISO();
     if (ISOEndTime === null) {
       throw new BadRequestException("Invalid end date");
     }

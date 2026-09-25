@@ -68,6 +68,13 @@ export class TeamsEventTypesRepository {
           slug: eventTypeSlug,
         },
       },
+      include: {
+        users: true,
+        schedule: true,
+        hosts: true,
+        destinationCalendar: true,
+        calVideoSettings: true,
+      },
     });
   }
 
