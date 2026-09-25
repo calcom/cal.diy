@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createColorMap } from "./getBrandColours";
+import { checkWCAGContrastColor, createColorMap } from "./getBrandColours";
 
 describe("useGetBrandingColours", () => {
   it("should return the correct color values for given lightVal and darkVal", () => {
@@ -37,5 +37,13 @@ describe("useGetBrandingColours", () => {
 
     expect(lightMap).toEqual(expectedResult.light);
     expect(darkMap).toEqual(expectedResult.dark);
+  });
+});
+
+describe("checkWCAGContrastColor", () => {
+  it("uses WCAG relative luminance for the contrast ratio", () => {
+    // #767676 on white is 4.54:1 and #777777 on #101010 is 4.25:1 per WCAG 2
+    expect(checkWCAGContrastColor("#ffffff", "#767676")).toBe(true);
+    expect(checkWCAGContrastColor("#101010", "#777777")).toBe(false);
   });
 });
