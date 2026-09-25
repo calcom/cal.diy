@@ -102,11 +102,13 @@ export const parseRecurringDates = (
     dtstart: new Date(dayjs(startDate).valueOf()),
   });
 
-  const startUtcOffset = dayjs(startDate).utcOffset();
+  // Offsets must be read in the event timeZone, not the runtime's local zone, so a
+  // booker whose browser timezone differs from the meeting timezone still gets the
+  // occurrences kept at a constant wall-clock time across the event zone's DST change.
+  const startUtcOffset = dayjs(startDate).tz(timeZone).utcOffset();
   // UTC still need to have DST applied, rrule does not do this.
   const times = rule.all().map((t) => {
-    // applying the DST offset.
-    return dayjs.utc(t).add(startUtcOffset - dayjs(t).utcOffset(), "minute");
+    return dayjs.utc(t).add(startUtcOffset - dayjs.utc(t).tz(timeZone).utcOffset(), "minute");
   });
   const dateStrings = times.map((t) => {
     // finally; show in local timeZone again
