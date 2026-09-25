@@ -4,6 +4,10 @@ import { v4 as uuidv4 } from "uuid";
 import type z from "zod";
 
 import { WEBAPP_URL } from "@calcom/lib/constants";
+import {
+  convertFromSmallestToPresentableCurrencyUnit,
+  convertToSmallestCurrencyUnit,
+} from "@calcom/lib/currencyConversions";
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import logger from "@calcom/lib/logger";
 import { safeStringify } from "@calcom/lib/safeStringify";
@@ -106,7 +110,7 @@ class HitPayPaymentService implements IAbstractPaymentService {
       const webhookUri = `${WEBAPP_URL}/api/integrations/${appConfig.slug}/webhook`;
 
       const formData = {
-        amount: payment.amount / 100,
+        amount: convertFromSmallestToPresentableCurrencyUnit(payment.amount, payment.currency),
         currency: payment.currency,
         email: bookerEmail,
         name: bookerName,
@@ -153,7 +157,7 @@ class HitPayPaymentService implements IAbstractPaymentService {
               id: bookingId,
             },
           },
-          amount: parseFloat(data.amount.replace(/,/g, "")) * 100,
+          amount: convertToSmallestCurrencyUnit(parseFloat(data.amount.replace(/,/g, "")), data.currency),
           externalId: data.id,
           currency: data.currency,
           data: Object.assign(

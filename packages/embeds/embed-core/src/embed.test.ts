@@ -325,6 +325,48 @@ describe("Cal", () => {
     });
   });
 
+  describe("__iframeReady handler", () => {
+    function fireIframeReady(ns: string) {
+      const errors: unknown[] = [];
+      const onError = (e: ErrorEvent) => {
+        errors.push(e.error);
+        e.preventDefault();
+      };
+      window.addEventListener("error", onError);
+      window.dispatchEvent(
+        new CustomEvent(`CAL:${ns}:__iframeReady`, {
+          detail: { type: "__iframeReady", namespace: ns, data: { isPrerendering: false } },
+        })
+      );
+      window.removeEventListener("error", onError);
+      return errors;
+    }
+
+    it("ignores __iframeReady on an instance that has no iframe", () => {
+      const instanceWithIframe = new CalClass("dup-ns", []);
+      const host = document.createElement("div");
+      document.body.appendChild(host);
+      instanceWithIframe.api.inline({ calLink: "user/30min", elementOrSelector: host });
+      const instanceWithoutIframe = new CalClass("dup-ns", []);
+
+      expect(fireIframeReady("dup-ns")).toEqual([]);
+      expect(instanceWithIframe.iframeReady).toBe(true);
+      expect(instanceWithoutIframe.iframeReady).toBeFalsy();
+    });
+
+    it("marks the iframe ready and visible when the instance owns an iframe", () => {
+      const cal = new CalClass("ready-ns", []);
+      const host = document.createElement("div");
+      document.body.appendChild(host);
+      cal.api.inline({ calLink: "user/30min", elementOrSelector: host });
+      cal.iframe!.style.visibility = "hidden";
+
+      expect(fireIframeReady("ready-ns")).toEqual([]);
+      expect(cal.iframeReady).toBe(true);
+      expect(cal.iframe!.style.visibility).toBe("");
+    });
+  });
+
   /**
    * We don't mock the createIframe method as it could update the 'this' objects which could affect the test, so we avoid mocking it
    */
