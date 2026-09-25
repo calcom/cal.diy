@@ -2,6 +2,7 @@ import logger from "./logger";
 
 // Fields that might contain sensitive data
 const SENSITIVE_FIELDS = [
+  "access_token",
   "accessToken",
   "api_key",
   "apiKey",
@@ -9,18 +10,27 @@ const SENSITIVE_FIELDS = [
   "authorization",
   "client_email",
   "client_id",
+  "clientId",
   "client_secret",
+  "clientSecret",
   "credential",
   "encrypted_credentials",
   "hash",
+  "id_token",
   "key",
   "password",
   "private_key",
+  "privateKey",
+  "refresh_token",
   "refreshToken",
   "secret",
+  "service_account_key",
   "serviceAccountKey",
   "tenant_id",
+  "tenantId",
   "token",
+  "webhook_secret",
+  "webhookSecret",
 ];
 
 // Create a Set for efficient O(1) average time complexity lookups
