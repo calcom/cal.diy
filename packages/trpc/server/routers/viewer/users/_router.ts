@@ -86,7 +86,7 @@ export const userAdminRouter = router({
 
           // Update all of this users tempOrgRedirectUrls
           if (requestedUser.username && profile.organizationId) {
-            const data = await prisma.team.findUnique({
+            const data = await tx.team.findUnique({
               where: {
                 id: profile.organizationId,
               },
@@ -104,7 +104,7 @@ export const userAdminRouter = router({
 
             const toUrl = `${orgUrlPrefix}/${input.username}`;
 
-            await prisma.tempOrgRedirect.updateMany({
+            await tx.tempOrgRedirect.updateMany({
               where: {
                 type: RedirectType.User,
                 from: requestedUser.username, // Old username

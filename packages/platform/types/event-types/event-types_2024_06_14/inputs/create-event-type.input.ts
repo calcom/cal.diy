@@ -141,6 +141,7 @@ export class CalVideoSettings {
   @IsBoolean()
   @DocsPropertyOptional({
     description: "If true, the organizer will not be able to record the meeting",
+    default: false,
   })
   disableRecordingForOrganizer?: boolean;
 
@@ -148,6 +149,7 @@ export class CalVideoSettings {
   @IsBoolean()
   @DocsPropertyOptional({
     description: "If true, the guests will not be able to record the meeting",
+    default: false,
   })
   disableRecordingForGuests?: boolean;
 
@@ -162,6 +164,7 @@ export class CalVideoSettings {
   @IsBoolean()
   @DocsPropertyOptional({
     description: "If true, enables the automatic recording for the event when organizer joins the call",
+    default: false,
   })
   enableAutomaticRecordingForOrganizer?: boolean;
 
@@ -169,6 +172,7 @@ export class CalVideoSettings {
   @IsBoolean()
   @DocsPropertyOptional({
     description: "If true, enables the automatic transcription for the event whenever someone joins the call",
+    default: false,
   })
   enableAutomaticTranscription?: boolean;
 
@@ -176,6 +180,7 @@ export class CalVideoSettings {
   @IsBoolean()
   @DocsPropertyOptional({
     description: "If true, the guests will not be able to receive transcription of the meeting",
+    default: false,
   })
   disableTranscriptionForGuests?: boolean;
 
@@ -183,6 +188,7 @@ export class CalVideoSettings {
   @IsBoolean()
   @DocsPropertyOptional({
     description: "If true, the organizer will not be able to receive transcription of the meeting",
+    default: false,
   })
   disableTranscriptionForOrganizer?: boolean;
 
