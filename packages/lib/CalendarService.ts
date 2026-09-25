@@ -738,8 +738,11 @@ export default abstract class BaseCalendarService implements Calendar {
 
         if (event.isRecurring()) {
           let maxIterations = 365;
-          if (["HOURLY", "SECONDLY", "MINUTELY"].includes(event.getRecurrenceTypes())) {
-            logger.warn(`Won't handle [${event.getRecurrenceTypes()}] recurrence`);
+          const recurrenceTypesValue = event.getRecurrenceTypes();
+          const recurrenceTypes =
+            typeof recurrenceTypesValue === "string" ? [recurrenceTypesValue] : Object.values(recurrenceTypesValue);
+          if (recurrenceTypes.some((type) => ["HOURLY", "SECONDLY", "MINUTELY"].includes(type))) {
+            logger.warn(`Won't handle [${recurrenceTypes.join(", ")}] recurrence`);
             return;
           }
 
@@ -747,6 +750,8 @@ export default abstract class BaseCalendarService implements Calendar {
           const end = dayjs(dateTo);
           const iterator = event.iterator();
           let current = iterator.next();
+          let fastForwardIterations = Math.max(365, start.diff(dayjs(event.startDate.toJSDate()), "day") + 1);
+          const eventDuration = event.endDate.toJSDate().getTime() - event.startDate.toJSDate().getTime();
 
           // RecurExpansion uses the supplied start time as DTSTART. Starting it at
           // the query range silently re-anchors rules such as FREQ=WEEKLY without
@@ -756,19 +761,11 @@ export default abstract class BaseCalendarService implements Calendar {
           let currentStart: ReturnType<typeof dayjs> | null = null;
           let currentError: string | undefined;
 
-          while (current) {
-            currentEvent = undefined;
-            try {
-              currentEvent = event.getOccurrenceDetails(current);
-            } catch (error) {
-              if (error instanceof Error && error.message !== currentError) {
-                currentError = error.message;
-                this.log.error("error", error);
-              }
-            }
-
-            if (!currentEvent || dayjs(currentEvent.endDate.toJSDate()).isAfter(start)) break;
+          while (current && fastForwardIterations > 0) {
+            const currentEnd = dayjs(current.toJSDate()).add(eventDuration, "millisecond");
+            if (currentEnd.isAfter(start)) break;
             current = iterator.next();
+            fastForwardIterations -= 1;
           }
 
           while (
