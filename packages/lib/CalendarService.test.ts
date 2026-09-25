@@ -127,6 +127,26 @@ describe("CalendarService - recurring availability", () => {
     vi.clearAllMocks();
   });
 
+  it("keeps weekly recurrences anchored to DTSTART when BYDAY is absent", async () => {
+    const service = new TestCalendarService();
+    mockCalendarObjects(
+      `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:weekly-anchor\r\nDTSTART:20240101T100000Z\r\nDTEND:20240101T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nEND:VCALENDAR`
+    );
+
+    const events = await service.getAvailability({
+      dateFrom: "2024-01-16T10:00:00.000Z",
+      dateTo: "2024-01-22T12:00:00.000Z",
+      selectedCalendars,
+    });
+
+    expect(events).toEqual([
+      {
+        start: "2024-01-22T10:00:00.000Z",
+        end: "2024-01-22T11:00:00.000Z",
+      },
+    ]);
+  });
+
   it("includes a recurrence that starts exactly at the query start", async () => {
     const service = new TestCalendarService();
     mockCalendarObjects(
