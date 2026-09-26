@@ -56,11 +56,15 @@ describe("redactSensitiveData", () => {
       }
     };
 
-    const redacted = redactSensitiveData(nestedData) as any;
-    expect(redacted.integration).toBe("google_calendar");
-    expect(redacted.credentials.expires_in).toBe(3600);
-    expect(redacted.credentials.access_token).toBe("[REDACTED]");
-    expect(redacted.credentials.refresh_token).toBe("[REDACTED]");
+    const redacted = redactSensitiveData(nestedData);
+    expect(redacted).toMatchObject({
+      integration: "google_calendar",
+      credentials: {
+        expires_in: 3600,
+        access_token: "[REDACTED]",
+        refresh_token: "[REDACTED]"
+      }
+    });
   });
 
   it("handles non-object and null inputs gracefully", () => {
