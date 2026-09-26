@@ -20,6 +20,14 @@ const appCredentialWebhookRequestBodySchema = z.object({
   keys: z.string(),
 });
 
+/**
+ * Handles incoming app credential webhook synchronization requests.
+ * Authenticates the request using constant-time comparison on the sync secret header,
+ * then validates the payload and updates or creates user app credentials.
+ *
+ * @param request - The incoming NextRequest containing sync payload and auth headers
+ * @returns NextResponse with status and message
+ */
 async function postHandler(request: NextRequest) {
   if (!APP_CREDENTIAL_SHARING_ENABLED) {
     return NextResponse.json({ message: "Credential sharing is not enabled" }, { status: 403 });

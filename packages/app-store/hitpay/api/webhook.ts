@@ -43,6 +43,13 @@ function generateSignatureArray<T>(secret: string, vals: T) {
   return signed;
 }
 
+/**
+ * Handles incoming HitPay webhook payment notifications.
+ * Verifies the payload HMAC signature in constant time before processing payment.
+ *
+ * @param req - Incoming NextApiRequest
+ * @param res - Outgoing NextApiResponse
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method !== "POST") {

@@ -29,6 +29,12 @@ export class GoogleCalendarSubscriptionAdapter implements ICalendarSubscriptionP
     process.env.GOOGLE_WEBHOOK_URL || process.env.NEXT_PUBLIC_WEBAPP_URL
   }/api/webhooks/calendar-subscription/google_calendar`;
 
+  /**
+   * Validates the Google Calendar webhook request token using constant-time comparison.
+   *
+   * @param request - The incoming webhook Request
+   * @returns Promise resolving to true if the channel token matches GOOGLE_WEBHOOK_TOKEN, false otherwise
+   */
   async validate(request: Request): Promise<boolean> {
     const token = request?.headers?.get("X-Goog-Channel-Token");
     if (!this.GOOGLE_WEBHOOK_TOKEN) {
