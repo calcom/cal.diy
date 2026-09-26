@@ -7,6 +7,7 @@ import { ApiError, api } from "@/lib/api";
 import { BOOKING_DURATIONS, type Interval, slotStarts } from "@/lib/availability";
 import { CATEGORIES } from "@/lib/categories";
 import { formatDayLong, formatRange, formatTime, MINUTE } from "@/lib/dates";
+import { DEFAULT_TIME_ZONES, formatRangeInZones } from "@/lib/format";
 import { googleCalendarTemplateUrl, icsFile } from "@/lib/invite";
 
 interface BookingResponse {
@@ -174,6 +175,7 @@ export function BookingFlow({
     );
   }
 
+  const viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const winStart = new Date(win.start);
   const winEnd = new Date(win.end);
   const windowMinutes = (win.end - win.start) / MINUTE;
@@ -190,6 +192,7 @@ export function BookingFlow({
           </p>
           <h2>{formatDayLong(winStart)}</h2>
           <p>Free {formatRange(winStart, winEnd)}</p>
+          <p style={{ marginTop: 6, fontSize: 11 }}>Times shown in your time zone ({viewerZone})</p>
         </div>
       }
       footer={
@@ -244,6 +247,15 @@ export function BookingFlow({
             <p className="muted" style={{ margin: 0, fontSize: 14 }}>
               This window is shorter than {duration} minutes — pick a shorter call.
             </p>
+          )}
+          {start !== null && (
+            <div className="muted" style={{ fontSize: 11, lineHeight: 1.6 }}>
+              {formatRangeInZones(new Date(start), new Date(start + duration * MINUTE), [
+                ...DEFAULT_TIME_ZONES,
+              ]).map((line) => (
+                <div key={line}>{line}</div>
+              ))}
+            </div>
           )}
         </div>
 
