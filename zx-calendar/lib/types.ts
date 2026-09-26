@@ -26,6 +26,8 @@ export interface Booking {
   googleEventId?: string;
   googleEventLink?: string;
   meetLink?: string;
+  /** Which of Z / XOE were invited (by Google or by email). */
+  invitesSentTo?: string[];
 }
 
 export interface Task {
@@ -49,6 +51,7 @@ export interface AppStatus {
   google: { configured: boolean; connected: boolean };
   ai: boolean;
   passcodeSet: boolean;
+  invites: { recipients: string[]; email: boolean };
 }
 
 export interface BrainDumpEvent {

@@ -63,8 +63,7 @@ export function TasksPanel({ tasks, onAdd, onToggle, onRemove, highlightId }: Ta
             return (
               <li
                 key={task.id}
-                className={`task-item${task.done ? " done" : ""}`}
-                style={highlightId === task.id ? { background: "rgba(123,117,201,0.1)" } : undefined}>
+                className={`task-item${task.done ? " done" : ""}${highlightId === task.id ? " flash" : ""}`}>
                 <button
                   type="button"
                   className="check"
@@ -85,7 +84,6 @@ export function TasksPanel({ tasks, onAdd, onToggle, onRemove, highlightId }: Ta
                 <button
                   type="button"
                   className="icon-btn sm remove"
-                  style={{ width: 26, height: 26 }}
                   aria-label={`Delete "${task.title}"`}
                   onClick={() => onRemove(task)}>
                   <Close size={13} />
@@ -105,21 +103,15 @@ export function TasksPanel({ tasks, onAdd, onToggle, onRemove, highlightId }: Ta
           maxLength={200}
         />
         <input
-          className="input"
+          className={`input date-input${due ? "" : " empty"}`}
           type="date"
           value={due}
           min={toDateKey(new Date())}
           onChange={(e) => setDue(e.target.value)}
           aria-label="Due date"
-          style={{ width: 44, padding: "8px 10px", flex: "none", color: due ? undefined : "transparent" }}
           title={due || "Due date"}
         />
-        <button
-          type="submit"
-          className="icon-btn dark"
-          aria-label="Add task"
-          disabled={!title.trim()}
-          style={{ width: 40, height: 40 }}>
+        <button type="submit" className="icon-btn accent" aria-label="Add task" disabled={!title.trim()}>
           <Plus />
         </button>
       </form>

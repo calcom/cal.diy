@@ -8,3 +8,6 @@ out
 *.tsbuildinfo
 next-env.d.ts
 .data
+# Written by `next dev`
+AGENTS.md
+CLAUDE.md

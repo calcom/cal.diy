@@ -145,7 +145,7 @@ export function BlockEditor({ state, onClose, onSave, onDelete }: BlockEditorPro
           <button type="button" className="btn btn-ghost" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" form="block-form" className="btn btn-dark" disabled={!valid || saving}>
+          <button type="submit" form="block-form" className="btn btn-primary" disabled={!valid || saving}>
             {saving ? <span className="spinner" /> : editing ? "Save" : "Add to calendar"}
           </button>
         </>

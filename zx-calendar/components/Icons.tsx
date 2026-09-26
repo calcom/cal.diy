@@ -171,23 +171,44 @@ export const Google = (p: IconProps) => (
   </svg>
 );
 
+export const Users = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="9" cy="8.5" r="3.5" />
+    <path d="M2.5 20c.9-3.4 3.4-5 6.5-5s5.6 1.6 6.5 5" />
+    <path d="M16 5.2a3.4 3.4 0 0 1 0 6.6M18 15.3c1.9.6 3 2.1 3.5 4.7" />
+  </svg>
+);
+export const LinkIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1" />
+    <path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" />
+  </svg>
+);
+export const Plug = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M9 3.5v5M15 3.5v5M6.5 8.5h11v3a5.5 5.5 0 0 1-11 0zM12 17v3.5" />
+  </svg>
+);
+
+/** Four-point star from the brand palette cards. */
 export function BrandMark({ size = 30 }: { size?: number }) {
   return (
     <svg className="brand-mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <defs>
-        <linearGradient id="bm-a" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#9FE2EE" />
-          <stop offset="1" stopColor="#7B75C9" />
-        </linearGradient>
-        <linearGradient id="bm-b" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#D7E5D2" />
-          <stop offset="1" stopColor="#8FAE8A" />
-        </linearGradient>
-      </defs>
-      <circle cx="11" cy="11" r="7" fill="url(#bm-b)" />
-      <circle cx="21" cy="11" r="5" fill="url(#bm-a)" opacity="0.9" />
-      <circle cx="11" cy="21.5" r="5" fill="url(#bm-a)" opacity="0.75" />
-      <circle cx="21.5" cy="21.5" r="6.5" fill="#1F2322" />
+      <rect width="32" height="32" rx="9" fill="#1B2CC1" />
+      <rect
+        x="0.5"
+        y="0.5"
+        width="31"
+        height="31"
+        rx="8.5"
+        fill="none"
+        stroke="#7692FF"
+        strokeOpacity="0.6"
+      />
+      <path
+        d="M16 5.5c.7 6.3 4.2 9.8 10.5 10.5-6.3.7-9.8 4.2-10.5 10.5-.7-6.3-4.2-9.8-10.5-10.5C11.8 15.3 15.3 11.8 16 5.5Z"
+        fill="#ABD2FA"
+      />
     </svg>
   );
 }

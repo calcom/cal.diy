@@ -1,6 +1,7 @@
 import "server-only";
 
 import process from "node:process";
+import { inviteRecipients, uniqueEmails } from "./recipients";
 import { read, write } from "./store";
 import type { Booking } from "./types";
 
@@ -72,10 +73,11 @@ async function accessToken(): Promise<string | null> {
   return data.access_token;
 }
 
-interface GoogleEvent {
+export interface GoogleEvent {
   id: string;
   htmlLink?: string;
   hangoutLink?: string;
+  organizer?: { email?: string; self?: boolean };
 }
 
 /**
@@ -87,10 +89,9 @@ export async function createCalendarEvent(booking: Booking): Promise<GoogleEvent
   const token = await accessToken();
   if (!token) return null;
 
-  const attendees = [process.env.Z_EMAIL, process.env.XOE_EMAIL, booking.email]
-    .filter((email): email is string => Boolean(email))
-    .filter((email, i, all) => all.findIndex((e) => e.toLowerCase() === email.toLowerCase()) === i)
-    .map((email) => ({ email }));
+  const attendees = uniqueEmails([...inviteRecipients(process.env), booking.email]).map((email) => ({
+    email,
+  }));
 
   const description = [
     booking.topic && `Topic: ${booking.topic}`,

@@ -112,7 +112,7 @@ export function BrainDump({ aiEnabled, blocks, onApply }: BrainDumpProps) {
         }}
       />
       <div className="pill-combo">
-        <button type="button" className="btn btn-dark" onClick={structure} disabled={loading}>
+        <button type="button" className="btn btn-primary" onClick={structure} disabled={loading}>
           {loading ? <span className="spinner" /> : <Sparkle />}
           {loading ? "Structuring…" : text.trim() ? "Structure it" : "Try the example"}
         </button>
@@ -193,7 +193,7 @@ export function BrainDump({ aiEnabled, blocks, onApply }: BrainDumpProps) {
           {events.length + tasks.length > 0 && (
             <button
               type="button"
-              className="btn btn-dark btn-block"
+              className="btn btn-primary btn-block"
               onClick={apply}
               disabled={!selectedCount || applying}>
               {applying ? (

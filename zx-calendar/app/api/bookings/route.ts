@@ -1,7 +1,10 @@
+import process from "node:process";
 import { NextResponse } from "next/server";
 import { BOOKING_DURATIONS, isBookable, MIN_NOTICE_MINUTES } from "@/lib/availability";
 import { MINUTE, uid } from "@/lib/dates";
 import { createCalendarEvent } from "@/lib/google";
+import { emailInvite } from "@/lib/notify";
+import { emailFallbackRecipients, inviteRecipients, uniqueEmails } from "@/lib/recipients";
 import { read, update } from "@/lib/store";
 import type { Booking } from "@/lib/types";
 import { BookingInput, firstIssue } from "@/lib/validation";
@@ -54,21 +57,51 @@ export async function POST(request: Request) {
   }
 
   let calendarWarning: string | undefined;
+  let organizerEmail: string | undefined;
+  let googleFailed = false;
   try {
     const event = await createCalendarEvent(booking);
     if (event) {
       booking.googleEventId = event.id;
       booking.googleEventLink = event.htmlLink;
       booking.meetLink = event.hangoutLink;
-      await update("bookings", (bookings) => ({
-        next: bookings.map((b) => (b.id === booking.id ? booking : b)),
-        result: null,
-      }));
+      organizerEmail = event.organizer?.email;
     }
   } catch (error) {
+    googleFailed = true;
     console.error("[bookings] Google Calendar sync failed", error);
-    calendarWarning =
-      "Your call is booked, but the calendar invite couldn't be sent. Z & XOE will follow up.";
+  }
+
+  const recipients = inviteRecipients(process.env);
+  const fallback = emailFallbackRecipients({
+    googleEventCreated: Boolean(booking.googleEventId),
+    organizerEmail,
+    recipients,
+    bookerEmail: booking.email,
+  });
+  let emailed: string[] = [];
+  try {
+    emailed = await emailInvite(booking, fallback);
+  } catch (error) {
+    console.error("[bookings] Invite email failed", error);
+  }
+  booking.invitesSentTo = uniqueEmails([
+    ...(booking.googleEventId
+      ? recipients.filter((r) => r.toLowerCase() !== organizerEmail?.toLowerCase())
+      : []),
+    ...emailed,
+  ]).filter((email) => recipients.some((r) => r.toLowerCase() === email.toLowerCase()));
+
+  await update("bookings", (bookings) => ({
+    next: bookings.map((b) => (b.id === booking.id ? booking : b)),
+    result: null,
+  }));
+
+  const inviteDelivered = Boolean(booking.googleEventId) || emailed.length > 0;
+  if (!inviteDelivered) {
+    calendarWarning = googleFailed
+      ? "Your call is booked, but the calendar invite couldn't be sent. Z & XOE will follow up."
+      : undefined;
   }
 
   return NextResponse.json(
@@ -80,6 +113,7 @@ export async function POST(request: Request) {
         topic: booking.topic,
         meetLink: booking.meetLink,
         synced: Boolean(booking.googleEventId),
+        emailed: emailed.some((e) => e.toLowerCase() === booking.email.toLowerCase()),
       },
       calendarWarning,
     },

@@ -2,11 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { AppShell } from "../AppShell";
 import { Lock } from "../Icons";
-import { TopBar } from "../TopBar";
 import { api } from "@/lib/api";
 
-export function PasscodeGate() {
+export function PasscodeGate({ configured }: { configured: boolean }) {
   const router = useRouter();
   const [passcode, setPasscode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,44 +26,54 @@ export function PasscodeGate() {
   };
 
   return (
-    <div className="shell">
-      <TopBar active="/executive" />
+    <AppShell active="/executive">
       <div className="lock">
         <form className="card lock-card" onSubmit={submit}>
           <div className="lock-orb">
             <Lock size={34} />
           </div>
-          <p className="eyebrow">Executive view</p>
-          <h1 style={{ fontWeight: 300, fontSize: 28, margin: "6px 0 18px", letterSpacing: "-0.02em" }}>
-            Welcome back, Z
+          <p className="eyebrow">Executive admin</p>
+          <h1 style={{ fontWeight: 700, fontSize: 24, margin: "8px 0 6px", letterSpacing: "-0.04em" }}>
+            Z &amp; XOE only
           </h1>
-          <input
-            className="input"
-            type="password"
-            placeholder="Passcode"
-            aria-label="Passcode"
-            autoComplete="current-password"
-            value={passcode}
-            onChange={(e) => setPasscode(e.target.value)}
-            style={{ textAlign: "center", borderRadius: 999, height: 48 }}
-          />
-          {error && (
-            <p style={{ color: "var(--danger)", fontSize: 13, margin: "10px 0 0" }} role="alert">
-              {error}
-            </p>
+          <p className="muted" style={{ fontSize: 12, margin: "0 0 20px" }}>
+            Enter the admin password to edit the schedule.
+          </p>
+          {configured ? (
+            <>
+              <input
+                className="input"
+                type="password"
+                placeholder="Password"
+                aria-label="Admin password"
+                autoComplete="current-password"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                style={{ textAlign: "center", height: 48 }}
+              />
+              {error && (
+                <p style={{ color: "var(--danger)", fontSize: 12, margin: "10px 0 0" }} role="alert">
+                  {error}
+                </p>
+              )}
+              <button
+                type="submit"
+                className="btn btn-primary btn-block"
+                style={{ marginTop: 14 }}
+                disabled={busy || !passcode}>
+                {busy ? <span className="spinner" /> : "Unlock"}
+              </button>
+            </>
+          ) : (
+            <div className="banner warn" role="alert">
+              Admin access is locked until EXECUTIVE_PASSCODE is set in the Vercel project settings.
+            </div>
           )}
-          <button
-            type="submit"
-            className="btn btn-dark btn-block"
-            style={{ marginTop: 14 }}
-            disabled={busy || !passcode}>
-            {busy ? <span className="spinner" /> : "Unlock"}
-          </button>
-          <p className="muted" style={{ fontSize: 12, marginTop: 16 }}>
-            Looking to book a call? Head to the Team tab.
+          <p className="muted" style={{ fontSize: 11, marginTop: 18 }}>
+            Booking a call? Use the Team tab.
           </p>
         </form>
       </div>
-    </div>
+    </AppShell>
   );
 }

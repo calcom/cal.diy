@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Z's schedule and team booking.",
     start_url: "/team",
     display: "standalone",
-    background_color: "#E6EAE7",
-    theme_color: "#E6EAE7",
+    background_color: "#04071A",
+    theme_color: "#04071A",
     icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }],
   };
 }

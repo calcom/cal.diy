@@ -71,7 +71,7 @@ export function BookingDetails({ booking, onClose, onCancel }: BookingDetailsPro
               </button>
               <div style={{ flex: 1 }} />
               {booking.meetLink && (
-                <a className="btn btn-dark" href={booking.meetLink} target="_blank" rel="noreferrer">
+                <a className="btn btn-primary" href={booking.meetLink} target="_blank" rel="noreferrer">
                   <Video /> Join Meet
                 </a>
               )}
@@ -125,6 +125,18 @@ export function BookingDetails({ booking, onClose, onCancel }: BookingDetailsPro
               </a>
             ) : (
               <span className="muted">Not synced to Google Calendar</span>
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <Mail />
+          </dt>
+          <dd>
+            {booking.invitesSentTo?.length ? (
+              <>Invites sent to {booking.invitesSentTo.join(" & ")}</>
+            ) : (
+              <span className="muted">No invite email sent (connect Google or set RESEND_API_KEY)</span>
             )}
           </dd>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
-import { Check, Google, Lock, Sparkle } from "../Icons";
+import { Check, Google, Lock, Mail, Sparkle } from "../Icons";
 import type { AppStatus } from "@/lib/types";
 
 export function Integrations({
@@ -42,11 +42,23 @@ export function Integrations({
               <Check size={12} /> On
             </span>
           ) : status.google.configured ? (
-            <a className="btn btn-dark btn-sm" href="/api/google/connect">
+            <a className="btn btn-primary btn-sm" href="/api/google/connect">
               Connect
             </a>
           ) : null
         }
+      />
+      <Row
+        icon={<Mail />}
+        title="Booking invites"
+        detail={
+          status.invites.recipients.length
+            ? `Sent to ${status.invites.recipients.join(" & ")}${
+                status.google.connected || status.invites.email ? "" : " once Google or email is set up"
+              }.`
+            : "Set Z_EMAIL and XOE_EMAIL."
+        }
+        action={status.google.connected || status.invites.email ? <span className="tag">On</span> : null}
       />
       <Row
         icon={<Sparkle />}
@@ -58,7 +70,7 @@ export function Integrations({
       />
       {!status.passcodeSet && (
         <div className="banner warn">
-          <Lock size={16} /> No EXECUTIVE_PASSCODE set — anyone with the link can edit.
+          <Lock size={16} /> Dev mode: no EXECUTIVE_PASSCODE set. Production stays locked until it is.
         </div>
       )}
       {status.storage === "memory" && (
@@ -90,15 +102,11 @@ function Row({
   action: ReactNode;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-      <span className="icon-btn sm" style={{ background: "rgba(255,255,255,0.7)" }}>
-        {icon}
-      </span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 500 }}>{title}</div>
-        <div className="muted" style={{ fontSize: 12 }}>
-          {detail}
-        </div>
+    <div className="connection">
+      <span className="icon-btn sm">{icon}</span>
+      <div className="connection-text">
+        <strong>{title}</strong>
+        <span>{detail}</span>
       </div>
       {action}
     </div>

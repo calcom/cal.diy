@@ -59,7 +59,7 @@ export function Sheet({ open, onClose, title, hero, children, footer, wide }: Sh
         <div className="sheet-handle" />
         {hero ?? (
           <div className="sheet-hero">
-            <h2 id={titleId} className="card-title" style={{ fontSize: 20, fontWeight: 500 }}>
+            <h2 id={titleId} className="card-title" style={{ fontSize: 18 }}>
               {title}
             </h2>
           </div>

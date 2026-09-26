@@ -10,7 +10,15 @@ import { formatDayLong, formatRange, formatTime, MINUTE } from "@/lib/dates";
 import { googleCalendarTemplateUrl, icsFile } from "@/lib/invite";
 
 interface BookingResponse {
-  booking: { id: string; start: string; end: string; topic: string; meetLink?: string; synced: boolean };
+  booking: {
+    id: string;
+    start: string;
+    end: string;
+    topic: string;
+    meetLink?: string;
+    synced: boolean;
+    emailed: boolean;
+  };
   calendarWarning?: string;
 }
 
@@ -126,30 +134,30 @@ export function BookingFlow({
           <div className="success-mark">
             <Check size={32} strokeWidth={2.2} />
           </div>
-          <h3 style={{ margin: "6px 0 0", fontSize: 22, fontWeight: 400, letterSpacing: "-0.02em" }}>
+          <h3 style={{ margin: "6px 0 0", fontSize: 20, fontWeight: 700, letterSpacing: "-0.03em" }}>
             {done.booking.topic}
           </h3>
           <p className="muted" style={{ margin: 0 }}>
             {formatDayLong(s)} · {formatRange(s, en)}
           </p>
           <p style={{ margin: "10px 0 0", fontSize: 14 }}>
-            {done.booking.synced
-              ? `A Google Calendar invite is on its way to ${email}.`
-              : "Z & XOE have been notified in the app."}
+            {done.booking.synced || done.booking.emailed
+              ? `Invites are on their way to you (${email}), Z and XOE.`
+              : "Z & XOE have your booking. Add it to your own calendar below."}
           </p>
         </div>
         {done.calendarWarning && <div className="banner warn">{done.calendarWarning}</div>}
         <div style={{ display: "grid", gap: 8 }}>
           {done.booking.meetLink && (
             <a
-              className="btn btn-dark btn-block"
+              className="btn btn-primary btn-block"
               href={done.booking.meetLink}
               target="_blank"
               rel="noreferrer">
               <Video /> Google Meet link
             </a>
           )}
-          {!done.booking.synced && (
+          {!done.booking.synced && !done.booking.emailed && (
             <a
               className="btn btn-soft btn-block"
               href={googleCalendarTemplateUrl({ title, start: s, end: en, details })}
@@ -188,7 +196,7 @@ export function BookingFlow({
         <button
           type="submit"
           form="booking-form"
-          className="btn btn-dark btn-block"
+          className="btn btn-primary btn-block"
           disabled={submitting || start === null}>
           {submitting ? (
             <span className="spinner" />

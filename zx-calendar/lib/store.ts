@@ -91,3 +91,36 @@ export async function update<K extends Key, R>(
   await write(key, next);
   return result;
 }
+
+const memoryCounters = new Map<string, { count: number; expiresAt: number }>();
+
+/** Increments a short-lived counter (rate limiting). Returns the new count. */
+export async function bumpCounter(key: string, ttlSeconds: number): Promise<number> {
+  const fullKey = `${PREFIX}counter:${key}`;
+  if (redis) {
+    const count = await redis.incr(fullKey);
+    if (count === 1) await redis.expire(fullKey, ttlSeconds);
+    return count;
+  }
+  const now = Date.now();
+  const current = memoryCounters.get(fullKey);
+  const next =
+    current && current.expiresAt > now
+      ? { count: current.count + 1, expiresAt: current.expiresAt }
+      : { count: 1, expiresAt: now + ttlSeconds * 1000 };
+  memoryCounters.set(fullKey, next);
+  return next.count;
+}
+
+export async function peekCounter(key: string): Promise<number> {
+  const fullKey = `${PREFIX}counter:${key}`;
+  if (redis) return (await redis.get<number>(fullKey)) ?? 0;
+  const current = memoryCounters.get(fullKey);
+  return current && current.expiresAt > Date.now() ? current.count : 0;
+}
+
+export async function clearCounter(key: string): Promise<void> {
+  const fullKey = `${PREFIX}counter:${key}`;
+  if (redis) await redis.del(fullKey);
+  else memoryCounters.delete(fullKey);
+}

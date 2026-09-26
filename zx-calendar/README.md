@@ -2,15 +2,17 @@
 
 A shared scheduling app with two tabs:
 
-- **Executive** (`/executive`, passcode-protected): Z fills in the week — Free time, Nursing, School,
+- **Executive** (`/executive`, admin password — only Z & XOE): Z fills in the week — Free time, Nursing, School,
   Production (music), Working, On duty for Mursezan, Personal. Drag blocks to move them, drag the bottom edge
   to resize, click or drag on empty space to create, click a block for details. Day / 3‑day / week / month
   views, weekly repeats, tasks, and a **brain dump** box that turns a messy paragraph into events and tasks.
 - **Team** (`/team`, public): shows **only Z's free time**. Anyone on the team picks a window, a length
-  (15–60 min) and a start time. The call is created in the connected Google Calendar with Z, XOE and the
-  booker as attendees and a Google Meet link.
+  (15–60 min) and a start time. Every booking sends a calendar invite to **xoe@zannyworld.org** and
+  **zantavius@zannyworld.org** (plus the booker): through Google Calendar with a Meet link when connected, and
+  by email with an `.ics` invite when `RESEND_API_KEY` is set.
 
-Built with Next.js 16 (App Router), React 19 and plain CSS. It works on phones (bottom dock, bottom sheets,
+Built with Next.js 16 (App Router), React 19 and plain CSS in a dark glass style using the
+Icy Blue / Cornflower / Persian Blue / Dusk Blue / Deep Navy palette and Space Mono. It works on phones (bottom dock, bottom sheets,
 long‑press to drag, swipe to change days) and desktop.
 
 ## Run locally
@@ -35,9 +37,10 @@ offline parser, and bookings are saved without a Google invite.
 
    | Variable | Purpose |
    | --- | --- |
-   | `EXECUTIVE_PASSCODE` | Passcode Z uses to unlock the Executive tab. **Set this.** |
+   | `EXECUTIVE_PASSCODE` | The admin password for the Executive tab. **Required** — without it production keeps the Executive tab locked. Store it only here, never in the repo. |
    | `AUTH_SECRET` | Random string that signs the session cookie (`openssl rand -base64 32`). |
-   | `Z_EMAIL`, `XOE_EMAIL` | Both get invited to every booked call. |
+   | `RESEND_API_KEY`, `INVITE_FROM` | Optional email invites (see below). |
+   | `XOE_EMAIL`, `Z_EMAIL`, `INVITE_EMAILS` | Optional overrides; invites go to xoe@ and zantavius@zannyworld.org by default. |
    | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google OAuth client (see below). |
    | `GOOGLE_CALENDAR_ID` | Optional, defaults to `primary`. |
    | `ANTHROPIC_API_KEY` | Turns on Claude for the brain dump. `ANTHROPIC_MODEL` overrides the model. |
@@ -48,7 +51,13 @@ offline parser, and bookings are saved without a Google invite.
    `/executive` → **Connections → Connect**, and sign in with the Google account whose calendar should
    receive the bookings. The refresh token is stored server‑side in Redis (or set `GOOGLE_REFRESH_TOKEN`
    yourself).
-5. Share `https://<your-domain>/team` with the team.
+5. **Email invites (recommended):** create a [Resend](https://resend.com) account, verify `zannyworld.org`,
+   and set `RESEND_API_KEY` (and `INVITE_FROM` if you want a different sender). Google never emails the
+   account that owns the calendar, so this makes sure that person also gets an invite email, and it keeps
+   invites working if Google is ever disconnected.
+6. Share `https://<your-domain>/team` with the team.
+
+Failed admin logins are limited to 8 per IP every 15 minutes.
 
 ## How it fits together
 

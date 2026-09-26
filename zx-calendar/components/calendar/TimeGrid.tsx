@@ -178,7 +178,6 @@ export function TimeGrid({
     });
   }, [computePreview]);
 
-
   const autoScroll = useCallback(() => {
     const p = pendingRef.current;
     const scroller = scrollRef.current;

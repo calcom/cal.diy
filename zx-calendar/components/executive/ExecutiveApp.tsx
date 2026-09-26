@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AppShell, type RailSection } from "../AppShell";
 import { Calendar, visibleRange } from "../calendar/Calendar";
 import type { AllDayItem, CalEvent, ViewMode } from "../calendar/types";
-import { Calendar as CalendarIcon, ListIcon, Logout, Pie, Plus, Sparkle } from "../Icons";
+import { Calendar as CalendarIcon, LinkIcon, ListIcon, Logout, Pie, Plug, Plus, Sparkle } from "../Icons";
 import { Sheet } from "../Sheet";
 import { useToast } from "../Toasts";
-import { TopBar } from "../TopBar";
 import { type BlockDraft, BlockEditor, type EditorState } from "./BlockEditor";
 import { BookingDetails } from "./BookingDetails";
 import { BrainDump } from "./BrainDump";
@@ -89,9 +89,14 @@ export function ExecutiveApp() {
     setViewState(stored ?? (window.matchMedia("(max-width: 899px)").matches ? "3day" : "week"));
   }, []);
 
+  // Bumped on every optimistic edit so a background refresh that started before
+  // the edit can't overwrite it with stale server data.
+  const editSeq = useRef(0);
   const load = useCallback(async () => {
+    const seqAtStart = editSeq.current;
     try {
-      setData(await api<ScheduleData>("/api/blocks"));
+      const fresh = await api<ScheduleData>("/api/blocks");
+      if (seqAtStart === editSeq.current) setData(fresh);
     } catch (err) {
       toast.show(err instanceof Error ? err.message : "Couldn't load your schedule", { tone: "error" });
     }
@@ -124,6 +129,7 @@ export function ExecutiveApp() {
   // ── Mutations ──────────────────────────────────────────────────────
 
   const patchLocal = useCallback((fn: (d: ScheduleData) => ScheduleData) => {
+    editSeq.current++;
     setData((d) => (d ? fn(d) : d));
   }, []);
 
@@ -382,7 +388,7 @@ export function ExecutiveApp() {
         return {
           id: b.id,
           title: b.title || c.label,
-          subtitle: b.location || (b.category === "free" ? "Visible to team" : c.short),
+          subtitle: b.location || (b.category === "free" ? "Team sees" : c.short),
           start: new Date(b.start),
           end: new Date(b.end),
           fill: c.fill,
@@ -404,7 +410,7 @@ export function ExecutiveApp() {
             end: new Date(b.end),
             fill: BOOKING_STYLE.fill,
             ink: BOOKING_STYLE.ink,
-            accent: "#9FE2EE",
+            accent: BOOKING_STYLE.accent,
             draggable: false,
           }));
     return [...blocks, ...calls];
@@ -472,82 +478,56 @@ export function ExecutiveApp() {
     />
   );
 
-  return (
-    <div className="shell">
-      <TopBar
-        active="/executive"
-        right={
-          <button
-            type="button"
-            className="icon-btn desktop-only"
-            onClick={logout}
-            aria-label="Lock executive view"
-            title="Lock">
-            <Logout />
-          </button>
-        }
-      />
+  const scrollToCard = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
-      <div className="workspace">
-        <aside className="sidebar">
-          {data && (
-            <WeekGlance date={date} blocks={data.blocks} bookings={data.bookings} tasks={data.tasks} />
-          )}
+  const sections: RailSection[] = [
+    { id: "cal", label: "Calendar", icon: <CalendarIcon />, onSelect: () => setDate(new Date()) },
+    { id: "brain", label: "Brain dump", icon: <Sparkle />, onSelect: () => scrollToCard("brain-card") },
+    { id: "tasks", label: "Tasks", icon: <ListIcon />, onSelect: () => scrollToCard("tasks-card") },
+    { id: "week", label: "Week stats", icon: <Pie />, onSelect: () => scrollToCard("week-card") },
+    { id: "setup", label: "Connections", icon: <Plug />, onSelect: () => scrollToCard("setup-card") },
+  ];
 
-          <SideCard title="Brain dump" eyebrow="Type it messy, get a schedule" icon={<Sparkle />}>
-            {brainDump}
-          </SideCard>
+  const copyTeamLink = async () => {
+    const link = `${window.location.origin}/team`;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.show("Team link copied");
+    } catch {
+      window.prompt("Copy the team link", link);
+    }
+  };
 
-          <SideCard
-            id="tasks-card"
-            title="Tasks"
-            eyebrow={`${data?.tasks.filter((t) => !t.done).length ?? 0} open`}>
-            {tasksPanel}
-          </SideCard>
-
-          <SideCard title="Your schedule" eyebrow="Toggle what you see · + to add">
-            <CategoryFilters hidden={hidden} onToggle={toggleHidden} onQuickAdd={(id) => newBlockAt(id)} />
-          </SideCard>
-
-          <SideCard title="Connections" eyebrow="Setup">
-            <Integrations status={status} onLoadSample={loadSample} />
-          </SideCard>
-        </aside>
-
-        <main className="main-panel">
-          <Calendar
-            events={events}
-            allDay={allDay}
-            view={view}
-            onViewChange={setView}
-            date={date}
-            onDateChange={setDate}
-            editable
-            onEventClick={onEventClick}
-            onEventChange={onEventChange}
-            onCreate={onCreate}
-            onAllDayClick={onAllDayClick}
-            toolbarExtra={
-              <button type="button" className="btn btn-dark btn-sm desktop-only" onClick={() => newBlockAt()}>
-                <Plus size={16} /> New block
-              </button>
-            }
-            overlay={
-              isEmpty ? (
-                <div className="banner" style={{ margin: "0 16px 10px" }}>
-                  <span style={{ flex: 1 }}>
-                    Your calendar is empty. Click or drag on the grid to add a block, or
-                  </span>
-                  <button type="button" className="btn btn-dark btn-sm" onClick={loadSample}>
-                    Load a sample week
-                  </button>
-                </div>
-              ) : null
-            }
-          />
-        </main>
+  const aside = (
+    <>
+      <div id="week-card">
+        {data && <WeekGlance date={date} blocks={data.blocks} bookings={data.bookings} tasks={data.tasks} />}
       </div>
+      <SideCard
+        id="brain-card"
+        title="Brain dump"
+        eyebrow="Type it messy · get a schedule"
+        icon={<Sparkle />}>
+        {brainDump}
+      </SideCard>
+      <SideCard
+        id="tasks-card"
+        title="Tasks"
+        eyebrow={`${data?.tasks.filter((t) => !t.done).length ?? 0} open`}>
+        {tasksPanel}
+      </SideCard>
+      <SideCard title="Your schedule" eyebrow="Toggle · + to add">
+        <CategoryFilters hidden={hidden} onToggle={toggleHidden} onQuickAdd={(id) => newBlockAt(id)} />
+      </SideCard>
+      <SideCard id="setup-card" title="Connections" eyebrow="Setup">
+        <Integrations status={status} onLoadSample={loadSample} />
+      </SideCard>
+    </>
+  );
 
+  const overlays = (
+    <>
       <nav className="dock mobile-only" aria-label="Executive tools">
         <button
           type="button"
@@ -594,7 +574,7 @@ export function ExecutiveApp() {
       </nav>
 
       <Sheet open={panel === "brain"} onClose={() => setPanel(null)} title="Brain dump">
-        <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+        <p className="muted" style={{ margin: 0, fontSize: 12 }}>
           Type everything on your mind. It becomes events and tasks you can review before adding.
         </p>
         {brainDump}
@@ -620,7 +600,61 @@ export function ExecutiveApp() {
 
       <BlockEditor state={editor} onClose={() => setEditor(null)} onSave={saveDraft} onDelete={deleteBlock} />
       <BookingDetails booking={openBooking} onClose={() => setOpenBooking(null)} onCancel={cancelBooking} />
-    </div>
+    </>
+  );
+
+  return (
+    <AppShell
+      active="/executive"
+      sections={sections}
+      aside={aside}
+      overlays={overlays}
+      railCard={
+        <>
+          <strong>Share free time</strong>
+          <p>Send the team link — they only ever see your free blocks.</p>
+          <button type="button" className="btn btn-primary btn-sm" onClick={copyTeamLink}>
+            <LinkIcon size={14} /> Copy team link
+          </button>
+        </>
+      }
+      railFooter={
+        <button type="button" className="rail-link" onClick={logout} title="Lock">
+          <Logout />
+          <span>Lock admin</span>
+        </button>
+      }>
+      <Calendar
+        events={events}
+        allDay={allDay}
+        view={view}
+        onViewChange={setView}
+        date={date}
+        onDateChange={setDate}
+        editable
+        onEventClick={onEventClick}
+        onEventChange={onEventChange}
+        onCreate={onCreate}
+        onAllDayClick={onAllDayClick}
+        toolbarExtra={
+          <button type="button" className="btn btn-primary btn-sm desktop-only" onClick={() => newBlockAt()}>
+            <Plus size={16} /> New block
+          </button>
+        }
+        overlay={
+          isEmpty ? (
+            <div className="banner" style={{ margin: "0 18px 12px" }}>
+              <span style={{ flex: 1 }}>
+                Your calendar is empty. Click or drag on the grid to add a block, or
+              </span>
+              <button type="button" className="btn btn-primary btn-sm" onClick={loadSample}>
+                Load a sample week
+              </button>
+            </div>
+          ) : null
+        }
+      />
+    </AppShell>
   );
 }
 
