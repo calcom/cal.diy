@@ -61,15 +61,15 @@ Cal.diy requires root `.env` configuration and a matching `.env` in `packages/pr
 2. Generate encryption keys:
    - For `NEXTAUTH_SECRET` (32 bytes base64):
      ```powershell
-     # In PowerShell:
-     [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
+     # In PowerShell (Cryptographically Secure .NET RandomNumberGenerator):
+     $bytes = New-Object byte[] 32; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes); [Convert]::ToBase64String($bytes)
      ```
      *(Or in Git Bash: `openssl rand -base64 32`)*
 
    - For `CALENDSO_ENCRYPTION_KEY` (24 bytes base64):
      ```powershell
-     # In PowerShell:
-     [Convert]::ToBase64String((1..24 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
+     # In PowerShell (Cryptographically Secure .NET RandomNumberGenerator):
+     $bytes = New-Object byte[] 24; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes); [Convert]::ToBase64String($bytes)
      ```
      *(Or in Git Bash: `openssl rand -base64 24`)*
 
@@ -92,7 +92,7 @@ Start the bundled PostgreSQL container:
 docker compose -f packages/prisma/docker-compose.yml up -d
 ```
 > [!NOTE]
-> The database container binds to host port **`5450`** (mapped internally to `5432`) to avoid conflicts with any locally installed PostgreSQL instance on Windows. The default `.env.example` already points to `postgresql://calcom:calcom@localhost:5450/calcom`.
+> The database container binds to host port **`5450`** (mapped internally to `5432`) to avoid conflicts with any locally installed PostgreSQL instance on Windows. The default `.env.example` is preconfigured to connect to this container at `postgresql://postgres:@localhost:5450/calendso`.
 
 ### 6. Run Database Migrations & Seed Data
 Initialize the database schema and insert default test accounts:
@@ -146,12 +146,74 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
   # PowerShell
   $env:NODE_OPTIONS="--max-old-space-size=8192"
   yarn dev
+  ```
 
-  # Git Bash / CMD
+  ```bash
+  # Git Bash
   export NODE_OPTIONS="--max-old-space-size=8192"
   yarn dev
   ```
+
+  ```cmd
+  REM Command Prompt (CMD)
+  set NODE_OPTIONS=--max-old-space-size=8192
+  yarn dev
+  ```
 </details>
+
+---
+
+### 🐧 Alternative: Windows Subsystem for Linux (WSL 2) Setup
+
+Developers preferring a POSIX/Linux development environment on Windows can use WSL 2.
+
+#### 1. Prerequisites
+- Install WSL 2 and Ubuntu (run in PowerShell as Administrator):
+  ```powershell
+  wsl --install
+  ```
+- Enable WSL 2 integration in **Docker Desktop**:
+  - Open **Docker Desktop Settings** > **Resources** > **WSL integration**.
+  - Check **Enable integration with my default WSL distro** and toggle on your installed Ubuntu distribution.
+
+#### 2. Clone into the Linux Filesystem
+> [!IMPORTANT]
+> Always clone the repository into the **WSL native Linux filesystem** (e.g. `~/projects/cal.diy` or `/home/<username>/projects/cal.diy`), **NOT** under the Windows mount `/mnt/c/`. Accessing `/mnt/c/` across the WSL 9P filesystem bridge causes significant disk I/O performance degradation, symlink resolution issues, and file watcher errors with Turbopack.
+
+Inside your WSL terminal:
+```bash
+mkdir -p ~/projects && cd ~/projects
+git clone -c core.symlinks=true https://github.com/calcom/cal.diy.git
+cd cal.diy
+```
+
+#### 3. Install Node.js & Yarn
+```bash
+# Install nvm and Node 20
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+source ~/.bashrc
+nvm install 20
+nvm use 20
+
+corepack enable
+yarn install
+```
+
+#### 4. Configure Environment & Database
+```bash
+cp .env.example .env
+cp .env packages/prisma/.env
+
+# Generate encryption keys
+openssl rand -base64 32
+openssl rand -base64 24
+# Paste the generated keys into NEXTAUTH_SECRET and CALENDSO_ENCRYPTION_KEY in .env
+
+docker compose -f packages/prisma/docker-compose.yml up -d
+yarn workspace @calcom/prisma db-deploy
+yarn workspace @calcom/prisma db-seed
+yarn dev
+```
 
 ---
 
@@ -167,10 +229,20 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
   xcode-select --install
   ```
 - Install Node.js (via [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm)):
-  ```bash
-  nvm install 20
-  nvm use 20
-  ```
+  - **Using nvm:**
+    ```bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+    # Restart your terminal or source your ~/.zshrc, then:
+    nvm install 20
+    nvm use 20
+    ```
+  - **Using fnm (Fast Node Manager):**
+    ```bash
+    brew install fnm
+    eval "$(fnm env --use-on-cd)"
+    fnm install 20
+    fnm use 20
+    ```
 - Install **Docker Desktop for Mac** (Apple Silicon or Intel) or [Colima](https://github.com/abiosoft/colima).
 
 ### 2. Clone and Setup
@@ -252,7 +324,9 @@ newgrp docker
 git clone https://github.com/calcom/cal.diy.git
 cd cal.diy
 
-# Ensure Node >= 18 is active via nvm
+# Install and load nvm (if not already installed), then activate Node 20:
+# curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash && source ~/.bashrc
+nvm install 20
 nvm use 20
 
 corepack enable
