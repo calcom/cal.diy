@@ -59,6 +59,11 @@ offline parser, and bookings are saved without a Google invite.
 
 Failed admin logins are limited to 8 per IP every 15 minutes.
 
+**Time zones:** every screen shows times in the viewer's own time zone (Z in Pacific, XOE and the team in
+the Philippines), and Google invites do the same. The booking dialog also shows the chosen slot in both
+Pacific and Philippine time. `CALENDAR_TIMEZONE` (default `America/Los_Angeles,Asia/Manila`) only controls
+which zones are written in the email-invite text.
+
 ## How it fits together
 
 ```

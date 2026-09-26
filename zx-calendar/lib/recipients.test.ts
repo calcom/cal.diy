@@ -69,3 +69,20 @@ test("ics escaping and invite structure", () => {
   assert.ok(ics.includes("\r\n"));
   assert.match(icsFile({ uid: "x", title: "t", start: new Date(0), end: new Date(1) }), /METHOD:PUBLISH/);
 });
+
+test("time zones: defaults to Pacific + Philippines, accepts a list, drops junk", async () => {
+  const { parseTimeZones, formatRangeInZones } = await import("./format.ts");
+  assert.deepEqual(parseTimeZones(undefined), ["America/Los_Angeles", "Asia/Manila"]);
+  assert.deepEqual(parseTimeZones(" Asia/Manila , Not/AZone,America/Los_Angeles"), [
+    "Asia/Manila",
+    "America/Los_Angeles",
+  ]);
+  // 2026-09-29 01:00 UTC = Mon 6:00 PM PDT = Tue 9:00 AM PHT
+  const lines = formatRangeInZones(
+    new Date(Date.UTC(2026, 8, 29, 1, 0)),
+    new Date(Date.UTC(2026, 8, 29, 1, 30)),
+    ["America/Los_Angeles", "Asia/Manila"]
+  );
+  assert.equal(lines[0], "Mon, Sep 28, 6:00 PM – 6:30 PM PDT");
+  assert.equal(lines[1], "Tue, Sep 29, 9:00 AM – 9:30 AM PHT");
+});
