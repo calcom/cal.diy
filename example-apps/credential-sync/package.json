@@ -10,7 +10,7 @@
   "dependencies": {
     "@calcom/atoms": "workspace:*",
     "@prisma/client": "6.16.1",
-    "next": "15.5.15",
+    "next": "15.5.26",
     "prisma": "6.16.1",
     "react": "18.2.0",
     "react-dom": "18.2.0"
