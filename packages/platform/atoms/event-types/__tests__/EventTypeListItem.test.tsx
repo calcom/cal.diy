@@ -1,8 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { vi } from "vitest";
-
-import type { AtomEventTypeListItem } from "../types";
 import { EventTypeListItem } from "../components/EventTypeListItem";
+import type { AtomEventTypeListItem } from "../types";
 
 // Mock auto-animate
 vi.mock("@formkit/auto-animate/react", () => ({
@@ -87,6 +86,7 @@ describe("EventTypeListItem", () => {
     expect(screen.getByText("30 Min Meeting")).toBeInTheDocument();
     expect(screen.getByText("Quick meeting")).toBeInTheDocument();
     expect(screen.getByText(/30m/)).toBeInTheDocument();
+    expect(screen.getByLabelText("30 minutes")).toBeInTheDocument();
   });
 
   it("should render as link when getEventTypeUrl is provided", () => {

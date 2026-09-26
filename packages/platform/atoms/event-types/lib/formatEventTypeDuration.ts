@@ -23,3 +23,24 @@ export function formatEventTypeDuration(minutes: number): string {
 
   return `${hours}h ${remainingMinutes}m`;
 }
+
+/**
+ * Accessible spoken form of an event type duration (English).
+ * Prefer localized helpers from `@calcom/lib/formatEventDuration` when `t` is available.
+ */
+export function getEventTypeDurationAccessibleLabel(minutes: number): string {
+  if (minutes < 60) {
+    return minutes === 1 ? "1 minute" : `${minutes} minutes`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  const hourPart = hours === 1 ? "1 hour" : `${hours} hours`;
+
+  if (remainingMinutes === 0) {
+    return hourPart;
+  }
+
+  const minutePart = remainingMinutes === 1 ? "1 minute" : `${remainingMinutes} minutes`;
+  return `${hourPart} ${minutePart}`;
+}
