@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
 import {
   getDurationAccessibleLabel,
@@ -8,7 +9,7 @@ import {
 
 type MockOptions = { count?: number; unit?: string };
 
-const mockT = (key: string, options?: MockOptions) => {
+const mockT = ((key: string, options?: MockOptions) => {
   const count = options?.count ?? 0;
   switch (key) {
     case "minute_one_short":
@@ -24,7 +25,7 @@ const mockT = (key: string, options?: MockOptions) => {
     default:
       return key;
   }
-};
+}) as TFunction;
 
 describe("formatEventDuration", () => {
   describe("getDurationFormatted", () => {

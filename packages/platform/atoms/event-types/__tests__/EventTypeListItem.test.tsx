@@ -17,7 +17,16 @@ vi.mock("next/link", () => ({
 // Mock useLocale
 vi.mock("@calcom/lib/hooks/useLocale", () => ({
   useLocale: () => ({
-    t: (key: string) => key,
+    t: (key: string, options?: { count?: number }) => {
+      const count = options?.count ?? 0;
+      if (key === "minute") {
+        return count === 1 ? "1 minute" : `${count} minutes`;
+      }
+      if (key === "hour") {
+        return count === 1 ? "1 hour" : `${count} hours`;
+      }
+      return key;
+    },
   }),
 }));
 
@@ -85,8 +94,8 @@ describe("EventTypeListItem", () => {
 
     expect(screen.getByText("30 Min Meeting")).toBeInTheDocument();
     expect(screen.getByText("Quick meeting")).toBeInTheDocument();
-    expect(screen.getByText(/30m/)).toBeInTheDocument();
-    expect(screen.getByLabelText("30 minutes")).toBeInTheDocument();
+    expect(screen.getByText("30m")).toBeInTheDocument();
+    expect(screen.getByText("30 minutes")).toBeInTheDocument();
   });
 
   it("should render as link when getEventTypeUrl is provided", () => {

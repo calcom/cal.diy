@@ -1,6 +1,5 @@
 import type { TFunction } from "i18next";
 
-/** Render X mins as X hours or X hours Y mins instead of in minutes once >= 60 minutes */
 export const getDurationFormatted = (mins: number | undefined, t: TFunction) => {
   if (!mins) return null;
 
@@ -25,7 +24,7 @@ export const getDurationFormatted = (mins: number | undefined, t: TFunction) => 
   return hourStr || minStr;
 };
 
-/** Full spoken form matching getDurationFormatted (e.g. "1 hour 30 minutes"). */
+/** Spoken form for screen readers; keeps short display abbreviations from being read as metres/age. */
 export const getDurationAccessibleLabel = (mins: number | undefined, t: TFunction) => {
   if (!mins) return null;
 
@@ -43,7 +42,6 @@ export const getDurationAccessibleLabel = (mins: number | undefined, t: TFunctio
   return parts.join(" ") || null;
 };
 
-/** Minutes-only short display used on event-type cards (e.g. "90m"). */
 export const getDurationMinutesFormatted = (mins: number | undefined, t: TFunction) => {
   if (!mins) return null;
   return mins === 1
@@ -51,7 +49,6 @@ export const getDurationMinutesFormatted = (mins: number | undefined, t: TFuncti
     : t("multiple_duration_timeUnit_short", { count: mins, unit: "minute" });
 };
 
-/** Minutes-only accessible label for event-type cards (e.g. "90 minutes"). */
 export const getDurationMinutesAccessibleLabel = (mins: number | undefined, t: TFunction) => {
   if (!mins) return null;
   return t("minute", { count: mins });

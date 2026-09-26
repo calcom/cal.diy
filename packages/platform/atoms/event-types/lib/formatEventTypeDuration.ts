@@ -25,8 +25,8 @@ export function formatEventTypeDuration(minutes: number): string {
 }
 
 /**
- * Accessible spoken form of an event type duration (English).
- * Prefer localized helpers from `@calcom/lib/formatEventDuration` when `t` is available.
+ * English fallback spoken form when a locale `t` function is unavailable.
+ * Prefer `getDurationAccessibleLabel` from `@calcom/lib/formatEventDuration` in UI code.
  */
 export function getEventTypeDurationAccessibleLabel(minutes: number): string {
   if (minutes < 60) {

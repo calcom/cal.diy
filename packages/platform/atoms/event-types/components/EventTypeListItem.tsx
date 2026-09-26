@@ -1,5 +1,6 @@
 "use client";
 
+import { getDurationAccessibleLabel } from "@calcom/lib/formatEventDuration";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Button } from "@calcom/ui/components/button";
@@ -15,10 +16,14 @@ import {
 import { showToast } from "@calcom/ui/components/toast";
 import Link from "next/link";
 import { useState } from "react";
-import { formatEventTypeDuration, getEventTypeDurationAccessibleLabel } from "../lib/formatEventTypeDuration";
+import { formatEventTypeDuration } from "../lib/formatEventTypeDuration";
 import type { AtomEventTypeListItem } from "../types";
 
 const EventTypeContent = ({ eventType }: { eventType: AtomEventTypeListItem }) => {
+  const { t } = useLocale();
+  const formatted = formatEventTypeDuration(eventType.length);
+  const label = getDurationAccessibleLabel(eventType.length, t);
+
   return (
     <div>
       <div className="space-x-2 rtl:space-x-reverse">
@@ -27,9 +32,8 @@ const EventTypeContent = ({ eventType }: { eventType: AtomEventTypeListItem }) =
       <div className="text-subtle mt-1">
         {eventType.description && <span className="block">{eventType.description}</span>}
         <Badge variant="gray" className="text-xs">
-          <span aria-label={getEventTypeDurationAccessibleLabel(eventType.length)}>
-            {formatEventTypeDuration(eventType.length)}
-          </span>
+          <span aria-hidden="true">{formatted}</span>
+          {label ? <span className="sr-only">{label}</span> : null}
         </Badge>
       </div>
     </div>

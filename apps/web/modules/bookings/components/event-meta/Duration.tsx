@@ -15,7 +15,12 @@ const renderDuration = (mins: number | undefined, t: TFunction) => {
   const formatted = getDurationFormatted(mins, t);
   const label = getDurationAccessibleLabel(mins, t);
   if (!formatted || !label) return null;
-  return <span aria-label={label}>{formatted}</span>;
+  return (
+    <>
+      <span aria-hidden="true">{formatted}</span>
+      <span className="sr-only">{label}</span>
+    </>
+  );
 };
 
 export const EventDuration = ({

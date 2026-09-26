@@ -76,7 +76,8 @@ export const EventTypeDescription = ({
                 return (
                   <li key={idx}>
                     <Badge variant="gray" startIcon="clock">
-                      <span aria-label={label}>{formatted}</span>
+                      <span aria-hidden="true">{formatted}</span>
+                      <span className="sr-only">{label}</span>
                     </Badge>
                   </li>
                 );
@@ -88,7 +89,8 @@ export const EventTypeDescription = ({
                 return (
                   <li>
                     <Badge variant="gray" startIcon="clock">
-                      <span aria-label={label}>{formatted}</span>
+                      <span aria-hidden="true">{formatted}</span>
+                      <span className="sr-only">{label}</span>
                     </Badge>
                   </li>
                 );

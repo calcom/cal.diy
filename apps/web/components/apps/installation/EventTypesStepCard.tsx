@@ -83,7 +83,8 @@ const EventTypeCard: FC<EventTypeCardProps> = ({
                 if (!formatted || !label) return null;
                 return (
                   <Badge key={`event-type-${id}-duration-${duration}`} variant="gray" startIcon="clock">
-                    <span aria-label={label}>{formatted}</span>
+                    <span aria-hidden="true">{formatted}</span>
+                    <span className="sr-only">{label}</span>
                   </Badge>
                 );
               })}
