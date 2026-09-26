@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-
-import { symmetricDecrypt, symmetricEncrypt } from "./crypto";
+import { safeCompare, symmetricDecrypt, symmetricEncrypt } from "./crypto";
 
 describe("crypto", () => {
   const testKey = "12345678901234567890123456789012"; // 32 bytes key
@@ -99,6 +98,41 @@ describe("crypto", () => {
       const decrypted = symmetricDecrypt(encrypted, testKey);
 
       expect(decrypted).toBe(unicodeText);
+    });
+  });
+
+  describe("safeCompare", () => {
+    it("should return true for identical strings", () => {
+      expect(safeCompare("secret-token-123", "secret-token-123")).toBe(true);
+      expect(safeCompare("", "")).toBe(true);
+      expect(safeCompare("a", "a")).toBe(true);
+    });
+
+    it("should return false for different strings of same length", () => {
+      expect(safeCompare("secret-token-123", "secret-token-124")).toBe(false);
+      expect(safeCompare("abc", "xyz")).toBe(false);
+    });
+
+    it("should return false for strings of different lengths without throwing", () => {
+      expect(safeCompare("short", "much-longer-secret-token")).toBe(false);
+      expect(safeCompare("secret-token-123", "secret")).toBe(false);
+      expect(safeCompare("", "non-empty")).toBe(false);
+    });
+
+    it("should return false when either or both inputs are null or undefined", () => {
+      expect(safeCompare(null, "secret")).toBe(false);
+      expect(safeCompare("secret", null)).toBe(false);
+      expect(safeCompare(undefined, "secret")).toBe(false);
+      expect(safeCompare("secret", undefined)).toBe(false);
+      expect(safeCompare(null, null)).toBe(false);
+      expect(safeCompare(undefined, undefined)).toBe(false);
+    });
+
+    it("should handle unicode and special characters", () => {
+      expect(safeCompare("🔑secret-token", "🔑secret-token")).toBe(true);
+      expect(safeCompare("🔑secret-token", "🔒secret-token")).toBe(false);
+      expect(safeCompare("!@#$%^&*()_+", "!@#$%^&*()_+")).toBe(true);
+      expect(safeCompare("!@#$%^&*()_+", "!@#$%^&*()_=")).toBe(false);
     });
   });
 });

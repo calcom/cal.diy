@@ -1,18 +1,18 @@
-import type { calendar_v3 } from "@googleapis/calendar";
-import { v4 as uuid } from "uuid";
-
+import process from "node:process";
 import { CalendarAuth } from "@calcom/app-store/googlecalendar/lib/CalendarAuth";
 import dayjs from "@calcom/dayjs";
 import { CalendarCacheEventService } from "@calcom/features/calendar-subscription/lib/cache/CalendarCacheEventService";
+import { safeCompare } from "@calcom/lib/crypto";
 import logger from "@calcom/lib/logger";
 import type { SelectedCalendar } from "@calcom/prisma/client";
-
+import type { calendar_v3 } from "@googleapis/calendar";
+import { v4 as uuid } from "uuid";
 import type {
-  ICalendarSubscriptionPort,
-  CalendarSubscriptionResult,
+  CalendarCredential,
   CalendarSubscriptionEvent,
   CalendarSubscriptionEventItem,
-  CalendarCredential,
+  CalendarSubscriptionResult,
+  ICalendarSubscriptionPort,
 } from "../lib/CalendarSubscriptionPort.interface";
 
 const log = logger.getSubLogger({ prefix: ["GoogleCalendarSubscriptionAdapter"] });
@@ -29,13 +29,19 @@ export class GoogleCalendarSubscriptionAdapter implements ICalendarSubscriptionP
     process.env.GOOGLE_WEBHOOK_URL || process.env.NEXT_PUBLIC_WEBAPP_URL
   }/api/webhooks/calendar-subscription/google_calendar`;
 
+  /**
+   * Validates the Google Calendar webhook request token using constant-time comparison.
+   *
+   * @param request - The incoming webhook Request
+   * @returns Promise resolving to true if the channel token matches GOOGLE_WEBHOOK_TOKEN, false otherwise
+   */
   async validate(request: Request): Promise<boolean> {
     const token = request?.headers?.get("X-Goog-Channel-Token");
     if (!this.GOOGLE_WEBHOOK_TOKEN) {
       log.warn("GOOGLE_WEBHOOK_TOKEN not configured");
       return false;
     }
-    if (token !== this.GOOGLE_WEBHOOK_TOKEN) {
+    if (!safeCompare(token, this.GOOGLE_WEBHOOK_TOKEN)) {
       log.warn("Invalid webhook token");
       return false;
     }
