@@ -1,36 +1,34 @@
-import { useState } from "react";
-
-import { useAppContextWithSchema } from "@calcom/app-store/EventTypeAppContext";
 import AppCard from "@calcom/app-store/_components/AppCard";
+import useIsAppEnabled from "@calcom/app-store/_utils/useIsAppEnabled";
+import { useAppContextWithSchema } from "@calcom/app-store/EventTypeAppContext";
 import type { EventTypeAppCardComponent } from "@calcom/app-store/types";
-import { TextField } from "@calcom/ui/components/form";
-
 import type { appDataSchema } from "../zod";
+import EventTypeAppSettingsInterface from "./EventTypeAppSettingsInterface";
 
-const EventTypeAppCard: EventTypeAppCardComponent = function EventTypeAppCard({ app, eventType, onAppInstallSuccess }) {
-  const { getAppData, setAppData } = useAppContextWithSchema<typeof appDataSchema>();
-  const trackingId = getAppData("trackingId");
-  const [enabled, setEnabled] = useState(getAppData("enabled"));
+const EventTypeAppCard: EventTypeAppCardComponent = function EventTypeAppCard({
+  app,
+  eventType,
+  onAppInstallSuccess,
+}) {
+  const { getAppData, setAppData, disabled } = useAppContextWithSchema<typeof appDataSchema>();
+  const { enabled, updateEnabled } = useIsAppEnabled(app);
 
   return (
     <AppCard
       onAppInstallSuccess={onAppInstallSuccess}
+      hideSettingsIcon
       app={app}
       switchOnClick={(e) => {
-        if (!e) {
-          setEnabled(false);
-        } else {
-          setEnabled(true);
-        }
+        updateEnabled(e);
       }}
       switchChecked={enabled}
-      teamId={eventType.team?.id || undefined}>
-      <TextField
-        name="Tracking ID"
-        value={trackingId}
-        onChange={(e) => {
-          setAppData("trackingId", e.target.value);
-        }}
+      teamId={eventType.team?.id ?? undefined}>
+      <EventTypeAppSettingsInterface
+        eventType={eventType}
+        slug={app.slug}
+        disabled={disabled}
+        getAppData={getAppData}
+        setAppData={setAppData}
       />
     </AppCard>
   );

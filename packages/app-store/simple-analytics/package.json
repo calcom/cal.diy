@@ -10,5 +10,5 @@
   "devDependencies": {
     "@calcom/types": "workspace:*"
   },
-  "description": "Simple Analytics is a European privacy-friendly and simple alternative to Google Analytics. No cookies. No trackers. No consent required from your visitors. Just straightforward analytics.\r\r"
+  "description": "Simple Analytics is a European privacy-friendly and simple alternative to Google Analytics. No cookies. No trackers. No consent required from your visitors. Just straightforward analytics."
 }

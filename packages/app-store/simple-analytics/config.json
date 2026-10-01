@@ -3,25 +3,30 @@
   "slug": "simple-analytics",
   "type": "simple-analytics_analytics",
   "logo": "icon.svg",
-  "url": "https://example.com/link",
+  "url": "https://simpleanalytics.com",
   "variant": "analytics",
-  "categories": [
-    "analytics"
-  ],
+  "categories": ["analytics"],
   "publisher": "Simple Analytics B.V.",
   "email": "support@simpleanalytics.com",
-  "description": "Simple Analytics is a European privacy-friendly and simple alternative to Google Analytics. No cookies. No trackers. No consent required from your visitors. Just straightforward analytics.\r\r",
+  "description": "Simple Analytics is a European privacy-friendly and simple alternative to Google Analytics. No cookies. No trackers. No consent required from your visitors. Just straightforward analytics.",
   "extendsFeature": "EventType",
   "appData": {
     "tag": {
       "scripts": [
         {
-          "src": "https://cdn.example.com/script.js",
           "attrs": {
-            "data-site": "{TRACKING_ID}"
-          }
+            "data-hostname": "{HOSTNAME}",
+            "data-collect-dnt": "{COLLECT_DNT}"
+          },
+          "content": "(function () { var self = document.currentScript; function get(name) { var value = self.getAttribute('data-' + name); if (!value) return ''; value = value.trim(); if (value.charAt(0) === '{') return ''; return value; } if (!get('hostname')) return; var host = 'scripts.simpleanalyticscdn.com'; if (!window.sa_event) { window.sa_event = function () { var args = [].slice.call(arguments); if (window.sa_event.q) { window.sa_event.q.push(args); return; } window.sa_event.q = [args]; }; } var script = document.createElement('script'); script.setAttribute('async', ''); script.src = 'https://' + host + '/latest.js'; var latest = { 'data-platform': 'calcom', 'data-hostname': get('hostname') }; if (get('collect-dnt') === 'true') latest['data-collect-dnt'] = 'true'; for (var attr in latest) { if (latest[attr]) script.setAttribute(attr, latest[attr]); } document.head.appendChild(script); })();"
         }
-      ]
+      ],
+      "pushEventScript": {
+        "attrs": {
+          "data-booking-events": "{BOOKING_EVENTS}"
+        },
+        "content": "(function () { var self = document.currentScript; window['$pushEvent'] = function (event) { if (self.getAttribute('data-booking-events') === 'false') return; if (!window.sa_event) return; var names = { bookingSuccessfulV2: 'booking_completed', rescheduleBookingSuccessfulV2: 'booking_rescheduled', bookingCancelled: 'booking_cancelled' }; var name = names[event.name]; if (!name) return; var data = event.data.data; if (!data) return; var metadata = {}; if (data.eventTypeId) metadata.event_type_id = data.eventTypeId; if (data.eventType && data.eventType.id) metadata.event_type_id = data.eventType.id; if (data.status) metadata.status = data.status; if (data.paymentRequired !== undefined) metadata.payment_required = data.paymentRequired; if (data.isRecurring !== undefined) metadata.is_recurring = data.isRecurring; window.sa_event(name, metadata); }; })();"
+      }
     }
   },
   "isTemplate": false,
