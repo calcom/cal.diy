@@ -16,6 +16,8 @@ import { Select } from "@calcom/ui/components/form";
 import { InfoIcon, PlusIcon } from "@coss/ui/icons";
 import { Tooltip } from "@calcom/ui/components/tooltip";
 
+import { parseOAuthScopes } from "./parse-oauth-scopes";
+
 export function Authorize() {
   const { t } = useLocale();
   const { status } = useSession();
@@ -38,7 +40,7 @@ export function Authorize() {
     value: string;
     label: string;
   } | null>();
-  const scopes = scope ? scope.toString().split(",") : [];
+  const scopes = parseOAuthScopes(scope);
 
   const {
     data: client,
