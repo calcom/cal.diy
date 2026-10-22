@@ -108,6 +108,28 @@ export const BookEventForm = ({
   }
 
   const watchedCfToken = bookingForm.watch("cfToken");
+  const bookingDisclosure = eventType.metadata?.bookingDisclosure;
+  const disclosureLinks: { href: string; label: string }[] = [];
+  if (bookingDisclosure?.privacyPolicyUrl) {
+    disclosureLinks.push({
+      href: bookingDisclosure.privacyPolicyUrl,
+      label: t("privacy_policy"),
+    });
+  }
+  if (bookingDisclosure?.termsOfServiceUrl) {
+    disclosureLinks.push({
+      href: bookingDisclosure.termsOfServiceUrl,
+      label: t("terms_of_service"),
+    });
+  }
+  const safeDisclosureLinks = disclosureLinks.filter((link) => {
+    try {
+      return ["http:", "https:"].includes(new URL(link.href).protocol);
+    } catch {
+      return false;
+    }
+  });
+  const hasDisclosure = !!bookingDisclosure?.text?.trim() || safeDisclosureLinks.length > 0;
 
   return (
     <div className="flex flex-col h-full">
@@ -219,6 +241,27 @@ export const BookEventForm = ({
               {t("privacy_policy")}
             </Link>
             .
+          </div>
+        )}
+        {hasDisclosure && (
+          <div className="my-3 w-full text-xs text-subtle" data-testid="booking-disclosure">
+            {bookingDisclosure?.text?.trim() && <p>{bookingDisclosure.text.trim()}</p>}
+            {safeDisclosureLinks.length > 0 && (
+              <div className="flex flex-wrap gap-x-2 gap-y-1">
+                {safeDisclosureLinks.map((link, index) => (
+                  <span key={link.href}>
+                    {index > 0 && <span className="mr-2">|</span>}
+                    <a
+                      className="text-emphasis hover:underline"
+                      href={link.href}
+                      target="_blank"
+                      rel="noreferrer">
+                      {link.label}
+                    </a>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
         <div className="flex justify-end mt-auto space-x-2 modalsticky rtl:space-x-reverse">
