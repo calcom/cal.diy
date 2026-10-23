@@ -51,6 +51,7 @@ interface BodyValue {
   end: { dateTime: string };
   evt: { showAs: string };
   start: { dateTime: string };
+  subject?: string;
 }
 
 class Office365CalendarService implements Calendar {
@@ -366,6 +367,17 @@ class Office365CalendarService implements Calendar {
   }
 
   async getAvailability(params: GetAvailabilityParams): Promise<EventBusyDate[]> {
+    return this.fetchBusyTimes(params, "showAs,start,end");
+  }
+
+  async getAvailabilityWithTitles(params: GetAvailabilityParams): Promise<EventBusyDate[]> {
+    return this.fetchBusyTimes(params, "showAs,start,end,subject");
+  }
+
+  private async fetchBusyTimes(
+    params: GetAvailabilityParams,
+    selectFields: string
+  ): Promise<EventBusyDate[]> {
     const { dateFrom, dateTo, selectedCalendars } = params;
     const dateFromParsed = new Date(dateFrom);
     const dateToParsed = new Date(dateTo);
@@ -376,7 +388,7 @@ class Office365CalendarService implements Calendar {
 
     // Request maximum page size (999) to minimize pagination rounds
     // Microsoft Graph allows up to 999 items per page for calendarView
-    const calendarSelectParams = "$select=showAs,start,end&$top=999";
+    const calendarSelectParams = `$select=${selectFields}&$top=999`;
 
     try {
       const selectedCalendarIds = selectedCalendars.reduce((calendarIds, calendar) => {
@@ -414,6 +426,16 @@ class Office365CalendarService implements Calendar {
 
       if (retryAfter && responseBatchApi.responses) {
         responseBatchApi = await this.fetchRequestWithRetryAfter(requests, responseBatchApi.responses, 2);
+      }
+
+      // Every requested calendar must have answered 200. A calendar whose subrequest failed (or was
+      // still throttled after the retries) has unknown busy times, not none: reject so the caller
+      // fails closed instead of treating the calendar as free.
+      const answered = new Set(
+        (responseBatchApi.responses ?? []).filter((r) => r.status === 200).map((r) => String(r.id))
+      );
+      if (requests.some((request: IRequest) => !answered.has(String(request.id)))) {
+        throw new Error("Office365 batch subrequest failed");
       }
 
       // Recursively fetch nextLink responses
@@ -574,6 +596,10 @@ class Office365CalendarService implements Calendar {
   ): Promise<ISettledResponse[]> => {
     const alreadySuccess = [] as ISettledResponse[];
     const newLinkRequest = [] as IRequest[];
+    // A failed page leaves its calendar's busy times incomplete.
+    if (settledResponses?.some((response: ISettledResponse) => response.status !== 200)) {
+      throw new Error("Office365 calendarView page failed");
+    }
     settledResponses?.forEach((response) => {
       if (response.status === 200 && response.body["@odata.nextLink"] === undefined) {
         alreadySuccess.push(response);
@@ -701,6 +727,7 @@ class Office365CalendarService implements Calendar {
             return acc.concat({
               start: `${evt.start.dateTime}Z`,
               end: `${evt.end.dateTime}Z`,
+              ...(evt.subject ? { title: evt.subject } : {}),
             });
           }, [])
         );
