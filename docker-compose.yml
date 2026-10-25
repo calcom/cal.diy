@@ -17,7 +17,7 @@ services:
     volumes:
       - database-data:/var/lib/postgresql
     environment:
-      - POSTGRES_USER=unicorn_user
+      - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=calendso
     networks:
