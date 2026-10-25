@@ -1,0 +1,42 @@
+services:
+  calcom:
+    image: ghcr.io/isomiki/cal.diy:latest
+    restart: unless-stopped
+    environment:
+      # Coolify assigns a domain, routes it to port 3000, and fills in the full URL (with scheme).
+      - SERVICE_URL_CALCOM_3000
+      - NEXT_PUBLIC_WEBAPP_URL=${SERVICE_URL_CALCOM}
+      - NEXTAUTH_URL=${SERVICE_URL_CALCOM}/api/auth
+      - NEXTAUTH_SECRET=${SERVICE_PASSWORD_64_NEXTAUTH}
+      # Must be exactly 32 characters (AES-256 key read as latin1): `openssl rand -base64 24`.
+      # Set it once in the Coolify UI and never change it; stored credentials depend on it.
+      - CALENDSO_ENCRYPTION_KEY=${CALENDSO_ENCRYPTION_KEY:?}
+      - DATABASE_URL=postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/calendso
+      - DATABASE_DIRECT_URL=postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/calendso
+      - DATABASE_HOST=postgres:5432
+      - CALCOM_TELEMETRY_DISABLED=1
+      # Resend is supported natively (packages/lib/serverConfig.ts) and takes precedence over EMAIL_SERVER_*.
+      - RESEND_API_KEY=${RESEND_API_KEY:?}
+      # Must be an address on a domain verified in Resend, e.g. "Marin <cal@yourdomain.com>".
+      - EMAIL_FROM=${EMAIL_FROM:?}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${SERVICE_USER_POSTGRES}
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - POSTGRES_DB=calendso
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d calendso"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
