@@ -66,6 +66,7 @@ describe("useBookerLayout", () => {
     );
 
     expect(result.current.defaultLayout).toBe(BookerLayouts.WEEK_VIEW);
+    expect(mockSetLayout).toHaveBeenCalledWith(BookerLayouts.WEEK_VIEW);
   });
 
   it("falls back to profile defaultLayout when query param layout is not enabled", () => {
