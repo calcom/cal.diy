@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { MeetLocationType } from "@calcom/app-store/constants";
+import dayjs from "@calcom/dayjs";
 import { getDestinationCalendarRepository } from "@calcom/features/di/containers/DestinationCalendar";
 import { SelectedCalendarRepository } from "@calcom/features/selectedCalendar/repositories/SelectedCalendarRepository";
 import { getLocation, getRichDescription } from "@calcom/lib/CalEventParser";
@@ -719,6 +720,89 @@ class GoogleCalendarService implements Calendar {
     } catch (error) {
       this.log.error(
         "There was an error getting availability from google calendar: ",
+        safeStringify({ error, selectedCalendars })
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Lists the events that block availability in a calendar, including their titles.
+   * The FreeBusy API used by getAvailability doesn't return titles, so the events themselves are listed here.
+   */
+  private async fetchBusyEventsWithTitles(
+    calendarId: string,
+    dateFrom: string,
+    dateTo: string
+  ): Promise<EventBusyDate[]> {
+    const calendar = await this.authedCalendar();
+    const busyEvents: EventBusyDate[] = [];
+    let pageToken: string | undefined;
+
+    do {
+      const { json: events } = await this.auth.authManager.request(
+        async () =>
+          new AxiosLikeResponseToFetchResponse(
+            await calendar.events.list({
+              calendarId,
+              timeMin: dateFrom,
+              timeMax: dateTo,
+              // Expands recurring events into the instances that fall within the date range
+              singleEvents: true,
+              maxResults: 2500, // 2500 is max
+              pageToken,
+              fields:
+                "timeZone,nextPageToken,items(summary,start,end,transparency,attendees(self,responseStatus))",
+            })
+          )
+      );
+
+      for (const event of events.items ?? []) {
+        // FreeBusy ignores events marked as "free" and the ones the user declined, so we do the same here
+        if (event.transparency === "transparent") continue;
+        if (event.attendees?.some((attendee) => attendee.self && attendee.responseStatus === "declined")) {
+          continue;
+        }
+
+        // All-day events only have a date, they start and end at midnight in the timezone of the calendar
+        const start =
+          event.start?.dateTime ??
+          (event.start?.date ? dayjs.tz(event.start.date, events.timeZone ?? "UTC").toISOString() : null);
+        const end =
+          event.end?.dateTime ??
+          (event.end?.date ? dayjs.tz(event.end.date, events.timeZone ?? "UTC").toISOString() : null);
+        if (!start || !end) continue;
+
+        busyEvents.push({ start, end, ...(event.summary ? { title: event.summary } : {}) });
+      }
+
+      pageToken = events.nextPageToken ?? undefined;
+    } while (pageToken);
+
+    return busyEvents;
+  }
+
+  async getAvailabilityWithTitles(params: GetAvailabilityParams): Promise<EventBusyDate[]> {
+    const { dateFrom, dateTo, selectedCalendars, fallbackToPrimary } = params;
+
+    const selectedCalendarIds = selectedCalendars
+      .filter((e) => e.integration === this.integrationName)
+      .map((e) => e.externalId);
+
+    // Early return if only other integrations are selected
+    if (selectedCalendarIds.length === 0 && selectedCalendars.length > 0) {
+      return [];
+    }
+
+    try {
+      const calendarIds = await this.getCalendarIds(selectedCalendarIds, fallbackToPrimary);
+      const busyEventsPerCalendar = await Promise.all(
+        calendarIds.map((calendarId) => this.fetchBusyEventsWithTitles(calendarId, dateFrom, dateTo))
+      );
+      return busyEventsPerCalendar.flat();
+    } catch (error) {
+      this.log.error(
+        "There was an error getting events from google calendar: ",
         safeStringify({ error, selectedCalendars })
       );
       throw error;
