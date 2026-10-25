@@ -8,7 +8,6 @@ services:
       - SERVICE_URL_CALCOM_3000
       # Public URL without trailing slash or port, e.g. https://cal.example.com
       - NEXT_PUBLIC_WEBAPP_URL=${NEXT_PUBLIC_WEBAPP_URL:?}
-      - NEXTAUTH_URL=${NEXT_PUBLIC_WEBAPP_URL}/api/auth
       - NEXTAUTH_SECRET=${SERVICE_PASSWORD_64_NEXTAUTH}
       # Must be exactly 32 characters (AES-256 key read as latin1): `openssl rand -base64 24`.
       # Set it once in the Coolify UI and never change it; stored credentials depend on it.
