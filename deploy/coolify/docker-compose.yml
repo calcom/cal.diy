@@ -3,10 +3,12 @@ services:
     image: ghcr.io/isomiki/cal.diy:latest
     restart: unless-stopped
     environment:
-      # Coolify assigns a domain, routes it to port 3000, and fills in the full URL (with scheme).
+      # Makes Coolify assign a domain and route it to port 3000. The value is not read here:
+      # NEXT_PUBLIC_WEBAPP_URL is set explicitly so a malformed generated URL cannot break next.config.
       - SERVICE_URL_CALCOM_3000
-      - NEXT_PUBLIC_WEBAPP_URL=${SERVICE_URL_CALCOM}
-      - NEXTAUTH_URL=${SERVICE_URL_CALCOM}/api/auth
+      # Public URL without trailing slash or port, e.g. https://cal.example.com
+      - NEXT_PUBLIC_WEBAPP_URL=${NEXT_PUBLIC_WEBAPP_URL:?}
+      - NEXTAUTH_URL=${NEXT_PUBLIC_WEBAPP_URL}/api/auth
       - NEXTAUTH_SECRET=${SERVICE_PASSWORD_64_NEXTAUTH}
       # Must be exactly 32 characters (AES-256 key read as latin1): `openssl rand -base64 24`.
       # Set it once in the Coolify UI and never change it; stored credentials depend on it.
