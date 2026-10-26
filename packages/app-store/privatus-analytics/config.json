@@ -1,0 +1,29 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "Privatus Analytics",
+  "slug": "privatus-analytics",
+  "type": "privatus-analytics_analytics",
+  "logo": "icon.svg",
+  "url": "https://privatusanalytics.com",
+  "variant": "analytics",
+  "categories": ["analytics"],
+  "publisher": "Privatus Analytics",
+  "email": "hello@privatusanalytics.com",
+  "extendsFeature": "EventType",
+  "appData": {
+    "tag": {
+      "scripts": [
+        {
+          "src": "https://privatusstats.com/js/pa.js",
+          "attrs": {
+            "data-site": "{TRACKING_ID}"
+          }
+        }
+      ]
+    }
+  },
+  "description": "Cookieless web analytics. See who visits your booking pages.",
+  "__createdUsingCli": true,
+  "__template": "booking-pages-tag",
+  "isOAuth": false
+}
