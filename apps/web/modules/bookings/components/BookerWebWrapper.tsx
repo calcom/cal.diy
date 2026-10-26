@@ -244,7 +244,7 @@ const BookerWebWrapperComponent = (props: BookerWebWrapperAtomProps): JSX.Elemen
           return;
         }
         const newUrl = new URL(`${WEBAPP_URL}/login`);
-        newUrl.searchParams.set("callbackUrl", window.location.pathname);
+        newUrl.searchParams.set("callbackUrl", `${window.location.pathname}${window.location.search}`);
         newUrl.searchParams.set("overlayCalendar", "true");
         router.push(newUrl.toString());
       }}
