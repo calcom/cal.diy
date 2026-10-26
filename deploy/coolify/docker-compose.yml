@@ -16,8 +16,14 @@ services:
       - DATABASE_DIRECT_URL=postgresql://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/calendso
       - DATABASE_HOST=postgres:5432
       - CALCOM_TELEMETRY_DISABLED=1
-      # Resend is supported natively (packages/lib/serverConfig.ts) and takes precedence over EMAIL_SERVER_*.
-      - RESEND_API_KEY=${RESEND_API_KEY:?}
+      # Resend API key: sends via smtp.resend.com:465 only (hardcoded in packages/lib/serverConfig.ts) and
+      # takes precedence over EMAIL_SERVER_*. If the host blocks outbound 465, leave this unset and use EMAIL_SERVER_*.
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      # Plain SMTP, e.g. smtp.resend.com / 587 / user "resend" / password = Resend API key.
+      - EMAIL_SERVER_HOST=${EMAIL_SERVER_HOST:-}
+      - EMAIL_SERVER_PORT=${EMAIL_SERVER_PORT:-}
+      - EMAIL_SERVER_USER=${EMAIL_SERVER_USER:-}
+      - EMAIL_SERVER_PASSWORD=${EMAIL_SERVER_PASSWORD:-}
       # Must be an address on a domain verified in Resend, e.g. "Marin <cal@yourdomain.com>".
       - EMAIL_FROM=${EMAIL_FROM:?}
     depends_on:
