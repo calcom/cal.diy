@@ -136,9 +136,58 @@ export const FULL_NAME_LENGTH_MAX_LIMIT = 50;
 export const API_NAME_LENGTH_MAX_LIMIT = 80;
 export const MINUTES_TO_BOOK = process.env.NEXT_PUBLIC_MINUTES_TO_BOOK || "5";
 export const ENABLE_PROFILE_SWITCHER = process.env.NEXT_PUBLIC_ENABLE_PROFILE_SWITCHER === "1";
+// Brackets normally wrap a JSON-style list, but they are also how an IPv6 host is
+// written ([::1]), so ask the URL parser before treating them as a wrapper.
+function isBracketedHost(value: string): boolean {
+  try {
+    return new URL(`http://${value}`).hostname.startsWith("[");
+  } catch {
+    return false;
+  }
+}
+
+function stripQuotes(value: string): string {
+  return value
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .trim();
+}
+
+// A single JSON-style wrapper leaves one stray [ on the first entry and one ] on the
+// last, but an IPv6 entry owns its brackets, so only strip brackets that aren't a host.
+function normalizeEntry(rawEntry: string): string {
+  let entry = rawEntry.trim();
+  if (entry.startsWith("[") && !isBracketedHost(entry)) entry = entry.slice(1);
+  entry = stripQuotes(entry);
+  if (entry.endsWith("]") && !isBracketedHost(entry)) entry = entry.slice(0, -1);
+  return stripQuotes(entry);
+}
+
 // Needed for orgs
-export const ALLOWED_HOSTNAMES = JSON.parse(`[${process.env.ALLOWED_HOSTNAMES || ""}]`) as string[];
-export const RESERVED_SUBDOMAINS = JSON.parse(`[${process.env.RESERVED_SUBDOMAINS || ""}]`) as string[];
+// Self-hosters commonly write bare hostnames (app.example.com,other.example.com)
+// while .env.example documents the JSON-fragment form ("a","b"). Accept both so a
+// formatting mismatch degrades to a clear empty list instead of crashing module load.
+export function parseHostnameList(rawValue: string | undefined): string[] {
+  const trimmed = rawValue?.trim();
+  if (!trimmed) return [];
+
+  // Only used to decide whether to parse the value as JSON or re-wrap it as an array.
+  const isWrapped = trimmed.startsWith("[") && trimmed.endsWith("]") && !isBracketedHost(trimmed);
+  try {
+    const parsed: unknown = JSON.parse(isWrapped ? trimmed : `[${trimmed}]`);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .filter((hostname): hostname is string => typeof hostname === "string")
+        .map((hostname) => hostname.trim())
+        .filter(Boolean);
+    }
+  } catch {
+    // Fall through to comma-separated parsing below.
+  }
+  return trimmed.split(",").map(normalizeEntry).filter(Boolean);
+}
+export const ALLOWED_HOSTNAMES = parseHostnameList(process.env.ALLOWED_HOSTNAMES);
+export const RESERVED_SUBDOMAINS = parseHostnameList(process.env.RESERVED_SUBDOMAINS);
 
 export const ORGANIZATION_SELF_SERVE_PRICE = parseFloat(
   process.env.NEXT_PUBLIC_ORGANIZATIONS_SELF_SERVE_PRICE_NEW || "37"
