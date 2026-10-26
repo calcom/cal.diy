@@ -38,9 +38,14 @@ export const useBookerLayout = (
     isTablet ? extraDaysConfig[layout].tablet : extraDaysConfig[layout].desktop
   );
   const bookerLayouts = profileBookerLayouts || defaultBookerLayoutSettings;
+  const queryParamLayout = getQueryParam("layout") as BookerLayouts;
+  const validQueryLayout =
+    !isEmbed &&
+    validateLayout(queryParamLayout) &&
+    bookerLayouts?.enabledLayouts?.find((userLayout) => userLayout === queryParamLayout);
   const defaultLayout = isEmbed
     ? validateLayout(embedUiConfig.layout) || bookerLayouts.defaultLayout
-    : bookerLayouts.defaultLayout;
+    : validQueryLayout || bookerLayouts.defaultLayout;
 
   useEffect(() => {
     if (isMobile && layout !== "mobile") {
