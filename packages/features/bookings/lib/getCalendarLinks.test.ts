@@ -150,12 +150,12 @@ describe("getCalendarLinks", () => {
 
     const googleLink = result.find((link) => link.id === CalendarLinkType.GOOGLE_CALENDAR);
     expect(googleLink?.link).toContain(`details=${encodeURIComponent(eventType.description)}`);
-    expect(googleLink?.link).toContain(`text=${customTitle}`);
+    expect(googleLink?.link).toContain(`text=${encodeURIComponent(customTitle)}`);
 
     // Check Office 365 link
     const microsoftOfficeLink = result.find((link) => link.id === CalendarLinkType.MICROSOFT_OFFICE);
     expect(microsoftOfficeLink?.link).toContain("body=Test%20Description");
-    expect(microsoftOfficeLink?.link).toContain(`subject=${customTitle}`);
+    expect(microsoftOfficeLink?.link).toContain(`subject=${encodeURIComponent(customTitle)}`);
 
     // Check Outlook link
     const microsoftOutlookLink = result.find((link) => link.id === CalendarLinkType.MICROSOFT_OUTLOOK);
@@ -210,5 +210,57 @@ describe("getCalendarLinks", () => {
     );
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it("should correctly encode event title and description with special characters (&, #, +, =)", async () => {
+    const specialTitle = "Q&A #1 + 100% é";
+    const specialDescription = "Discussion about a&b=c #review";
+    const specialLocation = "Room #4 & Lounge";
+
+    const booking = {
+      ...baseMockBooking,
+      location: specialLocation,
+    };
+
+    const eventType = {
+      ...baseMockEventType,
+      eventName: specialTitle,
+      description: specialDescription,
+    };
+
+    const result = getCalendarLinks({ booking, eventType, t: mockT });
+
+    const googleLink = result.find((link) => link.id === CalendarLinkType.GOOGLE_CALENDAR);
+    const officeLink = result.find((link) => link.id === CalendarLinkType.MICROSOFT_OFFICE);
+    const outlookLink = result.find((link) => link.id === CalendarLinkType.MICROSOFT_OUTLOOK);
+
+    // Verify title and description are properly URI encoded across all calendar providers
+    expect(googleLink?.link).toContain(`text=${encodeURIComponent(specialTitle)}`);
+    expect(googleLink?.link).toContain(`details=${encodeURIComponent(specialDescription)}`);
+    expect(googleLink?.link).toContain(`location=${encodeURIComponent(specialLocation)}`);
+
+    expect(officeLink?.link).toContain(`subject=${encodeURIComponent(specialTitle)}`);
+    expect(officeLink?.link).toContain(`body=${encodeURIComponent(specialDescription)}`);
+    expect(officeLink?.link).toContain(`location=${encodeURIComponent(specialLocation)}`);
+
+    expect(outlookLink?.link).toContain(`subject=${encodeURIComponent(specialTitle)}`);
+    expect(outlookLink?.link).toContain(`body=${encodeURIComponent(specialDescription)}`);
+    expect(outlookLink?.link).toContain(`location=${encodeURIComponent(specialLocation)}`);
+
+    // Verify URLSearchParams parses without parameter truncation or fragment leakage
+    const googleUrl = new URL(googleLink!.link);
+    expect(googleUrl.searchParams.get("text")).toBe(specialTitle);
+    expect(googleUrl.searchParams.get("details")).toBe(specialDescription);
+    expect(googleUrl.hash).toBe("");
+
+    const officeUrl = new URL(officeLink!.link);
+    expect(officeUrl.searchParams.get("subject")).toBe(specialTitle);
+    expect(officeUrl.searchParams.get("body")).toBe(specialDescription);
+    expect(officeUrl.hash).toBe("");
+
+    const outlookUrl = new URL(outlookLink!.link);
+    expect(outlookUrl.searchParams.get("subject")).toBe(specialTitle);
+    expect(outlookUrl.searchParams.get("body")).toBe(specialDescription);
+    expect(outlookUrl.hash).toBe("");
   });
 });
