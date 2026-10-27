@@ -52,4 +52,16 @@ describe("useCheckOverlapWithOverlay", () => {
       overlappingTitle: null,
     });
   });
+
+  it("formats overlapping times using the timezone offset of the start slot", () => {
+    // 10:00 UTC busy date checked with a slot in UTC+5 (15:00 local)
+    const slotInTz = dayjs("2024-01-10T15:30:00Z").utcOffset(300);
+    const result = renderHook(() =>
+      useCheckOverlapWithOverlay({ start: slotInTz, selectedDuration: 30, offset: 0 })
+    ).result.current;
+
+    expect(result.isOverlapping).toBe(true);
+    expect(result.overlappingTimeStart).toBe("15:00");
+    expect(result.overlappingTimeEnd).toBe("16:00");
+  });
 });

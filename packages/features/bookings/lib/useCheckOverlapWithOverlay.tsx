@@ -21,8 +21,8 @@ export function useCheckOverlapWithOverlay({
   const isOverlapping =
     overlayBusyDates &&
     overlayBusyDates.some((busyDate) => {
-      const busyDateStart = dayjs(busyDate.start);
-      const busyDateEnd = dayjs(busyDate.end);
+      const busyDateStart = dayjs(busyDate.start).utcOffset(start.utcOffset());
+      const busyDateEnd = dayjs(busyDate.end).utcOffset(start.utcOffset());
       const selectedEndTime = dayjs(start.add(offset, "hours")).add(selectedDuration ?? 0, "minute");
 
       const isOverlapping =
