@@ -48,8 +48,18 @@ export const useOverlayCalendar = ({
         // when the browser and selected timezones follow different DST rules.
         const shiftedToSelectedTz = (value: string | Date) => {
           const date = dayjs(value);
-          const shift = (date.tz(timezone).utcOffset() - date.utcOffset()) / 60;
-          return date.add(shift, "hours").toDate();
+          const shiftFor = (d: typeof date) => (d.tz(timezone).utcOffset() - d.utcOffset()) / 60;
+          // First pass: offsets at the original instant.
+          let shift = shiftFor(date);
+          let shifted = date.add(shift, "hours");
+          // The browser (or selected) offset at the shifted instant can differ
+          // across a DST transition; recompute once so the shifted wall clock
+          // matches the original instant's wall clock in the selected timezone.
+          const correctedShift = shiftFor(shifted);
+          if (correctedShift !== shift) {
+            shifted = date.add(correctedShift, "hours");
+          }
+          return shifted.toDate();
         };
         return {
           ...item,
