@@ -520,4 +520,26 @@ describe("getAggregatedAvailability", () => {
 
     expect(result).toEqual([]);
   });
+
+  it("falls back to dateRanges when oooExcludedDateRanges is undefined in team events", () => {
+    const userAvailability = [
+      {
+        dateRanges: [
+          { start: dayjs("2025-01-23T11:00:00.000Z"), end: dayjs("2025-01-23T12:00:00.000Z") },
+        ],
+        user: { isFixed: true },
+      },
+      {
+        dateRanges: [
+          { start: dayjs("2025-01-23T11:30:00.000Z"), end: dayjs("2025-01-23T12:30:00.000Z") },
+        ],
+        user: { isFixed: true },
+      },
+    ];
+
+    const result = getAggregatedAvailability(userAvailability as any, "COLLECTIVE" as any);
+    expect(result).toHaveLength(1);
+    expect(result[0].start.toISOString()).toBe("2025-01-23T11:30:00.000Z");
+    expect(result[0].end.toISOString()).toBe("2025-01-23T12:00:00.000Z");
+  });
 });
