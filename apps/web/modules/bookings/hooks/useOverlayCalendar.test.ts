@@ -162,4 +162,30 @@ describe("useOverlayCalendar", () => {
     const shift = (dayjs(busyDate.start).tz("America/New_York").utcOffset() - dayjs(busyDate.start).utcOffset()) / 60;
     expect(updatedStored![0].start).toEqual(dayjs(busyDate.start).add(shift, "hours").toDate());
   });
+
+  it("re-evaluates shift when shifted instant crosses a DST boundary", () => {
+    setTimezone("UTC");
+    const onToggleCalendar = vi.fn();
+    const switchoverInstant = "2026-03-08T06:30:00Z";
+
+    renderHook(() =>
+      useOverlayCalendar({
+        connectedCalendars: [],
+        overlayBusyDates: [{ start: switchoverInstant, end: "2026-03-08T07:30:00Z" }],
+        onToggleCalendar,
+      })
+    );
+
+    const storedDates = useOverlayCalendarStore.getState().overlayBusyDates;
+    expect(storedDates).toBeDefined();
+    expect(storedDates).toHaveLength(1);
+
+    const date = dayjs(switchoverInstant);
+    const shift = (date.tz("UTC").utcOffset() - date.utcOffset()) / 60;
+    let expectedOut = date.add(shift, "hours");
+    const shiftAtOut = (expectedOut.tz("UTC").utcOffset() - expectedOut.utcOffset()) / 60;
+    if (shiftAtOut !== shift) expectedOut = date.add(shiftAtOut, "hours");
+
+    expect(storedDates![0].start).toEqual(expectedOut.toDate());
+  });
 });

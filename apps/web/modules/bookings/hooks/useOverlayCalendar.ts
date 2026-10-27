@@ -46,7 +46,11 @@ export const useOverlayCalendar = ({
         const shiftedToSelectedTz = (value: string | Date) => {
           const date = dayjs(value);
           const shift = (date.tz(timezone).utcOffset() - date.utcOffset()) / 60;
-          return date.add(shift, "hours").toDate();
+          let out = date.add(shift, "hours");
+          // The shifted instant may cross a DST boundary in the browser tz; re-evaluate there once.
+          const shiftAtOut = (out.tz(timezone).utcOffset() - out.utcOffset()) / 60;
+          if (shiftAtOut !== shift) out = date.add(shiftAtOut, "hours");
+          return out.toDate();
         };
 
         return {
