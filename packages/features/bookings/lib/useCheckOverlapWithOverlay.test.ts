@@ -54,8 +54,11 @@ describe("useCheckOverlapWithOverlay", () => {
   });
 
   it("formats overlapping times using the timezone offset of the start slot", () => {
-    // 10:00 UTC busy date checked with a slot in UTC+5 (15:00 local)
-    const slotInTz = dayjs("2024-01-10T15:30:00Z").utcOffset(300);
+    useOverlayCalendarStore.setState({
+      overlayBusyDates: [{ start: new Date("2024-01-10T10:00:00Z"), end: new Date("2024-01-10T11:00:00Z") }],
+    });
+    // 10:30 UTC slot in UTC+5 (15:30 local) overlaps the 10:00-11:00 UTC busy date (15:00-16:00 local)
+    const slotInTz = dayjs("2024-01-10T10:30:00Z").utcOffset(300);
     const result = renderHook(() =>
       useCheckOverlapWithOverlay({ start: slotInTz, selectedDuration: 30, offset: 0 })
     ).result.current;
