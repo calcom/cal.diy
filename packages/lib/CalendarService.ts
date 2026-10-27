@@ -827,7 +827,11 @@ export default abstract class BaseCalendarService implements Calendar {
       })[];
 
       return calendars.reduce<IntegrationCalendar[]>((newCalendars, calendar) => {
-        if (!calendar.components?.includes("VEVENT")) return newCalendars;
+        const supportsVEvent =
+          !calendar.components ||
+          calendar.components.length === 0 ||
+          calendar.components.includes("VEVENT");
+        if (!supportsVEvent) return newCalendars;
         const [mainHostDestinationCalendar] = event?.destinationCalendar ?? [];
         newCalendars.push({
           externalId: calendar.url,
