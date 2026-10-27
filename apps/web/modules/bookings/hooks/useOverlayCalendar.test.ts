@@ -6,8 +6,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WrappedBookerPropsMain } from "../types";
 import { useOverlayCalendar } from "./useOverlayCalendar";
 
+import dayjs from "@calcom/dayjs";
+import { useOverlayCalendarStore } from "@calcom/features/bookings/Booker/components/OverlayCalendar/store";
+
+const { getTimezone, setTimezone } = vi.hoisted(() => {
+  let tz = "UTC";
+  return {
+    getTimezone: () => tz,
+    setTimezone: (newTz: string) => {
+      tz = newTz;
+    },
+  };
+});
+
 vi.mock("@calcom/features/bookings/lib", () => ({
-  useTimePreferences: () => ({ timezone: "UTC" }),
+  useTimePreferences: () => ({ timezone: getTimezone() }),
 }));
 
 type ConnectedCalendars = WrappedBookerPropsMain["calendars"]["connectedCalendars"];
@@ -36,6 +49,7 @@ const renderOverlayCalendar = (connectedCalendars: ConnectedCalendars) => {
 describe("useOverlayCalendar", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    setTimezone("UTC");
   });
 
   it("starts with the calendars that are checked for conflicts", () => {
@@ -92,5 +106,60 @@ describe("useOverlayCalendar", () => {
     expect(result.current.checkIsCalendarToggled("personal", 1)).toBe(true);
     expect(result.current.checkIsCalendarToggled("work", 1)).toBe(false);
     expect(onToggleCalendar).not.toHaveBeenCalled();
+  });
+
+  it("shifts overlay busy dates correctly across different DST periods", () => {
+    setTimezone("America/New_York");
+    const onToggleCalendar = vi.fn();
+    const octStart = "2026-10-15T10:00:00Z";
+    const octEnd = "2026-10-15T11:00:00Z";
+    const decStart = "2026-12-15T10:00:00Z";
+    const decEnd = "2026-12-15T11:00:00Z";
+
+    renderHook(() =>
+      useOverlayCalendar({
+        connectedCalendars: [],
+        overlayBusyDates: [
+          { start: octStart, end: octEnd },
+          { start: decStart, end: decEnd },
+        ],
+        onToggleCalendar,
+      })
+    );
+
+    const storedDates = useOverlayCalendarStore.getState().overlayBusyDates;
+    expect(storedDates).toBeDefined();
+    expect(storedDates).toHaveLength(2);
+
+    const octShift = (dayjs(octStart).tz("America/New_York").utcOffset() - dayjs(octStart).utcOffset()) / 60;
+    const decShift = (dayjs(decStart).tz("America/New_York").utcOffset() - dayjs(decStart).utcOffset()) / 60;
+
+    expect(storedDates![0].start).toEqual(dayjs(octStart).add(octShift, "hours").toDate());
+    expect(storedDates![1].start).toEqual(dayjs(decStart).add(decShift, "hours").toDate());
+  });
+
+  it("recalculates overlay busy dates when booker timezone changes", () => {
+    setTimezone("UTC");
+    const onToggleCalendar = vi.fn();
+    const busyDate = { start: "2026-10-15T10:00:00Z", end: "2026-10-15T11:00:00Z" };
+
+    const { rerender } = renderHook(
+      () =>
+        useOverlayCalendar({
+          connectedCalendars: [],
+          overlayBusyDates: [busyDate],
+          onToggleCalendar,
+        })
+    );
+
+    const initialStored = useOverlayCalendarStore.getState().overlayBusyDates;
+    expect(initialStored![0].start).toEqual(dayjs(busyDate.start).toDate());
+
+    setTimezone("America/New_York");
+    rerender();
+
+    const updatedStored = useOverlayCalendarStore.getState().overlayBusyDates;
+    const shift = (dayjs(busyDate.start).tz("America/New_York").utcOffset() - dayjs(busyDate.start).utcOffset()) / 60;
+    expect(updatedStored![0].start).toEqual(dayjs(busyDate.start).add(shift, "hours").toDate());
   });
 });

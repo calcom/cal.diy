@@ -120,10 +120,8 @@ const SlotItem = ({
   const isNearlyFull = slot.attendees && seatsPerTimeSlot && slot.attendees / seatsPerTimeSlot >= 0.83;
   const colorClass = isNearlyFull ? "bg-rose-600" : isHalfFull ? "bg-yellow-500" : "bg-emerald-400";
 
-  const nowDate = dayjs();
-  const usersTimezoneDate = nowDate.tz(timezone);
-
-  const offset = (usersTimezoneDate.utcOffset() - nowDate.utcOffset()) / 60;
+  const offset =
+    (computedDateWithUsersTimezone.utcOffset() - dayjs(computedDateWithUsersTimezone.toDate()).utcOffset()) / 60;
 
   const selectedTimeslot = useBookerStoreContext((state) => state.selectedTimeslot);
 
