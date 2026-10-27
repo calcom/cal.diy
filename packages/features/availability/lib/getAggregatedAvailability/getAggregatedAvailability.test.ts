@@ -469,4 +469,55 @@ describe("getAggregatedAvailability", () => {
     };
     expect(isAvailable(result, timeRangeNotAvailable)).toBe(false);
   });
+
+  it("returns no availability when a fixed host is fully busy, even if an rr host is free", () => {
+    const userAvailability = [
+      {
+        dateRanges: [],
+        oooExcludedDateRanges: [],
+        user: { isFixed: true },
+      },
+      {
+        dateRanges: [],
+        oooExcludedDateRanges: [
+          { start: dayjs("2025-01-23T11:00:00.000Z"), end: dayjs("2025-01-23T11:30:00.000Z") },
+        ],
+        user: { isFixed: false },
+      },
+    ];
+
+    const result = getAggregatedAvailability(userAvailability, "ROUND_ROBIN");
+
+    expect(result).toEqual([]);
+  });
+
+  it("returns no availability when fixed hosts have no time in common, even if an rr host is free", () => {
+    const userAvailability = [
+      {
+        dateRanges: [],
+        oooExcludedDateRanges: [
+          { start: dayjs("2025-01-23T11:00:00.000Z"), end: dayjs("2025-01-23T11:30:00.000Z") },
+        ],
+        user: { isFixed: true },
+      },
+      {
+        dateRanges: [],
+        oooExcludedDateRanges: [
+          { start: dayjs("2025-01-23T12:00:00.000Z"), end: dayjs("2025-01-23T12:30:00.000Z") },
+        ],
+        user: { isFixed: true },
+      },
+      {
+        dateRanges: [],
+        oooExcludedDateRanges: [
+          { start: dayjs("2025-01-23T11:00:00.000Z"), end: dayjs("2025-01-23T12:30:00.000Z") },
+        ],
+        user: { isFixed: false },
+      },
+    ];
+
+    const result = getAggregatedAvailability(userAvailability, "ROUND_ROBIN");
+
+    expect(result).toEqual([]);
+  });
 });

@@ -8,6 +8,7 @@ import {
   useBookerStoreContext,
   useInitializeBookerStoreContext,
 } from "@calcom/features/bookings/Booker/BookerStoreProvider";
+import { useOverlayCalendarStore } from "@calcom/features/bookings/Booker/components/OverlayCalendar/store";
 import { useBookerLayout } from "@calcom/features/bookings/Booker/hooks/useBookerLayout";
 import { useBookingForm } from "@calcom/features/bookings/Booker/hooks/useBookingForm";
 import { useInitializeBookerStore } from "@calcom/features/bookings/Booker/store";
@@ -17,16 +18,21 @@ import { DEFAULT_DARK_BRAND_COLOR, DEFAULT_LIGHT_BRAND_COLOR, WEBAPP_URL } from 
 import { useRouterQuery } from "@calcom/lib/hooks/useRouterQuery";
 import { localStorage } from "@calcom/lib/webstorage";
 import { useEvent, useScheduleForEvent } from "@calcom/web/modules/schedules/hooks/useEvent";
+import { useNonEmptyScheduleDays } from "@calcom/web/modules/schedules/hooks/useNonEmptyScheduleDays";
+import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { getProviders, signIn, useSession } from "next-auth/react";
 import { useCallback, useEffect, useMemo } from "react";
 import { shallow } from "zustand/shallow";
 import { useBookings } from "../hooks/useBookings";
-import { useCalendars } from "../hooks/useCalendars";
+import { getLastVisibleDate, useCalendars } from "../hooks/useCalendars";
 import { useSlots } from "../hooks/useSlots";
 import { useVerifyCode } from "../hooks/useVerifyCode";
 import { useVerifyEmail } from "../hooks/useVerifyEmail";
+import type { OverlaySocialLoginProvider } from "../types";
 import { Booker as BookerComponent } from "./Booker";
+
+const OVERLAY_SOCIAL_LOGIN_PROVIDERS: OverlaySocialLoginProvider[] = ["google", "azure-ad"];
 
 export type BookerWebWrapperAtomProps = BookerProps & {
   eventData?: NonNullable<Awaited<ReturnType<typeof getPublicEvent>>>;
@@ -120,7 +126,6 @@ const BookerWebWrapperComponent = (props: BookerWebWrapperAtomProps): JSX.Elemen
     extraOptions: routerQuery,
     prefillFormParams,
   });
-  const calendars = useCalendars({ hasSession });
   const verifyEmail = useVerifyEmail({
     email: bookerForm.formEmail,
     name: bookerForm.formName,
@@ -150,6 +155,16 @@ const BookerWebWrapperComponent = (props: BookerWebWrapperAtomProps): JSX.Elemen
     useApiV2: props.useApiV2,
     bookerLayout,
     ...(props.entity.orgSlug ? { orgSlug: props.entity.orgSlug } : {}),
+  });
+  const availableDays = useNonEmptyScheduleDays(schedule?.data?.slots);
+  const calendars = useCalendars({
+    hasSession,
+    lastVisibleDate: getLastVisibleDate({
+      selectedDate,
+      layout: bookerLayout.layout,
+      extraDays: bookerLayout.extraDays,
+      availableDays,
+    }),
   });
   const bookings = useBookings({
     event,
@@ -200,13 +215,34 @@ const BookerWebWrapperComponent = (props: BookerWebWrapperAtomProps): JSX.Elemen
     if (hasSession) onOverlaySwitchStateChange(true);
   }, [hasSession]);
 
+  // Which social logins exist depends on how the instance is configured, so we only offer the available ones.
+  // Fetched once the modal opens to not add a request to every booking page visit.
+  const isOverlayContinueModalOpen = useOverlayCalendarStore((state) => state.continueWithProviderModal);
+  const { data: authProviders } = useQuery({
+    queryKey: ["authProviders"],
+    queryFn: () => getProviders(),
+    enabled: isOverlayContinueModalOpen,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const overlaySocialLoginProviders = OVERLAY_SOCIAL_LOGIN_PROVIDERS.filter(
+    (provider) => authProviders?.[provider]
+  );
+
   return (
     <BookerComponent
       {...props}
       onOverlayClickNoCalendar={() => {
         router.push("/apps/categories/calendar");
       }}
-      onClickOverlayContinue={() => {
+      overlaySocialLoginProviders={overlaySocialLoginProviders}
+      onClickOverlayContinue={(socialLoginProvider) => {
+        if (socialLoginProvider) {
+          // Signing in with Google/Microsoft also connects that calendar, so we can come straight back here
+          signIn(socialLoginProvider, {
+            callbackUrl: `${window.location.pathname}${window.location.search}`,
+          });
+          return;
+        }
         const newUrl = new URL(`${WEBAPP_URL}/login`);
         newUrl.searchParams.set("callbackUrl", window.location.pathname);
         newUrl.searchParams.set("overlayCalendar", "true");
