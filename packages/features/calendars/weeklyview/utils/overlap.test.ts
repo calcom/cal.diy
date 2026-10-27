@@ -595,5 +595,44 @@ describe("overlap utility", () => {
       const map = createLayoutMap([]);
       expect(map.size).toBe(0);
     });
+    it("should retrieve layout when event id is 0", () => {
+      const events: CalendarEvent[] = [
+        {
+          id: 0,
+          title: "Event 0",
+          start: new Date("2024-01-01T10:00:00"),
+          end: new Date("2024-01-01T11:00:00"),
+        },
+      ];
+
+      const layouts = calculateEventLayouts(events);
+      const map = createLayoutMap(layouts);
+
+      expect(map.has(0)).toBe(true);
+      expect(map.get(0)?.event.id).toBe(0);
+    });
+
+    it("should not group non-overlapping events when multi-day event is clipped to day segment", () => {
+      const events: CalendarEvent[] = [
+        {
+          id: 1,
+          title: "Multi-day morning segment",
+          start: new Date("2024-01-01T00:00:00"),
+          end: new Date("2024-01-01T11:00:00"),
+        },
+        {
+          id: 2,
+          title: "Afternoon event",
+          start: new Date("2024-01-01T15:00:00"),
+          end: new Date("2024-01-01T16:00:00"),
+        },
+      ];
+
+      const layouts = calculateEventLayouts(events);
+      expect(layouts[0].groupIndex).toBe(0);
+      expect(layouts[1].groupIndex).toBe(1);
+      expect(layouts[0].widthPercent).toBe(99.5);
+      expect(layouts[1].widthPercent).toBe(99.5);
+    });
   });
 });

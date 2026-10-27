@@ -74,8 +74,9 @@ export function Event({
   const Component = onEventClick ? "button" : "div";
 
   // Events spanning several days need the date, the time alone would be ambiguous
-  const timeFormat = dayjs(event.start).isSame(event.end, "day") ? "HH:mm" : "MMM D, HH:mm";
-  const eventTime = `${dayjs(event.start).format(timeFormat)} - ${dayjs(event.end).format(timeFormat)}`;
+  const displayEvent = event.originalEvent ?? event;
+  const timeFormat = dayjs(displayEvent.start).isSame(displayEvent.end, "day") ? "HH:mm" : "MMM D, HH:mm";
+  const eventTime = `${dayjs(displayEvent.start).format(timeFormat)} - ${dayjs(displayEvent.end).format(timeFormat)}`;
 
   const dayOfWeek = dayjs(event.start).day();
   const tooltipSide = dayOfWeek >= 1 && dayOfWeek <= 4 ? "right" : "left";
