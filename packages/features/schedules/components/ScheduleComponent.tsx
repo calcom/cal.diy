@@ -163,7 +163,11 @@ const CopyButton = ({
           data-testid="copy-button"
           type="button"
           tooltip={labels?.copyTime ?? t("copy_times_to_tooltip")}
-          aria-label={labels?.copyTime ? `${labels.copyTime} for ${weekday}` : `${t("copy_times_to_tooltip")} for ${weekday}`}
+          aria-label={
+            labels?.copyTime
+              ? (weekday ? `${labels.copyTime} for ${weekday}` : labels.copyTime)
+              : (weekday ? t("copy_times_to_from_weekday", { weekday }) : t("copy_times_to_tooltip"))
+          }
           color="minimal"
           variant="icon"
           StartIcon="copy"
@@ -283,7 +287,11 @@ export const DayRanges = <TFieldValues extends FieldValues>({
                 disabled={disabled}
                 data-testid="add-time-availability"
                 tooltip={labels?.addTime ?? t("add_time_availability")}
-                aria-label={labels?.addTime ? `${labels.addTime} for ${weekday}` : `${t("add_time_availability")} for ${weekday}`}
+                aria-label={
+                  weekday
+                    ? `${labels?.addTime ?? t("add_time_availability")} for ${weekday}`
+                    : labels?.addTime ?? t("add_time_availability")
+                }
                 className="text-default"
                 type="button"
                 color="minimal"
@@ -343,7 +351,11 @@ const RemoveTimeButton = ({
       onClick={() => remove(index)}
       className={className}
       tooltip={labels?.deleteTime ?? t("delete")}
-      aria-label={labels?.deleteTime ? `${labels.deleteTime} for ${weekday}` : `${t("delete")} for ${weekday}`}
+      aria-label={
+        weekday
+          ? `${labels?.deleteTime ?? t("delete")} for ${weekday}`
+          : labels?.deleteTime ?? t("delete")
+      }
     />
   );
 };
