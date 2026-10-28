@@ -1,5 +1,6 @@
 "use client";
 
+import process from "node:process";
 import { ErrorCode } from "@calcom/features/auth/lib/ErrorCode";
 import { HOSTED_CAL_FEATURES, WEBAPP_URL, WEBSITE_URL } from "@calcom/lib/constants";
 import { emailRegex } from "@calcom/lib/emailSchema";
@@ -34,15 +35,12 @@ interface LoginValues {
   totpCode: string;
   backupCode: string;
   csrfToken: string;
+  totpToken?: string;
 }
 
-const MicrosoftIcon = () => (
-  <img className="size-4" src="/microsoft-logo.svg" alt="" />
-);
+const MicrosoftIcon = () => <img className="size-4" src="/microsoft-logo.svg" alt="" />;
 
-const GoogleIcon = () => (
-  <img className="size-4" src="/google-icon-colored.svg" alt="" />
-);
+const GoogleIcon = () => <img className="size-4" src="/google-icon-colored.svg" alt="" />;
 
 function BackgroundGrid() {
   const rows = 9;
@@ -101,11 +99,16 @@ function BackgroundGrid() {
   );
 }
 export type PageProps = inferSSRProps<typeof getServerSideProps>;
+/**
+ * Login view component rendering primary credential inputs, social login options,
+ * and conditional two-factor authentication / backup code verification prompts.
+ */
 export default function Login({
   csrfToken,
   isGoogleLoginEnabled,
   isOutlookLoginEnabled,
   totpEmail,
+  totpToken,
 }: PageProps) {
   const searchParams = useCompatSearchParams();
   const { t } = useLocale();
@@ -120,13 +123,30 @@ export default function Login({
     })
     // Passthrough other fields like totpCode
     .passthrough();
-  const methods = useForm<LoginValues>({ resolver: zodResolver(formSchema) });
+  const methods = useForm<LoginValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: totpEmail || (searchParams?.get("email") as string) || "",
+      csrfToken: csrfToken || "",
+      totpToken: totpToken || undefined,
+    },
+  });
   const { register, formState } = methods;
   const [twoFactorRequired, setTwoFactorRequired] = useState(!!totpEmail || false);
   const [twoFactorLostAccess, setTwoFactorLostAccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [lastUsed, setLastUsed] = useLastUsed();
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (totpToken && typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("totp")) {
+        url.searchParams.delete("totp");
+        window.history.replaceState({}, document.title, url.toString());
+      }
+    }
+  }, [totpToken]);
 
   const errorMessages: { [key: string]: string } = {
     // [ErrorCode.SecondFactorRequired]: t("2fa_enabled_instructions"),
@@ -243,6 +263,17 @@ export default function Login({
 
             <form onSubmit={methods.handleSubmit(onSubmit)} noValidate data-testid="login-form">
               <input defaultValue={csrfToken || undefined} type="hidden" hidden {...register("csrfToken")} />
+              {totpToken && (
+                <input defaultValue={totpToken} type="hidden" hidden {...register("totpToken")} />
+              )}
+              {twoFactorRequired && (
+                <input
+                  defaultValue={totpEmail || (searchParams?.get("email") as string) || ""}
+                  type="hidden"
+                  hidden
+                  {...register("email")}
+                />
+              )}
 
               {!twoFactorRequired && (
                 <div className="space-y-6">
@@ -352,13 +383,40 @@ export default function Login({
                     )}
                   </>
                 ) : (
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      window.location.replace("/");
-                    }}>
-                    {t("cancel")}
-                  </Button>
+                  <>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        if (twoFactorLostAccess) {
+                          setTwoFactorLostAccess(false);
+                          methods.setValue("backupCode", "");
+                          setErrorMessage(null);
+                        } else {
+                          window.location.replace("/");
+                        }
+                      }}>
+                      {twoFactorLostAccess ? (
+                        <>
+                          <Icon name="arrow-left" className="mr-2 size-4" />
+                          {t("go_back")}
+                        </>
+                      ) : (
+                        t("cancel")
+                      )}
+                    </Button>
+                    {!twoFactorLostAccess && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setTwoFactorLostAccess(true);
+                          setErrorMessage(null);
+                          methods.setValue("totpCode", "");
+                        }}>
+                        <Icon name="lock" className="mr-2 size-4" />
+                        {t("lost_access")}
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             )}
