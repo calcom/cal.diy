@@ -80,4 +80,18 @@ describe("redactError", () => {
     expect(result.message).toBe("An error occurred while querying the database.");
     expect(result.code).toBe("P2025");
   });
+
+  it("should handle Prisma error without code in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("CALCOM_ENV", "production");
+    const { redactError } = await import("./redactError");
+
+    const prismaError = new Error("General prisma failure");
+    prismaError.name = "PrismaClientUnknownRequestError";
+
+    const result = redactError(prismaError) as Error & { code?: string };
+
+    expect(result.message).toBe("An error occurred while querying the database.");
+    expect(result.code).toBeUndefined();
+  });
 });

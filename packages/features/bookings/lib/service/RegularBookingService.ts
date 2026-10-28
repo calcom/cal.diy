@@ -483,6 +483,15 @@ async function validateRescheduleRestrictions({
   }
 }
 
+/**
+ * Core handler for creating and rescheduling regular non-recurring bookings.
+ *
+ * @param this - RegularBookingService instance context.
+ * @param input - Booking handler input parameters including booking data and metadata.
+ * @param deps - Injected booking service dependencies.
+ * @param bookingDataSchemaGetter - Getter for booking data validation schema.
+ * @returns The created or rescheduled booking response.
+ */
 async function handler(
   this: RegularBookingService,
   input: BookingHandlerInput,
