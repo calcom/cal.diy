@@ -199,7 +199,7 @@ export function processDateOverride({
   const endTimeMinutes = item.endTime.getUTCMinutes();
 
   if (endTimeHours === 23 && endTimeMinutes === 59) {
-    endDate = endDate.add(1, "day").tz(timeZone, true);
+    endDate = endDate.add(1, "day").tz(adjustedTimezone, true);
   } else {
     endDate = itemDateStartOfDay
       .add(endTimeHours, "hours")
