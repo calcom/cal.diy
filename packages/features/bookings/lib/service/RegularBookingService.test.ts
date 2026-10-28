@@ -10,13 +10,26 @@ import {
   setupAndTeardown,
   TestData,
 } from "@calcom/testing/lib/bookingScenario/bookingScenario";
+import process from "node:process";
 import { getRegularBookingService } from "@calcom/features/bookings/di/RegularBookingService.container";
 import * as createBookingModule from "@calcom/features/bookings/lib/handleNewBooking/createBooking";
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import { HttpError } from "@calcom/lib/http-error";
+import type { TraceContext } from "@calcom/lib/tracing";
+import { TracedError } from "@calcom/lib/tracing/error";
 import { Prisma } from "@calcom/prisma/client";
 import { test } from "@calcom/testing/lib/fixtures/fixtures";
 import { afterEach, describe, expect, vi } from "vitest";
+
+vi.mock("@calcom/lib/constants", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@calcom/lib/constants")>();
+  return {
+    ...actual,
+    get IS_PRODUCTION(): boolean {
+      return process.env.NODE_ENV === "production" || process.env.CALCOM_ENV === "production";
+    },
+  };
+});
 
 vi.mock("@calcom/features/auth/lib/verifyCodeUnAuthenticated", () => ({
   verifyCodeUnAuthenticated: vi.fn(),
@@ -158,8 +171,14 @@ describe("RegularBookingService", () => {
       prismaError.code = "P2002";
       prismaError.clientVersion = "5.0.0";
       Object.setPrototypeOf(prismaError, Prisma.PrismaClientKnownRequestError.prototype);
+      const traceContext: TraceContext = {
+        traceId: "test_trace_id",
+        spanId: "test_span_id",
+        operation: "createBooking",
+      };
+      const tracedError = new TracedError(prismaError, traceContext);
 
-      vi.spyOn(createBookingModule, "createBooking").mockRejectedValueOnce(prismaError);
+      vi.spyOn(createBookingModule, "createBooking").mockRejectedValueOnce(tracedError);
 
       const regularBookingService = getRegularBookingService();
 
