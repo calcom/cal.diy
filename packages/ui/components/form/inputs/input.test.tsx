@@ -17,6 +17,16 @@ describe("Tests for InputField Component", () => {
     expect(getByPlaceholderText("Test Placeholder")).toBeInTheDocument();
   });
 
+  test("Should associate label correctly when id prop is passed", () => {
+    const { getByLabelText } = render(
+      <InputField id="custom-password-id" name="password" label="Password" type="password" />
+    );
+
+    const input = getByLabelText("Password");
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveAttribute("id", "custom-password-id");
+  });
+
   test("Should handle input correctly", () => {
     const { getByRole } = render(<InputField name="testInput" onChange={onChangeMock} />);
     const inputElement = getByRole("textbox") as HTMLInputElement;
