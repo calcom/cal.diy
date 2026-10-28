@@ -75,7 +75,6 @@ export type ManagedEventCancellationResult = {
   status: BookingStatus;
 };
 
-
 type TeamBookingsParamsBase = {
   user: { id: number; email: string };
   teamId: number;
