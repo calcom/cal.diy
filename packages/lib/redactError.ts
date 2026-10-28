@@ -1,12 +1,13 @@
 import logger from "@calcom/lib/logger";
-
 import { IS_PRODUCTION } from "./constants";
 
 const log = logger.getSubLogger({ prefix: [`[redactError]`] });
 
 function shouldRedact(error: Error) {
   const n = error.name || "";
-  return /Prisma/i.test(n);
+  return (
+    /Prisma/i.test(n) || ("code" in error && typeof error.code === "string" && error.code.startsWith("P"))
+  );
 }
 
 export const redactError = <T extends Error | unknown>(error: T) => {
@@ -16,7 +17,11 @@ export const redactError = <T extends Error | unknown>(error: T) => {
   log.debug("Type of Error: ", error.constructor);
   if (shouldRedact(error) && IS_PRODUCTION) {
     log.error("Error: ", JSON.stringify(error));
-    return new Error("An error occurred while querying the database.");
+    const redacted = new Error("An error occurred while querying the database.");
+    if ("code" in error && typeof error.code === "string") {
+      (redacted as Error & { code?: string }).code = error.code;
+    }
+    return redacted;
   }
   return error;
 };
