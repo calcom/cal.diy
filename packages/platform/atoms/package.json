@@ -2,6 +2,7 @@
   "name": "@calcom/atoms",
   "sideEffects": false,
   "type": "module",
+  "private": true,
   "description": "Customizable UI components to integrate scheduling into your product.",
   "authors": "Cal.com, Inc.",
   "version": "2.3.3",
