@@ -542,7 +542,7 @@ const ZoomVideoApiAdapter = (credential: CredentialPayload): VideoApiAdapter => 
           method: "DELETE",
         });
         return Promise.resolve();
-      } catch (err) {
+      } catch {
         return Promise.reject(new Error("Failed to delete meeting"));
       }
     },
