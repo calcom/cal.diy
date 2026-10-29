@@ -2,6 +2,7 @@ import { DailyLocationType } from "@calcom/app-store/constants";
 import dayjs from "@calcom/dayjs";
 import tasker from "@calcom/features/tasker";
 import getWebhooks from "@calcom/features/webhooks/lib/getWebhooks";
+import { getNoShowTaskReferenceUid } from "@calcom/features/webhooks/lib/noShowTaskReference";
 import { withReporting } from "@calcom/lib/sentryWrapper";
 import { WebhookTriggerEvents } from "@calcom/prisma/enums";
 
@@ -63,7 +64,7 @@ const _scheduleNoShowTriggers = async (args: ScheduleNoShowTriggersArgs) => {
             // Prevents null values from being serialized
             webhook: { ...webhook, time: webhook.time, timeUnit: webhook.timeUnit },
           },
-          { scheduledAt, referenceUid: booking.uid }
+          { scheduledAt, referenceUid: getNoShowTaskReferenceUid(booking.uid, webhook.id) }
         );
       }
       return Promise.resolve();
@@ -94,7 +95,7 @@ const _scheduleNoShowTriggers = async (args: ScheduleNoShowTriggersArgs) => {
             // Prevents null values from being serialized
             webhook: { ...webhook, time: webhook.time, timeUnit: webhook.timeUnit },
           },
-          { scheduledAt, referenceUid: booking.uid }
+          { scheduledAt, referenceUid: getNoShowTaskReferenceUid(booking.uid, webhook.id) }
         );
       }
 
