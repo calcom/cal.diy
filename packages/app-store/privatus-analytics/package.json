@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "private": true,
+  "name": "@calcom/privatus-analytics",
+  "version": "0.0.0",
+  "main": "./index.ts",
+  "description": "Cookieless web analytics. See who visits your booking pages.",
+  "dependencies": {
+    "@calcom/lib": "workspace:*"
+  },
+  "devDependencies": {
+    "@calcom/types": "workspace:*"
+  }
+}
