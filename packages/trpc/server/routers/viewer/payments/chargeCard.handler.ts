@@ -1,6 +1,5 @@
 import { handleNoShowFee } from "@calcom/features/bookings/lib/payment/handleNoShowFee";
 import { BookingRepository } from "@calcom/features/bookings/repositories/BookingRepository";
-import { BookingAccessService } from "@calcom/features/bookings/services/BookingAccessService";
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import { ErrorWithCode } from "@calcom/lib/errors";
 import type { PrismaClient } from "@calcom/prisma";
@@ -17,19 +16,6 @@ interface ChargeCardHandlerOptions {
 export const chargeCardHandler = async ({ ctx, input }: ChargeCardHandlerOptions) => {
   const { prisma } = ctx;
 
-  const bookingAccessService = new BookingAccessService(prisma);
-  const isUserAuthorizedToChargeCard = await bookingAccessService.doesUserIdHaveAccessToBooking({
-    userId: ctx.user.id,
-    bookingId: input.bookingId,
-  });
-
-  if (!isUserAuthorizedToChargeCard) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "User is not authorized to charge the card for this booking",
-    });
-  }
-
   const bookingRepository = new BookingRepository(prisma);
 
   const booking = await bookingRepository.getBookingForPaymentProcessing(input.bookingId);
@@ -38,6 +24,13 @@ export const chargeCardHandler = async ({ ctx, input }: ChargeCardHandlerOptions
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Booking not found",
+    });
+  }
+
+  if (booking.userId !== ctx.user.id) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Only the organizer can charge the card for this booking",
     });
   }
 
