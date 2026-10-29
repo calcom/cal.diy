@@ -282,6 +282,8 @@ class StripePaymentService implements IAbstractPaymentService {
 
       const paymentIntent = await this.stripe.paymentIntents.create(params, {
         stripeAccount: this.credentials.stripe_user_id,
+        // Same key for the same payment so Stripe never charges a held card twice
+        idempotencyKey: `no-show-fee-${payment.id}`,
       });
 
       const paymentData = await prisma.payment.update({
