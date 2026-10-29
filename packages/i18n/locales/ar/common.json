@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "إرسال رسالة نصية قصيرة إلى أحد الحضور",
   "sms_number_action": "إرسال رسالة نصية قصيرة إلى رقم محدد",
   "send_reminder_sms": "إرسال تذكيرات بالاجتماعات إلى الحاضرين بيُسر عبر الرسائل النصية القصيرة",
-  "whatsapp_number_action": "إرسال رسالة WhatsApp إلى رقم محدد",
-  "whatsapp_attendee_action": "إرسال رسالة عبر WhatsApp إلى أحد الحاضرين",
   "workflows": "سير العمل",
   "new_workflow_btn": "سير عمل جديد",
   "how_would_you_like_to_start": "كيف ترغب في البدء؟",

@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "Enviar SMS al asistente",
   "sms_number_action": "enviar SMS a un número específico",
   "send_reminder_sms": "Envía fácilmente recordatorios de reuniones por SMS a tus asistentes",
-  "whatsapp_number_action": "enviar mensaje de WhatsApp a un número específico",
-  "whatsapp_attendee_action": "enviar mensaje de WhatsApp al asistente",
   "workflows": "Flujos de trabajo",
   "new_workflow_btn": "Nuevo Flujo de Trabajo",
   "how_would_you_like_to_start": "¿Cómo te gustaría comenzar?",

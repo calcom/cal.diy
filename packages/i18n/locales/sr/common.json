@@ -1654,8 +1654,6 @@
   "sms_attendee_action": "Pošalji SMS učesniku",
   "sms_number_action": "pošalji SMS na određeni broj",
   "send_reminder_sms": "Učesnicima lako pošaljite podsetnike za sastanak putem poruke",
-  "whatsapp_number_action": "pošaljite Whatsapp poruku na određeni broj",
-  "whatsapp_attendee_action": "pošaljite Whatsapp poruku učesniku",
   "workflows": "Radni tokovi",
   "new_workflow_btn": "Novi radni tok",
   "how_would_you_like_to_start": "Kako želite da počnete?",

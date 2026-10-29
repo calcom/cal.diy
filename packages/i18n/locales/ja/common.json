@@ -1705,8 +1705,6 @@
   "sms_attendee_action": "出席者に SMS を送信する",
   "sms_number_action": "特定の番号に SMS を送信",
   "send_reminder_sms": "SMS で簡単にミーティングのリマインダーを送信します",
-  "whatsapp_number_action": "特定の番号に Whatsapp メッセージを送信",
-  "whatsapp_attendee_action": "出席者に Whatsapp メッセージを送信",
   "workflows": "ワークフロー",
   "new_workflow_btn": "新しいワークフロー",
   "how_would_you_like_to_start": "どのように始めますか？",

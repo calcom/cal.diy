@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "Enviar SMS a l'assistent",
   "sms_number_action": "enviar SMS a un número específic",
   "send_reminder_sms": "Envia fàcilment recordatoris de reunions per SMS als teus assistents",
-  "whatsapp_number_action": "enviar missatge de WhatsApp a un número específic",
-  "whatsapp_attendee_action": "enviar missatge de WhatsApp a l'assistent",
   "workflows": "Fluxos de treball",
   "new_workflow_btn": "Nou flux de treball",
   "how_would_you_like_to_start": "Com vols començar?",

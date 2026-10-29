@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "Αποστολή SMS στον συμμετέχοντα",
   "sms_number_action": "αποστολή SMS σε συγκεκριμένο αριθμό",
   "send_reminder_sms": "Εύκολη αποστολή υπενθυμίσεων συναντήσεων μέσω SMS στους συμμετέχοντες",
-  "whatsapp_number_action": "αποστολή μηνύματος WhatsApp σε συγκεκριμένο αριθμό",
-  "whatsapp_attendee_action": "αποστολή μηνύματος WhatsApp στον συμμετέχοντα",
   "workflows": "Ροές εργασίας",
   "new_workflow_btn": "Νέα ροή εργασίας",
   "how_would_you_like_to_start": "Πώς θα θέλατε να ξεκινήσετε;",

@@ -1685,8 +1685,6 @@ checksums:
     sms_attendee_action: d916b1b13aaa72046eed49dcb3795b27
     sms_number_action: 7d2ab74c110418e376aacc199489765e
     send_reminder_sms: 34d7f8bc9791479f6bed9e1b93cc3570
-    whatsapp_number_action: e87557d1e1c641100df7b3ddfeca18a6
-    whatsapp_attendee_action: e2228eb197bdff521e7f5580de775629
     workflows: b0c9c8615a9ba7d9cb73e767290a7f72
     new_workflow_btn: 556be5b31c361973a19d3e2f7375d4f3
     how_would_you_like_to_start: 118de435d9585cb475d85dbae1f331f8

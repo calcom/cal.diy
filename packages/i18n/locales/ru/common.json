@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "Отправить SMS-сообщение участнику",
   "sms_number_action": "отправка SMS-сообщение на указанный номер",
   "send_reminder_sms": "Отправляйте участникам напоминания о встрече по SMS",
-  "whatsapp_number_action": "отправка сообщение в Whatsapp на указанный номер",
-  "whatsapp_attendee_action": "отправить участнику сообщение в Whatsapp",
   "workflows": "Рабочие процессы",
   "new_workflow_btn": "Новый рабочий процесс",
   "how_would_you_like_to_start": "С чего вы хотите начать?",

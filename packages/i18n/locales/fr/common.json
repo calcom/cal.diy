@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "Envoyer un SMS au participant",
   "sms_number_action": "envoyer un SMS à un numéro spécifique",
   "send_reminder_sms": "Envoyez facilement des rappels de rendez-vous par SMS à vos participants",
-  "whatsapp_number_action": "envoyer un message WhatsApp à un numéro spécifique",
-  "whatsapp_attendee_action": "envoyer un message WhatsApp au participant",
   "workflows": "Workflows",
   "new_workflow_btn": "Nouveau workflow",
   "how_would_you_like_to_start": "Comment souhaitez-vous commencer ?",
