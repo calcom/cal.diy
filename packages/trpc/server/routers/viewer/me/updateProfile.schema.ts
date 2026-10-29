@@ -88,7 +88,7 @@ export const ZUpdateProfileInputSchema: z.ZodType<
 > = z.object({
   username: z.string().optional(),
   name: z.string().max(FULL_NAME_LENGTH_MAX_LIMIT).optional(),
-  email: z.string().optional(),
+  email: z.string().toLowerCase().optional(),
   bio: z.string().optional(),
   avatarUrl: z.string().nullable().optional(),
   timeZone: timeZoneSchema.optional(),
