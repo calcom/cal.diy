@@ -21,8 +21,11 @@ export function useCheckOverlapWithOverlay({
   const isOverlapping =
     overlayBusyDates &&
     overlayBusyDates.some((busyDate) => {
+      const startOffset = start.utcOffset();
       const busyDateStart = dayjs(busyDate.start);
       const busyDateEnd = dayjs(busyDate.end);
+      const busyDateStartInOffset = dayjs.utc(busyDateStart.valueOf()).add(startOffset, "minute");
+      const busyDateEndInOffset = dayjs.utc(busyDateEnd.valueOf()).add(startOffset, "minute");
       const selectedEndTime = dayjs(start.add(offset, "hours")).add(selectedDuration ?? 0, "minute");
 
       const isOverlapping =
@@ -31,9 +34,9 @@ export function useCheckOverlapWithOverlay({
         selectedEndTime > busyDateStart;
 
       // Busy times spanning several days need the date, the time alone would be ambiguous
-      const timeFormat = busyDateStart.isSame(busyDateEnd, "day") ? "HH:mm" : "MMM D, HH:mm";
-      overlappingTimeStart = isOverlapping ? busyDateStart.format(timeFormat) : null;
-      overlappingTimeEnd = isOverlapping ? busyDateEnd.format(timeFormat) : null;
+      const timeFormat = busyDateStartInOffset.isSame(busyDateEndInOffset, "day") ? "HH:mm" : "MMM D, HH:mm";
+      overlappingTimeStart = isOverlapping ? busyDateStartInOffset.format(timeFormat) : null;
+      overlappingTimeEnd = isOverlapping ? busyDateEndInOffset.format(timeFormat) : null;
       overlappingTitle = isOverlapping ? (busyDate.title ?? null) : null;
 
       return isOverlapping;
