@@ -31,7 +31,7 @@ export const ChargeCardDialog = (props: IRescheduleDialog) => {
       showToast("Charge successful", "success");
     },
     onError: (error) => {
-      setChargeError(error.message || t("error_charging_card"));
+      setChargeError(error.message ? t(error.message) : t("error_charging_card"));
     },
   });
 
