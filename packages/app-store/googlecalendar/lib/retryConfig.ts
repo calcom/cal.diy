@@ -2,10 +2,11 @@
  * Retry policy for the Google Calendar API client.
  *
  * gaxios (the HTTP client behind googleapis) retries only GET/HEAD/PUT/OPTIONS/DELETE
- * on 1xx/429/5xx by default. Creating an event does an insert (POST) followed by a
- * PATCH that adds the Meet link to the description/location, and Google answers short
- * bursts with `403 rateLimitExceeded`, which it documents as retryable with exponential
- * backoff: https://developers.google.com/workspace/calendar/api/guides/errors
+ * on 1xx/408/429/5xx by default (older releases skip 408). Creating an event does an
+ * insert (POST) followed by a PATCH that adds the Meet link to the description/location,
+ * and Google answers short bursts with `403 rateLimitExceeded`, which it documents as
+ * retryable with exponential backoff:
+ * https://developers.google.com/workspace/calendar/api/guides/errors
  * That PATCH was never retried, so the whole calendar integration failed and the booking
  * was left without calendar reference or confirmation emails (#28834, #30044).
  *
@@ -24,13 +25,16 @@ const DEFAULT_NO_RESPONSE_RETRIES = 2;
 
 type GoogleErrorBody = { error?: { errors?: Array<{ reason?: string }> } };
 
+/** gaxios's default retryable statuses: 1xx, 408, 429 and 5xx. */
 function isRetryableStatus(status: number): boolean {
-  return status < 200 || status === 429 || status >= 500;
+  return status < 200 || status === 408 || status === 429 || status >= 500;
 }
 
 /** The subset of a GaxiosError this policy reads. */
 export type RetryableError = {
   name?: string;
+  /** node-fetch wraps the underlying error, e.g. an AbortError, here. */
+  error?: { name?: string };
   config?: {
     method?: string;
     retryConfig?: {
@@ -45,6 +49,7 @@ export type RetryableError = {
   };
 };
 
+/** True for a 403 whose Google error reason is rateLimitExceeded or userRateLimitExceeded. */
 export function isGoogleRateLimitError(err: RetryableError): boolean {
   if (err.response?.status !== 403) return false;
   let data = err.response.data;
@@ -59,9 +64,13 @@ export function isGoogleRateLimitError(err: RetryableError): boolean {
   return errors.some((e) => !!e?.reason && RATE_LIMIT_REASONS.has(e.reason));
 }
 
+/**
+ * gaxios `shouldRetry` hook. It replaces gaxios's own predicate, so it re-implements the
+ * default checks (abort, attempt budget, methods, statuses) and adds rate-limited 403s.
+ */
 export function shouldRetryGoogleCalendarRequest(err: RetryableError): boolean {
   const retryConfig = err.config?.retryConfig;
-  if (!retryConfig || err.name === "AbortError") return false;
+  if (!retryConfig || err.name === "AbortError" || err.error?.name === "AbortError") return false;
 
   const attempt = retryConfig.currentRetryAttempt ?? 0;
   if (attempt >= (retryConfig.retry ?? DEFAULT_RETRY)) return false;
