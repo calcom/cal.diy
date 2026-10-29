@@ -18,6 +18,26 @@ export type TimezoneSelectComponentProps = SelectProps & {
   isWebTimezoneSelect?: boolean;
 };
 
+const TIMEZONE_CORRECTIONS: Record<string, string> = {
+  "America/Port_Of_Spain": "America/Port_of_Spain",
+  "Africa/Porto-novo": "Africa/Porto-Novo",
+  "Africa/Dar_Es_Salaam": "Africa/Dar_es_Salaam",
+  "Europe/Kiev": "Europe/Kyiv",
+};
+
+const normalizeTimezoneValue = (val: SelectProps["value"]) => {
+  if (typeof val === "string") {
+    return TIMEZONE_CORRECTIONS[val] || val;
+  }
+  if (val && typeof val === "object" && "value" in val) {
+    const corrected = TIMEZONE_CORRECTIONS[val.value];
+    if (corrected) {
+      return { ...val, value: corrected };
+    }
+  }
+  return val;
+};
+
 // TODO: I wonder if we move this to ui package, and keep the TRPC version in features
 export function TimezoneSelectComponent({
   className,
@@ -33,6 +53,8 @@ export function TimezoneSelectComponent({
   ...props
 }: TimezoneSelectComponentProps) {
   const data = useMemo(() => props.data || [], [props.data]);
+
+  const normalizedValue = useMemo(() => normalizeTimezoneValue(value), [value]);
 
   /*
    * we support multiple timezones for the different labels
@@ -69,13 +91,7 @@ export function TimezoneSelectComponent({
         return;
       }
 
-      const corrections: Record<string, string> = {
-        "America/Port_Of_Spain": "America/Port_of_Spain",
-        "Africa/Porto-novo": "Africa/Porto-Novo",
-        "Africa/Dar_Es_Salaam": "Africa/Dar_es_Salaam",
-      };
-
-      const correctedValue = corrections[selectedOption.value] || selectedOption.value;
+      const correctedValue = TIMEZONE_CORRECTIONS[selectedOption.value] || selectedOption.value;
       props.onChange({ ...selectedOption, value: correctedValue });
     },
     [props.onChange]
@@ -93,7 +109,7 @@ export function TimezoneSelectComponent({
 
   return (
     <BaseSelect
-      value={value}
+      value={normalizedValue}
       className={`${className} ${timezoneSelectCustomClassname}`}
       aria-label="Timezone Select"
       isLoading={isPending}
