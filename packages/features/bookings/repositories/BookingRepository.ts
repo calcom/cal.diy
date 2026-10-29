@@ -758,23 +758,26 @@ export class BookingRepository implements IBookingRepository {
       select: bookingsSelect,
     });
 
-    const currentBookingsAllUsersQueryThree = eventTypeId
-      ? this.prismaClient.booking.findMany({
-          where: {
-            startTime: { lte: endDate },
-            endTime: { gte: startDate },
-            eventType: {
-              id: eventTypeId,
-              requiresConfirmation: true,
-              requiresConfirmationWillBlockSlot: true,
-            },
-            status: {
-              in: [BookingStatus.PENDING],
-            },
-          },
-          select: bookingsSelect,
-        })
-      : [];
+    // A pending booking blocks the host's time regardless of which event type is being booked,
+    // otherwise the same slot can still be taken through a different event type.
+    const currentBookingsAllUsersQueryThree = this.prismaClient.booking.findMany({
+      where: {
+        startTime: { lte: endDate },
+        endTime: { gte: startDate },
+        eventType: {
+          requiresConfirmation: true,
+          requiresConfirmationWillBlockSlot: true,
+        },
+        status: {
+          in: [BookingStatus.PENDING],
+        },
+        OR: [
+          { userId: { in: Array.from(userIdAndEmailMap.keys()) } },
+          ...(eventTypeId ? [{ eventTypeId }] : []),
+        ],
+      },
+      select: bookingsSelect,
+    });
 
     const [resultOne, resultTwo, resultThree] = await Promise.all([
       currentBookingsAllUsersQueryOne,
