@@ -150,7 +150,6 @@
   "apply_to_all_event_types": "Piemēroties visiem, ieskaitot arī nākotnes notikumu veidus",
   "date_and_time": "Datums un laiks",
   "email_reminder_upcoming_event_notice": "Šis ir atgādinājums par jūsu gaidāmo pasākumu.",
-  "email_reminder_triggered_by_workflow": "Šo atgādinājumu ir iedarbinājis Cal darbplūsma.",
   "event_upper_case": "Notikums",
   "scheduling_by": "Ieplānoja",
   "experience_review_prompt": "Kāda bija jūsu pēdējā pieredze?",
@@ -158,6 +157,5 @@
   "meeting_satisfaction_question": "Cik apmierināts bijāt ar savu pēdējo tikšanos?",
   "meeting_not_joined_question": "nepiedalījāties sanāksmē?",
   "reschedule_cta_short": "Pārzīmēt šeit.",
-  "you_and_conjunction": "Jūs &",
-  "email_survey_triggered_by_workflow": "Šo aptauju aktivizēja darbplūsma Cal."
+  "you_and_conjunction": "Jūs &"
 }

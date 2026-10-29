@@ -11,11 +11,16 @@
     "./next-i18next.config": "./next-i18next.config.js",
     "./locales/*": "./locales/*"
   },
+  "scripts": {
+    "lint": "eloqnt lint"
+  },
   "dependencies": {
     "i18next": "23.2.3"
   },
   "devDependencies": {
     "@calcom/tsconfig": "workspace:*",
+    "@eloqnt/cli": "0.6.17",
+    "@eloqnt/format-i18next-json": "0.0.5",
     "typescript": "5.9.3"
   }
 }
