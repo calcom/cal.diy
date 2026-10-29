@@ -23,6 +23,10 @@ describe("parseIpFromHeaders", () => {
     expect(parseIpFromHeaders(["1.2.3.4", "5.6.7.8"])).toBe("1.2.3.4");
   });
 
+  it("returns the first IP when an array element contains comma-separated addresses", () => {
+    expect(parseIpFromHeaders(["1.2.3.4, 5.6.7.8"])).toBe("1.2.3.4");
+  });
+
   it("trims leading/trailing whitespace from a padded string value", () => {
     expect(parseIpFromHeaders("  1.2.3.4  , 5.6.7.8")).toBe("1.2.3.4");
   });
