@@ -33,6 +33,8 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { getLocation, getRichDescription } from "./CalEventParser";
 import { symmetricDecrypt } from "./crypto";
+import { ErrorCode } from "./errorCodes";
+import { ErrorWithCode } from "./errors";
 import logger from "./logger";
 
 const TIMEZONE_FORMAT = "YYYY-MM-DDTHH:mm:ss[Z]";
@@ -861,6 +863,7 @@ export default abstract class BaseCalendarService implements Calendar {
    *   @param {string} options.dateTo - The end date of the date range to fetch events from.
    *   @param {Object} options.headers - Headers to be included in the API requests.
    * @returns {Promise<Array>} - A promise that resolves to a flattened array of calendar objects with the structure { url: ..., etag: ..., data: ...}.
+   * @throws {ErrorWithCode} - If any of the selected calendars could not be fetched, so that an unreachable calendar is never reported as having no events.
    */
 
   async fetchObjectsWithOptionalExpand({
@@ -909,9 +912,29 @@ export default abstract class BaseCalendarService implements Calendar {
           return calendarObject;
         })
       );
+
+      // tsdav doesn't throw on a failed request (e.g. 401 or 5xx). It returns the error response as an
+      // object without calendar data, so an unreachable calendar would otherwise look like an empty one.
+      if (processedResponse.some((calendarObject) => calendarObject && calendarObject.data === undefined)) {
+        throw new Error("CalDAV server returned a calendar object without calendar data");
+      }
       return processedResponse;
     });
     const resolvedPromises = await Promise.allSettled(fetchPromises);
+    const rejectedPromises = resolvedPromises.filter(
+      (promise): promise is PromiseRejectedResult => promise.status === "rejected"
+    );
+    if (rejectedPromises.length > 0) {
+      for (const { reason } of rejectedPromises) {
+        this.log.error("Error fetching calendar objects", reason);
+      }
+      // Fail the whole availability check instead of returning partial results: a calendar that
+      // couldn't be read must not be treated as free, or bookings go through over blocked time.
+      throw new ErrorWithCode(
+        ErrorCode.InternalServerError,
+        `Unable to check ${this.integrationName} availability: ${rejectedPromises.length} of ${filteredCalendars.length} selected calendars could not be fetched for credential ${this.credential.id}`
+      );
+    }
     const fulfilledPromises = resolvedPromises.filter(
       (promise): promise is PromiseFulfilledResult<(DAVObject | undefined)[]> =>
         promise.status === "fulfilled"
