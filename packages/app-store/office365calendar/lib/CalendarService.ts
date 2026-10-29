@@ -30,15 +30,15 @@ import { getOfficeAppKeys } from "./getOfficeAppKeys";
 interface IRequest {
   method: string;
   url: string;
-  id: number;
+  id: string;
 }
 
 interface ISettledResponse {
   id: string;
   status: number;
-  headers: {
-    "Retry-After": string;
-    "Content-Type": string;
+  headers?: {
+    "Retry-After"?: string;
+    "Content-Type"?: string;
   };
   body: Record<string, DefaultBodyType>;
 }
@@ -407,33 +407,17 @@ class Office365CalendarService implements Calendar {
         ? this.listCalendars().then((cals) => cals.map((e_2) => e_2.externalId).filter(Boolean) || [])
         : Promise.resolve(selectedCalendarIds));
       const requestsPromises = ids.map(async (calendarId, id) => ({
-        id,
+        id: String(id),
         method: "GET",
         url: `${await this.getUserEndpoint()}/calendars/${calendarId}/calendarView${filter}&${calendarSelectParams}`,
       }));
       const requests = await Promise.all(requestsPromises);
-      const response = await this.apiGraphBatchCall(requests);
-      const responseBody = await this.handleErrorJsonOffice365Calendar(response);
-      let responseBatchApi: IBatchResponse = { responses: [] };
-      if (typeof responseBody === "string") {
-        responseBatchApi = this.handleTextJsonResponseWithHtmlInBody(responseBody);
-      }
-      let alreadySuccessResponse = [] as ISettledResponse[];
+      const responses = await this.fetchBatchResponses(requests);
 
-      // Validate if any 429 status Retry-After is present
-      const retryAfter =
-        !!responseBatchApi?.responses && this.findRetryAfterResponse(responseBatchApi.responses);
-
-      if (retryAfter && responseBatchApi.responses) {
-        responseBatchApi = await this.fetchRequestWithRetryAfter(requests, responseBatchApi.responses, 2);
-      }
-
-      // Recursively fetch nextLink responses
-      alreadySuccessResponse = await this.fetchResponsesWithNextLink(responseBatchApi.responses);
-
-      return alreadySuccessResponse ? this.processBusyTimes(alreadySuccessResponse) : [];
-    } catch {
-      return Promise.reject([]);
+      return this.processBusyTimes(await this.fetchResponsesWithNextLink(responses));
+    } catch (error) {
+      this.log.error(error);
+      throw error;
     }
   }
 
@@ -584,43 +568,26 @@ class Office365CalendarService implements Calendar {
   private fetchResponsesWithNextLink = async (
     settledResponses: ISettledResponse[]
   ): Promise<ISettledResponse[]> => {
-    const alreadySuccess = [] as ISettledResponse[];
+    const responsesWithNextLink = [] as ISettledResponse[];
     const newLinkRequest = [] as IRequest[];
     settledResponses?.forEach((response) => {
-      if (response.status === 200 && response.body["@odata.nextLink"] === undefined) {
-        alreadySuccess.push(response);
-      } else {
-        const nextLinkUrl = response.body["@odata.nextLink"]
-          ? String(response.body["@odata.nextLink"]).replace(this.apiGraphUrl, "")
-          : "";
-        if (nextLinkUrl) {
-          // Saving link for later use
-          newLinkRequest.push({
-            id: Number(response.id),
-            method: "GET",
-            url: nextLinkUrl,
-          });
-        }
-        delete response.body["@odata.nextLink"];
-        // Pushing success body content
-        alreadySuccess.push(response);
+      responsesWithNextLink.push(response);
+      const nextLink = response.body["@odata.nextLink"];
+      if (typeof nextLink === "string" && nextLink) {
+        newLinkRequest.push({
+          id: response.id,
+          method: "GET",
+          url: nextLink.replace(this.apiGraphUrl, ""),
+        });
       }
     });
 
     if (newLinkRequest.length === 0) {
-      return alreadySuccess;
+      return responsesWithNextLink;
     }
 
-    const newResponse = await this.apiGraphBatchCall(newLinkRequest);
-    let newResponseBody = await handleErrorsJson<IBatchResponse | string>(newResponse);
-
-    if (typeof newResponseBody === "string") {
-      newResponseBody = this.handleTextJsonResponseWithHtmlInBody(newResponseBody);
-    }
-
-    // Going recursive to fetch next link
-    const newSettledResponses = await this.fetchResponsesWithNextLink(newResponseBody.responses);
-    return [...alreadySuccess, ...newSettledResponses];
+    const newResponses = await this.fetchBatchResponses(newLinkRequest);
+    return [...responsesWithNextLink, ...(await this.fetchResponsesWithNextLink(newResponses))];
   };
 
   private fetchRequestWithRetryAfter = async (
@@ -628,47 +595,129 @@ class Office365CalendarService implements Calendar {
     settledPromises: ISettledResponse[],
     maxRetries: number,
     retryCount = 0
-  ): Promise<IBatchResponse> => {
+  ): Promise<ISettledResponse[]> => {
     const getRandomness = () => Number(Math.random().toFixed(3));
     let retryAfterTimeout = 0;
-    if (retryCount >= maxRetries) {
-      return { responses: settledPromises };
-    }
-    const alreadySuccessRequest = [] as ISettledResponse[];
+    const responsesNotToRetry = settledPromises.filter((item) => item.status !== 429);
     const failedRequest = [] as IRequest[];
     settledPromises.forEach((item) => {
-      if (item.status === 200) {
-        alreadySuccessRequest.push(item);
-      } else if (item.status === 429) {
-        const newTimeout = Number(item.headers["Retry-After"]) * 1000 || 0;
+      if (item.status === 429) {
+        const request = originalRequests.find((request) => request.id === item.id);
+        if (!request) {
+          throw new Error(`Office 365 batch response has an unexpected request ID: ${item.id}`);
+        }
+        const newTimeout = Number(item.headers?.["Retry-After"]) * 1000 || 0;
         retryAfterTimeout = newTimeout > retryAfterTimeout ? newTimeout : retryAfterTimeout;
-        failedRequest.push(originalRequests[Number(item.id)]);
+        failedRequest.push(request);
       }
     });
 
-    if (failedRequest.length === 0) {
-      return { responses: alreadySuccessRequest };
+    if (failedRequest.length === 0 || retryCount >= maxRetries) {
+      return settledPromises;
     }
 
     // Await certain time from retry-after header
     await new Promise((r) => setTimeout(r, retryAfterTimeout + getRandomness()));
 
-    const newResponses = await this.apiGraphBatchCall(failedRequest);
-    let newResponseBody = await handleErrorsJson<IBatchResponse | string>(newResponses);
-    if (typeof newResponseBody === "string") {
-      newResponseBody = this.handleTextJsonResponseWithHtmlInBody(newResponseBody);
-    }
-    const retryAfter = !!newResponseBody?.responses && this.findRetryAfterResponse(newResponseBody.responses);
+    const newResponse = await this.apiGraphBatchCall(failedRequest);
+    const newResponses = await this.parseBatchResponse(newResponse);
+    this.assertKnownResponseIds(failedRequest, newResponses.responses);
+    const retriedResponses = await this.fetchRequestWithRetryAfter(
+      failedRequest,
+      newResponses.responses,
+      maxRetries,
+      retryCount + 1
+    );
+    return [...responsesNotToRetry, ...retriedResponses];
+  };
 
-    if (retryAfter && newResponseBody.responses) {
-      newResponseBody = await this.fetchRequestWithRetryAfter(
-        failedRequest,
-        newResponseBody.responses,
-        maxRetries,
-        retryCount + 1
-      );
+  private fetchBatchResponses = async (requests: IRequest[]): Promise<ISettledResponse[]> => {
+    const response = await this.apiGraphBatchCall(requests);
+    const batchResponse = await this.parseBatchResponse(response);
+    this.assertKnownResponseIds(requests, batchResponse.responses);
+
+    const responses = this.findRetryAfterResponse(batchResponse.responses)
+      ? await this.fetchRequestWithRetryAfter(requests, batchResponse.responses, 2)
+      : batchResponse.responses;
+
+    return this.validateSuccessfulBatchResponses(requests, responses);
+  };
+
+  private parseBatchResponse = async (response: Response): Promise<IBatchResponse> => {
+    if (!response.ok) {
+      throw new Error(`Office 365 calendar batch request failed with status ${response.status}`);
     }
-    return { responses: [...alreadySuccessRequest, ...(newResponseBody?.responses || [])] };
+    const responseBody = await this.handleErrorJsonOffice365Calendar<IBatchResponse | string>(response);
+    const batchResponse =
+      typeof responseBody === "string"
+        ? this.handleTextJsonResponseWithHtmlInBody(responseBody)
+        : responseBody;
+
+    if (!batchResponse || typeof batchResponse !== "object" || !Array.isArray(batchResponse.responses)) {
+      throw new Error("Office 365 returned a malformed calendar batch response");
+    }
+
+    return batchResponse;
+  };
+
+  private assertKnownResponseIds = (requests: IRequest[], responses: ISettledResponse[]): void => {
+    const requestIds = new Set(requests.map((request) => request.id));
+    const responseIds = new Set<string>();
+
+    for (const response of responses) {
+      if (!response || typeof response.id !== "string" || typeof response.status !== "number") {
+        throw new Error("Office 365 returned a malformed calendar batch subresponse");
+      }
+      if (!requestIds.has(response.id) || responseIds.has(response.id)) {
+        throw new Error(
+          `Office 365 returned an unexpected or duplicate calendar batch response ID: ${response.id}`
+        );
+      }
+      responseIds.add(response.id);
+    }
+  };
+
+  private validateSuccessfulBatchResponses = (
+    requests: IRequest[],
+    responses: ISettledResponse[]
+  ): ISettledResponse[] => {
+    this.assertKnownResponseIds(requests, responses);
+    const responseById = new Map(responses.map((response) => [response.id, response]));
+
+    return requests.map((request) => {
+      const response = responseById.get(request.id);
+      if (!response) {
+        throw new Error(`Office 365 did not return a calendar batch response for request ${request.id}`);
+      }
+      if (response.status !== 200) {
+        throw new Error(
+          `Office 365 calendar batch request ${request.id} failed with status ${response.status}`
+        );
+      }
+      if (
+        !response.body ||
+        typeof response.body !== "object" ||
+        !Array.isArray(response.body.value) ||
+        response.body.value.some(
+          (event) =>
+            !event ||
+            typeof event !== "object" ||
+            !event.start ||
+            typeof event.start !== "object" ||
+            typeof event.start.dateTime !== "string" ||
+            !event.start.dateTime ||
+            !event.end ||
+            typeof event.end !== "object" ||
+            typeof event.end.dateTime !== "string" ||
+            !event.end.dateTime
+        ) ||
+        (response.body["@odata.nextLink"] !== undefined &&
+          (typeof response.body["@odata.nextLink"] !== "string" || !response.body["@odata.nextLink"]))
+      ) {
+        throw new Error(`Office 365 returned a malformed calendar response for request ${request.id}`);
+      }
+      return response;
+    });
   };
 
   private apiGraphBatchCall = async (requests: IRequest[]): Promise<Response> => {
