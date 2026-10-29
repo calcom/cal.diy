@@ -55,10 +55,10 @@ export default function RequiresConfirmationController({
   const formMethods = useFormContext<FormValues>();
 
   useEffect(() => {
-    if (!requiresConfirmation) {
+    if (!requiresConfirmation && formMethods.getValues("metadata.requiresConfirmationThreshold") != null) {
       formMethods.setValue("metadata.requiresConfirmationThreshold", undefined, { shouldDirty: true });
     }
-  }, [requiresConfirmation, formMethods.setValue]);
+  }, [requiresConfirmation, formMethods.setValue, formMethods.getValues]);
 
   const shouldLockDisableProps = (_field: string) => ({ disabled: false, LockedIcon: false as const, isLocked: false });
   const shouldLockIndicator = (_field: string) => false;
