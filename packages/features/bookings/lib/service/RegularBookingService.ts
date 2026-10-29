@@ -109,6 +109,10 @@ import type { IEventTypePaymentCredentialType, Invitee, IsFixedAwareUser } from 
 import { validateBookingTimeIsNotOutOfBounds } from "../handleNewBooking/validateBookingTimeIsNotOutOfBounds";
 import { validateEventLength } from "../handleNewBooking/validateEventLength";
 import handleSeats from "../handleSeats/handleSeats";
+import {
+  OFFICE365_CALENDAR_TYPE,
+  withSeatCalendarReferences,
+} from "../handleSeats/lib/seatCalendarReferences";
 import type { IBookingService } from "../interfaces/IBookingService";
 import type { BookingEventHandlerService } from "../onBookingEvents/BookingEventHandlerService";
 import type { BookingRescheduledPayload } from "../onBookingEvents/types";
@@ -483,6 +487,10 @@ async function validateRescheduleRestrictions({
   }
 }
 
+/**
+ * Calendar references are recorded here because cancellation and reschedule flows need provider
+ * event IDs after the booking transaction completes.
+ */
 async function handler(
   this: RegularBookingService,
   input: BookingHandlerInput,
@@ -2441,9 +2449,16 @@ async function handler(
 
   if (!booking) throw new HttpError({ statusCode: 400, message: "Booking failed" });
 
+  // Single-seat cancellation deletes by provider UID, so only concrete Office365 events belong in seat metadata.
+  const office365SeatReferences = referencesToCreate.filter(
+    (reference) => reference.type === OFFICE365_CALENDAR_TYPE && reference.uid
+  );
+  const shouldPersistOffice365SeatReferences =
+    !!eventType.seatsPerTimeSlot && !!evt.attendeeSeatId && office365SeatReferences.length > 0;
+
   try {
     if (!isDryRun) {
-      await deps.prismaClient.booking.update({
+      const bookingUpdate = deps.prismaClient.booking.update({
         where: {
           uid: booking.uid,
         },
@@ -2457,9 +2472,33 @@ async function handler(
           },
         },
       });
+
+      if (shouldPersistOffice365SeatReferences && evt.attendeeSeatId) {
+        // Seat metadata must persist with booking references or Outlook cleanup loses the per-attendee event.
+        await deps.prismaClient.$transaction([
+          bookingUpdate,
+          deps.prismaClient.bookingSeat.update({
+            where: {
+              referenceUid: evt.attendeeSeatId,
+            },
+            data: {
+              metadata: withSeatCalendarReferences({
+                metadata: reqBody.metadata,
+                integration: OFFICE365_CALENDAR_TYPE,
+                references: office365SeatReferences,
+              }),
+            },
+          }),
+        ]);
+      } else {
+        await bookingUpdate;
+      }
     }
   } catch (error) {
     tracingLogger.error("Error while creating booking references", JSON.stringify({ error }));
+    if (shouldPersistOffice365SeatReferences) {
+      throw error;
+    }
   }
 
   // Queue BOOKING_REQUESTED webhook after booking update so consumer fetches booking with location, metadata, references
