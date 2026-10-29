@@ -1,23 +1,49 @@
 import { HttpError } from "./http-error";
 
+async function getErrorBody(response: Response): Promise<Record<string, unknown>> {
+  const text = await response.text();
+  if (text.length === 0) {
+    return { message: response.statusText || response.status.toString() };
+  }
+  try {
+    const parsed = JSON.parse(text);
+    if (typeof parsed === "object" && parsed !== null) {
+      return parsed;
+    }
+    return { message: text };
+  } catch {
+    return { message: text };
+  }
+}
+
 async function http<T>(path: string, config: RequestInit): Promise<T> {
   const request = new Request(path, config);
   const response: Response = await fetch(request);
 
   if (!response.ok) {
-    const errJson = await response.json();
+    const parsedError = await getErrorBody(response);
+    const message =
+      typeof parsedError.message === "string" && parsedError.message.length > 0
+        ? parsedError.message
+        : response.statusText || response.status.toString();
     const err = HttpError.fromRequest(
       request,
       {
-        ...response,
-        statusText: errJson.message || response.statusText,
+        url: response.url,
+        status: response.status,
+        statusText: message,
       },
-      errJson
+      parsedError
     );
     throw err;
   }
-  // may error if there is no body, return empty array
-  return await response.json();
+  try {
+    return await response.json();
+  } catch {
+    throw new Error(
+      `Failed to parse response as JSON: ${response.status} ${response.statusText}`
+    );
+  }
 }
 
 export async function get<T>(path: string, config?: RequestInit): Promise<T> {
