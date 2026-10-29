@@ -171,8 +171,12 @@ describe("Tests for DatePicker Component", () => {
       vi.useRealTimers();
     });
 
-    test("Should show traditional view when compact=true (not monthly view) even after second week", async () => {
+    test("Should preserve the full month and include next-month dates when compact=true", async () => {
       const lateMonthDate = dayjs("2024-01-20");
+
+      vi.useFakeTimers();
+      vi.setSystemTime(lateMonthDate.toDate());
+
       const slots = createMockSlots(["2024-01-25", "2024-02-01"]);
 
       const { getAllByTestId } = render(
@@ -198,9 +202,10 @@ describe("Tests for DatePicker Component", () => {
 
       const dayElements = getAllByTestId("day");
 
-      // Should show day 1 even in compact mode after second week
       const firstDayOfMonth = dayElements.find((day) => day.textContent === "1");
       expect(firstDayOfMonth).toBeTruthy();
+      expect(dayElements.slice(-3).map((day) => day.textContent?.trim())).toEqual(["1", "2", "3"]);
+      vi.useRealTimers();
     });
   });
 });
