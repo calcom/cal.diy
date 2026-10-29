@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "SMS küldése a résztvevőnek",
   "sms_number_action": "SMS-t küldeni egy adott számra",
   "send_reminder_sms": "Könnyen küldhet emlékeztetőket SMS-ben a résztvevőknek",
-  "whatsapp_number_action": "küldjön WhatsApp üzenetet egy adott számra",
-  "whatsapp_attendee_action": "küldjön WhatsApp üzenetet a résztvevőnek",
   "workflows": "Munkafolyamatok",
   "new_workflow_btn": "Új munkafolyamat",
   "how_would_you_like_to_start": "Hogyan szeretnéd kezdeni?",

@@ -1679,8 +1679,6 @@
   "sms_attendee_action": "Enviar SMS ao participante",
   "sms_number_action": "enviar SMS para um número específico",
   "send_reminder_sms": "Envie com facilidade lembretes de reunião via SMS aos seus participantes",
-  "whatsapp_number_action": "enviar Whatsapp para um número específico",
-  "whatsapp_attendee_action": "enviar Whatsapp ao participante",
   "workflows": "Fluxos de trabalho",
   "new_workflow_btn": "Novo fluxo de trabalho",
   "how_would_you_like_to_start": "Como gostaria de começar?",

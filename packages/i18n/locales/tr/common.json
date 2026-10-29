@@ -1630,8 +1630,6 @@
   "sms_attendee_action": "Katılımcıya SMS gönder",
   "sms_number_action": "belirli bir numaraya SMS gönder",
   "send_reminder_sms": "Katılımcılarınıza toplantı hatırlatmalarını SMS ile kolayca gönderin",
-  "whatsapp_number_action": "belirli bir numaraya Whatsapp mesajı gönder",
-  "whatsapp_attendee_action": "katılımcıya Whatsapp mesajı gönder",
   "workflows": "İş akışları",
   "new_workflow_btn": "Yeni iş akışı",
   "how_would_you_like_to_start": "Nasıl başlamak istersiniz?",

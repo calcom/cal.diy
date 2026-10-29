@@ -1630,8 +1630,6 @@
   "sms_attendee_action": "向参与者发送短信",
   "sms_number_action": "向特定号码发送短信",
   "send_reminder_sms": "通过短信轻松向参与者发送会议提醒",
-  "whatsapp_number_action": "向特定号码发送 Whatsapp",
-  "whatsapp_attendee_action": "向参与者发送 Whatsapp",
   "workflows": "工作流程",
   "new_workflow_btn": "新建工作流",
   "how_would_you_like_to_start": "您想如何开始？",

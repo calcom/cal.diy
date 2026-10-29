@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "ផ្ញើសារ SMS ទៅអ្នកចូលរួម",
   "sms_number_action": "ផ្ញើសារ SMS ទៅលេខជាក់លាក់",
   "send_reminder_sms": "ផ្ញើការរំលឹកជួបប្រជុំតាមរយៈ SMS ទៅអ្នកចូលរួមរបស់អ្នកបានយ៉ាងងាយស្រួល",
-  "whatsapp_number_action": "ផ្ញើសារតាម WhatsApp ទៅលេខជាក់លាក់",
-  "whatsapp_attendee_action": "ផ្ញើសារតាម WhatsApp ទៅអ្នកចូលរួម",
   "workflows": "លំហូរការងារ",
   "new_workflow_btn": "លំហូរការងារថ្មី",
   "how_would_you_like_to_start": "តើអ្នកចង់ចាប់ផ្តើមដោយរបៀបណា?",

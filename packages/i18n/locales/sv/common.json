@@ -1630,8 +1630,6 @@
   "sms_attendee_action": "Skicka SMS till deltagare",
   "sms_number_action": "skicka SMS till ett specifikt nummer",
   "send_reminder_sms": "Skicka enkelt mötespåminnelser via SMS till dina deltagare",
-  "whatsapp_number_action": "skicka Whatsapp till ett specifikt nummer",
-  "whatsapp_attendee_action": "skicka Whatsapp till deltagare",
   "workflows": "Arbetsflöden",
   "new_workflow_btn": "Nytt arbetsflöde",
   "how_would_you_like_to_start": "Hur vill du börja?",

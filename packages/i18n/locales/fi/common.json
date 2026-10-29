@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "Lähetä tekstiviesti osallistujalle",
   "sms_number_action": "lähetä tekstiviesti tiettyyn numeroon",
   "send_reminder_sms": "Lähetä helposti kokousmuistutuksia tekstiviestillä osallistujille",
-  "whatsapp_number_action": "lähetä WhatsApp-viesti tiettyyn numeroon",
-  "whatsapp_attendee_action": "lähetä WhatsApp-viesti osallistujalle",
   "workflows": "Työnkulut",
   "new_workflow_btn": "Uusi työnkulku",
   "how_would_you_like_to_start": "Miten haluaisit aloittaa?",

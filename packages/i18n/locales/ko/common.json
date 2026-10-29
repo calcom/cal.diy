@@ -1679,8 +1679,6 @@
   "sms_attendee_action": "참석자에게 SMS 발송",
   "sms_number_action": "특정 번호로 SMS 발송",
   "send_reminder_sms": "SMS를 통해 참석자에게 회의 알림을 쉽게 보낼 수 있습니다",
-  "whatsapp_number_action": "특정 번호로 Whatsapp 발송",
-  "whatsapp_attendee_action": "참석자에게 Whatsapp 발송",
   "workflows": "워크플로",
   "new_workflow_btn": "새 워크플로",
   "how_would_you_like_to_start": "어떻게 시작하시겠습니까?",

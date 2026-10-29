@@ -1630,8 +1630,6 @@
   "sms_attendee_action": "傳送簡訊給與會者",
   "sms_number_action": "傳送簡訊至特定號碼",
   "send_reminder_sms": "透過簡訊輕鬆傳送會議提醒給您的與會者",
-  "whatsapp_number_action": "傳送 Whatsapp 至特定號碼",
-  "whatsapp_attendee_action": "傳送 Whatsapp 給與會者",
   "workflows": "工作流程",
   "new_workflow_btn": "新增工作流程",
   "how_would_you_like_to_start": "您想如何開始？",
