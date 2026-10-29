@@ -18,6 +18,7 @@ describe("chargeCardHandler", () => {
   const mockBooking = {
     id: 10,
     userId: 1,
+    startTime: new Date(Date.now() - 60 * 60 * 1000),
     payment: [{ id: 1, amount: 5000, currency: "usd", paymentOption: "HOLD", appId: "stripe", success: false }],
   };
 
@@ -48,6 +49,19 @@ describe("chargeCardHandler", () => {
 
     await expect(chargeCardHandler({ ctx, input: { bookingId: 10 } })).rejects.toMatchObject({
       code: "NOT_FOUND",
+    });
+    expect(handleNoShowFee).not.toHaveBeenCalled();
+  });
+
+  it("throws BAD_REQUEST and does not charge before the booking has started", async () => {
+    mockBookingRepo.getBookingForPaymentProcessing.mockResolvedValue({
+      ...mockBooking,
+      startTime: new Date(Date.now() + 60 * 60 * 1000),
+    });
+
+    await expect(chargeCardHandler({ ctx, input: { bookingId: 10 } })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "no_show_fee_charge_before_start",
     });
     expect(handleNoShowFee).not.toHaveBeenCalled();
   });

@@ -34,6 +34,13 @@ export const chargeCardHandler = async ({ ctx, input }: ChargeCardHandlerOptions
     });
   }
 
+  if (booking.startTime > new Date()) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "no_show_fee_charge_before_start",
+    });
+  }
+
   if (booking.payment[0].success) {
     throw new TRPCError({
       code: "BAD_REQUEST",
