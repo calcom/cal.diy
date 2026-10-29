@@ -304,5 +304,18 @@ describe("Tests for Select File", () => {
 
       expect(handleSubmit).not.toHaveBeenCalled();
     });
+
+    test("Should focus the react-select component when the hidden input receives focus", async () => {
+      renderSelectWithValidation(true);
+      const hiddenInput = document.querySelector('input[required]') as HTMLInputElement;
+      expect(hiddenInput).toBeInTheDocument();
+      
+      // Simulate browser focusing the hidden input due to validation failure
+      fireEvent.focus(hiddenInput);
+      
+      // React Select uses a combobox role for its internal input
+      const combobox = screen.getByRole("combobox");
+      expect(combobox).toHaveFocus();
+    });
   });
 });
