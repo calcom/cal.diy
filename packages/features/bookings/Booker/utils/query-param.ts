@@ -27,7 +27,7 @@ export const removeQueryParam = (param: string, shouldReplace = true) => {
   if (typeof window === "undefined") return;
 
   const url = new URL(window.location.href);
-  if (!url.searchParams.get(param)) return;
+  if (!url.searchParams.has(param)) return;
 
   url.searchParams.delete(param);
   if (shouldReplace) {

@@ -4,9 +4,12 @@ import dayjs from "@calcom/dayjs";
 import { BOOKER_NUMBER_OF_DAYS_TO_LOAD } from "@calcom/lib/constants";
 import { BookerLayouts } from "@calcom/prisma/zod-utils";
 import { useEffect } from "react";
+import type { StoreApi } from "zustand";
+import type { UseBoundStoreWithEqualityFn } from "zustand/traditional";
 import { createWithEqualityFn } from "zustand/traditional";
 import type { GetBookingType } from "../lib/get-booking";
 import type { BookerLayout, BookerState } from "./types";
+import { normalizeBookerQueryParams } from "./utils/normalizeBookerQueryParams";
 import { getQueryParam, removeQueryParam, updateQueryParam } from "./utils/query-param";
 
 const _iso_3166_1_alpha_2_codes = [
@@ -438,7 +441,16 @@ export type BookerStore = {
 /**
  * Creates a new booker store instance
  */
-export const createBookerStore = () =>
+const getInitialQueryParams = (): { month: string; date: string | null } => {
+  return normalizeBookerQueryParams({
+    month: getQueryParam("month"),
+    date: getQueryParam("date"),
+  });
+};
+
+export const createBookerStore = (
+  queryParams: { month: string; date: string | null } = getInitialQueryParams()
+): UseBoundStoreWithEqualityFn<StoreApi<BookerStore>> =>
   createWithEqualityFn<BookerStore>((set, get) => ({
     state: "loading",
     setState: (state: BookerState) => set({ state }),
@@ -454,7 +466,7 @@ export const createBookerStore = () =>
       }
       return set({ layout });
     },
-    selectedDate: getQueryParam("date") || null,
+    selectedDate: queryParams.date,
     setSelectedDate: ({ date: selectedDate, omitUpdatingParams = false, preventMonthSwitching = false }) => {
       // unset selected date
       if (!selectedDate) {
@@ -517,12 +529,7 @@ export const createBookerStore = () =>
     setVerificationCode: (code: string | null) => {
       set({ verificationCode: code });
     },
-    month:
-      getQueryParam("month") ||
-      (getQueryParam("date") && dayjs(getQueryParam("date")).isValid()
-        ? dayjs(getQueryParam("date")).format("YYYY-MM")
-        : null) ||
-      dayjs().format("YYYY-MM"),
+    month: queryParams.month,
     setMonth: (month: string | null) => {
       if (!month) {
         removeQueryParam("month");
@@ -624,6 +631,27 @@ export const createBookerStore = () =>
         allowUpdatingUrlParams,
         defaultPhoneCountry,
       });
+
+      if (!isPlatform || allowUpdatingUrlParams) {
+        const queryMonth = getQueryParam("month");
+        const queryDate = getQueryParam("date");
+        const normalizedQueryParams = normalizeBookerQueryParams({
+          month: queryMonth,
+          date: queryDate,
+        });
+
+        const monthToSync = month || normalizedQueryParams.month;
+        if ((queryMonth !== null || queryDate !== null) && queryMonth !== monthToSync) {
+          updateQueryParam("month", monthToSync);
+        }
+        if (queryDate !== normalizedQueryParams.date) {
+          if (normalizedQueryParams.date) {
+            updateQueryParam("date", normalizedQueryParams.date);
+          } else {
+            removeQueryParam("date");
+          }
+        }
+      }
 
       if (durationConfig?.includes(Number(getQueryParam("duration")))) {
         set({
