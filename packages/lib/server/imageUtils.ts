@@ -69,15 +69,14 @@ export async function detectContentType(buffer: Buffer): Promise<string | null> 
   // Fallback to sharp metadata detection
   try {
     const meta = await sharp(buffer).metadata();
+    // sharp reports decoder names: AVIF decodes as "heif" (caught by the magic bytes above) and
+    // JPEG as "jpeg", so there are no "avif" or "jpg" cases.
     switch (meta?.format) {
-      case "avif":
-        return AVIF;
       case "webp":
         return WEBP;
       case "png":
         return PNG;
       case "jpeg":
-      case "jpg":
         return JPEG;
       case "gif":
         return GIF;
