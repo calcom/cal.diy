@@ -13,6 +13,7 @@ export const apiHandlers = {
   closecom: import("./closecom/api"),
   databuddy: import("./databuddy/api"),
   demodesk: import("./demodesk/api"),
+  descript: import("./descript/api"),
   dialpad: import("./dialpad/api"),
   discord: import("./discord/api"),
   dub: import("./dub/api"),
