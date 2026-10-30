@@ -1,5 +1,4 @@
-import { describe, it, expect } from "vitest";
-
+import { describe, expect, it } from "vitest";
 import { redactSensitiveData } from "./redactSensitiveData";
 
 describe("redactSensitiveData", () => {
@@ -221,5 +220,32 @@ describe("redactSensitiveData", () => {
         "credential": "[REDACTED]",
       }
     `);
+  });
+
+  it("should redact OAuth tokens and casing variants of sensitive fields", () => {
+    const input = {
+      access_token: "ya29.secret123",
+      refresh_token: "1//refresh123",
+      id_token: "id_token_jwt",
+      clientId: "client_id_val",
+      clientSecret: "client_secret_val",
+      privateKey: "-----BEGIN PRIVATE KEY-----",
+      tenantId: "tenant_id_val",
+      service_account_key: "service_key_val",
+      webhook_secret: "whsec_123",
+      webhookSecret: "whsec_456",
+    };
+    expect(redactSensitiveData(input)).toEqual({
+      access_token: "[REDACTED]",
+      refresh_token: "[REDACTED]",
+      id_token: "[REDACTED]",
+      clientId: "[REDACTED]",
+      clientSecret: "[REDACTED]",
+      privateKey: "[REDACTED]",
+      tenantId: "[REDACTED]",
+      service_account_key: "[REDACTED]",
+      webhook_secret: "[REDACTED]",
+      webhookSecret: "[REDACTED]",
+    });
   });
 });
