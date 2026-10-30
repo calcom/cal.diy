@@ -1,6 +1,10 @@
 import { getServerSession } from "@calcom/features/auth/lib/getServerSession";
 import type { GetBookingType } from "@calcom/features/bookings/lib/get-booking";
-import { getBookingForReschedule, getMultipleDurationValue } from "@calcom/features/bookings/lib/get-booking";
+import {
+  doesBookingOrSeatUidExist,
+  getBookingForReschedule,
+  getMultipleDurationValue,
+} from "@calcom/features/bookings/lib/get-booking";
 import { EventRepository } from "@calcom/features/eventtypes/repositories/EventRepository";
 import { HashedLinkService } from "@calcom/features/hashedLink/lib/service/HashedLinkService";
 import {
@@ -107,6 +111,14 @@ async function getUserPageProps(context: GetServerSidePropsContext) {
   let booking: GetBookingType | null = null;
   if (rescheduleUid) {
     booking = await getBookingForReschedule(`${rescheduleUid}`, session?.user?.id);
+    // A null booking either means that the rescheduleUid doesn't belong to any
+    // booking or booking seat, or that the booking exists but the current visitor
+    // isn't allowed to reschedule it (e.g. a seated event where only the organizer
+    // or a host can reschedule). An unknown rescheduleUid must not open the
+    // booking flow - return 404.
+    if (!booking && !(await doesBookingOrSeatUidExist(`${rescheduleUid}`))) {
+      return notFound;
+    }
   }
 
   const isTeamEvent = !!hashedLink.eventType?.team?.id;

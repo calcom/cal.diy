@@ -123,6 +123,20 @@ export const getBookingWithResponses = <
 
 export default getBooking;
 
+/**
+ * Checks whether a uid belongs to an existing booking or to a booking seat reference.
+ * Lets callers differentiate an unknown rescheduleUid (which should lead to a 404)
+ * from a booking that exists but can't be rescheduled by the current visitor
+ * (e.g. a seated event where only the organizer or a host can reschedule).
+ */
+export const doesBookingOrSeatUidExist = async (uid: string): Promise<boolean> => {
+  const [booking, bookingSeat] = await Promise.all([
+    prisma.booking.findUnique({ where: { uid }, select: { id: true } }),
+    prisma.bookingSeat.findFirst({ where: { referenceUid: uid }, select: { id: true } }),
+  ]);
+  return !!booking || !!bookingSeat;
+};
+
 export const getBookingForReschedule = async (uid: string, userId?: number) => {
   let rescheduleUid: string | null = null;
   const theBooking = await prisma.booking.findUnique({

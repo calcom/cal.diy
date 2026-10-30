@@ -183,6 +183,52 @@ test.describe("pro user", () => {
     await expect(page).toHaveURL(new RegExp(`${pro.username}/${eventType.slug}`));
   });
 
+  test("it returns a 404 when the rescheduleUid does not exist", async ({ page, users }) => {
+    const [pro] = users.get();
+    const [eventType] = pro.eventTypes;
+
+    const bookingPageUrl = new URL(
+      `${pro.username}/${eventType.slug}?rescheduleUid=${randomString(10)}`,
+      WEBAPP_URL
+    );
+    const response = await page.goto(bookingPageUrl.href);
+    expect(response?.status()).toBe(404);
+  });
+
+  test("it returns a 404 on a private booking link when the rescheduleUid does not exist", async ({
+    page,
+    users,
+    prisma,
+  }) => {
+    const [pro] = users.get();
+    const [eventType] = pro.eventTypes;
+
+    const eventWithPrivateLink = await prisma.eventType.update({
+      where: {
+        id: eventType.id,
+      },
+      data: {
+        hashedLink: {
+          create: [
+            {
+              link: generateHashedLink(eventType.id),
+            },
+          ],
+        },
+      },
+      include: {
+        hashedLink: true,
+      },
+    });
+
+    const bookingPageUrl = new URL(
+      `/d/${eventWithPrivateLink.hashedLink[0]?.link}/${eventWithPrivateLink.slug}?rescheduleUid=${randomString(10)}`,
+      WEBAPP_URL
+    );
+    const response = await page.goto(bookingPageUrl.href);
+    expect(response?.status()).toBe(404);
+  });
+
   test("it returns a 404 when a requested event type does not exist", async ({ page, users }) => {
     const [pro] = users.get();
     const unexistingPageUrl = new URL(`${pro.username}/invalid-event-type`, WEBAPP_URL);

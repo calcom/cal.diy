@@ -602,5 +602,15 @@ test.describe("Reschedule for booking with seats", () => {
     await expect(page).toHaveURL(/\/booking\/.*/);
   });
 
-  // @TODO: force 404 when rescheduleUid is not found
+  test("Should return a 404 when the rescheduleUid doesn't exist", async ({ page, users, bookings }) => {
+    const { user, eventType } = await createUserWithSeatedEventAndAttendees({ users, bookings }, [
+      { name: "John First", email: "first+seats@cal.com", timeZone: "Europe/Berlin" },
+      { name: "Jane Second", email: "second+seats@cal.com", timeZone: "Europe/Berlin" },
+    ]);
+
+    const response = await page.goto(
+      `/${user.username}/${eventType.slug}?rescheduleUid=${randomString(10)}&bookingUid=null`
+    );
+    expect(response?.status()).toBe(404);
+  });
 });

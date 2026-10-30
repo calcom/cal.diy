@@ -1,6 +1,10 @@
 import { getServerSession } from "@calcom/features/auth/lib/getServerSession";
 import type { GetBookingType } from "@calcom/features/bookings/lib/get-booking";
-import { getBookingForReschedule, getBookingForSeatedEvent } from "@calcom/features/bookings/lib/get-booking";
+import {
+  doesBookingOrSeatUidExist,
+  getBookingForReschedule,
+  getBookingForSeatedEvent,
+} from "@calcom/features/bookings/lib/get-booking";
 import { getUsernameList } from "@calcom/features/eventtypes/lib/defaultEvents";
 import type { getPublicEvent } from "@calcom/features/eventtypes/lib/getPublicEvent";
 import { EventRepository } from "@calcom/features/eventtypes/repositories/EventRepository";
@@ -50,6 +54,16 @@ async function processReschedule({
         permanent: false,
       },
     };
+  }
+
+  // A null booking either means that the rescheduleUid doesn't belong to any
+  // booking or booking seat, or that the booking exists but the current visitor
+  // isn't allowed to reschedule it (e.g. a seated event where only the organizer
+  // or a host can reschedule). Only the former must not open the booking flow.
+  if (booking === null && !(await doesBookingOrSeatUidExist(`${rescheduleUid}`))) {
+    return {
+      notFound: true,
+    } as const;
   }
 
   // if no booking found, no eventTypeId (dynamic) or it matches this eventData - return void (success).
