@@ -110,7 +110,7 @@
     "react-select": "5.8.0",
     "sonner": "1.7.4",
     "tailwind-merge": "1.13.2",
-    "uuid": "11.1.0",
+    "uuid": "11.1.1",
     "zod": "3.25.76"
   },
   "peerDependencies": {
@@ -125,7 +125,6 @@
     "@testing-library/user-event": "14.6.1",
     "@types/react": "18.0.26",
     "@types/react-dom": "18.2.6",
-    "@types/uuid": "10.0.0",
     "execa": "9.3.0",
     "fast-glob": "3.3.2",
     "fs-extra": "11.3.2",
