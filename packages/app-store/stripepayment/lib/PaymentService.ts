@@ -263,13 +263,16 @@ class StripePaymentService implements IAbstractPaymentService {
 
       // Earlier attempts for this payment, so a charge that went through on Stripe but wasn't saved
       // here is reused instead of charging the card again
-      const customerPaymentIntents = await this.stripe.paymentIntents.list(
+      const previousAttempts: Stripe.PaymentIntent[] = [];
+      // Iterating the list goes through every page, not only the first 100 results
+      for await (const paymentIntent of this.stripe.paymentIntents.list(
         { customer: setupIntent.customer as string, limit: 100 },
         { stripeAccount: this.credentials.stripe_user_id }
-      );
-      const previousAttempts = customerPaymentIntents.data.filter(
-        (paymentIntent) => paymentIntent.metadata?.noShowFeePaymentId === String(payment.id)
-      );
+      )) {
+        if (paymentIntent.metadata?.noShowFeePaymentId === String(payment.id)) {
+          previousAttempts.push(paymentIntent);
+        }
+      }
       const succeededPaymentIntent = previousAttempts.find(
         (paymentIntent) => paymentIntent.status === "succeeded"
       );

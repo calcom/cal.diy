@@ -15,6 +15,13 @@ const { mockStripe, mockPrisma, mockBookingRepo } = vi.hoisted(() => ({
   },
 }));
 
+// Stripe list calls return an auto-paginating async iterable
+const listOf = (items: unknown[]) => ({
+  async *[Symbol.asyncIterator]() {
+    yield* items;
+  },
+});
+
 vi.mock("stripe", () => ({
   default: vi.fn().mockImplementation(function () {
     return mockStripe;
@@ -68,7 +75,7 @@ describe("StripePaymentService.chargeCard", () => {
     });
     mockStripe.customers.retrieve.mockResolvedValue({ id: "cus_123" });
     mockStripe.paymentMethods.retrieve.mockResolvedValue({ id: "pm_123" });
-    mockStripe.paymentIntents.list.mockResolvedValue({ data: [] });
+    mockStripe.paymentIntents.list.mockReturnValue(listOf([]));
     mockStripe.paymentIntents.create.mockResolvedValue({ id: "pi_123", status: "succeeded" });
     mockPrisma.payment.update.mockResolvedValue({ ...payment, success: true });
   });
@@ -95,13 +102,13 @@ describe("StripePaymentService.chargeCard", () => {
   });
 
   it("uses a new key after a declined attempt and ignores other payments", async () => {
-    mockStripe.paymentIntents.list.mockResolvedValue({
-      data: [
+    mockStripe.paymentIntents.list.mockReturnValue(
+      listOf([
         { id: "pi_declined", status: "requires_payment_method", metadata: { noShowFeePaymentId: "1" } },
         { id: "pi_other", status: "requires_payment_method", metadata: { noShowFeePaymentId: "2" } },
         { id: "pi_untagged", status: "succeeded", metadata: {} },
-      ],
-    });
+      ])
+    );
     const paymentService = BuildPaymentService(credentials);
 
     await paymentService.chargeCard(payment, 10);
@@ -118,7 +125,7 @@ describe("StripePaymentService.chargeCard", () => {
       status: "succeeded",
       metadata: { noShowFeePaymentId: "1" },
     };
-    mockStripe.paymentIntents.list.mockResolvedValue({ data: [succeededPaymentIntent] });
+    mockStripe.paymentIntents.list.mockReturnValue(listOf([succeededPaymentIntent]));
     const paymentService = BuildPaymentService(credentials);
 
     await paymentService.chargeCard(payment, 10);
@@ -133,10 +140,29 @@ describe("StripePaymentService.chargeCard", () => {
     });
   });
 
+  it("finds an earlier successful charge past the first page of results", async () => {
+    const otherPaymentIntents = Array.from({ length: 150 }, (_, index) => ({
+      id: `pi_other_${index}`,
+      status: "succeeded",
+      metadata: { noShowFeePaymentId: "2" },
+    }));
+    const succeededPaymentIntent = {
+      id: "pi_succeeded",
+      status: "succeeded",
+      metadata: { noShowFeePaymentId: "1" },
+    };
+    mockStripe.paymentIntents.list.mockReturnValue(listOf([...otherPaymentIntents, succeededPaymentIntent]));
+    const paymentService = BuildPaymentService(credentials);
+
+    await paymentService.chargeCard(payment, 10);
+
+    expect(mockStripe.paymentIntents.create).not.toHaveBeenCalled();
+  });
+
   it("does not charge while an earlier attempt is still processing", async () => {
-    mockStripe.paymentIntents.list.mockResolvedValue({
-      data: [{ id: "pi_processing", status: "processing", metadata: { noShowFeePaymentId: "1" } }],
-    });
+    mockStripe.paymentIntents.list.mockReturnValue(
+      listOf([{ id: "pi_processing", status: "processing", metadata: { noShowFeePaymentId: "1" } }])
+    );
     const paymentService = BuildPaymentService(credentials);
 
     await expect(paymentService.chargeCard(payment, 10)).rejects.toThrow("could_not_charge_card");
