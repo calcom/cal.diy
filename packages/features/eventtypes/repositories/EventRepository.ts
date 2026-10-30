@@ -11,15 +11,15 @@ export type GetPublicEventInput = {
 
 export class EventRepository {
   static async getPublicEvent(input: GetPublicEventInput, userId?: number) {
-    const event = await getPublicEvent(
-      input.username,
-      input.eventSlug,
-      input.isTeamEvent,
-      input.org,
-      prisma,
-      input.fromRedirectOfNonOrgLink,
-      userId
-    );
+    const event = await getPublicEvent({
+      username: input.username,
+      eventSlug: input.eventSlug,
+      isTeamEvent: input.isTeamEvent,
+      org: input.org,
+      prisma: prisma,
+      fromRedirectOfNonOrgLink: input.fromRedirectOfNonOrgLink,
+      currentUserId: userId
+    });
     return event;
   }
 }

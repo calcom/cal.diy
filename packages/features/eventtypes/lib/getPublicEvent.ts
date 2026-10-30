@@ -280,8 +280,7 @@ export async function getEventTypeHosts({
   };
 }
 
-// TODO: Convert it to accept a single parameter with structured data
-export const getPublicEvent = async (
+export type GetPublicEventParams = {
   username: string,
   eventSlug: string,
   isTeamEvent: boolean | undefined,
@@ -289,8 +288,23 @@ export const getPublicEvent = async (
   prisma: PrismaClient,
   fromRedirectOfNonOrgLink: boolean,
   currentUserId?: number,
-  fetchAllUsers = false
+  fetchAllUsers?: boolean
+}
+
+export const getPublicEvent = async (
+  params: GetPublicEventParams
 ) => {
+  const {
+    username,
+    eventSlug,
+    isTeamEvent,
+    org,
+    prisma,
+    fromRedirectOfNonOrgLink,
+    currentUserId,
+    fetchAllUsers = false
+  } = params
+
   const usernameList = getUsernameList(username);
   const orgQuery = org ? getSlugOrRequestedSlug(org) : null;
   // In case of dynamic group event, we fetch user's data and use the default event.
