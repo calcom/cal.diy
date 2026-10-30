@@ -16,13 +16,17 @@ const defaultIntegrationAddHandler = async ({
   user,
   teamId = undefined,
   createCredential,
+  req,
+  validators,
 }: {
   slug: string;
   supportsMultipleInstalls: boolean;
   appType: string;
   user?: Session["user"];
   teamId?: number;
+  req: NextApiRequest;
   createCredential: AppDeclarativeHandler["createCredential"];
+  validators?: AppDeclarativeHandler["validators"];
 }) => {
   if (!user?.id) {
     throw new HttpError({ statusCode: 401, message: "You must be logged in to do this" });
@@ -41,7 +45,26 @@ const defaultIntegrationAddHandler = async ({
 
   await throwIfNotHaveAdminAccessToTeam({ teamId: teamId ?? null, userId: user.id });
 
-  await createCredential({ user: user, appType, slug, teamId });
+  // Validate the request if needed
+  let query = req.query;
+  if (query && validators?.querySchema) {
+    const validated = validators.querySchema.safeParse(query);
+    if (!validated.success) {
+      throw new HttpError({ statusCode: 422, message: "Invalid query" });
+    }
+    query = validated.data;
+  }
+
+  let body = req.body;
+  if (body && validators?.bodySchema) {
+    const validated = validators.bodySchema.safeParse(body);
+    if (!validated.success) {
+      throw new HttpError({ statusCode: 422, message: "Invalid body" });
+    }
+    body = validated.data;
+  }
+
+  return await createCredential({ user: user, appType, slug, teamId, query, body, method: req.method });
 };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -73,9 +96,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     if (typeof handler === "function") {
       await handler(req, res);
     } else {
-      await defaultIntegrationAddHandler({ user: req.session?.user, teamId: Number(teamId), ...handler });
-      const redirectUrl = handler.redirect?.url ?? undefined;
-      res.json({ url: redirectUrl, newTab: handler.redirect?.newTab });
+      // See if there's
+      const result = await defaultIntegrationAddHandler({
+        user: req.session?.user,
+        teamId: Number(teamId),
+        ...handler,
+        req,
+      });
+      const redirectOptions = "redirect" in result && result.redirect ? result.redirect : handler.redirect;
+      // No redirection in json. What should we do as a default fallback?
+      res.json(redirectOptions ?? { done: true });
     }
     if (!res.writableEnded) res.status(200);
     return;

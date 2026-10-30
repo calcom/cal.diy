@@ -1,0 +1,16 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "Yandex Calendar",
+  "slug": "yandex-calendar",
+  "type": "yandex-calendar_calendar",
+  "logo": "icon.svg",
+  "url": "https://yandex.com/calendar",
+  "variant": "calendar",
+  "categories": ["calendar"],
+  "publisher": "Aladdin Bouzerd",
+  "email": "aladin.bouzerd@gmail.com",
+  "description": "Yandex Calendar is an online calendar service developed by the Russian tech giant Yandex. It helps users manage their schedules, set reminders, and share events, with seamless integration into other Yandex services for efficient time management.",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "basic"
+}

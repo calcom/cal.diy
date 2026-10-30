@@ -28,8 +28,36 @@ export const getCalendar = async (
     calendarType = calendarType.split("_crm")[0];
   }
 
-  const calendarAppImportFn =
-    CalendarServiceMap[calendarType.split("_").join("") as keyof typeof CalendarServiceMap];
+  /**
+   * This should represent the dirName of the app as the generated service map
+   * is a Record<dirName, import(dirName/lib/CalendarService)>
+   * @see packages/app-store-cli/src/build.ts
+   */
+  let calendarNameInServiceMap = calendarType.split("_").join("");
+
+  /**
+   * The calendar app name is fragile in here and it will fail if the calendar contains
+   * a hyphen in the name.
+   * zohocalendar for example is in the folder: zohocalendar, the crendetial, when saved,
+   * is of type zoho_calendar. The split here will work as the generated service map has the
+   * folder name.
+   * However, for a calendar like yandex-calendar, the folder is yandex-calendar and the generated
+   * config's type is yandex-calendar_calendar (we shouldn't modify this), so if we record
+   * the type in the credentials as yandex-calendar_calendar, the split here will result
+   * in yandex-calendarcalendar, which is not a valid key in the service map.
+   *
+   * The correct way is to have CredentialForCalendarService load the app as well and we
+   * can use credential.app.dirName to guarantee the correct key in the service map.
+   *
+   * Another way is to do a roundtrip in the db to get the app and use the dirName.
+   *
+   * For now, we can just use the appId as it closely resembles the dirName (usually derived from the slug).
+   */
+  if (!(calendarNameInServiceMap in CalendarServiceMap) && credential.appId) {
+    calendarNameInServiceMap = credential.appId;
+  }
+
+  const calendarAppImportFn = CalendarServiceMap[calendarNameInServiceMap as keyof typeof CalendarServiceMap];
 
   if (!calendarAppImportFn) {
     log.warn(`calendar of type ${calendarType} is not implemented`);
