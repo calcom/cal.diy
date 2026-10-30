@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "Saada osalejale SMS",
   "sms_number_action": "Saada SMS kindlale numbrile",
   "send_reminder_sms": "Saatke oma osalejatele koosolekute meeldetuletusi hõlpsalt SMS-i teel",
-  "whatsapp_number_action": "Saada WhatsAppi sõnum konkreetsele numbrile",
-  "whatsapp_attendee_action": "saada osalejale WhatsAppi sõnum",
   "workflows": "Töövood",
   "new_workflow_btn": "Uus töövoog",
   "how_would_you_like_to_start": "Kuidas soovite alustada?",

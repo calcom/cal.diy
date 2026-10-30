@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "SMS an Teilnehmende senden",
   "sms_number_action": "SMS an eine bestimmte Nummer senden",
   "send_reminder_sms": "Senden Sie Meeting-Erinnerungen einfach per SMS an Ihre Teilnehmer",
-  "whatsapp_number_action": "WhatsApp-Nachricht an eine bestimmte Nummer senden",
-  "whatsapp_attendee_action": "WhatsApp-Nachricht an Teilnehmer senden",
   "workflows": "Workflows",
   "new_workflow_btn": "Neuer Workflow",
   "how_would_you_like_to_start": "Wie möchtest du beginnen?",

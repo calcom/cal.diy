@@ -1683,8 +1683,6 @@
   "sms_attendee_action": "Send SMS til deltager",
   "sms_number_action": "send SMS til et specifikt nummer",
   "send_reminder_sms": "Send nemt mødepåmindelser via SMS til dine deltagere",
-  "whatsapp_number_action": "send WhatsApp-besked til et specifikt nummer",
-  "whatsapp_attendee_action": "send WhatsApp-besked til deltager",
   "workflows": "Workflows",
   "new_workflow_btn": "Nyt Workflow",
   "how_would_you_like_to_start": "Hvordan vil du gerne starte?",

@@ -1712,8 +1712,6 @@
   "sms_attendee_action": "Send SMS to attendee",
   "sms_number_action": "send SMS to a specific number",
   "send_reminder_sms": "Easily send meeting reminders via SMS to your attendees",
-  "whatsapp_number_action": "send WhatsApp message to a specific number",
-  "whatsapp_attendee_action": "send WhatsApp message to attendee",
   "workflows": "Workflows",
   "new_workflow_btn": "New workflow",
   "how_would_you_like_to_start": "How would you like to start?",

@@ -1679,8 +1679,6 @@
   "sms_attendee_action": "poslať SMS účastníkovi",
   "sms_number_action": "poslať SMS na konkrétne číslo",
   "send_reminder_sms": "jednoducho posielajte pripomienky stretnutí cez SMS svojim účastníkom",
-  "whatsapp_number_action": "poslať správu cez WhatsApp na konkrétne číslo",
-  "whatsapp_attendee_action": "poslať správu cez WhatsApp účastníkovi",
   "workflows": "Pracovné postupy",
   "new_workflow_btn": "Nový pracovný postup",
   "how_would_you_like_to_start": "Ako by ste chceli začať?",

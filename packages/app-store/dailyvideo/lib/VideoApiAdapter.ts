@@ -243,7 +243,7 @@ const DailyVideoApiAdapter = (): VideoApiAdapter => {
     region?: RoomGeo
   ): Promise<VideoCallData> {
     if (!event.uid) {
-      throw new Error("We need need the booking uid to create the Daily reference in DB");
+      throw new Error("We need the booking uid to create the Daily reference in DB");
     }
     const body = await translateEvent(event, region);
     const dailyEvent = await postToDailyAPI(endpoint, body).then(dailyReturnTypeSchema.parse);

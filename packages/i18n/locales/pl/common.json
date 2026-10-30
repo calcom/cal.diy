@@ -1679,8 +1679,6 @@
   "sms_attendee_action": "Wyślij wiadomość SMS do uczestnika",
   "sms_number_action": "wyślij wiadomość SMS na określony numer",
   "send_reminder_sms": "Łatwo wysyłaj uczestnikom przypomnienia SMS o spotkaniu",
-  "whatsapp_number_action": "wyślij wiadomość w aplikacji Whatsapp na określony numer",
-  "whatsapp_attendee_action": "wyślij wiadomość w aplikacji Whatsapp do uczestnika",
   "workflows": "Przepływy pracy",
   "new_workflow_btn": "Nowy przepływ pracy",
   "how_would_you_like_to_start": "Jak chciałbyś zacząć?",

@@ -1630,8 +1630,6 @@
   "sms_attendee_action": "Надіслати SMS учаснику",
   "sms_number_action": "надсилати SMS на певний номер",
   "send_reminder_sms": "Легко відправляйте нагадування про зустріч в SMS вашим відвідувачам",
-  "whatsapp_number_action": "надсилати повідомлення у Whatsapp на певний номер",
-  "whatsapp_attendee_action": "надсилати повідомлення у Whatsapp учаснику",
   "workflows": "Робочі процеси",
   "new_workflow_btn": "Новий робочий процес",
   "how_would_you_like_to_start": "Як би ви хотіли почати?",
