@@ -1681,12 +1681,7 @@ checksums:
     email_host_action: 9566929caf21c96cedc11447e1de34ff
     email_attendee_action: 3ca2ca348baef93742f3a1889ffcc96b
     email_attendee_action_form: 768b89f3f32891ebed3e90b85058c01e
-    sms_attendee_action_form: 639088f46f18cc0cea09bfab956541ae
-    sms_attendee_action: d916b1b13aaa72046eed49dcb3795b27
-    sms_number_action: 7d2ab74c110418e376aacc199489765e
     send_reminder_sms: 34d7f8bc9791479f6bed9e1b93cc3570
-    whatsapp_number_action: e87557d1e1c641100df7b3ddfeca18a6
-    whatsapp_attendee_action: e2228eb197bdff521e7f5580de775629
     workflows: b0c9c8615a9ba7d9cb73e767290a7f72
     new_workflow_btn: 556be5b31c361973a19d3e2f7375d4f3
     how_would_you_like_to_start: 118de435d9585cb475d85dbae1f331f8
@@ -1769,7 +1764,6 @@ checksums:
     add_exchange2016: a1219d84140ee0f06642c63001660e3d
     custom_template: bf9b3f3049227c1508dc739750311f41
     email_body: d9328ed52130df702caba45fc784dc21
-    text_message: c8f79f68bc43eac591cae0ca59e25d2b
     specific_issue: bebf9152fd8c8e3d080b7db19fef76b4
     browse_our_docs: 6aee4451660a3bf883c00b934061447c
     docs: 55fea190a0c0fb32acd3dc986cd3cc91
@@ -1862,8 +1856,6 @@ checksums:
     notification_sent: fd56cd7912721aafac9498cc8f79cd53
     no_input: f5df9619ecb621d1cf9c7a80027ed78c
     test_workflow_action: 3d603d102e78fae4dd63597717833bea
-    send_sms: 7537bf3f66a53a99128c84aff015c340
-    send_sms_to_number: 6c831cc596b4de9a58c3cb2831440e06
     missing_connected_calendar: 07b57964be20aca10370621795685ef9
     connect_your_calendar_and_link: 39a00247fd714fb2e6a94f8577f32176
     default_calendar_selected: a261712074af618d1d222e95dbbb0c5c
@@ -2044,14 +2036,9 @@ checksums:
     more: ee5e035ee328a8947be2ea44e338a57d
     and_count_more: 307b4b3b3d8b441b35142907df4197fa
     more_page_footer: e2deddfbcc810846fd0cded621687b73
-    workflow_example_1: 5f72e83ced3d7155fbf3d5bbc86ac868
-    workflow_example_2: c1153c28e0ec440735b0e19ee680cba9
     workflow_example_3: f5fc153e6b6e9b8aa6f91a84914cf3d1
     workflow_example_4: 05ec3b7900f5e4c19546914407ae1d8c
     workflow_example_5: d2ee89e4551e043a4eeefc44b71d66f9
-    workflow_example_6: 59fa576aa1cd974f666f4227c12b839b
-    send_sms_reminder: d66cfcfe2a54385153414ca2459a5d78
-    send_sms_reminder_description: be749047a34cdd1e4968c0e8261b920a
     follow_up_with_no_shows: 2dfd34cd3a38688667fa1ffdd28b6c56
     follow_up_with_no_shows_description: fa0fe338c08c0486818b3b348c92575e
     remind_attendees_to_bring_id: adadc5588109a7d0d497a5f45d7216bd
