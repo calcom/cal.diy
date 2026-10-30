@@ -23,6 +23,7 @@ import { oAuthManagerHelper } from "../../_utils/oauth/oAuthManagerHelper";
 import { OAuth2UniversalSchema } from "../../_utils/oauth/universalSchema";
 import { metadata } from "../_metadata";
 import { getGoogleAppKeys } from "./getGoogleAppKeys";
+import { getGoogleCalendarRetryConfig } from "./retryConfig";
 
 type DelegatedTo = NonNullable<CredentialForCalendarServiceWithEmail["delegatedTo"]>;
 const log = logger.getSubLogger({ prefix: ["app-store/googlecalendar/lib/CalendarAuth"] });
@@ -303,6 +304,7 @@ export class CalendarAuth {
 
     return new calendar_v3.Calendar({
       auth: googleAuthClient,
+      retryConfig: getGoogleCalendarRetryConfig(),
     });
   }
 }
