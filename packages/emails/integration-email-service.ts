@@ -29,8 +29,8 @@ export const sendDisabledAppEmail = async ({
   appName,
   appType,
   t,
-  title = undefined,
-  eventTypeId = undefined,
+  title,
+  eventTypeId,
 }: {
   email: string;
   appName: string;
