@@ -773,12 +773,14 @@ export function expectSuccessfulBookingRescheduledEmails({
   booker,
   iCalUID,
   appsStatus,
+  expectPreviousTime,
 }: {
   emails: Fixtures["emails"];
   organizer: { email: string; name: string };
   booker: { email: string; name: string };
   iCalUID: string;
   appsStatus?: AppsStatus[];
+  expectPreviousTime?: { startTime: string; endTime: string };
 }) {
   expect(emails).toHaveEmail(
     {
@@ -806,6 +808,40 @@ export function expectSuccessfulBookingRescheduledEmails({
     },
     `${booker.name} <${booker.email}>`
   );
+
+  if (expectPreviousTime) {    
+  const allEmails = emails.get();    
+  const bookerEmail = allEmails.find(e => e.to === booker.email || e.to === `${booker.name} <${booker.email}>`);    
+  const organizerEmail = allEmails.find(e => e.to === organizer.email || e.to === `${organizer.name} <${organizer.email}>`);    
+    
+  // Booker  
+  const expectedBookerPreviousStart = dayjs(expectPreviousTime.startTime)    
+    .tz(booker.timeZone || "Asia/Kolkata")    
+    .locale(booker.locale || "en")    
+    .format(`dddd, LL | h:mma`);    
+      
+  const expectedBookerPreviousEnd = dayjs(expectPreviousTime.endTime)    
+    .tz(booker.timeZone || "Asia/Kolkata")    
+    .format(`h:mma`);    
+      
+  const expectedBookerTime = `${expectedBookerPreviousStart} - ${expectedBookerPreviousEnd} (${booker.timeZone || "Asia/Kolkata"})`;    
+      
+  expect(bookerEmail?.html).toContain(expectedBookerTime);      
+    
+  // Organizer  
+  const expectedOrganizerPreviousStart = dayjs(expectPreviousTime.startTime)    
+    .tz(organizer.timeZone || "Europe/London")    
+    .locale(organizer.locale || "en")    
+    .format(`dddd, LL | h:mma`);    
+      
+  const expectedOrganizerPreviousEnd = dayjs(expectPreviousTime.endTime)    
+    .tz(organizer.timeZone || "Europe/London")    
+    .format(`h:mma`);    
+      
+  const expectedOrganizerTime = `${expectedOrganizerPreviousStart} - ${expectedOrganizerPreviousEnd} (${organizer.timeZone || "Europe/London"})`;    
+      
+  expect(organizerEmail?.html).toContain(expectedOrganizerTime);      
+}
 }
 
 export function expectSuccesfulLocationChangeEmails({
