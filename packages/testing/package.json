@@ -23,6 +23,6 @@
     "@biomejs/biome": "2.3.10",
     "@calcom/tsconfig": "workspace:*",
     "prismock": "1.35.3",
-    "vitest": "4.1.8"
+    "vitest": "4.1.11"
   }
 }
