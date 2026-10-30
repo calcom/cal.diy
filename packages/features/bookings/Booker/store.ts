@@ -8,6 +8,7 @@ import { createWithEqualityFn } from "zustand/traditional";
 import type { GetBookingType } from "../lib/get-booking";
 import type { BookerLayout, BookerState } from "./types";
 import { getQueryParam, removeQueryParam, updateQueryParam } from "./utils/query-param";
+import { getValidDate, getValidMonth } from "./utils/validate-date";
 
 const _iso_3166_1_alpha_2_codes = [
   "ad",
@@ -454,7 +455,7 @@ export const createBookerStore = () =>
       }
       return set({ layout });
     },
-    selectedDate: getQueryParam("date") || null,
+    selectedDate: getValidDate(getQueryParam("date")),
     setSelectedDate: ({ date: selectedDate, omitUpdatingParams = false, preventMonthSwitching = false }) => {
       // unset selected date
       if (!selectedDate) {
@@ -518,10 +519,8 @@ export const createBookerStore = () =>
       set({ verificationCode: code });
     },
     month:
-      getQueryParam("month") ||
-      (getQueryParam("date") && dayjs(getQueryParam("date")).isValid()
-        ? dayjs(getQueryParam("date")).format("YYYY-MM")
-        : null) ||
+      getValidMonth(getQueryParam("month")) ||
+      (getValidDate(getQueryParam("date")) ? dayjs(getQueryParam("date")).format("YYYY-MM") : null) ||
       dayjs().format("YYYY-MM"),
     setMonth: (month: string | null) => {
       if (!month) {
