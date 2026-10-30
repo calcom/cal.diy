@@ -162,6 +162,9 @@ export function BookingActionsDropdown({
     },
   });
 
+  // Controlled so opening the menu re-renders and the time based checks below use the current time
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const isUpcoming = new Date(booking.endTime) >= new Date();
   const isOngoing = isUpcoming && new Date() >= new Date(booking.startTime);
   const isBookingInPast = new Date(booking.endTime) < new Date();
@@ -540,7 +543,7 @@ export function BookingActionsDropdown({
         }
         isPending={isConfirmPending}
       />
-      <Dropdown modal={false}>
+      <Dropdown modal={false} open={isMenuOpen} onOpenChange={setIsMenuOpen}>
         <DropdownMenuTrigger asChild data-testid="booking-actions-dropdown">
           <Button
             type="button"
