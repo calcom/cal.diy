@@ -152,3 +152,22 @@ describe("Tests for FilterSearchField Component", () => {
     expect(searchInput.value).toBe("Test search");
   });
 });
+
+describe("label association regressions (calcom/cal.diy#30390, #30391)", () => {
+  test("InputField associates the label with a caller-provided id", () => {
+    const { getByLabelText } = render(<InputField name="email" label="Email" id="signup-email" />);
+    const input = getByLabelText("Email") as HTMLInputElement;
+    expect(input.id).toBe("signup-email");
+  });
+
+  test("TextAreaField associates its label with the textarea", () => {
+    const { getByLabelText } = render(<TextAreaField name="bio" label="About" />);
+    expect(getByLabelText("About")).toBeInTheDocument();
+  });
+
+  test("TextAreaField associates the label with a caller-provided id", () => {
+    const { getByLabelText } = render(<TextAreaField name="bio" label="About" id="about-bio" />);
+    const textarea = getByLabelText("About") as HTMLTextAreaElement;
+    expect(textarea.id).toBe("about-bio");
+  });
+});
