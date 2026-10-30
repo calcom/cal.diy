@@ -15,6 +15,7 @@ interface ChargeCardHandlerOptions {
 }
 export const chargeCardHandler = async ({ ctx, input }: ChargeCardHandlerOptions) => {
   const { prisma } = ctx;
+
   const bookingRepository = new BookingRepository(prisma);
 
   const booking = await bookingRepository.getBookingForPaymentProcessing(input.bookingId);
@@ -23,6 +24,20 @@ export const chargeCardHandler = async ({ ctx, input }: ChargeCardHandlerOptions
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Booking not found",
+    });
+  }
+
+  if (booking.userId !== ctx.user.id) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Only the organizer can charge the card for this booking",
+    });
+  }
+
+  if (booking.startTime > new Date()) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "no_show_fee_charge_before_start",
     });
   }
 

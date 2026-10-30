@@ -576,9 +576,20 @@ describe("Booking Actions", () => {
     });
 
     it("should disable charge card action when already charged", () => {
-      const context = createMockContext({ cardCharged: true });
+      const context = createMockContext({ cardCharged: true, isBookingInPast: true });
 
       expect(isActionDisabled("charge_card", context)).toBe(true);
+    });
+
+    it("should disable charge card action before the booking starts", () => {
+      const context = createMockContext({ isBookingInPast: false, isOngoing: false });
+
+      expect(isActionDisabled("charge_card", context)).toBe(true);
+    });
+
+    it("should enable charge card action once the booking has started", () => {
+      expect(isActionDisabled("charge_card", createMockContext({ isOngoing: true }))).toBe(false);
+      expect(isActionDisabled("charge_card", createMockContext({ isBookingInPast: true }))).toBe(false);
     });
 
     describe("change_location action", () => {

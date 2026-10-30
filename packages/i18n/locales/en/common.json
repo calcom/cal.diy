@@ -2702,6 +2702,7 @@
   "your_card_does_not_support_this_type_of_purchase": "This card type isn't supported for this purchase. Please use a different payment method.",
   "amount_must_convert_to_at_least": "Minimum payment amount is $0.50 USD. Please increase your payment amount.",
   "could_not_charge_card": "Could not charge card for payment.",
+  "no_show_fee_charge_before_start": "The no-show fee can only be charged once the booking has started.",
   "insights": "Insights",
   "routing_forms": "Routing forms",
   "insights_no_data_found_for_filter": "No data found for the selected filter or selected dates.",

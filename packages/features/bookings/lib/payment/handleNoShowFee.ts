@@ -161,7 +161,12 @@ export const handleNoShowFee= async ({
       throw new Error("Payment processing failed");
     }
 
-    await sendNoShowFeeChargedEmail(attendee, evt, eventTypeMetdata);
+    // The card is already charged here, so a failed email should not report the charge as failed
+    try {
+      await sendNoShowFeeChargedEmail(attendee, evt, eventTypeMetdata);
+    } catch (emailError) {
+      log.error(`Failed to send no-show fee charged email for paymentId ${payment.id}`, emailError);
+    }
 
     return paymentData;
   } catch (err) {
