@@ -79,6 +79,8 @@ export class PrismaOOORepository {
           },
         },
       },
+      // calculateOutOfOfficeRanges keeps the last entry per day. Later start wins; same start, higher id wins.
+      orderBy: [{ start: "asc" }, { id: "asc" }],
     });
   }
 
@@ -148,6 +150,8 @@ export class PrismaOOORepository {
           },
         },
       },
+      // calculateOutOfOfficeRanges keeps the last entry per day. Later start wins; same start, higher id wins.
+      orderBy: [{ start: "asc" }, { id: "asc" }],
     });
   }
 
