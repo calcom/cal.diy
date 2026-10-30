@@ -20,8 +20,8 @@ import { flexRender } from "@tanstack/react-table";
 import { useVirtualizer, type VirtualItem, type Virtualizer } from "@tanstack/react-virtual";
 import kebabCase from "lodash/kebabCase";
 import { memo, useEffect, useMemo, useState } from "react";
-import { useColumnResizing } from "~/data-table/hooks/useColumnResizing";
-import { useColumnSizingVars } from "~/data-table/hooks/useColumnSizingVars";
+import { useColumnResizing } from "../hooks/useColumnResizing";
+import { useColumnSizingVars } from "../hooks/useColumnSizingVars";
 
 export type DataTablePropsFromWrapper<TData> = {
   table: ReactTableType<TData>;
@@ -281,16 +281,25 @@ type RowToRender<TData> = {
   virtualItem?: VirtualItem;
 };
 
-function SeparatorRowRenderer({ separator, className }: { separator: SeparatorRow; className?: string }) {
+function SeparatorRowRenderer({
+  separator,
+  className,
+  colSpan,
+}: {
+  separator: SeparatorRow;
+  className?: string;
+  colSpan: number;
+}) {
   return (
-    <div
+    <TableCell
+      colSpan={colSpan}
       className={classNames(
         "bg-cal-muted text-emphasis w-full px-3 py-2 font-semibold",
         separator.className,
         className
       )}>
       {separator.label}
-    </div>
+    </TableCell>
   );
 }
 
@@ -381,7 +390,11 @@ function DataTableBody<TData>({
                 }),
               }}
               className="hover:bg-subtle border-muted flex w-full border-b">
-              <SeparatorRowRenderer separator={row.original as SeparatorRow} className={separatorClassName} />
+              <SeparatorRowRenderer
+                separator={row.original as SeparatorRow}
+                className={separatorClassName}
+                colSpan={table.getVisibleLeafColumns().length}
+              />
             </TableRow>
           );
         }
