@@ -1,8 +1,6 @@
-import { describe, expect, it } from "vitest";
-
-import type { TFunction } from "i18next";
 import { SUPPORT_MAIL_ADDRESS } from "@calcom/lib/constants";
-
+import type { TFunction } from "i18next";
+import { describe, expect, it } from "vitest";
 import AdminOAuthClientNotification from "./admin-oauth-client-notification";
 
 class TestAdminOAuthClientNotification extends AdminOAuthClientNotification {

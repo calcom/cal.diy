@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-
 import EmailCommonDivider from "./EmailCommonDivider";
 
 const EmailScheduledBodyHeaderContent = (props: {

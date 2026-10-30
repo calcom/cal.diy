@@ -1,5 +1,4 @@
 import type { CalendarEvent, Person } from "@calcom/types/Calendar";
-
 import { BaseScheduledEmail } from "./BaseScheduledEmail";
 
 export const AttendeeScheduledEmail = (

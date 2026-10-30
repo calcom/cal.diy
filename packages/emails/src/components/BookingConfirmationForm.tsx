@@ -17,7 +17,7 @@ export const BookingConfirmationForm = (props: { action: string; children: React
           textTransform: "none",
           padding: "0.625rem 0",
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
+          // @ts-expect-error
           msoPaddingAlt: "0px",
           borderRadius: "6px",
           boxSizing: "border-box",

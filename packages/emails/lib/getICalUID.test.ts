@@ -1,9 +1,7 @@
-import { describe, expect } from "vitest";
-
 import { APP_NAME } from "@calcom/lib/constants";
 import { buildCalendarEvent } from "@calcom/lib/test/builder";
 import { test } from "@calcom/testing/lib/fixtures/fixtures";
-
+import { describe, expect } from "vitest";
 import getICalUID from "./getICalUID";
 
 describe("getICalUid", () => {

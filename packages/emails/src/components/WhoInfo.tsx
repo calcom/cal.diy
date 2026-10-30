@@ -1,13 +1,11 @@
-import type { TFunction } from "i18next";
-
 import isSmsCalEmail from "@calcom/lib/isSmsCalEmail";
 import type { CalendarEvent } from "@calcom/types/Calendar";
-
+import type { TFunction } from "i18next";
 import { Info } from "./Info";
 
 export const PersonInfo = ({ name = "", email = "", role = "", phoneNumber = "" }) => {
   const displayEmail = !isSmsCalEmail(email);
-  const formattedPhoneNumber = !!phoneNumber ? `${phoneNumber} ` : "";
+  const formattedPhoneNumber = phoneNumber ? `${phoneNumber} ` : "";
 
   return (
     <div style={{ color: "#101010", fontWeight: 400, lineHeight: "24px" }}>

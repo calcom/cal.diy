@@ -1,7 +1,6 @@
+import { APP_NAME } from "@calcom/lib/constants";
 import short from "short-uuid";
 import { v4 as uuidv4 } from "uuid";
-
-import { APP_NAME } from "@calcom/lib/constants";
 
 /**
  * This function returns the iCalUID if a uid is passed or if it is present in the event that is passed

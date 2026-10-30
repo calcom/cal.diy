@@ -1,5 +1,4 @@
 import type BaseEmail from "@calcom/emails/templates/_base-email";
-
 import type { OAuthClientNotification } from "./templates/admin-oauth-client-notification";
 import AdminOAuthClientNotification from "./templates/admin-oauth-client-notification";
 import type { OAuthClientApprovedNotification } from "./templates/oauth-client-approved-notification";

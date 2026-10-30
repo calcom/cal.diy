@@ -32,12 +32,36 @@ export const BaseScheduledEmail = (
 
   const timeFormat = timeFormat_ ?? TimeFormat.TWELVE_HOUR;
 
+  const getFormattedDate = (time: string, format: string) => {
+    const date = new Date(time);
+    if (isNaN(date.getTime())) {
+      return dayjs(time).tz(timeZone).format(format);
+    }
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).formatToParts(date);
+      const getPart = (type: string) => parts.find((p) => p.type === type)?.value;
+      const localString = `${getPart("year")}-${getPart("month")}-${getPart("day")}T${getPart("hour")}:${getPart("minute")}:${getPart("second")}.000`;
+      return dayjs.utc(localString).format(format);
+    } catch (e) {
+      return dayjs(time).tz(timeZone).format(format);
+    }
+  };
+
   function getRecipientStart(format: string) {
-    return dayjs(props.calEvent.startTime).tz(timeZone).format(format);
+    return getFormattedDate(props.calEvent.startTime, format);
   }
 
   function getRecipientEnd(format: string) {
-    return dayjs(props.calEvent.endTime).tz(timeZone).format(format);
+    return getFormattedDate(props.calEvent.endTime, format);
   }
 
   const subject = t(props.subject || "confirmed_event_type_subject", {
