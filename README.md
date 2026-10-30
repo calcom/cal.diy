@@ -568,7 +568,7 @@ These variables must also be provided at runtime
 
 | Variable | Description | Required | Default |
 | --- | --- | --- | --- |
-| DATABASE_URL | database url with credentials - if using a connection pooler, this setting should point there | required | `postgresql://unicorn_user:magical_password@database:5432/calendso` |
+| DATABASE_URL | database url with credentials - if using a connection pooler, this setting should point there | required | `postgresql://unicorn_user:{POSTGRES_PASSWORD}@database:5432/calendso` |
 | NEXT_PUBLIC_WEBAPP_URL | Base URL of the site. NOTE: if this value differs from the value used at build-time, there will be a slight delay during container start (to update the statically built files). | optional | `http://localhost:3000` |
 | NEXTAUTH_URL | Location of the auth server. By default, this is the Cal.diy docker instance itself. | optional | `{NEXT_PUBLIC_WEBAPP_URL}/api/auth` |
 | NEXTAUTH_SECRET | Cookie encryption key. Must match build variable. Generate with: `openssl rand -base64 32` | required | `secret` |
@@ -580,7 +580,7 @@ If building the image yourself, these variables must be provided at the time of 
 
 | Variable | Description | Required | Default |
 | --- | --- | --- | --- |
-| DATABASE_URL | database url with credentials - if using a connection pooler, this setting should point there | required | `postgresql://unicorn_user:magical_password@database:5432/calendso` |
+| DATABASE_URL | database url with credentials - if using a connection pooler, this setting should point there | required | `postgresql://unicorn_user:{POSTGRES_PASSWORD}@database:5432/calendso` |
 | MAX_OLD_SPACE_SIZE | Needed for Nodejs/NPM build options | required | 4096 |
 | NEXTAUTH_SECRET | Cookie encryption key | required | `secret` |
 | CALENDSO_ENCRYPTION_KEY | Authentication encryption key | required | `secret` |
