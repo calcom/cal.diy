@@ -330,19 +330,24 @@ export const Button = forwardRef<HTMLAnchorElement | HTMLButtonElement, ButtonPr
   // Link manages its own anchor element, so we don't pass ref to it
   if (isLink) {
     return (
-      <Link
-        {...(passThroughProps as Omit<JSX.IntrinsicElements["a"], "href" | "onClick" | "ref"> & LinkProps)}
-        shallow={shallow && shallow}
-        className={buttonClassName}
-        onClick={handleClick}>
-        {buttonContent}
-      </Link>
+      <Wrapper
+        tooltip={props.tooltip}
+        tooltipSide={tooltipSide}
+        tooltipOffset={tooltipOffset}
+        tooltipClassName={tooltipClassName}>
+        <Link
+          {...(passThroughProps as Omit<JSX.IntrinsicElements["a"], "href" | "onClick" | "ref"> & LinkProps)}
+          shallow={shallow && shallow}
+          className={buttonClassName}
+          onClick={handleClick}>
+          {buttonContent}
+        </Link>
+      </Wrapper>
     );
   }
 
   return (
     <Wrapper
-      data-testid="wrapper"
       tooltip={props.tooltip}
       tooltipSide={tooltipSide}
       tooltipOffset={tooltipOffset}
