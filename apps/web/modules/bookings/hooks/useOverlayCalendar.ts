@@ -42,22 +42,26 @@ export const useOverlayCalendar = ({
 
   useEffect(() => {
     if (overlayBusyDates) {
-      const nowDate = dayjs();
-      const usersTimezoneDate = nowDate.tz(timezone);
-
-      const offset = (usersTimezoneDate.utcOffset() - nowDate.utcOffset()) / 60;
-
       const offsettedArray = overlayBusyDates.map((item) => {
+        const shiftedToSelectedTz = (value: string | Date) => {
+          const date = dayjs(value);
+          const shift = (date.tz(timezone).utcOffset() - date.utcOffset()) / 60;
+          let out = date.add(shift, "hours");
+          // The shifted instant may cross a DST boundary in the browser tz; re-evaluate there once.
+          const shiftAtOut = (out.tz(timezone).utcOffset() - out.utcOffset()) / 60;
+          if (shiftAtOut !== shift) out = date.add(shiftAtOut, "hours");
+          return out.toDate();
+        };
+
         return {
           ...item,
-          start: dayjs(item.start).add(offset, "hours").toDate(),
-          end: dayjs(item.end).add(offset, "hours").toDate(),
+          start: shiftedToSelectedTz(item.start),
+          end: shiftedToSelectedTz(item.end),
         };
       });
       setOverlayBusyDates(offsettedArray);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [overlayBusyDates]);
+  }, [overlayBusyDates, timezone, setOverlayBusyDates]);
 
   useEffect(() => {
     // Wait for the connected calendars to load, otherwise we'd initialise with nothing
