@@ -38,7 +38,7 @@
     "postcss-prefixwrap": "1.57.0",
     "ts-jest": "29.1.4",
     "typescript": "5.9.3",
-    "vite": "6.4.2",
+    "vite": "6.4.4",
     "vite-plugin-dts": "4.5.4",
     "vite-plugin-inspect": "0.8.4"
   },
