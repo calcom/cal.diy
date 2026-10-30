@@ -2,13 +2,7 @@ import type { UserRepository } from "@calcom/features/users/repositories/UserRep
 import type { WatchlistRepository } from "@calcom/features/watchlist/lib/repository/WatchlistRepository";
 import { MembershipRole, type WatchlistSource, type WatchlistType } from "@calcom/prisma/enums";
 import { WatchlistErrors } from "../errors/WatchlistErrors";
-
-class PermissionCheckService {
-  constructor(_prisma?: unknown) {}
-  async checkPermission(..._args: unknown[]) { return true; }
-  async hasPermission(..._args: unknown[]) { return true; }
-  async getTeamIdsWithPermission(..._args: unknown[]): Promise<number[]> { return []; }
-}
+import { PermissionCheckService } from "@calcom/features/permissions/services/PermissionCheckService";
 
 export interface ListWatchlistEntriesInput {
   organizationId: number;

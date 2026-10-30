@@ -17,13 +17,7 @@ import type { Kysely, SelectQueryBuilder } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { TrpcSessionUser } from "../../../types";
 import type { TGetInputSchema } from "./get.schema";
-
-class PermissionCheckService {
-  constructor(_prisma?: unknown) {}
-  async checkPermission(..._args: unknown[]) { return true; }
-  async hasPermission(..._args: unknown[]) { return true; }
-  async getTeamIdsWithPermission(..._args: unknown[]): Promise<number[]> { return []; }
-}
+import { PermissionCheckService } from "@calcom/features/permissions/services/PermissionCheckService";
 
 type GetOptions = {
   ctx: {
@@ -267,6 +261,7 @@ export async function getBookings({
               .select("users.email")
               .innerJoin("Membership", "Membership.userId", "users.id")
               .where("Membership.teamId", "in", teamIdsWithBookingPermission)
+              .where("Membership.accepted", "=", true)
           ),
         tables: ["Booking", "Attendee"],
       });
@@ -291,6 +286,7 @@ export async function getBookings({
               .select("users.email")
               .innerJoin("Membership", "Membership.userId", "users.id")
               .where("Membership.teamId", "in", teamIdsWithBookingPermission)
+              .where("Membership.accepted", "=", true)
           ),
         tables: ["Booking", "Attendee", "BookingSeat"],
       });
@@ -335,6 +331,7 @@ export async function getBookings({
               .selectFrom("Membership")
               .select("Membership.userId")
               .where("Membership.teamId", "in", teamIdsWithBookingPermission)
+              .where("Membership.accepted", "=", true)
           ),
         tables: ["Booking"],
       });
@@ -989,6 +986,7 @@ async function getUserIdsFromTeamIds(prisma: PrismaClient, teamIds: number[]): P
           teamId: {
             in: teamIds,
           },
+          accepted: true,
         },
       },
     },

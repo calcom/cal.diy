@@ -10,13 +10,7 @@ import { TeamAccessUseCase } from "./teamAccessUseCase";
 import { EventGroupBuilder } from "./usecases/EventGroupBuilder";
 import { ProfilePermissionProcessor } from "./usecases/ProfilePermissionProcessor";
 import { EventTypeGroupFilter } from "./utils/EventTypeGroupFilter";
-
-class PermissionCheckService {
-  constructor(_prisma?: unknown) {}
-  async checkPermission(..._args: unknown[]) { return true; }
-  async hasPermission(..._args: unknown[]) { return true; }
-  async getTeamIdsWithPermission(..._args: unknown[]): Promise<number[]> { return []; }
-}
+import { PermissionCheckService } from "@calcom/features/permissions/services/PermissionCheckService";
 
 type GetByViewerOptions = {
   ctx: {
