@@ -2,3 +2,4 @@
 /.yarn/releases/*    binary
 /.yarn/plugins/**/*  binary
 /.pnp.*              binary linguist-generated
+*.sh                  text eol=lf
