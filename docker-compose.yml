@@ -12,27 +12,32 @@ networks:
 services:
   database:
     container_name: database
-    image: postgres
+    image: postgres:15-alpine
     restart: always
     volumes:
-      - database-data:/var/lib/postgresql
+      - database-data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=unicorn_user
-      - POSTGRES_PASSWORD=magical_password
-      - POSTGRES_DB=calendso
+      - POSTGRES_USER=${POSTGRES_USER:-unicorn_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-magical_password}
+      - POSTGRES_DB=${POSTGRES_DB:-calendso}
     networks:
       - stack
 
   redis:
     container_name: redis
-    image: redis:latest
+    image: redis:7.2-alpine
     restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
       - redis-data:/data
     networks:
       - stack
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    # Port 6379 is NOT published to 0.0.0.0.
+    # If host access is strictly required for local debugging, bind to loopback:
+    # ports:
+    #   - "127.0.0.1:${REDIS_PORT:-6379}:6379"
 
   calcom:
     image: calcom.docker.scarf.sh/calcom/cal.diy
@@ -60,7 +65,7 @@ services:
       - 3000:3000
     env_file: .env
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST:-database}/${POSTGRES_DB}
       - DATABASE_DIRECT_URL=${DATABASE_URL}
     depends_on:
       - database
@@ -83,9 +88,9 @@ services:
       - NODE_ENV=${NODE_ENV}
       - API_PORT=${API_PORT:-80}
       - API_URL=${API_URL}
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
-      - DATABASE_READ_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
-      - DATABASE_WRITE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST:-database}/${POSTGRES_DB}
+      - DATABASE_READ_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST:-database}/${POSTGRES_DB}
+      - DATABASE_WRITE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST:-database}/${POSTGRES_DB}
       - DATABASE_DIRECT_URL=${DATABASE_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - JWT_SECRET=${JWT_SECRET}
@@ -117,17 +122,17 @@ services:
       - database
       - redis
 
-  # Optional use of Prisma Studio. In production, comment out or remove the section below to prevent unwanted access to your database.
+  # Prisma Studio: bound strictly to 127.0.0.1 and isolated behind a dev profile
   studio:
     image: calcom.docker.scarf.sh/calcom/cal.diy
-    restart: always
+    restart: unless-stopped
     networks:
       - stack
     ports:
-      - 5555:5555
+      - "127.0.0.1:5555:5555"
     env_file: .env
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST:-database}/${POSTGRES_DB}
       - DATABASE_DIRECT_URL=${DATABASE_URL}
     depends_on:
       - database
@@ -135,4 +140,5 @@ services:
       - npx
       - prisma
       - studio
-# END SECTION: Optional use of Prisma Studio.
+    profiles:
+      - dev
