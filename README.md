@@ -70,7 +70,7 @@ To get a local copy up and running, please follow these simple steps.
 
 Here’s what you need to run Cal.diy.
 
-- Node.js (Version: >=18.x)
+- Node.js (Version: >=20.9, Node 22 LTS recommended)
 - PostgreSQL (Version: >=13.x)
 - Yarn _(recommended)_
 
@@ -95,39 +95,34 @@ Here’s what you need to run Cal.diy.
    cd cal.diy
    ```
 
-3. Install packages with yarn
+3. Set up Node
+   If your Node version does not meet the project's requirements, use nvm (Node Version Manager) to install Node.js 22:
+
+   ```sh
+   nvm install 22
+   nvm use 22
+   ```
+
+   You can install nvm from [here](https://github.com/nvm-sh/nvm).
+
+4. Install packages with yarn
 
    ```sh
    yarn
    ```
 
-4. Set up your `.env` file
+5. Set up your `.env` file
 
    - Duplicate `.env.example` to `.env`
    - Use `openssl rand -base64 32` to generate a key and add it under `NEXTAUTH_SECRET` in the `.env` file.
    - Use `openssl rand -base64 24` to generate a key and add it under `CALENDSO_ENCRYPTION_KEY` in the `.env` file.
 
- > **Windows users:** Replace the `packages/prisma/.env` symlink with a real copy to avoid a Prisma error (`unexpected character / in variable name`):
- >
- > ```sh
- > # Git Bash / WSL
- > rm packages/prisma/.env && cp .env packages/prisma/.env
- > ```
-
-5. Set up Node
-   If your Node version does not meet the project's requirements as instructed by the docs, "nvm" (Node Version Manager) allows using Node at the version required by the project:
-
-   ```sh
-   nvm use
-   ```
-
-   You first might need to install the specific version and then use it:
-
-   ```sh
-   nvm install && nvm use
-   ```
-
-   You can install nvm from [here](https://github.com/nvm-sh/nvm).
+   > **Windows users:** Replace the `packages/prisma/.env` symlink with a real copy to avoid a Prisma error (`unexpected character / in variable name`):
+   >
+   > ```sh
+   > # Git Bash / WSL
+   > rm packages/prisma/.env && cp .env packages/prisma/.env
+   > ```
 
 #### Quick start with `yarn dx`
 
