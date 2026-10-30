@@ -29,7 +29,7 @@
     "sharp": "0.33.5",
     "tsdav": "2.0.3",
     "tslog": "4.9.2",
-    "uuid": "8.3.2"
+    "uuid": "11.1.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.10",
