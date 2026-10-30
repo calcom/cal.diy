@@ -2061,16 +2061,40 @@ async function handler(
     referencesToCreate = createManager.referencesToCreate;
     videoCallUrl = evt.videoCallData?.url ? evt.videoCallData.url : null;
 
-    if (results.length > 0 && results.every((res) => !res.success)) {
+    const calendarResults = results.filter((res) => res.type.includes("_calendar"));
+    
+   
+    const isCalendarSyncFailure = calendarResults.length > 0 && calendarResults.every((res) => !res.success);
+    
+
+    const allIntegrationsFailed = results.length > 0 && results.every((res) => !res.success);
+
+    if (isCalendarSyncFailure || allIntegrationsFailed  ) {
       const error = {
         errorCode: "BookingCreatingMeetingFailed",
         message: "Booking failed",
       };
 
+      if (!isDryRun && booking && booking.id) {
+        await deps.prismaClient.booking.update({
+          where: { id: booking.id },
+          data: {
+            status: BookingStatus.CANCELLED,
+            cancellationReason: "Calendar integration failed to create the event.",
+          },
+        });
+      }
+
       tracingLogger.error(
         `EventManager.create failure in some of the integrations ${organizerUser.username}`,
         safeStringify({ error, results })
       );
+
+      throw new HttpError({
+        statusCode: 500,
+        message: "Failed to create calendar event. Booking cancelled.",
+      });
+      
     } else {
       const additionalInformation: AdditionalInformation = {};
 
