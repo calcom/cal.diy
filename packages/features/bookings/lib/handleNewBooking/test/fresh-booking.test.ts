@@ -586,7 +586,7 @@ describe("handleNewBooking", () => {
       );
 
       test(
-        `an error in creating a calendar event should not stop the booking creation - Current behaviour is wrong as the booking is created but no-one is notified of it`,
+        `an error in creating a calendar event should not stop the booking creation and should still send the booking emails`,
 
         async ({ emails }) => {
           const handleNewBooking = getNewBookingHandler();
@@ -681,6 +681,18 @@ describe("handleNewBooking", () => {
                 meetingUrl: null,
               },
             ],
+          });
+
+          const iCalUID = expectICalUIDAsString(createdBooking.iCalUID);
+
+          expectSuccessfulBookingCreationEmails({
+            booking: {
+              uid: createdBooking.uid!,
+            },
+            booker,
+            organizer,
+            emails,
+            iCalUID,
           });
 
           // FIXME: We should send Broken Integration emails on calendar event creation failure
