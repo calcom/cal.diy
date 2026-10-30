@@ -1681,7 +1681,6 @@ checksums:
     email_host_action: 9566929caf21c96cedc11447e1de34ff
     email_attendee_action: 3ca2ca348baef93742f3a1889ffcc96b
     email_attendee_action_form: 768b89f3f32891ebed3e90b85058c01e
-    send_reminder_sms: 34d7f8bc9791479f6bed9e1b93cc3570
     workflows: b0c9c8615a9ba7d9cb73e767290a7f72
     new_workflow_btn: 556be5b31c361973a19d3e2f7375d4f3
     how_would_you_like_to_start: 118de435d9585cb475d85dbae1f331f8
@@ -2045,8 +2044,6 @@ checksums:
     remind_attendees_to_bring_id_description: 8e5ef7fc27a2d5cd28203606631fbf82
     email_to_remind_booking: e9db5f453e1b54f6aa221e3f91d7575b
     email_to_remind_booking_description: 43669d1c43190b59cff4ae442a492657
-    custom_sms_reminder: 75ad5777f1779e7358e44a19e4658c18
-    custom_sms_reminder_description: 6cb0a7f5f616012fb8ff6602cd383740
     custom_email_reminder: 86ee90bd0fa4a5ce0ba43906b693e3aa
     custom_email_reminder_description: 6b6b94dad20aa0ad0265f02770ca7f33
     count_managed_to_limit: b0ea1798bda7d078e5e8afa7a45ed386
@@ -2241,7 +2238,6 @@ checksums:
     problem_registering_domain: 68d55d949e1a21f4e43cfae74eadcf37
     team_publish: bcadf047bdf5fd9e5b08467c74407b4e
     number_text_notifications: 88a6af945bf12881d5fabf624f2d58b6
-    number_sms_notifications: ad31276ea0a7846797a93fcc86d36d11
     attendee_email_variable: 31a830ea056b94cd705c86954c3312a9
     attendee_email_info: 682f8767c3a870a20fc3b82c3f7ebdb7
     booking_uid: b15ff03d1f75a6f45f582a6aec8835c3
@@ -2795,7 +2791,6 @@ checksums:
     my_settings: 5a5728b1f142aaf81af5b56dda752ada
     crm: 441decfd55814370f4ef962cb9faaf4b
     messaging: 84ef090280dd156c702e414598704083
-    sender_id_info: a9932f818e07563027b457f42746f6b0
     org_admins_can_create_new_teams: 3d9a5f080809bffb33579a23eab6a4c1
     google_new_spam_policy: 9f6c96260bce62ccd6754e80b96374fa
     resolve: 47362c1e812b301e132d9c4be5f0329e
@@ -2871,7 +2866,6 @@ checksums:
     user_has_no_app_installed: 59246b2d2eaa1d2a70b853643f05fcc2
     requires_booker_email_verification: aca667f422e911b6f3851dcf60d64500
     description_requires_booker_email_verification: 82ccb213337629af22e379f7b5a7eaac
-    requires_confirmation_mandatory: ff747a41552070f0291edbaa710d0946
     organizations: bd50dd0b17bd74a72b728a8385b5ee28
     upload_cal_video_logo: 0590e14812abc8578e3df01c6858a81b
     update_cal_video_logo: 6ed10dcd6e17e433346d8b97d3ba560a
@@ -3142,8 +3136,6 @@ checksums:
     org_admin_no_slots%7Ccta: 5ba661090be09ce20c3de4065e9e6432
     organization_no_slots_notification_switch_title: 1cc2a64f54fd84bd5811feca5fc87ddd
     organization_no_slots_notification_switch_description: 26328eb7a51cf76b0784548082304a9d
-    organization_disable_phone_only_sms_notifications_switch_title: 151ad3a330c942ffc46a945da0aaae8b
-    organization_disable_phone_only_sms_notifications_switch_description: 12b5cda47cc9f9a47e10599ee42b0d66
     email_team_invite%7Csubject%7Cadded_to_org: 93e640f58f1b85bd28a57d701be296d8
     email_team_invite%7Csubject%7Cinvited_to_org: 24c4b84dc386b76c36ad163049627488
     email_team_invite%7Csubject%7Cadded_to_subteam: fd1877260436f261dccd59f7425f0f7f
@@ -3853,7 +3845,6 @@ checksums:
     routing_preview_more_info_found_insights: 8bccc340f8d7e0c85e0c0be29328ff61
     results: 1a8f50c90d0a0d500624dd3a62aab6ee
     view_form: 31b80396918ffbac1b3ae860a2e03ea0
-    sms_opt_out_message: 51959b7ca038e02d867701bfe02e0347
     team_credits_low_warning: 3ebc7812714842a0d2ad10b364243f76
     user_credits_low_warning: 239f90e2fe4d66e62a97100a59a29e03
     action_required_out_of_credits: 93d1fa52db6acb8c4f445052ce73d622
@@ -4223,7 +4214,6 @@ checksums:
     event_details: c12d4fb6e717dbbc8768e887d0bb173d
     agent: a5c36b9f3c5e71bfa2aa0cb196654512
     no_transcript_available: 4a31a08fa738150c97c8703f05fd11df
-    testing_sms_workflow_info_message: 23a2702763ff6f8a6c0e794581348bf3
     start_from_scratch_title: 6fc756927ca9ea22c26368cccd64a67e
     start_from_scratch_description: 6e326932a833c6c175a5ba0eaa36267b
     cal_ai_template_title: ce36995d69f1b83e111499976eed892a
