@@ -84,11 +84,3 @@ The calendar cache system follows specific patterns in `packages/features/calend
 The OpenAPI specification at `docs/api-reference/v2/openapi.json` is auto-generated from NestJS controllers. Manual edits will be wiped out.
 
 To make persistent changes to API documentation, use NestJS decorators (`@ApiQuery`, `@ApiOperation`, etc.) in the controller files at `apps/api/v2/src/modules/*/controllers/*.controller.ts`.
-
-### Workflows vs Webhooks
-
-Workflows and webhooks are two completely separate features in Cal.diy with different implementations and file structures:
-- Workflow constants: `packages/features/ee/workflows/lib/constants.ts`
-- NOT in the webhooks directory
-
-When working on workflow triggers, do not reference or use webhook trigger implementations - they are distinct systems.
