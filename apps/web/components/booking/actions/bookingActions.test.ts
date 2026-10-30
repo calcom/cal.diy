@@ -74,6 +74,7 @@ function createMockContext(overrides: Partial<BookingActionContext> = {}): Booki
         },
         disableCancelling: false,
         disableRescheduling: false,
+        minimumCancellationNotice: null,
         disableGuests: false,
         allowReschedulingPastBookings: false,
         recurringEvent: null,
@@ -566,6 +567,103 @@ describe("Booking Actions", () => {
       });
 
       expect(isActionDisabled("cancel", futureContext)).toBe(false);
+    });
+
+    describe("minimumCancellationNotice", () => {
+      it("should disable cancel for attendee when within minimum cancellation notice period", () => {
+        const now = new Date();
+        const startTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes from now
+        const context = createMockContext({
+          isAttendee: true,
+          booking: {
+            ...createMockContext().booking,
+            startTime: startTime.toISOString(),
+            eventType: {
+              ...createMockContext().booking.eventType,
+              minimumCancellationNotice: 60, // 60 minutes notice required
+            },
+          },
+        });
+
+        expect(isActionDisabled("cancel", context)).toBe(true);
+      });
+
+      it("should allow cancel for attendee when outside minimum cancellation notice period", () => {
+        const now = new Date();
+        const startTime = new Date(now.getTime() + 120 * 60 * 1000); // 120 minutes from now
+        const context = createMockContext({
+          isAttendee: true,
+          booking: {
+            ...createMockContext().booking,
+            startTime: startTime.toISOString(),
+            eventType: {
+              ...createMockContext().booking.eventType,
+              minimumCancellationNotice: 60, // 60 minutes notice required
+            },
+          },
+        });
+
+        expect(isActionDisabled("cancel", context)).toBe(false);
+      });
+
+      it("should allow cancel for host/organizer even within minimum cancellation notice period", () => {
+        const now = new Date();
+        const startTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes from now
+        const context = createMockContext({
+          isAttendee: false,
+          booking: {
+            ...createMockContext().booking,
+            startTime: startTime.toISOString(),
+            eventType: {
+              ...createMockContext().booking.eventType,
+              minimumCancellationNotice: 60,
+            },
+            loggedInUser: {
+              userId: 1,
+              userTimeZone: "America/New_York",
+              userTimeFormat: 12,
+              userEmail: "organizer@example.com",
+            },
+            user: {
+              id: 1,
+              name: "Organizer",
+              email: "organizer@example.com",
+            },
+          },
+        });
+
+        expect(isActionDisabled("cancel", context)).toBe(false);
+      });
+
+      it("should allow cancel for attendee when minimumCancellationNotice is null or 0", () => {
+        const now = new Date();
+        const startTime = new Date(now.getTime() + 10 * 60 * 1000);
+        const contextNull = createMockContext({
+          isAttendee: true,
+          booking: {
+            ...createMockContext().booking,
+            startTime: startTime.toISOString(),
+            eventType: {
+              ...createMockContext().booking.eventType,
+              minimumCancellationNotice: null,
+            },
+          },
+        });
+        const contextZero = createMockContext({
+          isAttendee: true,
+          booking: {
+            ...createMockContext().booking,
+            startTime: startTime.toISOString(),
+            eventType: {
+              ...createMockContext().booking.eventType,
+              minimumCancellationNotice: 0,
+            },
+          },
+        });
+
+        expect(isActionDisabled("cancel", contextNull)).toBe(false);
+        expect(isActionDisabled("cancel", contextZero)).toBe(false);
+      });
     });
 
     it("should disable video actions for non-past bookings", () => {

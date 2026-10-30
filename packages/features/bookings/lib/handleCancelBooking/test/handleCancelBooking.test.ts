@@ -2125,4 +2125,368 @@ describe("Cancel Booking", () => {
       expect(result.success).toBe(true);
     });
   });
+
+  describe("Minimum Cancellation Notice", () => {
+    test("Should reject attendee cancellation when within minimumCancellationNotice period", async () => {
+      const handleCancelBooking = (await import("@calcom/features/bookings/lib/handleCancelBooking")).default;
+
+      const booker = getBooker({
+        email: "booker@example.com",
+        name: "Booker",
+      });
+
+      const organizer = getOrganizer({
+        name: "Organizer",
+        email: "organizer@example.com",
+        id: 101,
+        schedules: [TestData.schedules.IstWorkHours],
+        credentials: [getGoogleCalendarCredential()],
+        selectedCalendars: [TestData.selectedCalendars.google],
+      });
+
+      const uidOfBookingToBeCancelled = "min-notice-attendee-rejected";
+      const idOfBookingToBeCancelled = 9001;
+      const startTime = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 mins from now
+      const endTime = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+      await createBookingScenario(
+        getScenarioData({
+          eventTypes: [
+            {
+              id: 1,
+              slotInterval: 30,
+              length: 30,
+              minimumCancellationNotice: 60, // 60 mins notice required
+              users: [{ id: 101 }],
+            },
+          ],
+          bookings: [
+            {
+              id: idOfBookingToBeCancelled,
+              uid: uidOfBookingToBeCancelled,
+              eventTypeId: 1,
+              userId: 101,
+              attendees: [{ email: booker.email, timeZone: "Asia/Kolkata" }],
+              responses: {
+                email: booker.email,
+                name: booker.name,
+                location: { optionValue: "", value: BookingLocations.CalVideo },
+              },
+              status: BookingStatus.ACCEPTED,
+              startTime,
+              endTime,
+            },
+          ],
+          organizer,
+          apps: [TestData.apps["daily-video"]],
+        })
+      );
+
+      await expect(
+        handleCancelBooking({
+          bookingData: {
+            id: idOfBookingToBeCancelled,
+            uid: uidOfBookingToBeCancelled,
+            cancelledBy: booker.email,
+          },
+        })
+      ).rejects.toThrow("Cancellation is not allowed within the minimum notice period before the event");
+    });
+
+    test("Should allow attendee cancellation when outside minimumCancellationNotice period", async () => {
+      const handleCancelBooking = (await import("@calcom/features/bookings/lib/handleCancelBooking")).default;
+
+      const booker = getBooker({
+        email: "booker@example.com",
+        name: "Booker",
+      });
+
+      const organizer = getOrganizer({
+        name: "Organizer",
+        email: "organizer@example.com",
+        id: 101,
+        schedules: [TestData.schedules.IstWorkHours],
+        credentials: [getGoogleCalendarCredential()],
+        selectedCalendars: [TestData.selectedCalendars.google],
+      });
+
+      const uidOfBookingToBeCancelled = "min-notice-attendee-allowed";
+      const idOfBookingToBeCancelled = 9002;
+      const startTime = new Date(Date.now() + 120 * 60 * 1000).toISOString(); // 120 mins from now
+      const endTime = new Date(Date.now() + 150 * 60 * 1000).toISOString();
+
+      await createBookingScenario(
+        getScenarioData({
+          eventTypes: [
+            {
+              id: 1,
+              slotInterval: 30,
+              length: 30,
+              minimumCancellationNotice: 60,
+              users: [{ id: 101 }],
+            },
+          ],
+          bookings: [
+            {
+              id: idOfBookingToBeCancelled,
+              uid: uidOfBookingToBeCancelled,
+              eventTypeId: 1,
+              userId: 101,
+              attendees: [{ email: booker.email, timeZone: "Asia/Kolkata" }],
+              responses: {
+                email: booker.email,
+                name: booker.name,
+                location: { optionValue: "", value: BookingLocations.CalVideo },
+              },
+              status: BookingStatus.ACCEPTED,
+              startTime,
+              endTime,
+            },
+          ],
+          organizer,
+          apps: [TestData.apps["daily-video"]],
+        })
+      );
+
+      mockSuccessfulVideoMeetingCreation({
+        metadataLookupKey: "dailyvideo",
+        videoMeetingData: {
+          id: "MOCK_ID",
+          password: "MOCK_PASS",
+          url: `http://mock-dailyvideo.example.com/meeting-min-notice-allowed`,
+        },
+      });
+
+      mockCalendarToHaveNoBusySlots("googlecalendar", {
+        create: {
+          id: "MOCKED_GOOGLE_CALENDAR_EVENT_ID_MIN_NOTICE_ALLOWED",
+        },
+      });
+
+      const result = await handleCancelBooking({
+        bookingData: {
+          id: idOfBookingToBeCancelled,
+          uid: uidOfBookingToBeCancelled,
+          cancelledBy: booker.email,
+        },
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    test("Should allow host cancellation even when within minimumCancellationNotice period", async () => {
+      const handleCancelBooking = (await import("@calcom/features/bookings/lib/handleCancelBooking")).default;
+
+      const booker = getBooker({
+        email: "booker@example.com",
+        name: "Booker",
+      });
+
+      const organizer = getOrganizer({
+        name: "Organizer",
+        email: "organizer@example.com",
+        id: 101,
+        schedules: [TestData.schedules.IstWorkHours],
+        credentials: [getGoogleCalendarCredential()],
+        selectedCalendars: [TestData.selectedCalendars.google],
+      });
+
+      const uidOfBookingToBeCancelled = "min-notice-host-allowed";
+      const idOfBookingToBeCancelled = 9003;
+      const startTime = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 mins from now
+      const endTime = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+      await createBookingScenario(
+        getScenarioData({
+          eventTypes: [
+            {
+              id: 1,
+              slotInterval: 30,
+              length: 30,
+              minimumCancellationNotice: 60,
+              users: [{ id: 101 }],
+            },
+          ],
+          bookings: [
+            {
+              id: idOfBookingToBeCancelled,
+              uid: uidOfBookingToBeCancelled,
+              eventTypeId: 1,
+              userId: 101,
+              attendees: [{ email: booker.email, timeZone: "Asia/Kolkata" }],
+              responses: {
+                email: booker.email,
+                name: booker.name,
+                location: { optionValue: "", value: BookingLocations.CalVideo },
+              },
+              status: BookingStatus.ACCEPTED,
+              startTime,
+              endTime,
+            },
+          ],
+          organizer,
+          apps: [TestData.apps["daily-video"]],
+        })
+      );
+
+      mockSuccessfulVideoMeetingCreation({
+        metadataLookupKey: "dailyvideo",
+        videoMeetingData: {
+          id: "MOCK_ID",
+          password: "MOCK_PASS",
+          url: `http://mock-dailyvideo.example.com/meeting-min-notice-host`,
+        },
+      });
+
+      mockCalendarToHaveNoBusySlots("googlecalendar", {
+        create: {
+          id: "MOCKED_GOOGLE_CALENDAR_EVENT_ID_MIN_NOTICE_HOST",
+        },
+      });
+
+      const result = await handleCancelBooking({
+        bookingData: {
+          id: idOfBookingToBeCancelled,
+          uid: uidOfBookingToBeCancelled,
+          cancelledBy: organizer.email,
+        },
+        userId: organizer.id,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    test("Should reject cancellation with 'Cannot cancel a booking that has already ended' when booking is in past, even if minimumCancellationNotice is set", async () => {
+      const handleCancelBooking = (await import("@calcom/features/bookings/lib/handleCancelBooking")).default;
+
+      const booker = getBooker({
+        email: "booker@example.com",
+        name: "Booker",
+      });
+
+      const organizer = getOrganizer({
+        name: "Organizer",
+        email: "organizer@example.com",
+        id: 101,
+        schedules: [TestData.schedules.IstWorkHours],
+        credentials: [getGoogleCalendarCredential()],
+        selectedCalendars: [TestData.selectedCalendars.google],
+      });
+
+      const uidOfBookingToBeCancelled = "min-notice-ended-booking";
+      const idOfBookingToBeCancelled = 9004;
+      const startTime = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hour ago
+      const endTime = new Date(Date.now() - 30 * 60 * 1000).toISOString(); // 30 mins ago
+
+      await createBookingScenario(
+        getScenarioData({
+          eventTypes: [
+            {
+              id: 1,
+              slotInterval: 30,
+              length: 30,
+              minimumCancellationNotice: 60,
+              users: [{ id: 101 }],
+            },
+          ],
+          bookings: [
+            {
+              id: idOfBookingToBeCancelled,
+              uid: uidOfBookingToBeCancelled,
+              eventTypeId: 1,
+              userId: 101,
+              attendees: [{ email: booker.email, timeZone: "Asia/Kolkata" }],
+              responses: {
+                email: booker.email,
+                name: booker.name,
+                location: { optionValue: "", value: BookingLocations.CalVideo },
+              },
+              status: BookingStatus.ACCEPTED,
+              startTime,
+              endTime,
+            },
+          ],
+          organizer,
+          apps: [TestData.apps["daily-video"]],
+        })
+      );
+
+      await expect(
+        handleCancelBooking({
+          bookingData: {
+            id: idOfBookingToBeCancelled,
+            uid: uidOfBookingToBeCancelled,
+            cancelledBy: booker.email,
+          },
+        })
+      ).rejects.toThrow("Cannot cancel a booking that has already ended");
+    });
+
+    test("Should reject cancellation with 'This event type does not allow cancellations' when disableCancelling is true", async () => {
+      const handleCancelBooking = (await import("@calcom/features/bookings/lib/handleCancelBooking")).default;
+
+      const booker = getBooker({
+        email: "booker@example.com",
+        name: "Booker",
+      });
+
+      const organizer = getOrganizer({
+        name: "Organizer",
+        email: "organizer@example.com",
+        id: 101,
+        schedules: [TestData.schedules.IstWorkHours],
+        credentials: [getGoogleCalendarCredential()],
+        selectedCalendars: [TestData.selectedCalendars.google],
+      });
+
+      const uidOfBookingToBeCancelled = "min-notice-disable-cancelling";
+      const idOfBookingToBeCancelled = 9005;
+      const startTime = new Date(Date.now() + 120 * 60 * 1000).toISOString();
+      const endTime = new Date(Date.now() + 150 * 60 * 1000).toISOString();
+
+      await createBookingScenario(
+        getScenarioData({
+          eventTypes: [
+            {
+              id: 1,
+              slotInterval: 30,
+              length: 30,
+              disableCancelling: true,
+              minimumCancellationNotice: 60,
+              users: [{ id: 101 }],
+            },
+          ],
+          bookings: [
+            {
+              id: idOfBookingToBeCancelled,
+              uid: uidOfBookingToBeCancelled,
+              eventTypeId: 1,
+              userId: 101,
+              attendees: [{ email: booker.email, timeZone: "Asia/Kolkata" }],
+              responses: {
+                email: booker.email,
+                name: booker.name,
+                location: { optionValue: "", value: BookingLocations.CalVideo },
+              },
+              status: BookingStatus.ACCEPTED,
+              startTime,
+              endTime,
+            },
+          ],
+          organizer,
+          apps: [TestData.apps["daily-video"]],
+        })
+      );
+
+      await expect(
+        handleCancelBooking({
+          bookingData: {
+            id: idOfBookingToBeCancelled,
+            uid: uidOfBookingToBeCancelled,
+            cancelledBy: booker.email,
+          },
+        })
+      ).rejects.toThrow("This event type does not allow cancellations");
+    });
+  });
 });
