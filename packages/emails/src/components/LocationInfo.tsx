@@ -1,9 +1,8 @@
-import type { TFunction } from "i18next";
-
 import { guessEventLocationType } from "@calcom/app-store/locations";
 import { getVideoCallUrlFromCalEvent } from "@calcom/lib/CalEventParser";
+import { formatPhoneNumber } from "@calcom/lib/formatPhoneNumber";
 import type { CalendarEvent } from "@calcom/types/Calendar";
-
+import type { TFunction } from "i18next";
 import { Info } from "./Info";
 
 export function LocationInfo(props: { calEvent: CalendarEvent; t: TFunction }) {
@@ -63,7 +62,7 @@ export function LocationInfo(props: { calEvent: CalendarEvent; t: TFunction }) {
         withSpacer
         description={
           <a href={`tel:${location}`} title="Phone" style={{ color: "#3E3E3E" }}>
-            {location}
+            {formatPhoneNumber(location)}
           </a>
         }
       />
