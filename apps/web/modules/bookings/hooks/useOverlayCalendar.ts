@@ -42,16 +42,29 @@ export const useOverlayCalendar = ({
 
   useEffect(() => {
     if (overlayBusyDates) {
-      const nowDate = dayjs();
-      const usersTimezoneDate = nowDate.tz(timezone);
-
-      const offset = (usersTimezoneDate.utcOffset() - nowDate.utcOffset()) / 60;
-
       const offsettedArray = overlayBusyDates.map((item) => {
+        // Compute the browser->selected timezone shift per busy instant: a fixed
+        // offset taken from "now" is wrong for dates in a different DST period
+        // when the browser and selected timezones follow different DST rules.
+        const shiftedToSelectedTz = (value: string | Date) => {
+          const date = dayjs(value);
+          const shiftFor = (d: typeof date) => (d.tz(timezone).utcOffset() - d.utcOffset()) / 60;
+          // First pass: offsets at the original instant.
+          let shift = shiftFor(date);
+          let shifted = date.add(shift, "hours");
+          // The browser (or selected) offset at the shifted instant can differ
+          // across a DST transition; recompute once so the shifted wall clock
+          // matches the original instant's wall clock in the selected timezone.
+          const correctedShift = shiftFor(shifted);
+          if (correctedShift !== shift) {
+            shifted = date.add(correctedShift, "hours");
+          }
+          return shifted.toDate();
+        };
         return {
           ...item,
-          start: dayjs(item.start).add(offset, "hours").toDate(),
-          end: dayjs(item.end).add(offset, "hours").toDate(),
+          start: shiftedToSelectedTz(item.start),
+          end: shiftedToSelectedTz(item.end),
         };
       });
       setOverlayBusyDates(offsettedArray);
