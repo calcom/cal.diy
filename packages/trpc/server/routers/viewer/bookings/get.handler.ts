@@ -359,10 +359,12 @@ export async function getBookings({
     // 4. Filter by Attendee Name (if provided)
     if (filters?.attendeeName) {
       if (typeof filters.attendeeName === "string") {
-        // Simple string match (exact)
+        // Simple string match (case-insensitive)
         fullQuery = fullQuery
           .innerJoin("Attendee", "Attendee.bookingId", "Booking.id")
-          .where("Attendee.name", "=", filters.attendeeName.trim());
+          .where(({ eb }) =>
+            eb(eb.fn<string>("lower", ["Attendee.name"]), "=", filters.attendeeName.trim().toLowerCase())
+          );
       } else if (isTextFilterValue(filters.attendeeName)) {
         // TODO: write makeWhereClause equivalent for kysely
         fullQuery = addAdvancedAttendeeWhereClause(
@@ -378,10 +380,12 @@ export async function getBookings({
     // 5. Filter by Attendee Email (if provided)
     if (filters?.attendeeEmail) {
       if (typeof filters.attendeeEmail === "string") {
-        // Simple string match (exact)
+        // Simple string match (case-insensitive)
         fullQuery = fullQuery
           .innerJoin("Attendee", "Attendee.bookingId", "Booking.id")
-          .where("Attendee.email", "=", filters.attendeeEmail.trim());
+          .where(({ eb }) =>
+            eb(eb.fn<string>("lower", ["Attendee.email"]), "=", filters.attendeeEmail.trim().toLowerCase())
+          );
       } else if (isTextFilterValue(filters.attendeeEmail)) {
         // TODO: write makeWhereClause equivalent for kysely
         fullQuery = addAdvancedAttendeeWhereClause(
