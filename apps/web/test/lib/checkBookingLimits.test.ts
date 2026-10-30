@@ -113,6 +113,20 @@ describe("Booking limit validation", () => {
   it("Should validate a correct limit with equal values ", () => {
     expect(validateIntervalLimitOrder({ PER_DAY: 1, PER_YEAR: 1 })).toBe(true);
   });
+
+  it("Should not depend on key order when values are equal", () => {
+    expect(validateIntervalLimitOrder({ PER_WEEK: 1, PER_DAY: 1 })).toBe(true);
+    expect(validateIntervalLimitOrder({ PER_MONTH: 10, PER_WEEK: 5, PER_DAY: 5 })).toBe(true);
+    // Postgres jsonb returns keys shorter-first, so a saved PER_YEAR comes back before PER_MONTH
+    expect(validateIntervalLimitOrder({ PER_DAY: 1, PER_YEAR: 5, PER_MONTH: 5 })).toBe(true);
+    expect(validateIntervalLimitOrder({ PER_YEAR: 1, PER_MONTH: 1, PER_WEEK: 1, PER_DAY: 1 })).toBe(true);
+  });
+
+  it("Should invalidate an incorrect limit regardless of key order", () => {
+    expect(validateIntervalLimitOrder({ PER_WEEK: 2, PER_DAY: 3 })).toBe(false);
+    expect(validateIntervalLimitOrder({ PER_MONTH: 5, PER_WEEK: 3, PER_DAY: 5 })).toBe(false);
+  });
+
   it("Should validate a correct with empty", () => {
     expect(validateIntervalLimitOrder({})).toBe(true);
   });
