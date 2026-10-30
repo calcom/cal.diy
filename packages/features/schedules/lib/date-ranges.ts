@@ -28,6 +28,14 @@ function getAdjustedTimezone(date: Dayjs, timeZone: string, travelSchedules: Tra
   return adjustedTimezone;
 }
 
+function atWallClockTime(localDate: string, time: Date, timeZone: string): Dayjs {
+  const hours = String(time.getUTCHours()).padStart(2, "0");
+  const minutes = String(time.getUTCMinutes()).padStart(2, "0");
+  // Round-trip through the instant so the result has the same shape as other `.tz()` values,
+  // which keeps deep equality comparisons of DateRange objects stable.
+  return dayjs(dayjs.tz(`${localDate} ${hours}:${minutes}`, timeZone).valueOf()).tz(timeZone);
+}
+
 // reducer
 export function processWorkingHours(
   results: Record<number, DateRange>,
@@ -61,17 +69,11 @@ export function processWorkingHours(
       continue;
     }
 
-    let start = dateInTz
-      .add(item.startTime.getUTCHours(), "hours")
-      .add(item.startTime.getUTCMinutes(), "minutes");
-
-    let end = dateInTz.add(item.endTime.getUTCHours(), "hours").add(item.endTime.getUTCMinutes(), "minutes");
-
-    const offsetBeginningOfDay = dayjs(start.format("YYYY-MM-DD hh:mm")).tz(adjustedTimezone).utcOffset();
-    const offsetDiff = start.utcOffset() - offsetBeginningOfDay; // there will be 60 min offset on the day day of DST change
-
-    start = start.add(offsetDiff, "minute");
-    end = end.add(offsetDiff, "minute");
+    // Resolve the wall-clock time directly in the host's timezone. Adding hours to midnight and then
+    // correcting by a parsed offset depended on the server's own timezone and shifted DST days by an hour.
+    const localDate = dateInTz.format("YYYY-MM-DD");
+    const start = atWallClockTime(localDate, item.startTime, adjustedTimezone);
+    const end = atWallClockTime(localDate, item.endTime, adjustedTimezone);
 
     const startResult = dayjs.max(start, dateFrom);
     let endResult = dayjs.min(end, dateTo.tz(adjustedTimezone));
