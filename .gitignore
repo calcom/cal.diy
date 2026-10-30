@@ -3,6 +3,7 @@
 # .env file
 .env
 !packages/prisma/.env
+!.env.dev.example
 
 # dependencies
 node_modules

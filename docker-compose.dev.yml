@@ -1,0 +1,128 @@
+# Podpůrné služby pro lokální vývoj SSO. Cal.diy samotné běží mimo Docker (`yarn dev`).
+# Spuštění:  docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
+name: calendiy-dev
+
+x-authentik-env: &authentik-env
+  AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?nastav AUTHENTIK_SECRET_KEY v .env.dev}
+  AUTHENTIK_POSTGRESQL__HOST: postgres
+  AUTHENTIK_POSTGRESQL__PORT: "5432"
+  AUTHENTIK_POSTGRESQL__NAME: authentik
+  AUTHENTIK_POSTGRESQL__USER: authentik
+  AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_DB_PASSWORD:?nastav AUTHENTIK_DB_PASSWORD v .env.dev}
+  AUTHENTIK_EMAIL__HOST: mailpit
+  AUTHENTIK_EMAIL__PORT: "1025"
+  AUTHENTIK_EMAIL__USE_TLS: "false"
+  AUTHENTIK_EMAIL__USE_SSL: "false"
+  AUTHENTIK_EMAIL__FROM: authentik@calendiy.localhost
+  AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+  # Jen pro první start: vytvoří uživatele akadmin bez průvodce na /if/flow/initial-setup/
+  AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_BOOTSTRAP_EMAIL:-akadmin@calendiy.localhost}
+  AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD:?nastav AUTHENTIK_BOOTSTRAP_PASSWORD v .env.dev}
+
+services:
+  postgres:
+    image: docker.io/library/postgres:16.10-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?nastav POSTGRES_SUPERUSER_PASSWORD v .env.dev}
+      # Čte je jen init skript při prvním vytvoření volume
+      CALDIY_DB_PASSWORD: ${CALDIY_DB_PASSWORD:?nastav CALDIY_DB_PASSWORD v .env.dev}
+      AUTHENTIK_DB_PASSWORD: ${AUTHENTIK_DB_PASSWORD:?nastav AUTHENTIK_DB_PASSWORD v .env.dev}
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  redis:
+    # Vyhrazený pro Cal.diy. Authentik Redis nepoužívá.
+    image: docker.io/library/redis:7.4.5-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?nastav REDIS_PASSWORD v .env.dev}", "--appendonly", "yes"]
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    ports:
+      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  mailpit:
+    # Testovací SMTP: zachytí všechny maily, nic nikam neodešle
+    image: docker.io/axllent/mailpit:v1.27.0
+    restart: unless-stopped
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_HOST_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_HOST_PORT:-8025}:8025"
+    volumes:
+      - mailpit_data:/data
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:2026.8.3
+    restart: unless-stopped
+    command: server
+    environment: *authentik-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${AUTHENTIK_HOST_PORT:-9000}:9000"
+    shm_size: 512mb
+    volumes:
+      - authentik_data:/data
+    healthcheck:
+      test: ["CMD", "ak", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s   # první start provádí databázové migrace
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:2026.8.3
+    restart: unless-stopped
+    command: worker
+    environment: *authentik-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+    volumes:
+      - authentik_data:/data
+    healthcheck:
+      test: ["CMD", "ak", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+volumes:
+  postgres_data:
+  redis_data:
+  mailpit_data:
+  authentik_data:
