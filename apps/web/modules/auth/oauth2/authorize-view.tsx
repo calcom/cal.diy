@@ -16,6 +16,24 @@ import { Select } from "@calcom/ui/components/form";
 import { InfoIcon, PlusIcon } from "@coss/ui/icons";
 import { Tooltip } from "@calcom/ui/components/tooltip";
 
+/**
+ * Parses an OAuth 2.0 scope parameter string into an array of individual scope tokens.
+ * Supports both standard RFC 6749 space-delimited scopes and comma-delimited strings.
+ *
+ * @param scope - The raw scope query parameter value from the OAuth authorization request.
+ * @returns An array of non-empty scope strings parsed from the input.
+ */
+export function parseOAuthScopes(scope: unknown): string[] {
+  return scope ? scope.toString().split(/[,\s]+/).filter(Boolean) : [];
+}
+
+/**
+ * OAuth 2.0 Authorization view component.
+ * Renders the consent screen for third-party OAuth clients requesting access
+ * to Cal.com user resources, validating client metadata, permissions, and requested scopes.
+ *
+ * @returns The rendered OAuth authorization consent view.
+ */
 export function Authorize() {
   const { t } = useLocale();
   const { status } = useSession();
@@ -38,7 +56,7 @@ export function Authorize() {
     value: string;
     label: string;
   } | null>();
-  const scopes = scope ? scope.toString().split(",") : [];
+  const scopes = parseOAuthScopes(scope);
 
   const {
     data: client,
@@ -279,12 +297,24 @@ export function Authorize() {
   );
 }
 
+/**
+ * Maps a tRPC error code to a standardized OAuth 2.0 error string.
+ *
+ * @param code - The tRPC error code received from server.
+ * @returns The corresponding OAuth 2.0 error string.
+ */
 function mapTrpcCodeToOAuthError(code: string | undefined) {
   if (code === "BAD_REQUEST") return "invalid_request";
   if (code === "UNAUTHORIZED") return "unauthorized_client";
   return "server_error";
 }
 
+/**
+ * Builds the redirect URL for an OAuth 2.0 error response with query parameters.
+ *
+ * @param params - Parameters containing redirectUri, error, optional description and state.
+ * @returns The fully formatted error redirect URL.
+ */
 function buildOAuthErrorRedirectUrl({
   redirectUri,
   error,
@@ -311,6 +341,11 @@ function buildOAuthErrorRedirectUrl({
   return `${redirectUri}${redirectUri.includes("?") ? "&" : "?"}${errorParams.toString()}`;
 }
 
+/**
+ * Redirects the user agent to the OAuth client redirect URI with error parameters.
+ *
+ * @param params - Parameters containing redirectUri, trpcError object, and optional state.
+ */
 function redirectToOAuthError({
   redirectUri,
   trpcError,
