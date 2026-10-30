@@ -555,6 +555,8 @@ export const InfiniteEventTypeList = ({
             const isChildrenManagedEventType =
               type.metadata?.managedEventConfig !== undefined &&
               type.schedulingType !== SchedulingType.MANAGED;
+            const isChildHiddenLocked =
+              isChildrenManagedEventType && !type.metadata?.managedEventConfig?.unlockedFields?.hidden;
             return (
               <li key={type.id}>
                 <div className="flex w-full items-center justify-between transition hover:bg-cal-muted">
@@ -594,29 +596,29 @@ export const InfiniteEventTypeList = ({
                           />
                         )}
                         <div className="flex items-center justify-between space-x-2 rtl:space-x-reverse">
-                          {!isManagedEventType && (
-                            <>
-                              {type.hidden && <span className="text-gray-400 text-sm">{t("hidden")}</span>}
-                              <Tooltip
-                                content={
-                                  type.hidden ? t("show_eventtype_on_profile") : t("hide_from_profile")
-                                }>
-                                <div className="self-center rounded-md p-2">
-                                  <Switch
-                                    name="Hidden"
-                                    disabled={lockedByOrg}
-                                    checked={!type.hidden}
-                                    onCheckedChange={() => {
-                                      setHiddenMutation.mutate({
-                                        id: type.id,
-                                        hidden: !type.hidden,
-                                      });
-                                    }}
-                                  />
-                                </div>
-                              </Tooltip>
-                            </>
-                          )}
+                          {type.hidden && <span className="text-gray-400 text-sm">{t("hidden")}</span>}
+                          <Tooltip
+                            content={
+                              isChildHiddenLocked
+                                ? t("locked_by_team_admin")
+                                : type.hidden
+                                  ? t("show_eventtype_on_profile")
+                                  : t("hide_from_profile")
+                            }>
+                            <div className="self-center rounded-md p-2">
+                              <Switch
+                                name="Hidden"
+                                disabled={lockedByOrg || isChildHiddenLocked}
+                                checked={!type.hidden}
+                                onCheckedChange={() => {
+                                  setHiddenMutation.mutate({
+                                    id: type.id,
+                                    hidden: !type.hidden,
+                                  });
+                                }}
+                              />
+                            </div>
+                          </Tooltip>
 
                           <ButtonGroup combined>
                             {!isManagedEventType && (
@@ -833,7 +835,7 @@ export const InfiniteEventTypeList = ({
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
-                          {!isManagedEventType && (
+                          {!isChildHiddenLocked && (
                             <div className="flex h-9 cursor-pointer flex-row items-center justify-between rounded-b-lg px-4 py-2 transition hover:bg-subtle">
                               <Skeleton
                                 as={Label}
@@ -844,6 +846,7 @@ export const InfiniteEventTypeList = ({
                               <Switch
                                 id="hiddenSwitch"
                                 name="Hidden"
+                                disabled={lockedByOrg}
                                 checked={!type.hidden}
                                 onCheckedChange={() => {
                                   setHiddenMutation.mutate({
@@ -930,9 +933,7 @@ const CTA = ({ profileOptions }: { profileOptions: ProfileOption[] }) => {
         }}
         placeholder={t("search")}
       />
-      <Button
-        data-testid="new-event-type"
-        href={`?dialog=new&eventPage=${profileOptions[0]?.slug ?? ""}`}>
+      <Button data-testid="new-event-type" href={`?dialog=new&eventPage=${profileOptions[0]?.slug ?? ""}`}>
         {t("new")}
       </Button>
       <CreateEventTypeDialog profileOptions={profileOptions} />
