@@ -9,7 +9,7 @@ import type { TFunction } from "i18next";
 export const buildVideoCallData = (callData?: Partial<VideoCallData>): VideoCallData => {
   return {
     type: faker.helpers.arrayElement(["zoom_video", "stream_video"]),
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
     password: faker.internet.password(),
     url: faker.internet.url(),
     ...callData,
@@ -18,13 +18,13 @@ export const buildVideoCallData = (callData?: Partial<VideoCallData>): VideoCall
 
 export const buildPerson = (person?: Partial<Person>): Person => {
   return {
-    name: faker.name.firstName(),
+    name: faker.person.firstName(),
     email: faker.internet.email(),
-    timeZone: faker.address.timeZone(),
-    username: faker.internet.userName(),
-    id: faker.datatype.number(),
+    timeZone: faker.location.timeZone(),
+    username: faker.internet.username(),
+    id: faker.number.int({ max: 99999 }),
     language: {
-      locale: faker.random.locale(),
+      locale: faker.helpers.arrayElement(["en", "de", "fr", "es"]),
       translate: ((key: string) => key) as TFunction,
     },
     ...person,
@@ -34,9 +34,9 @@ export const buildPerson = (person?: Partial<Person>): Person => {
 export const buildBooking = (
   booking?: Partial<Booking> & { references?: Partial<BookingReference>[] }
 ): Booking & { references?: Partial<BookingReference>[]; attendees?: [] } => {
-  const uid = faker.datatype.uuid();
+  const uid = faker.string.uuid();
   return {
-    id: faker.datatype.number(),
+    id: faker.number.int({ max: 99999 }),
     uid,
     userId: null,
     eventTypeId: null,
@@ -83,7 +83,7 @@ export const buildBooking = (
 
 export const buildEventType = (eventType?: Partial<EventType>): EventType => {
   return {
-    id: faker.datatype.number(),
+    id: faker.number.int({ max: 99999 }),
     title: faker.lorem.sentence(),
     slug: faker.lorem.slug(),
     description: faker.lorem.paragraph(),
@@ -174,11 +174,11 @@ export const buildEventType = (eventType?: Partial<EventType>): EventType => {
 
 export const buildWebhook = (webhook?: Partial<Webhook>): Webhook => {
   return {
-    id: faker.datatype.uuid(),
-    eventTypeId: faker.datatype.number(),
+    id: faker.string.uuid(),
+    eventTypeId: faker.number.int({ max: 99999 }),
     subscriberUrl: "http://mockedURL.com",
     payloadTemplate: null,
-    createdAt: faker.datatype.datetime(),
+    createdAt: faker.date.anytime(),
     appId: null,
     userId: null,
     secret: faker.lorem.slug(),
@@ -224,7 +224,7 @@ export const buildCalendarEvent = (
   event?: Partial<CalendarEvent>,
   omitVideoCallData?: boolean
 ): CalendarEvent => {
-  const uid = faker.datatype.uuid();
+  const uid = faker.string.uuid();
   return {
     uid,
     iCalUID: getICalUID({ uid }),
@@ -232,7 +232,7 @@ export const buildCalendarEvent = (
     title: faker.lorem.sentence(),
     startTime: faker.date.future().toISOString(),
     endTime: faker.date.future().toISOString(),
-    location: faker.address.city(),
+    location: faker.location.city(),
     description: faker.lorem.paragraph(),
     attendees: [],
     customInputs: {},
@@ -296,10 +296,10 @@ export const buildUser = <T extends Partial<UserPayload>>(
   return {
     locked: false,
     smsLockState: "UNLOCKED",
-    name: faker.name.firstName(),
+    name: faker.person.firstName(),
     email: faker.internet.email(),
-    timeZone: faker.address.timeZone(),
-    username: faker.internet.userName(),
+    timeZone: faker.location.timeZone(),
+    username: faker.internet.username(),
     id: 0,
     allowDynamicBooking: true,
     availability: [],
