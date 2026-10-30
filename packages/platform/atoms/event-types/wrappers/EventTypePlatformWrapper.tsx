@@ -133,7 +133,7 @@ const EventType = forwardRef<
       // Reset the form with these values as new default values to ensure the correct comparison for dirtyFields eval
       form.reset(currentValues);
       if (!disableToasts) {
-        toast({ description: t("event_type_updated_successfully", { eventTypeTitle: eventType.title }) });
+        toast({ description: t("event_type_updated_successfully", { eventTypeTitle: currentValues.title }) });
       }
       onSuccess?.(currentValues);
       callbacksRef.current?.onSuccess?.();
@@ -162,7 +162,7 @@ const EventType = forwardRef<
       if (!isDryRun) {
         updateMutation.mutate(data);
       } else {
-        toast({ description: t("event_type_updated_successfully", { eventTypeTitle: eventType.title }) });
+        toast({ description: t("event_type_updated_successfully", { eventTypeTitle: data.title }) });
         callbacksRef.current?.onSuccess?.();
       }
     },
