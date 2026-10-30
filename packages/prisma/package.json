@@ -31,7 +31,7 @@
     "@prisma/generator-helper": "6.16.2",
     "prisma": "6.16.1",
     "prisma-kysely": "2.2.0",
-    "uuid": "8.3.2",
+    "uuid": "11.1.1",
     "zod": "3.25.76",
     "zod-prisma-types": "3.2.4"
   },
