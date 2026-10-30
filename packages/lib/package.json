@@ -35,7 +35,7 @@
     "@biomejs/biome": "2.3.10",
     "@calcom/tsconfig": "workspace:*",
     "@calcom/types": "workspace:*",
-    "@faker-js/faker": "7.6.0",
+    "@faker-js/faker": "10.5.0",
     "typescript": "5.9.3"
   }
 }
