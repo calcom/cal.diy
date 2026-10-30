@@ -197,7 +197,9 @@ const Days = ({
   if (showNextMonthDays) {
     const startDay = 8;
     const pad = getPadding(startDay);
-    days = Array(pad).fill(null);
+    for (let i = pad; i > 0; i--) {
+      days.push(browsingDate.set("date", startDay - i));
+    }
 
     for (let day = startDay; day <= totalDays; day++) {
       days.push(browsingDate.set("date", day));
@@ -212,12 +214,25 @@ const Days = ({
       days.push(nextMonth.set("date", 1 + i));
     }
   } else {
-    // Traditional calendar grid logic for compact sidebar or early in month
+    // Traditional calendar grid logic: fill complete calendar weeks with trailing previous/next month days
     const pad = getPadding(1);
-    days = Array(pad).fill(null);
+    const prevMonth = browsingDate.subtract(1, "month");
+    const totalDaysPrev = daysInMonth(prevMonth);
+    for (let i = pad; i > 0; i--) {
+      days.push(prevMonth.set("date", totalDaysPrev - i + 1));
+    }
 
     for (let day = 1; day <= totalDays; day++) {
       days.push(browsingDate.set("date", day));
+    }
+
+    const remainingInRow = days.length % 7;
+    if (remainingInRow > 0) {
+      const extraDays = 7 - remainingInRow;
+      const nextMonth = browsingDate.add(1, "month");
+      for (let i = 0; i < extraDays; i++) {
+        days.push(nextMonth.set("date", 1 + i));
+      }
     }
   }
 
@@ -255,8 +270,8 @@ const Days = ({
     const daySlots = slots?.[dateKey] || [];
     const oooInfo = daySlots.find((slot) => slot.away) || null;
 
-    const isNextMonth = day.month() !== browsingDate.month();
-    const isFirstDayOfNextMonth = isSecondWeekOver && !isCompact && isNextMonth && day.date() === 1;
+    const isOutsideMonth = day.month() !== browsingDate.month();
+    const isFirstDayOfNextMonth = isSecondWeekOver && !isCompact && isOutsideMonth && day.date() === 1;
 
     const included = includedDates?.includes(dateKey);
     const excluded = excludedDates.includes(dateKey);
@@ -267,7 +282,7 @@ const Days = ({
 
     // OOO dates are selectable only if there's a redirect user OR the note is public
     const oooIsSelectable = oooInfo?.toUser || oooInfo?.showNotePublicly;
-    const disabled = away ? !oooIsSelectable : isNextMonth ? !hasAvailableSlots : !included || excluded;
+    const disabled = away ? !oooIsSelectable : isOutsideMonth ? !hasAvailableSlots : !included || excluded;
 
     return {
       day,
@@ -341,7 +356,7 @@ const Days = ({
               active={isActive(day)}
               away={away}
               emoji={emoji}
-              showMonthTooltip={showNextMonthDays && !disabled && day.month() !== browsingDate.month()}
+              showMonthTooltip={!disabled && day.month() !== browsingDate.month()}
               isFirstDayOfNextMonth={isFirstDayOfNextMonth}
             />
           )}
