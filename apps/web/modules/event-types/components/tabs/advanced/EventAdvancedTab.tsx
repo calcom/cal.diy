@@ -40,6 +40,7 @@ import {
   SelectField,
   SettingsToggle,
   Switch,
+  TextAreaField,
   TextField,
 } from "@calcom/ui/components/form";
 import {
@@ -713,6 +714,34 @@ export const EventAdvancedTab = ({
         onRequiresConfirmation={setRequiresConfirmation}
         customClassNames={customClassNames?.requiresConfirmation}
       />
+
+      <div className="border-subtle rounded-lg border px-4 py-6 sm:px-6">
+        <div className="mb-4">
+          <p className="text-default text-sm font-semibold">{t("booking_disclosure")}</p>
+          <p className="text-subtle text-sm">{t("booking_disclosure_description")}</p>
+        </div>
+        <div className="stack-y-4">
+          <TextAreaField
+            label={t("booking_disclosure_text")}
+            {...formMethods.register("metadata.bookingDisclosure.text")}
+          />
+          <p className="text-subtle -mt-2 text-sm">{t("booking_disclosure_text_description")}</p>
+          <TextField
+            label={t("privacy_policy_url")}
+            hint={t("privacy_policy_url_description")}
+            type="url"
+            placeholder="https://"
+            {...formMethods.register("metadata.bookingDisclosure.privacyPolicyUrl")}
+          />
+          <TextField
+            label={t("terms_of_service_url")}
+            hint={t("terms_of_service_url_description")}
+            type="url"
+            placeholder="https://"
+            {...formMethods.register("metadata.bookingDisclosure.termsOfServiceUrl")}
+          />
+        </div>
+      </div>
 
       {!isPlatform && (
         <>

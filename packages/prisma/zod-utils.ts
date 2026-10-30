@@ -144,6 +144,33 @@ export type BookerLayoutSettings = z.infer<typeof bookerLayouts>;
 export const RequiresConfirmationThresholdUnits: z.ZodType<UnitTypeLongPlural> = z.enum(["hours", "minutes"]);
 
 const _eventTypeMetaDataSchemaWithoutApps = z.object({
+  bookingDisclosure: z
+    .object({
+      text: z.string().trim().optional(),
+      privacyPolicyUrl: z
+        .string()
+        .trim()
+        .refine(
+          (value) =>
+            value === "" ||
+            (z.string().url().safeParse(value).success &&
+              ["http:", "https:"].includes(new URL(value).protocol)),
+          { message: "URL must use HTTP or HTTPS" }
+        )
+        .optional(),
+      termsOfServiceUrl: z
+        .string()
+        .trim()
+        .refine(
+          (value) =>
+            value === "" ||
+            (z.string().url().safeParse(value).success &&
+              ["http:", "https:"].includes(new URL(value).protocol)),
+          { message: "URL must use HTTP or HTTPS" }
+        )
+        .optional(),
+    })
+    .optional(),
   smartContractAddress: z.string().optional(),
   blockchainId: z.number().optional(),
   multipleDuration: z.number().array().optional(),
