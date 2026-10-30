@@ -15,6 +15,7 @@ export const CalendarServiceMap =
         googlecalendar: import("./googlecalendar/lib/CalendarService"),
         "ics-feedcalendar": import("./ics-feedcalendar/lib/CalendarService"),
         larkcalendar: import("./larkcalendar/lib/CalendarService"),
+        nostrcalendar: import("./nostrcalendar/lib/CalendarService"),
         office365calendar: import("./office365calendar/lib/CalendarService"),
         zohocalendar: import("./zohocalendar/lib/CalendarService"),
       };
