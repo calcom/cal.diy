@@ -63,7 +63,7 @@
     "@sentry/profiling-node": "9.46.0",
     "@snyk/protect": "latest",
     "axios": "1.15.0",
-    "body-parser": "1.20.3",
+    "body-parser": "1.20.9",
     "bull": "4.15.1",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.3",
