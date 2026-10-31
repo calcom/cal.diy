@@ -23,6 +23,7 @@ export const metadata = {
       linkType: "dynamic",
       type: "integrations:google:meet",
       label: "Google Meet",
+      urlRegExp: "^https?:\\/\\/(?:www\\.)?meet\\.google\\.com\\/[a-zA-Z0-9-_]+",
     },
   },
   dirName: "googlevideo",
