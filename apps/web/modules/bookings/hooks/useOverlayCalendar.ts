@@ -1,13 +1,11 @@
-import { useEffect, useState } from "react";
-import { shallow } from "zustand/shallow";
-
 import dayjs from "@calcom/dayjs";
 import { useOverlayCalendarStore } from "@calcom/features/bookings/Booker/components/OverlayCalendar/store";
+import { useLocalSet } from "@calcom/features/bookings/Booker/hooks/useLocalSet";
 import type { ToggledConnectedCalendars } from "@calcom/features/bookings/Booker/types";
 import { useTimePreferences } from "@calcom/features/bookings/lib";
-
+import { useEffect, useState } from "react";
+import { shallow } from "zustand/shallow";
 import type { WrappedBookerPropsMain } from "../types";
-import { useLocalSet } from "@calcom/features/bookings/Booker/hooks/useLocalSet";
 
 export const useOverlayCalendar = ({
   connectedCalendars,
@@ -57,23 +55,25 @@ export const useOverlayCalendar = ({
       setOverlayBusyDates(offsettedArray);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [overlayBusyDates]);
+  }, [overlayBusyDates, setOverlayBusyDates, timezone]);
 
   useEffect(() => {
     // Wait for the connected calendars to load, otherwise we'd initialise with nothing
-    if (connectedCalendars?.length && set.size === 0 && !initalised) {
-      // Start with the calendars the user checks for conflicts, that's what they consider themselves busy with
-      const defaultCalendars = connectedCalendars.flatMap((item) =>
-        (item.calendars ?? [])
-          .filter((cal) => cal.isSelected ?? cal.primary)
-          .map((cal) => ({ credentialId: item.credentialId, externalId: cal.externalId }))
-      );
-      defaultCalendars.forEach(addValue);
-      onToggleCalendar(new Set(defaultCalendars));
+    if (connectedCalendars?.length && !initalised) {
+      if (set.size === 0) {
+        // Start with the calendars the user checks for conflicts, that's what they consider themselves busy with
+        const defaultCalendars = connectedCalendars.flatMap((item) =>
+          (item.calendars ?? [])
+            .filter((cal) => cal.isSelected ?? cal.primary)
+            .map((cal) => ({ credentialId: item.credentialId, externalId: cal.externalId }))
+        );
+        defaultCalendars.forEach(addValue);
+        onToggleCalendar(new Set(defaultCalendars));
+      }
       setInitalised(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasItem, set, initalised]);
+  }, [connectedCalendars, set, initalised, addValue, onToggleCalendar]);
 
   const handleToggleConnectedCalendar = (externalCalendarId: string, credentialId: number): void => {
     const calendarsToLoad = toggleValue({
