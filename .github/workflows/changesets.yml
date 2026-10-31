@@ -24,7 +24,7 @@ jobs:
       - name: Setup Node and registry for OIDC
         uses: actions/setup-node@v4
         with:
-          node-version: "20.17.0"
+          node-version: "24.22.1"
           registry-url: "https://registry.npmjs.org"
           always-auth: false
       - name: Setup node, yarn and install dependencies
