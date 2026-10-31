@@ -14,7 +14,7 @@ description: "Run yarn install with node_modules linker and cache enabled"
 inputs:
   node_version:
     required: false
-    default: v20.x
+    default: v22.x
   skip-install-if-cache-hit:
     description: "Skip yarn install if node_modules cache is hit. Use this for jobs that only need to check that cache exists."
     required: false
