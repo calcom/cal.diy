@@ -1,13 +1,14 @@
+import process from "node:process";
+import { fetchWithTimeout } from "../fetchWithTimeout";
 import { HttpError } from "../http-error";
-
-const TURNSTILE_SECRET_ID = process.env.CLOUDFLARE_TURNSTILE_SECRET;
 
 export const INVALID_CLOUDFLARE_TOKEN_ERROR = "Invalid cloudflare token";
 
 export async function checkCfTurnstileToken({ token, remoteIp }: { token?: string; remoteIp: string }) {
+  const turnstileSecretId = process.env.CLOUDFLARE_TURNSTILE_SECRET;
   // This means the instance doesn't have turnstile enabled - we skip the check and just return success.
   // OR the instance is running in CI so we skip these checks also
-  if (!TURNSTILE_SECRET_ID || !!process.env.NEXT_PUBLIC_IS_E2E) {
+  if (!turnstileSecretId || !!process.env.NEXT_PUBLIC_IS_E2E) {
     return {
       success: true,
     };
@@ -18,14 +19,18 @@ export async function checkCfTurnstileToken({ token, remoteIp }: { token?: strin
   }
 
   const form = new URLSearchParams();
-  form.append("secret", TURNSTILE_SECRET_ID);
+  form.append("secret", turnstileSecretId);
   form.append("response", token);
   form.append("remoteip", remoteIp);
 
-  const result = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-    method: "POST",
-    body: form,
-  });
+  const result = await fetchWithTimeout(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    {
+      method: "POST",
+      body: form,
+    },
+    10000
+  );
 
   const data = await result.json();
 
