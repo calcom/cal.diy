@@ -18,11 +18,21 @@ import { setupAndTeardown } from "@calcom/testing/lib/bookingScenario/setupAndTe
 import { describe, expect, vi } from "vitest";
 
 import { processPaymentRefund } from "@calcom/features/bookings/lib/payment/processPaymentRefund";
+import {
+  cancelNoShowTasksForBooking,
+  deleteWebhookScheduledTriggers,
+} from "@calcom/features/webhooks/lib/scheduleTrigger";
 import { BookingStatus } from "@calcom/prisma/enums";
 import { test } from "@calcom/testing/lib/fixtures/fixtures";
 
 vi.mock("@calcom/features/bookings/lib/payment/processPaymentRefund", () => ({
   processPaymentRefund: vi.fn(),
+}));
+
+vi.mock("@calcom/features/webhooks/lib/scheduleTrigger", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@calcom/features/webhooks/lib/scheduleTrigger")>()),
+  cancelNoShowTasksForBooking: vi.fn(),
+  deleteWebhookScheduledTriggers: vi.fn(),
 }));
 
 describe("Cancel Booking", () => {
@@ -1355,6 +1365,115 @@ describe("Cancel Booking", () => {
     expect(result.success).toBe(true);
     expect(result.onlyRemovedAttendee).toBe(false);
     expect(result.bookingId).toBe(idOfBookingToBeCancelled);
+  });
+
+  test("Should only clean up scheduled webhooks and no-show tasks of the cancelled occurrences when cancelSubsequentBookings is true", async () => {
+    const handleCancelBooking = (await import("@calcom/features/bookings/lib/handleCancelBooking")).default;
+
+    const booker = getBooker({
+      email: "booker@example.com",
+      name: "Booker",
+    });
+
+    const organizer = getOrganizer({
+      name: "Organizer",
+      email: "organizer@example.com",
+      id: 101,
+      schedules: [TestData.schedules.IstWorkHours],
+      credentials: [getGoogleCalendarCredential()],
+      selectedCalendars: [TestData.selectedCalendars.google],
+    });
+
+    const recurringEventId = "recurring-subsequent-scope-456";
+    const occurrences = [1, 2, 3].map((dateIncrement, index) => {
+      const { dateString } = getDate({ dateIncrement });
+      return {
+        id: 6100 + index,
+        uid: `recurring-scope-${index + 1}`,
+        recurringEventId,
+        attendees: [{ email: booker.email }],
+        eventTypeId: 1,
+        userId: 101,
+        responses: {
+          email: booker.email,
+          name: booker.name,
+          location: { optionValue: "", value: BookingLocations.CalVideo },
+        },
+        status: BookingStatus.ACCEPTED,
+        startTime: `${dateString}T05:00:00.000Z`,
+        endTime: `${dateString}T05:30:00.000Z`,
+      };
+    });
+
+    await createBookingScenario(
+      getScenarioData({
+        eventTypes: [
+          {
+            id: 1,
+            slotInterval: 30,
+            length: 30,
+            recurringEvent: {
+              freq: 2, // weekly
+              count: 3,
+              interval: 1,
+            },
+            users: [
+              {
+                id: 101,
+              },
+            ],
+          },
+        ],
+        bookings: occurrences,
+        organizer,
+        apps: [TestData.apps["daily-video"]],
+      })
+    );
+
+    mockSuccessfulVideoMeetingCreation({
+      metadataLookupKey: "dailyvideo",
+      videoMeetingData: {
+        id: "MOCK_ID",
+        password: "MOCK_PASS",
+        url: `http://mock-dailyvideo.example.com/meeting-subsequent-scope`,
+      },
+    });
+
+    mockCalendarToHaveNoBusySlots("googlecalendar", {
+      create: {
+        id: "MOCKED_GOOGLE_CALENDAR_EVENT_ID_SUBSEQUENT_SCOPE",
+      },
+    });
+
+    vi.mocked(cancelNoShowTasksForBooking).mockClear();
+    vi.mocked(deleteWebhookScheduledTriggers).mockClear();
+
+    // Cancel the middle occurrence and everything after it. The first occurrence still takes place.
+    const [firstOccurrence, middleOccurrence, lastOccurrence] = occurrences;
+    const result = await handleCancelBooking({
+      bookingData: {
+        id: middleOccurrence.id,
+        uid: middleOccurrence.uid,
+        cancelledBy: organizer.email,
+        cancellationReason: "Cancelling this and all subsequent bookings",
+        cancelSubsequentBookings: true,
+      },
+      userId: organizer.id,
+    });
+
+    expect(result.success).toBe(true);
+
+    const noShowCleanupUids = vi
+      .mocked(cancelNoShowTasksForBooking)
+      .mock.calls.map(([{ bookingUid }]) => bookingUid);
+    const webhookCleanupUids = vi
+      .mocked(deleteWebhookScheduledTriggers)
+      .mock.calls.map(([{ booking }]) => booking.uid);
+
+    expect(noShowCleanupUids.sort()).toEqual([middleOccurrence.uid, lastOccurrence.uid].sort());
+    expect(webhookCleanupUids.sort()).toEqual([middleOccurrence.uid, lastOccurrence.uid].sort());
+    expect(noShowCleanupUids).not.toContain(firstOccurrence.uid);
+    expect(webhookCleanupUids).not.toContain(firstOccurrence.uid);
   });
 
   test("Should handle booking reference cleanup during cancellation", async () => {
