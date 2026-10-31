@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { BookingStatus, SchedulingType } from "@calcom/prisma/enums";
+import { BookingStatus, SchedulingType , DisableCancelling } from "@calcom/prisma/enums";
 
 import {
   getPendingActions,
@@ -107,7 +107,7 @@ function createMockContext(overrides: Partial<BookingActionContext> = {}): Booki
     isRecurring: false,
     isTabRecurring: false,
     isTabUnconfirmed: false,
-    isDisabledCancelling: false,
+    isDisabledCancelling: DisableCancelling.NOBODY,
     isDisabledRescheduling: false,
     isCalVideoLocation: true,
     showPendingPayment: false,
@@ -185,11 +185,31 @@ describe("Booking Actions", () => {
       });
     });
 
-    it("should be disabled when cancellation is disabled", () => {
-      const context = createMockContext({ isDisabledCancelling: true });
+    it("should be disabled when cancellation is disabled for both host and guests", () => {
+      const context = createMockContext({ isDisabledCancelling: DisableCancelling.BOTH_HOST_GUESTS});
       const action = getCancelEventAction(context);
 
       expect(action.disabled).toBe(true);
+    });
+
+    it("should be disabled when cancellation is disabled for guests and current logged in user is a guest", () => {
+      const context = createMockContext({ isDisabledCancelling: DisableCancelling.GUESTS});
+      context.booking.loggedInUser = {
+        userId: 4,
+        userTimeZone: "Asia/Calcutta",
+        userTimeFormat: 12,
+        userEmail: "pro@example.com",
+      }
+
+      const action = getCancelEventAction(context);
+      expect(action.disabled).toBe(true);
+    });
+
+    it("should be enabled when cancellation is disabled for guests and current logged in user is host", () => {
+      const context = createMockContext({ isDisabledCancelling: DisableCancelling.GUESTS});
+
+      const action = getCancelEventAction(context);
+      expect(action.disabled).toBe(false);
     });
 
     it("should be disabled for past pending bookings", () => {
@@ -534,10 +554,29 @@ describe("Booking Actions", () => {
       expect(isActionDisabled("reschedule_request", context)).toBe(true);
     });
 
-    it("should disable cancel action when cancellation is disabled", () => {
-      const context = createMockContext({ isDisabledCancelling: true });
+    it("should disable cancel action when cancellation is disabled for both host and guest", () => {
+      const context = createMockContext({ isDisabledCancelling: DisableCancelling.BOTH_HOST_GUESTS });
 
       expect(isActionDisabled("cancel", context)).toBe(true);
+    });
+
+    it("should be disabled when cancellation is disabled for guests and current logged in user is a guest", () => {
+      const context = createMockContext({ isDisabledCancelling: DisableCancelling.GUESTS});
+      context.booking.loggedInUser = {
+        userId: 4,
+        userTimeZone: "Asia/Calcutta",
+        userTimeFormat: 12,
+        userEmail: "pro@example.com",
+      }
+
+      expect(isActionDisabled("cancel", context)).toBe(true);
+    });
+
+    it("should be enabled when cancellation is disabled for guests and current logged in user is host", () => {
+      const context = createMockContext({ isDisabledCancelling: DisableCancelling.GUESTS});
+
+      const action = getCancelEventAction(context);
+      expect(isActionDisabled("cancel", context)).toBe(false);
     });
 
     it("should disable cancelling all past bookings", () => {
