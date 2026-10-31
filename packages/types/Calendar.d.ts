@@ -224,6 +224,7 @@ export interface CalendarEvent {
   oneTimePassword?: string | null;
   delegationCredentialId?: string | null;
   customReplyToEmail?: string | null;
+  customEmailSubject?: string | null;
   rescheduledBy?: string;
   organizationId?: number | null;
   hasOrganizerChanged?: boolean;
