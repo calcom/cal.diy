@@ -19,12 +19,20 @@ function getUser(username: string) {
   });
 }
 
-export const userHandler = async ({ input }: UserOptions) => {
+export const userHandler = async ({ ctx, input }: UserOptions) => {
   const userAvailabilityService = getUserAvailabilityService();
   const user = await getUser(input.username);
   if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+  // Titles of calendar events are private. Only the owner gets them, anyone else just sees busy times.
+  // Compared by id because usernames aren't unique across organizations.
+  const isOwnAvailability = user.id === ctx.user.id;
   return userAvailabilityService.getUserAvailabilityIncludingBusyTimesFromLimits(
-    { returnDateOverrides: true, bypassBusyCalendarTimes: false, ...input },
+    {
+      returnDateOverrides: true,
+      bypassBusyCalendarTimes: false,
+      ...input,
+      ...(isOwnAvailability ? { mode: "overlay" as const } : {}),
+    },
     {
       user,
     }
