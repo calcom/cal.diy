@@ -3,9 +3,26 @@ import classNames from "classnames";
 
 import type { LayoutProps } from "~/shell/Shell";
 
+type ShellMainAppDirProps = Pick<
+  LayoutProps,
+  | "heading"
+  | "subtitle"
+  | "headerClassName"
+  | "CTA"
+  | "actions"
+  | "beforeCTAactions"
+  | "afterHeading"
+  | "backPath"
+  | "HeadingLeftIcon"
+  | "smallHeading"
+  | "large"
+  | "flexChildrenContainer"
+  | "children"
+>;
+
 // Copied from `ShellMain` but with a different `ShellMainAppDirBackButton` import
 // for client/server component separation
-export function ShellMainAppDir(props: LayoutProps) {
+export function ShellMainAppDir(props: ShellMainAppDirProps) {
   return (
     <>
       {(props.heading || !!props.backPath) && (
