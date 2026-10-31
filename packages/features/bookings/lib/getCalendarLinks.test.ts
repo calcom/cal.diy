@@ -99,7 +99,7 @@ describe("getCalendarLinks", () => {
       expect(microsoftOutlookLink?.link).toContain("https://outlook.live.com/calendar/0/deeplink/compose");
       expect(microsoftOutlookLink?.link).toContain("enddt=");
       expect(microsoftOutlookLink?.link).toContain("startdt=");
-      expect(microsoftOutlookLink?.link).toContain("body=Test%20Description");
+      expect(new URL(microsoftOutlookLink!.link).searchParams.get("body")).toBe("Test Description");
     })();
 
     (function verifyIcsLink() {
@@ -150,16 +150,20 @@ describe("getCalendarLinks", () => {
 
     const googleLink = result.find((link) => link.id === CalendarLinkType.GOOGLE_CALENDAR);
     expect(googleLink?.link).toContain(`details=${encodeURIComponent(eventType.description)}`);
-    expect(googleLink?.link).toContain(`text=${customTitle}`);
+    expect(new URL(googleLink!.link).searchParams.get("text")).toBe(customTitle);
 
     // Check Office 365 link
     const microsoftOfficeLink = result.find((link) => link.id === CalendarLinkType.MICROSOFT_OFFICE);
     expect(microsoftOfficeLink?.link).toContain("body=Test%20Description");
-    expect(microsoftOfficeLink?.link).toContain(`subject=${customTitle}`);
+    expect(
+        new URL(microsoftOfficeLink!.link).searchParams.get("subject")
+      ).toBe(customTitle);
 
     // Check Outlook link
     const microsoftOutlookLink = result.find((link) => link.id === CalendarLinkType.MICROSOFT_OUTLOOK);
-    expect(microsoftOutlookLink?.link).toContain("body=Test%20Description");
+    expect(
+  new URL(microsoftOutlookLink!.link).searchParams.get("body")
+).toBe("Test Description");
     expect(microsoftOutlookLink?.link).toContain(`subject=${encodeURIComponent(customTitle)}`);
   });
 
