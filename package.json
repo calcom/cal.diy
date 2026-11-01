@@ -186,7 +186,7 @@
     "multer": "2.1.1",
     "flatted": "3.4.2",
     "socket.io-parser": "4.2.6",
-    "vite": "6.4.4",
+    "vite": "6.4.5",
     "defu": "6.1.5",
     "immutable": "3.8.3",
     "@hono/node-server": "1.19.13",
