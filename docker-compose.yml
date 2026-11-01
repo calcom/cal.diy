@@ -13,7 +13,7 @@
 services:
   cal:
     build: .
-    image: cal-diy:latest
+    image: ${IMAGE:-cal-diy:latest}
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
