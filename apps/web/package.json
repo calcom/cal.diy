@@ -186,7 +186,7 @@
     "detect-port": "1.3.0",
     "dotenv-cli": "6.0.0",
     "env-cmd": "10.1.0",
-    "glob": "10.5.0",
+    "glob": "10.4.5",
     "google-auth-library": "9.15.0",
     "module-alias": "2.2.2",
     "node-html-parser": "6.1.13",
