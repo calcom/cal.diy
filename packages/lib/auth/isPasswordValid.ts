@@ -1,9 +1,15 @@
 export function isPasswordValid(password: string): boolean;
+export function isPasswordValid(password: string, breakdown: false, strict?: boolean): boolean;
+export function isPasswordValid(
+  password: string,
+  breakdown: true,
+  strict?: boolean
+): { caplow: boolean; num: boolean; min: boolean; admin_min: boolean };
 export function isPasswordValid(
   password: string,
   breakdown: boolean,
   strict?: boolean
-): { caplow: boolean; num: boolean; min: boolean; admin_min: boolean };
+): boolean | { caplow: boolean; num: boolean; min: boolean; admin_min: boolean };
 export function isPasswordValid(password: string, breakdown?: boolean, strict?: boolean) {
   let cap = false, // Has uppercase characters
     low = false, // Has lowercase characters

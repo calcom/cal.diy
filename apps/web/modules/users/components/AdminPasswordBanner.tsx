@@ -14,11 +14,14 @@ function getBannerMessageKey(reason: "both" | "password" | "2fa" | undefined): s
       return "invalid_admin_password_2fa_only";
     case "both":
     default:
-      return "invalid_admin_password";
+      return "invalid_admin_password_requirements";
   }
 }
 
-function getBannerAction(reason: "both" | "password" | "2fa" | undefined): { href: string; labelKey: string } {
+function getBannerAction(reason: "both" | "password" | "2fa" | undefined): {
+  href: string;
+  labelKey: string;
+} {
   switch (reason) {
     case "2fa":
       return { href: "/settings/security/two-factor-auth", labelKey: "enable_2fa" };
