@@ -113,7 +113,7 @@
     "next-i18next": "15.4.2",
     "next-seo": "6.1.0",
     "next-themes": "0.2.0",
-    "nodemailer": "7.0.12",
+    "nodemailer": "10.1.4",
     "nuqs": "2.8.2",
     "openid-client": "6.5.0",
     "otplib": "12.0.1",
