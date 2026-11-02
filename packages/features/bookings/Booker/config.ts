@@ -169,7 +169,23 @@ export const useBookerResizeAnimation = (layout: BookerLayout, state: BookerStat
   const isEmbed = typeof window !== "undefined" && window?.isEmbed?.();
   ``;
   useEffect(() => {
-    const animationConfig = resizeAnimationConfig[layout][state] || resizeAnimationConfig[layout].default;
+    let animationConfig = resizeAnimationConfig[layout][state] || resizeAnimationConfig[layout].default;
+
+    // AIM: OnceHub-style variant (?amPm=1) stacks the time slots BELOW the compact
+    // calendar (month_view only) instead of a right-hand column, and drops the tall
+    // min-height so there's no empty space under the short calendar.
+    const amPmMode =
+      typeof window !== "undefined" && new URLSearchParams(window.location.search).get("amPm") === "1";
+    if (amPmMode && layout === BookerLayouts.MONTH_VIEW) {
+      animationConfig = {
+        width: "var(--booker-main-width)",
+        height: "auto",
+        minHeight: "0px",
+        gridTemplateAreas: `"main" "timeslots"`,
+        gridTemplateColumns: "100%",
+        gridTemplateRows: "auto auto",
+      };
+    }
 
     if (!animationScope.current) return;
 

@@ -180,7 +180,7 @@ const SlotItem = ({
                 )}
               />
             )}
-            {computedDateWithUsersTimezone.format(timeFormat)}
+            {computedDateWithUsersTimezone.format(getQueryParam("amPm") === "1" ? "h:mma" : timeFormat)}
           </div>
           {bookingFull && <p className="text-sm">{t("booking_full")}</p>}
           {hasTimeSlots && !bookingFull && (
@@ -262,6 +262,11 @@ export const AvailableTimes = ({
   ...props
 }: AvailableTimesProps) => {
   const { t } = useLocale();
+  const { timezone } = useBookerTime();
+  // AIM: OnceHub-style split-test variant. When the booking link carries ?amPm=1
+  // (funnel variant B), render the day's slots as two columns (AM | PM) like the
+  // legacy OnceHub widget. Default (no param) keeps the stock single-column list.
+  const amPmMode = getQueryParam("amPm") === "1";
 
   const oooAllDay = slots.every((slot) => slot.away);
   if (oooAllDay) {
@@ -271,6 +276,44 @@ export const AvailableTimes = ({
   // Display ooo in slots once but after or before slots
   const oooBeforeSlots = slots[0] && slots[0].away;
   const oooAfterSlots = slots[slots.length - 1] && slots[slots.length - 1].away;
+
+  if (amPmMode) {
+    const realSlots = slots.filter((slot) => !slot.away);
+    const isAm = (slot: Slot) => dayjs.utc(slot.time).tz(timezone).hour() < 12;
+    const amSlots = realSlots.filter(isAm);
+    const pmSlots = realSlots.filter((slot) => !isAm(slot));
+    return (
+      <div className={classNames("text-default flex flex-col", className)}>
+        <div className="h-full pb-4">
+          {!realSlots.length && (
+            <div
+              data-testId="no-slots-available"
+              className="bg-subtle border-subtle flex h-full flex-col items-center rounded-md border p-6 dark:bg-transparent">
+              <CalendarX2Icon className="text-muted mb-2 h-4 w-4" />
+              <p className={classNames("text-muted", showTimeFormatToggle ? "-mt-1 text-lg" : "text-sm")}>
+                {t("all_booked_today")}
+              </p>
+            </div>
+          )}
+          {!!realSlots.length && (
+            <div className="flex gap-3">
+              {[
+                { label: "AM", items: amSlots },
+                { label: "PM", items: pmSlots },
+              ].map((col) => (
+                <div key={col.label} className="flex flex-1 flex-col">
+                  <p className="text-emphasis mb-2 text-center text-sm font-semibold">{col.label}</p>
+                  {col.items.map((slot) => (
+                    <SlotItem key={slot.time} slot={slot} {...props} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={classNames("text-default flex flex-col", className)}>

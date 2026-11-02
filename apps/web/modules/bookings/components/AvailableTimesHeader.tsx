@@ -3,6 +3,7 @@ import { shallow } from "zustand/shallow";
 import type { Dayjs } from "@calcom/dayjs";
 import dayjs from "@calcom/dayjs";
 import { useBookerStoreContext } from "@calcom/features/bookings/Booker/BookerStoreProvider";
+import { getQueryParam } from "@calcom/features/bookings/Booker/utils/query-param";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { nameOfDay } from "@calcom/lib/weekday";
 import { BookerLayouts } from "@calcom/prisma/zod-utils";
@@ -65,7 +66,9 @@ export const AvailableTimesHeader = ({
         </span>
       </span>
 
-      {showTimeFormatToggle && (
+      {/* AIM: in the OnceHub-style AM/PM variant (?amPm=1) the 12h/24h toggle is
+          meaningless (slots are already split AM|PM and forced to 12h), so hide it. */}
+      {showTimeFormatToggle && getQueryParam("amPm") !== "1" && (
         <div className="ml-auto rtl:mr-auto">
           <TimeFormatToggle customClassName={customClassNames?.availableTimeSlotsTimeFormatToggle} />
         </div>
