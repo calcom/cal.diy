@@ -697,6 +697,7 @@ describe("handleNewBooking", () => {
             organizer,
             emails,
             iCalUID,
+            appsStatus: createdBooking.appsStatus,
           });
 
           // FIXME: We should send Broken Integration emails on calendar event creation failure
@@ -2610,6 +2611,7 @@ describe("handleNewBooking", () => {
             organizer,
             emails,
             iCalUID,
+            appsStatus: evt.appsStatus,
           });
         },
         timeout
