@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from "@coss/ui/components/alert";
 import { Badge } from "@coss/ui/components/badge";
 import { Button } from "@coss/ui/components/button";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -34,6 +35,7 @@ const MESSAGE_KEYS = [
   "copy",
   "copied",
   "download",
+  "admin_needs_two_factor",
   ...AUTH_ERROR_MESSAGE_KEYS,
 ];
 
@@ -49,6 +51,7 @@ function secretFromTotpUri(uri: string): string {
 
 function TwoFactorPage() {
   const { security } = Route.useLoaderData();
+  const { adminRequired } = Route.useSearch();
   const t = useT();
   const router = useRouter();
   const [step, setStep] = useState<Step>({ kind: "idle" });
@@ -122,6 +125,11 @@ function TwoFactorPage() {
 
   return (
     <HydratedFieldset className="flex max-w-lg flex-col gap-4">
+      {adminRequired && !security.twoFactorEnabled && (
+        <Alert variant="warning">
+          <AlertDescription>{t("admin_needs_two_factor")}</AlertDescription>
+        </Alert>
+      )}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="flex items-center gap-2 font-heading text-lg">
@@ -228,6 +236,8 @@ function TwoFactorPage() {
 }
 
 export const Route = createFileRoute("/_authed/settings/security/two-factor-auth")({
+  validateSearch: (search: Record<string, unknown>): { adminRequired?: true } =>
+    search.adminRequired === true || search.adminRequired === "true" ? { adminRequired: true } : {},
   loader: async ({ context }) => {
     const [messages, security] = await Promise.all([loadMessages(context, MESSAGE_KEYS), getSecurity()]);
     return { messages, security };
