@@ -13,7 +13,7 @@ import {
   verification,
 } from "@calcom/db/schema";
 import { isPasswordValid } from "@calcom/lib/auth/isPasswordValid";
-import { type BetterAuthOptions, type BetterAuthPlugin, betterAuth } from "better-auth";
+import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { admin } from "better-auth/plugins/admin";
@@ -310,7 +310,7 @@ export function createAuth({
  * signs into an existing account only when it reports that account's email as verified.
  */
 function oidcPlugin(config: OidcConfig) {
-  const plugin = genericOAuth({
+  return genericOAuth({
     config: [
       {
         providerId: OIDC_PROVIDER_ID,
@@ -324,13 +324,6 @@ function oidcPlugin(config: OidcConfig) {
       },
     ],
   });
-  return {
-    ...plugin,
-    // Yarn installs a second copy of @better-auth/core inside better-auth (it needs zod 4; the app
-    // pins zod 3). The copies are the same version, but TypeScript sees their OAuth provider types as
-    // different, and this is the only plugin whose init returns them.
-    init: plugin.init as BetterAuthPlugin["init"],
-  };
 }
 
 export type Auth = ReturnType<typeof createAuth>;

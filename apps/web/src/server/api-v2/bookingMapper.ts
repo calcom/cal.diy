@@ -32,7 +32,7 @@ const createBookingInputSchema = z
     username: z.string().min(1).max(100).optional(),
     guests: z.array(z.string().trim().email().max(320)).max(30).optional(),
     location: bookingLocationSchema.optional(),
-    bookingFieldsResponses: z.record(z.unknown()).optional(),
+    bookingFieldsResponses: z.record(z.string(), z.unknown()).optional(),
     lengthInMinutes: z.number().int().min(1).max(1440).optional(),
     recurrenceCount: z.number().int().min(1).max(100).optional(),
     emailVerificationCode: z
@@ -49,11 +49,11 @@ type CreateBookingApiInput = z.infer<typeof createBookingInputSchema>;
 
 const STATUSES = ["upcoming", "recurring", "past", "cancelled", "unconfirmed"] as const;
 const sortOrder = z.enum(["asc", "desc"]).optional();
-const commaList = <T extends z.ZodTypeAny>(item: T) =>
-  z
-    .string()
-    .transform((value) => value.split(",").map((part) => part.trim()))
-    .pipe(z.array(item).min(1));
+const commaList = <T extends z.ZodType>(item: T) =>
+  z.preprocess(
+    (value) => (typeof value === "string" ? value.split(",").map((part) => part.trim()) : value),
+    z.array(item).min(1)
+  );
 
 const listBookingsQuerySchema = z.object({
   status: commaList(z.enum(STATUSES)).optional(),
