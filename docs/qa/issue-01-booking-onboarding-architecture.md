@@ -152,3 +152,20 @@ UI hiển thị câu “We sent an email with a calendar invitation...” ở �
 - Lặp lại cài đặt trên máy/profile Docker khác để kiểm tra khả năng tái lập; lần chạy trên checkout PR nêu trên chỉ xác nhận môi trường hiện tại.
 - Nếu cần khẳng định trạng thái database ngay sau từng thao tác, chạy lại kịch bản và truy vấn chỉ đọc sau mỗi bước; bản ghi hiện tại chỉ giữ trạng thái cuối. Kiểm tra trường hợp slot không còn khả dụng trước khi chốt đầy đủ chuyển tiếp của mô hình MBT.
 - Kiểm chứng việc gửi/nhận email bằng hộp thư hoặc log phù hợp nếu đưa thông báo email vào kết luận báo cáo.
+
+## 9. Tái lập từ checkout sạch (02/11/2026)
+
+Chạy lại harness Issue #6 từ một bản clone mới của tag `mbt-baseline-1` (`280ae3a6d3a58961f4552025f470ae52c829a96c`) trong thư mục riêng, với toolchain tải mới (Node, JDK, PowerShell 7, GraphWalker, Chromium trong `tools/issue06-env`). Đây là **cùng một máy vật lý** với các lần chạy trước của người viết, không phải máy khác: chứng minh được tái lập từ checkout và toolchain mới, **chưa chứng minh trên phần cứng khác**. Image `postgres:17-alpine` đã có sẵn trong cache Docker, không pull mới.
+
+- Kết quả: **pass**, 25 bước, edge 6/6 (100%), vertex 5/5 (100%); stale-slot trả HTTP 409, A không đổi, không tạo B. Evidence: [`issue-06-2026-11-02T15-07-24-820Z.json`](evidence/issue-06-2026-11-02T15-07-24-820Z.json).
+- Môi trường: Windows, Node 20.20.2, Temurin JDK 21.0.13+9, Docker 29.4.1, PostgreSQL 17.11, GraphWalker 4.3.3, PowerShell 7.6.9.
+- Evidence ghi `dirty=true`. Nguyên nhân đã kiểm tra: `yarn install` sinh lại các file `*.generated.ts` và `schema.prisma`, cộng với `core.autocrlf=true`; `git diff --ignore-cr-at-eol` rỗng nên nội dung không đổi, chỉ khác ký tự xuống dòng.
+- Thời gian: `yarn install --immutable` khoảng 6 phút, harness khoảng 3 phút.
+
+Các điểm lệch so với `apps/web/playwright/mbt/README.md` gặp trên máy sạch:
+
+1. **PowerShell 7 là bắt buộc.** Trên Windows PowerShell 5.1, `prepare-issue-04-env.ps1` báo lỗi `GetBytes` nhưng vẫn ghi ra `.env` hỏng (bản sao `.env.example`, thiếu `POSTGRES_USER`, `DATABASE_HOST`). Phải xóa `.env` đó rồi chạy lại bằng `pwsh`.
+2. **README không chỉ cách lấy Node 20.20.2 và JDK 21** vào `tools/issue06-env`. JDK tải mới là 21.0.13+9, khác bản 21.0.12.1 trong evidence cũ.
+3. **Lệnh `dev -p 3000` lỗi trên PowerShell 7.6.9** (`-p` mơ hồ với `-ProgressAction` / `-PipelineVariable`). Dùng `dev --port 3000`.
+4. **Cổng:** harness dùng web dev server ở cổng 3000 và PostgreSQL riêng ở cổng 5450 (container `caldiy-issue04-db`), không dùng app Compose ở cổng 3001 / DB 5433.
+5. `yarn install` lần đầu bị gián đoạn ở bước Link khi phiên làm việc kết thúc; chạy lại lệnh thì hoàn tất. Không ảnh hưởng kết quả.
