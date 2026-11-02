@@ -18,9 +18,11 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { admin } from "better-auth/plugins/admin";
 import { adminAc, userAc } from "better-auth/plugins/admin/access";
+import { genericOAuth } from "better-auth/plugins/generic-oauth";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { MIN_PASSWORD_LENGTH } from "~/lib/auth-errors";
+import { OIDC_PROVIDER_ID } from "~/lib/oidc";
 import { RESERVED_USERNAMES } from "~/lib/reserved-usernames";
 import { pickMessages } from "../catalog";
 import type { AuthEmailKind } from "../emails/templates";
@@ -30,6 +32,7 @@ import { ScheduleRepository } from "../schedules/ScheduleRepository";
 import { ScheduleService } from "../schedules/ScheduleService";
 import { UserRepository } from "../users/UserRepository";
 import { createPasswordVerifier } from "./legacyPassword";
+import type { OidcConfig } from "./oidc";
 import { teamsAuthSchema, teamsPlugin } from "./organizations";
 import { findAvailableUsername, normalizeUsername, usernameFromEmail } from "./username";
 
@@ -167,6 +170,8 @@ export type AuthConfig = {
   baseURL: string;
   secret: string;
   google?: { clientId: string; clientSecret: string };
+  /** Single sign-on through the instance's own OpenID Connect provider. */
+  oidc?: OidcConfig;
   /** Headers the runtime guarantees hold the real client IP; rate limiting is keyed on it. */
   clientIpHeaders: string[];
   rateLimit: boolean;
@@ -196,6 +201,7 @@ export function createAuth({
   baseURL,
   secret,
   google,
+  oidc,
   clientIpHeaders,
   rateLimit,
   sendAuthEmail,
@@ -292,8 +298,30 @@ export function createAuth({
         keyExpiration: { defaultExpiresIn: null },
       }),
       teamsPlugin(sendAuthEmail, baseURL),
+      ...(oidc ? [oidcPlugin(oidc)] : []),
       // Must stay last so it sees the cookies every other plugin sets.
       tanstackStartCookies(),
+    ],
+  });
+}
+
+/**
+ * Sign-in through an OpenID Connect provider. It isn't a trusted provider for account linking, so it
+ * signs into an existing account only when it reports that account's email as verified.
+ */
+function oidcPlugin(config: OidcConfig) {
+  return genericOAuth({
+    config: [
+      {
+        providerId: OIDC_PROVIDER_ID,
+        discoveryUrl: config.discoveryUrl,
+        clientId: config.clientId,
+        clientSecret: config.clientSecret,
+        scopes: ["openid", "email", "profile"],
+        pkce: true,
+        // Without the provider's published keys, ID tokens would be decoded without checking their signature.
+        requireIdTokenVerification: true,
+      },
     ],
   });
 }

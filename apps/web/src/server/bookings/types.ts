@@ -23,9 +23,11 @@ export const createBookingSchema = z.object({
   timeZone: z.string().min(1).max(100),
   locale: z.string().max(20).default("en"),
   /** Answers keyed by booking field name, in Cal's format; checked against the event's questions. */
-  responses: z.record(z.unknown()).refine((value) => JSON.stringify(value).length <= MAX_RESPONSES_BYTES, {
-    message: "something_went_wrong",
-  }),
+  responses: z
+    .record(z.string(), z.unknown())
+    .refine((value) => JSON.stringify(value).length <= MAX_RESPONSES_BYTES, {
+      message: "something_went_wrong",
+    }),
   rescheduleUid: z.string().max(100).optional(),
   /** Who moved the booking (Cal's rescheduledBy); the booker unless the host did it or someone is named. */
   rescheduledBy: z.string().trim().email().max(320).optional(),

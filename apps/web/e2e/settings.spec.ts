@@ -18,6 +18,17 @@ function nextMonthRange(): { start: string; end: string } {
   return { start: first.toISOString().slice(0, 10), end: last.toISOString().slice(0, 10) };
 }
 
+/**
+ * A trip covering all of next month. It starts a week early because the host's hours on the day
+ * before the 1st can already fall on the 1st in the guest's time zone, the first day the guest sees.
+ */
+function tripCoveringNextMonth(): { start: string; end: string } {
+  const { end } = nextMonthRange();
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1 - 7));
+  return { start: start.toISOString().slice(0, 10), end };
+}
+
 test("general settings reach the dashboard and the public booking page", async ({ page, browser }) => {
   const { username } = await signUp(page);
   await page.goto("/settings/my-account/general");
@@ -54,7 +65,7 @@ test("a trip moves the host's working hours into the travel time zone", async ({
   const guest = await guestContext.newPage();
   expect(await firstSlotNextMonth(guest, username)).not.toBe("9:00 AM");
 
-  const { start, end } = nextMonthRange();
+  const { start, end } = tripCoveringNextMonth();
   await host.goto("/settings/my-account/general");
   await host.getByRole("button", { name: "Schedule timezone change" }).click();
   await host.getByLabel("Date", { exact: true }).fill(start);

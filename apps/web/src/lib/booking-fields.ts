@@ -84,7 +84,7 @@ const bookingFieldShape = z.object({
     .optional(),
   options: z.array(optionSchema).max(100).optional(),
   getOptionsAt: z.string().max(100).optional(),
-  optionsInputs: z.record(optionInputSchema).optional(),
+  optionsInputs: z.record(z.string(), optionInputSchema).optional(),
   hideWhenJustOneOption: z.boolean().optional(),
   minLength: z.number().int().min(0).max(MAX_TEXT_LENGTH).optional(),
   maxLength: z.number().int().min(1).max(MAX_TEXT_LENGTH).optional(),
@@ -92,7 +92,7 @@ const bookingFieldShape = z.object({
   requireEmails: z.string().max(5000).optional(),
   views: z.array(z.object({ id: z.string(), label: z.string().optional() })).optional(),
   /** Where a field came from (default, user, a workflow); Cal shows it in the editor. */
-  sources: z.array(z.record(z.union([z.string(), z.number(), z.boolean(), z.null()]))).optional(),
+  sources: z.array(z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))).optional(),
 });
 
 /** One question. Unknown Cal properties (variants, sources) are kept as they are. */

@@ -652,7 +652,7 @@ __metadata:
     vite: "npm:8.3.5"
     vitest: "npm:4.1.8"
     wrangler: "npm:4.153.0"
-    zod: "npm:3.25.76"
+    zod: "npm:4.6.7"
   languageName: unknown
   linkType: soft
 
@@ -6958,14 +6958,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:3.25.76":
-  version: 3.25.76
-  resolution: "zod@npm:3.25.76"
-  checksum: 10/f0c963ec40cd96858451d1690404d603d36507c1fc9682f2dae59ab38b578687d542708a7fdbf645f77926f78c9ed558f57c3d3aa226c285f798df0c4da16995
-  languageName: node
-  linkType: hard
-
-"zod@npm:^4.5.4":
+"zod@npm:4.6.7, zod@npm:^4.5.4":
   version: 4.6.7
   resolution: "zod@npm:4.6.7"
   checksum: 10/3ca8b8d6bb401538e59504c543db629ea7beaa775e504c3f22269b406fdffbf1431c856d59a597bf66d8487e4d2be12b03a55d76fc2c63d9f046eae1ca173bca

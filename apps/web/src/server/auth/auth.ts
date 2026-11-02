@@ -5,6 +5,7 @@ import { IS_PRODUCTION_BUILD } from "../build";
 import { getDb } from "../db";
 import { createEmailService } from "../emails/container";
 import { type Auth, type AuthEmailSender, createAuth } from "./createAuth";
+import { oidcConfigFromEnv } from "./oidc";
 import { authSecret } from "./secret";
 import { CLIENT_IP_HEADERS } from "#runtime";
 
@@ -29,6 +30,7 @@ async function init(): Promise<Auth> {
       GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET
         ? { clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET }
         : undefined,
+    oidc: oidcConfigFromEnv(process.env) ?? undefined,
   });
 }
 

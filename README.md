@@ -167,6 +167,7 @@ URIs keep Cal's paths, so an OAuth app registered for an earlier install keeps w
 | Integration | Settings | Redirect URI |
 | --- | --- | --- |
 | Google sign-in, Google Calendar and Meet | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `<BETTER_AUTH_URL>/api/auth/callback/google` and `<BETTER_AUTH_URL>/api/integrations/googlecalendar/callback` |
+| Single sign-on (any OpenID Connect provider) | `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, optional `OIDC_NAME` (button label) | `<BETTER_AUTH_URL>/api/auth/callback/oidc` |
 | Outlook Calendar and Teams | `MS_GRAPH_CLIENT_ID`, `MS_GRAPH_CLIENT_SECRET` | `<BETTER_AUTH_URL>/api/integrations/office365calendar/callback` and `<BETTER_AUTH_URL>/api/integrations/office365video/callback` |
 | Zoom | `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET` | `<BETTER_AUTH_URL>/api/integrations/zoomvideo/callback` |
 | Cal Video (Daily) | `DAILY_API_KEY` | |
