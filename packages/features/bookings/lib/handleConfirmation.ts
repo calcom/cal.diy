@@ -18,6 +18,7 @@ import type { PlatformClientParams } from "@calcom/prisma/zod-utils";
 import { EventTypeMetaDataSchema } from "@calcom/prisma/zod-utils";
 import type { AdditionalInformation, CalendarEvent } from "@calcom/types/Calendar";
 import { getCalEventResponses } from "./getCalEventResponses";
+import { handleAppsStatus } from "./handleNewBooking/handleAppsStatus";
 import { scheduleNoShowTriggers } from "./handleNewBooking/scheduleNoShowTriggers";
 
 export async function handleConfirmation(args: {
@@ -93,6 +94,7 @@ export async function handleConfirmation(args: {
     };
 
     tracingLogger.error(`Booking ${user.username} failed`, safeStringify({ error, results }));
+    evt.appsStatus = handleAppsStatus(results, null, undefined);
   } else if (results.length) {
     // TODO: Handle created event metadata more elegantly
     metadata.hangoutLink = results[0].createdEvent?.hangoutLink;

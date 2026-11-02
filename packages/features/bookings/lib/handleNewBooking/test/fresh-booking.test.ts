@@ -33,12 +33,14 @@ import {
 import process from "node:process";
 import { appStoreMetadata } from "@calcom/app-store/appStoreMetaData";
 import { createWatchlistEntry } from "@calcom/features/watchlist/lib/testUtils";
+import { getTranslation } from "@calcom/i18n/server";
 import { WEBAPP_URL, WEBSITE_URL } from "@calcom/lib/constants";
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import type { HttpError } from "@calcom/lib/http-error";
 import logger from "@calcom/lib/logger";
 import { resetTestEmails } from "@calcom/lib/testEmails";
 import { distributedTracing } from "@calcom/lib/tracing/factory";
+import type { PrismaClient } from "@calcom/prisma";
 import { BookingStatus, CreationSource, SchedulingType, WatchlistType } from "@calcom/prisma/enums";
 import {
   expectAwaitingPaymentEmails,
@@ -57,10 +59,12 @@ import { getMockRequestDataForBooking } from "@calcom/testing/lib/bookingScenari
 import { setupAndTeardown } from "@calcom/testing/lib/bookingScenario/setupAndTeardown";
 import { testWithAndWithoutOrg } from "@calcom/testing/lib/bookingScenario/test";
 import { test } from "@calcom/testing/lib/fixtures/fixtures";
+import type { CalendarEvent } from "@calcom/types/Calendar";
 import type { Request, Response } from "express";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { describe, expect } from "vitest";
 import type Stripe from "stripe";
+import { describe, expect } from "vitest";
+import { handleConfirmation } from "../../handleConfirmation";
 import { getNewBookingHandler } from "./getNewBookingHandler";
 
 const log = logger.getSubLogger({ prefix: ["[fresh-booking.test]"] });
@@ -835,7 +839,6 @@ describe("handleNewBooking", () => {
             ],
             iCalUID: createdBooking.iCalUID,
           });
-
 
           expectSuccessfulCalendarEventCreationInCalendar(calendarMock, {
             calendarId: "organizer@google-calendar.com",
@@ -2419,6 +2422,199 @@ describe("handleNewBooking", () => {
         timeout
       );
 
+      test(
+        `confirming a pending booking when every integration fails should still send confirmation emails and set appsStatus`,
+        async ({ emails }) => {
+          const handleNewBooking = getNewBookingHandler();
+          const booker = getBooker({
+            email: "booker@example.com",
+            name: "Booker",
+          });
+
+          const organizer = getOrganizer({
+            name: "Organizer",
+            email: "organizer@example.com",
+            id: 101,
+            schedules: [TestData.schedules.IstWorkHours],
+            credentials: [getGoogleCalendarCredential()],
+            selectedCalendars: [TestData.selectedCalendars.google],
+            destinationCalendar: {
+              integration: "google_calendar",
+              externalId: "organizer@google-calendar.com",
+            },
+          });
+          const scenarioData = getScenarioData({
+            eventTypes: [
+              {
+                id: 1,
+                slotInterval: 30,
+                requiresConfirmation: true,
+                length: 30,
+                users: [
+                  {
+                    id: 101,
+                  },
+                ],
+              },
+            ],
+            organizer,
+            apps: [TestData.apps["google-calendar"]],
+          });
+          await createBookingScenario(scenarioData);
+
+          const mockBookingData = getMockRequestDataForBooking({
+            data: {
+              eventTypeId: 1,
+              responses: {
+                email: booker.email,
+                name: booker.name,
+                location: { optionValue: "", value: "New York" },
+              },
+            },
+          });
+
+          const createdBooking = await handleNewBooking({
+            bookingData: mockBookingData,
+          });
+
+          await expectBookingToBeInDatabase({
+            uid: createdBooking.uid!,
+            eventTypeId: mockBookingData.eventTypeId,
+            status: BookingStatus.PENDING,
+          });
+
+          resetTestEmails();
+          mockCalendarToCrashOnCreateEvent("googlecalendar");
+
+          const dbBooking = await prismaMock.booking.findUniqueOrThrow({
+            where: { id: createdBooking.id },
+            select: {
+              id: true,
+              uid: true,
+              startTime: true,
+              endTime: true,
+              title: true,
+              description: true,
+              customInputs: true,
+              location: true,
+              status: true,
+              metadata: true,
+              smsReminderNumber: true,
+              userId: true,
+              userPrimaryEmail: true,
+              eventTypeId: true,
+              iCalUID: true,
+              eventType: {
+                select: {
+                  id: true,
+                  title: true,
+                  description: true,
+                  length: true,
+                  price: true,
+                  currency: true,
+                  requiresConfirmation: true,
+                  metadata: true,
+                  slug: true,
+                  bookingFields: true,
+                  hideOrganizerEmail: true,
+                },
+              },
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  email: true,
+                  name: true,
+                  timeZone: true,
+                  locale: true,
+                  destinationCalendar: true,
+                },
+              },
+              attendees: {
+                select: {
+                  name: true,
+                  email: true,
+                  timeZone: true,
+                  locale: true,
+                  phoneNumber: true,
+                },
+              },
+            },
+          });
+
+          const tOrganizer = await getTranslation(dbBooking.user?.locale ?? "en", "common");
+          const evt: CalendarEvent = {
+            type: dbBooking.eventType?.slug as string,
+            title: dbBooking.title,
+            description: dbBooking.eventType?.description ?? null,
+            bookerUrl: WEBAPP_URL,
+            startTime: dbBooking.startTime.toISOString(),
+            endTime: dbBooking.endTime.toISOString(),
+            organizer: {
+              id: dbBooking.user?.id,
+              email: dbBooking.userPrimaryEmail || dbBooking.user?.email || organizer.email,
+              name: dbBooking.user?.name || organizer.name,
+              username: dbBooking.user?.username || organizer.username,
+              timeZone: dbBooking.user?.timeZone || organizer.timeZone,
+              language: { translate: tOrganizer, locale: dbBooking.user?.locale ?? "en" },
+            },
+            attendees: dbBooking.attendees.map((att) => ({
+              name: att.name,
+              email: att.email,
+              timeZone: att.timeZone,
+              language: { translate: tOrganizer, locale: att.locale ?? "en" },
+            })),
+            location: dbBooking.location,
+            destinationCalendar: dbBooking.user?.destinationCalendar
+              ? [dbBooking.user.destinationCalendar]
+              : [],
+            hideOrganizerEmail: dbBooking.eventType?.hideOrganizerEmail ?? false,
+            uid: dbBooking.uid,
+            iCalUID: dbBooking.iCalUID,
+          };
+
+          const traceContext = distributedTracing.createTrace("test_confirm_booking");
+
+          await handleConfirmation({
+            user: {
+              ...dbBooking.user!,
+              credentials: organizer.credentials,
+              destinationCalendar: organizer.destinationCalendar,
+            },
+            evt,
+            bookingId: dbBooking.id,
+            booking: dbBooking,
+            prisma: prismaMock as unknown as PrismaClient,
+            traceContext,
+          });
+
+          await expectBookingToBeInDatabase({
+            uid: createdBooking.uid!,
+            eventTypeId: mockBookingData.eventTypeId,
+            status: BookingStatus.ACCEPTED,
+          });
+
+          expect(evt.appsStatus).toEqual([
+            expect.objectContaining({
+              failures: 1,
+              success: 0,
+            }),
+          ]);
+
+          const iCalUID = expectICalUIDAsString(createdBooking.iCalUID);
+          expectSuccessfulBookingCreationEmails({
+            booking: {
+              uid: createdBooking.uid!,
+            },
+            booker,
+            organizer,
+            emails,
+            iCalUID,
+          });
+        },
+        timeout
+      );
+
       /**
        * NOTE: We might want to think about making the bookings get ACCEPTED automatically if the booker is the organizer of the event-type. This is a design decision it seems for now.
        */
@@ -2960,7 +3156,8 @@ describe("handleNewBooking", () => {
           const booker = getBooker({
             email: "booker@example.com",
             name: "Booker",
-          });          const organizer = getOrganizer({
+          });
+          const organizer = getOrganizer({
             name: "Organizer",
             email: "organizer@example.com",
             id: 101,
@@ -3098,7 +3295,8 @@ describe("handleNewBooking", () => {
             7. Booking should still stay in pending state
       `,
 
-        async ({ emails }) => {          const handleNewBooking = getNewBookingHandler();
+        async ({ emails }) => {
+          const handleNewBooking = getNewBookingHandler();
           const subscriberUrl = "http://my-webhook.example.com";
           const booker = getBooker({
             email: "booker@example.com",
