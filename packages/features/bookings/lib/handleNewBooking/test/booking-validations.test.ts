@@ -70,6 +70,39 @@ describe("Booking Validation Specifications", () => {
   setupAndTeardown();
 
   describe("Email Blacklist Validation", () => {
+    test("when email is in BLACKLISTED_GUEST_EMAILS with surrounding whitespace, properly block unauthenticated booking", async () => {
+      const handleNewBooking = getNewBookingHandler();
+      const blockedEmail = "other@example.com";
+
+      const booker = getBooker({
+        email: blockedEmail,
+        name: "Other Booker",
+      });
+
+      const organizer = getOrganizer({
+        name: "Organizer",
+        email: "organizer@example.com",
+        id: 101,
+        schedules: [TestData.schedules.IstWorkHours],
+        credentials: [getGoogleCalendarCredential()],
+        selectedCalendars: [TestData.selectedCalendars.google],
+        emailVerified: new Date(),
+      });
+
+      process.env.BLACKLISTED_GUEST_EMAILS = "spam@test.com,   other@example.com   , blocked@example.com";
+
+      const response = await handleNewBooking(
+        getScenarioData({
+          booker,
+          organizers: [organizer],
+        })
+      );
+
+      expect(response).toMatchObject({
+        status: 400,
+      });
+    });
+
     test("when email is in BLACKLISTED_GUEST_EMAILS, allow the user to book only if they are logged in with that email", async () => {
       const handleNewBooking = getNewBookingHandler();
       const blockedEmail = "organizer@example.com"; // Use organizer's email as the blocked one
