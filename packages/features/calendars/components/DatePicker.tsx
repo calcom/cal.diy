@@ -313,9 +313,24 @@ const Days = ({
 
   useEffect(useHandleInitialDateSelection);
 
+  // AIM: OnceHub-style variant (?amPm=1) collapses the month grid to only the weeks
+  // that contain at least one bookable day, so leftover empty weeks aren't shown.
+  // Gated on !isLoading so the calendar never renders empty while slots load; keeps
+  // 7-day chunk alignment by dropping whole weeks at once.
+  const amPmMode =
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("amPm") === "1";
+  let daysToRender = daysToRenderForTheMonth;
+  if (amPmMode && !props.isLoading) {
+    const filtered = daysToRenderForTheMonth.filter((_, i, arr) => {
+      const weekStart = Math.floor(i / 7) * 7;
+      return arr.slice(weekStart, weekStart + 7).some((d) => d.day && !d.disabled);
+    });
+    if (filtered.length) daysToRender = filtered;
+  }
+
   return (
     <>
-      {daysToRenderForTheMonth.map(({ day, disabled, away, emoji, isFirstDayOfNextMonth }, idx) => (
+      {daysToRender.map(({ day, disabled, away, emoji, isFirstDayOfNextMonth }, idx) => (
         <div key={day === null ? `e-${idx}` : `day-${day.format()}`} className="relative w-full pt-[100%]">
           {day === null ? (
             <div key={`e-${idx}`} />
@@ -474,7 +489,15 @@ const DatePicker = ({
           </div>
         ))}
       </div>
-      <div className="relative grid grid-cols-7 grid-rows-6 gap-1 text-center">
+      <div
+        className={classNames(
+          "relative grid grid-cols-7 gap-1 text-center",
+          // AIM: OnceHub-style variant (?amPm=1) shows only the weeks with availability,
+          // so use auto rows instead of a fixed 6-row grid — otherwise the reserved empty
+          // rows leave a big blank gap under the compact calendar.
+          !(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("amPm") === "1") &&
+            "grid-rows-6"
+        )}>
         <Days
           customClassName={{
             datePickerDate: customClassNames?.datePickersDates,

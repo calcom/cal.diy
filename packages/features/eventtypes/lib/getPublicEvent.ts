@@ -435,6 +435,21 @@ export const getPublicEvent = async (
     select: getPublicEventSelect(fetchAllUsers),
   });
 
+  // Fallback: events created via SQL (seed scripts) may only have userId FK without a join table row.
+  // The primary users.some query uses the _user_eventtype join table, so it misses such events.
+  if (!event && !isTeamEvent && !orgQuery && usernameList.length === 1) {
+    const ownerUser = await prisma.user.findFirst({
+      where: { username, organization: null },
+      select: { id: true },
+    });
+    if (ownerUser) {
+      event = await prisma.eventType.findFirst({
+        where: { slug: eventSlug, userId: ownerUser.id, team: null },
+        select: getPublicEventSelect(fetchAllUsers),
+      });
+    }
+  }
+
   // If no event was found, check for platform org user event
   if (!event && !orgQuery) {
     event = await prisma.eventType.findFirst({
