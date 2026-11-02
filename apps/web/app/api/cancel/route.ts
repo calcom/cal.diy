@@ -22,7 +22,8 @@ async function handler(req: NextRequest) {
   }
   let bookingData;
   try {
-    // The uid-only schema rejects sequential/guessable integer ids outright
+    // Zod strips the unrecognized `id` key, so a uid+id payload still parses
+    // but only the uid survives into the cancellation logic
     bookingData = bookingCancelWithCsrfUidOnlySchema.parse(appDirRequestBody);
   } catch {
     return NextResponse.json(
@@ -47,7 +48,7 @@ async function handler(req: NextRequest) {
     identifier,
   });
 
-  // id is rejected by the uid-only schema, so lookup is always by uid
+  // `id` was stripped by the uid-only schema, so the lookup is always by uid
   const result = await handleCancelBooking({
     bookingData,
     userId: session?.user?.id || -1,

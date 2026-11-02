@@ -358,8 +358,9 @@ export const bookingCancelWithCsrfSchema = bookingCancelSchema
 // Web cancel route contract: lookups must always be by high-entropy uid,
 // never by sequential/guessable integer id. Deriving from
 // bookingCancelWithCsrfSchema with `id` omitted keeps the shape in sync with
-// the shared cancel schema while making an id-only or id+uid payload a
-// validation error at the route boundary.
+// the shared cancel schema while dropping any `id` the client sends: Zod
+// strips unrecognized keys, so a uid+id payload still parses but continues
+// as uid-only data, while an id-only payload fails the required `uid`.
 export const bookingCancelWithCsrfUidOnlySchema = bookingCancelSchema
   .omit({ id: true })
   .extend({
