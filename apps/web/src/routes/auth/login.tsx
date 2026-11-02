@@ -2,6 +2,7 @@ import { Button } from "@coss/ui/components/button";
 import { createFileRoute, Link, redirect, useHydrated, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 import { AuthCard, FormError } from "~/components/AuthCard";
+import { SOCIAL_SIGN_IN_MESSAGE_KEYS, SocialSignIn } from "~/components/SocialSignIn";
 import { TextField } from "~/components/TextField";
 import { authClient } from "~/lib/auth-client";
 import { AUTH_ERROR_MESSAGE_KEYS, AUTH_ERROR_VALUES, authErrorKey, safeCallbackUrl } from "~/lib/auth-errors";
@@ -16,7 +17,6 @@ const MESSAGE_KEYS = [
   "email_address",
   "password",
   "sign_in",
-  "or",
   "continue_with_google",
   "dont_have_an_account",
   "create_account",
@@ -27,6 +27,7 @@ const MESSAGE_KEYS = [
   "backup_code",
   "lost_access",
   "back",
+  ...SOCIAL_SIGN_IN_MESSAGE_KEYS,
   ...AUTH_ERROR_MESSAGE_KEYS,
 ];
 
@@ -146,18 +147,7 @@ function LoginPage() {
           {pending ? t("loading") : t("sign_in")}
         </Button>
       </form>
-      {providers.google && (
-        <>
-          <div className="my-4 text-center text-muted-foreground text-xs">{t("or")}</div>
-          <Button
-            variant="outline"
-            className="w-full"
-            disabled={!hydrated}
-            onClick={() => authClient.signIn.social({ provider: "google", callbackURL: callbackUrl })}>
-            {t("continue_with_google")}
-          </Button>
-        </>
-      )}
+      <SocialSignIn providers={providers} callbackURL={callbackUrl} googleLabelKey="continue_with_google" />
     </AuthCard>
   );
 }

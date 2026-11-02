@@ -5,6 +5,10 @@ BETTER_AUTH_URL=http://localhost:3000
 CALENDSO_ENCRYPTION_KEY=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+OIDC_ISSUER=
+OIDC_CLIENT_ID=
+OIDC_CLIENT_SECRET=
+OIDC_NAME=
 EMAIL_FROM=
 RESEND_API_KEY=
 # Optional apps; see .env.example for what each needs and its redirect URI.

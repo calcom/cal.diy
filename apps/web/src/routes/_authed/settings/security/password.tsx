@@ -8,6 +8,8 @@ import { authClient } from "~/lib/auth-client";
 import { AUTH_ERROR_MESSAGE_KEYS, AUTH_ERROR_VALUES, authErrorKey } from "~/lib/auth-errors";
 import { useT } from "~/lib/i18n";
 import { loadMessages } from "~/lib/messages";
+import { OIDC_PROVIDER_ID } from "~/lib/oidc";
+import { getAuthProviders } from "~/server/auth/providers";
 import { getSecurity } from "~/server/profile/functions";
 
 const MESSAGE_KEYS = [
@@ -23,18 +25,19 @@ const MESSAGE_KEYS = [
 ];
 
 function PasswordPage() {
-  const { security } = Route.useLoaderData();
+  const { security, providers } = Route.useLoaderData();
   const t = useT();
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [changed, setChanged] = useState(false);
   const [pending, setPending] = useState(false);
 
   if (!security.hasPassword) {
+    const provider = security.identityProviderId === OIDC_PROVIDER_ID ? (providers.oidc ?? "SSO") : "Google";
     return (
       <div className="flex max-w-lg flex-col gap-1 text-sm">
-        <p className="font-medium">{t("account_managed_by_identity_provider", { provider: "Google" })}</p>
+        <p className="font-medium">{t("account_managed_by_identity_provider", { provider })}</p>
         <p className="text-muted-foreground">
-          {t("account_managed_by_identity_provider_description", { provider: "Google" })}
+          {t("account_managed_by_identity_provider_description", { provider })}
         </p>
       </div>
     );
@@ -97,8 +100,12 @@ function PasswordPage() {
 
 export const Route = createFileRoute("/_authed/settings/security/password")({
   loader: async ({ context }) => {
-    const [messages, security] = await Promise.all([loadMessages(context, MESSAGE_KEYS), getSecurity()]);
-    return { messages, security };
+    const [messages, security, providers] = await Promise.all([
+      loadMessages(context, MESSAGE_KEYS),
+      getSecurity(),
+      getAuthProviders(),
+    ]);
+    return { messages, security, providers };
   },
   component: PasswordPage,
 });

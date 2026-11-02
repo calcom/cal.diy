@@ -2,6 +2,7 @@ import { Button } from "@coss/ui/components/button";
 import { createFileRoute, Link, redirect, useHydrated, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState } from "react";
 import { AuthCard, FormError } from "~/components/AuthCard";
+import { SOCIAL_SIGN_IN_MESSAGE_KEYS, SocialSignIn } from "~/components/SocialSignIn";
 import { TextField } from "~/components/TextField";
 import { authClient } from "~/lib/auth-client";
 import { AUTH_ERROR_MESSAGE_KEYS, AUTH_ERROR_VALUES, authErrorKey } from "~/lib/auth-errors";
@@ -16,11 +17,11 @@ const MESSAGE_KEYS = [
   "password",
   "password_complexity_requirement",
   "create_account",
-  "or",
   "signup_with_google",
   "already_have_account",
   "login_instead",
   "loading",
+  ...SOCIAL_SIGN_IN_MESSAGE_KEYS,
   ...AUTH_ERROR_MESSAGE_KEYS,
 ];
 
@@ -85,18 +86,7 @@ function SignupPage() {
           {pending ? t("loading") : t("create_account")}
         </Button>
       </form>
-      {providers.google && (
-        <>
-          <div className="my-4 text-center text-muted-foreground text-xs">{t("or")}</div>
-          <Button
-            variant="outline"
-            className="w-full"
-            disabled={!hydrated}
-            onClick={() => authClient.signIn.social({ provider: "google", callbackURL: "/event-types" })}>
-            {t("signup_with_google")}
-          </Button>
-        </>
-      )}
+      <SocialSignIn providers={providers} callbackURL={"/event-types"} googleLabelKey="signup_with_google" />
     </AuthCard>
   );
 }

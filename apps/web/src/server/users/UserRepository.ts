@@ -3,7 +3,7 @@ import "@tanstack/react-start/server-only";
 import type { Database } from "@calcom/db/database";
 import type { JsonValue } from "@calcom/db/ids";
 import { account, user } from "@calcom/db/schema";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 
 const appearanceColumns = {
   theme: user.theme,
@@ -154,7 +154,10 @@ export class UserRepository {
     await this.db.update(user).set(data).where(eq(user.id, userId));
   }
 
-  /** What the security settings need: whether a password exists, and the 2FA and verification state. */
+  /**
+   * What the security settings need: whether a password exists, which identity provider the user
+   * signs in with otherwise, and the 2FA and verification state.
+   */
   async findSecurity(userId: number) {
     const [found] = await this.db
       .select({
@@ -169,7 +172,17 @@ export class UserRepository {
       .limit(1);
     if (!found) return null;
     const { passwordAccountId, ...rest } = found;
-    return { ...rest, hasPassword: passwordAccountId !== null };
+    const [identityAccount] = await this.db
+      .select({ providerId: account.providerId })
+      .from(account)
+      .where(and(eq(account.userId, userId), ne(account.providerId, "credential")))
+      .orderBy(account.id)
+      .limit(1);
+    return {
+      ...rest,
+      hasPassword: passwordAccountId !== null,
+      identityProviderId: identityAccount?.providerId ?? null,
+    };
   }
 
   async updateProfile(
