@@ -4,7 +4,6 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { sessionStorage } from "@calcom/lib/webstorage";
 import { trpc } from "@calcom/trpc/react";
 import { showToast } from "@calcom/ui/components/toast";
-import { setShowWelcomeToCalcomModalFlag } from "@calcom/web/modules/shell/hooks/useWelcomeToCalcomModal";
 
 const ONBOARDING_REDIRECT_KEY = "onBoardingRedirect";
 const ORG_MODAL_STORAGE_KEY = "showNewOrgModal";
@@ -70,9 +69,10 @@ export const useSubmitPersonalOnboarding = () => {
       const hasOrgModalFlag = sessionStorage.getItem(ORG_MODAL_STORAGE_KEY) === "true";
 
       if (!hasOrgModalFlag) {
-        // Only set personal modal flag if org modal flag is not set
-        setShowWelcomeToCalcomModalFlag();
-        router.push("/event-types?welcomeToCalcomModal=true");
+        // AIM: after the calendar step each advisor connects their OWN Zoom account (per-user
+        // OAuth; it cannot be pre-installed). The hourly set-conferencing-locations.js cron then
+        // switches their event types from Google Meet to Zoom.
+        router.push("/apps/zoom");
       } else {
         // Org modal flag exists - redirect to event-types without personal modal query param
         // The org modal will show via sessionStorage check

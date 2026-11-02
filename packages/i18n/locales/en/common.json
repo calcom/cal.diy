@@ -4622,6 +4622,7 @@
   "enabled_via_auto_opt_in": "Enabled via auto opt-in",
   "account_already_exists_please_login": "An account with this email already exists. Please log in to accept the invitation.",
   "unverified_email_oauth_error": "Please verify your email address before signing in with Google or SAML. Sign in with your password to resend the verification email.",
+  "aim_no_account_error": "There is no Annuity Gator scheduling account for this Google account. Contact your Annuity Gator admin to get access.",
   "connect_your_first_calendar": "Connect your first calendar",
   "routing_that_grows_with_you": "Routing that grows with you",
   "routing_forms_upgrade_description": "Create simple forms that guide bookings to the right person, team, or event. Start solo, then seamlessly route meetings as more people or use cases come into play. Available on the Teams plan.",

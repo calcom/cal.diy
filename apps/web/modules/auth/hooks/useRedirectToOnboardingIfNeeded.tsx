@@ -46,7 +46,8 @@ export function useRedirectToOnboardingIfNeeded() {
 
   useEffect(() => {
     if (canRedirect) {
-      const gettingStartedPath = flags["onboarding-v3"] ? "/onboarding/getting-started" : "/getting-started";
+      // AIM: straight to the calendar step (see AIM_ONBOARDING_START in onboardingUtils).
+      const gettingStartedPath = flags["onboarding-v3"] ? "/onboarding/personal/calendar" : "/getting-started";
       router.replace(gettingStartedPath);
     }
   }, [canRedirect, router, flags, pathname]);

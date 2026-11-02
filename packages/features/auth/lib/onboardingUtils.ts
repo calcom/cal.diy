@@ -1,6 +1,5 @@
 import dayjs from "@calcom/dayjs";
 import { FeaturesRepository } from "@calcom/features/flags/features.repository";
-import { MembershipRepository } from "@calcom/features/membership/repositories/MembershipRepository";
 import { ProfileRepository } from "@calcom/features/profile/repositories/ProfileRepository";
 import { UserRepository } from "@calcom/features/users/repositories/UserRepository";
 import { prisma } from "@calcom/prisma";
@@ -16,6 +15,9 @@ const ONBOARDING_INTRODUCED_AT = dayjs("September 1 2021").toISOString();
  * @param options.checkEmailVerification - Whether to check if email verification is required
  * @param options.organizationId - Optional organizationId from session (to avoid extra query)
  */
+/** First (and only) onboarding page for AIM advisors. */
+export const AIM_ONBOARDING_START = "/onboarding/personal/calendar";
+
 export async function checkOnboardingRedirect(
   userId: number,
   options?: {
@@ -64,13 +66,12 @@ export async function checkOnboardingRedirect(
   // Determine which onboarding path to use
   const onboardingV3Enabled = await featuresRepository.checkIfFeatureIsEnabledGlobally("onboarding-v3");
 
-  // Check for any team membership (pending or accepted) to handle users who signed up via invite token
-  // When users sign up with an invite token, the membership is auto-accepted
-  const hasTeamMembership = await MembershipRepository.hasAnyTeamMembershipByUserId({ userId });
-
-  if (hasTeamMembership && onboardingV3Enabled) {
-    return "/onboarding/personal/settings";
+  if (onboardingV3Enabled) {
+    // AIM: advisors are provisioned with name, username and event types already set, so the plan
+    // picker ("personal or team, pricing") and the details form only get in the way. Their first
+    // and only onboarding step is connecting the calendar (then Zoom, see useSubmitPersonalOnboarding).
+    return AIM_ONBOARDING_START;
   }
 
-  return onboardingV3Enabled ? "/onboarding/getting-started" : "/getting-started";
+  return "/getting-started";
 }

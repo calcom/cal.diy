@@ -1104,6 +1104,15 @@ export const getOptions = ({
           return `/auth/error?error=wrong-provider&provider=${existingUserWithEmail.identityProvider}`;
         }
 
+        // AIM: cal.annuitygator.com accounts are provisioned by ops (onboard-advisors.js), never
+        // self-served. Google login is only a way into an EXISTING account; without this check any
+        // Google account allowed by the OAuth consent screen would get a brand-new user here.
+        // Set AIM_ALLOW_GOOGLE_SIGNUP=true to restore upstream behaviour.
+        if (process.env.AIM_ALLOW_GOOGLE_SIGNUP !== "true") {
+          log.warn("Google sign-in for an email with no cal account, denied", { idP });
+          return `/auth/error?error=no-account`;
+        }
+
         // Associate with organization if enabled by flag and idP is Google or Azure AD
         const { orgUsername, orgId } = await checkIfUserShouldBelongToOrg(idP, user.email);
 

@@ -1,12 +1,10 @@
 import { getServerSession } from "@calcom/features/auth/lib/getServerSession";
-import { MembershipRepository } from "@calcom/features/membership/repositories/MembershipRepository";
+import { AIM_ONBOARDING_START } from "@calcom/features/auth/lib/onboardingUtils";
 import { APP_NAME } from "@calcom/lib/constants";
 import { buildLegacyRequest } from "@lib/buildLegacyCtx";
 import { _generateMetadata } from "app/_utils";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-
-import { OnboardingView } from "~/onboarding/getting-started/onboarding-view";
 
 export const generateMetadata = async () => {
   return await _generateMetadata(
@@ -25,18 +23,9 @@ const ServerPage = async () => {
     return redirect("/auth/login");
   }
 
-  // If user has any team membership (pending or accepted), redirect them directly to personal onboarding
-  // This handles the case where users sign up with an invite token (membership is auto-accepted)
-  const hasTeamMembership = await MembershipRepository.hasAnyTeamMembershipByUserId({
-    userId: session.user.id,
-  });
-  if (hasTeamMembership) {
-    return redirect("/onboarding/personal/settings");
-  }
-
-  const userEmail = session.user.email || "";
-
-  return <OnboardingView userEmail={userEmail} />;
+  // AIM: the plan picker ("personal or team", pricing) never applies to advisors. Anyone who lands
+  // here (old link, back button) goes to the calendar step instead.
+  return redirect(AIM_ONBOARDING_START);
 };
 
 export default ServerPage;
