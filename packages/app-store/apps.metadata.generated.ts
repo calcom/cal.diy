@@ -15,6 +15,7 @@ import { metadata as caldavcalendar__metadata_ts } from "./caldavcalendar/_metad
 import campfire_config_json from "./campfire/config.json";
 import caretta_config_json from "./caretta/config.json";
 import chatbase_config_json from "./chatbase/config.json";
+import clara_config_json from "./clara/config.json";
 import clic_config_json from "./clic/config.json";
 import closecom_config_json from "./closecom/config.json";
 import cron_config_json from "./cron/config.json";
@@ -127,6 +128,7 @@ export const appStoreMetadata = {
   campfire: campfire_config_json,
   caretta: caretta_config_json,
   chatbase: chatbase_config_json,
+  clara: clara_config_json,
   clic: clic_config_json,
   closecom: closecom_config_json,
   cron: cron_config_json,

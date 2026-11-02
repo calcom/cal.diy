@@ -27,7 +27,7 @@ export function Providers({ isEmbed, children, country }: ProvidersProps) {
         <TrpcProvider>
           <ToastProvider position="bottom-center">
             {!isEmbed && !isBookingPage && <NotificationSoundHandler />}
-            {/* @ts-expect-error FIXME remove this comment when upgrading typescript to v5 */}
+            {/* @ts-expect-error react-inlinesvg/provider is incompatible with @types/react@18.0.26. Remove when these types are compatible. */}
             <CacheProvider>
               <WebPushProvider>{children}</WebPushProvider>
             </CacheProvider>

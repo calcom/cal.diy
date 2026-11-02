@@ -193,8 +193,6 @@ export function useInitialFormValues({
         key: buildKey({ values: defaults, hasSession, stableHashExtraOptions }),
       });
     })();
-    // TODO: Remove it. It was initially added so that we don't add extraOptions in deps but that is handled using stableHashExtraOptions now.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     eventType?.bookingFields,
     formValues,

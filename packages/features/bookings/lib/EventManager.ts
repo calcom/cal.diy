@@ -712,7 +712,7 @@ export default class EventManager {
           });
         }
 
-        log.debug("RescheduleOrganizerChanged: Creating Event and Meeting for for new booking");
+        log.debug("RescheduleOrganizerChanged: Creating Event and Meeting for new booking");
         const createdEvent = await this.create(originalEvt);
         results.push(...createdEvent.results);
         updatedBookingReferences.push(...createdEvent.referencesToCreate);

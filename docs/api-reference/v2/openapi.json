@@ -8357,11 +8357,13 @@
         "properties": {
           "disableRecordingForOrganizer": {
             "type": "boolean",
-            "description": "If true, the organizer will not be able to record the meeting"
+            "description": "If true, the organizer will not be able to record the meeting",
+            "default": false
           },
           "disableRecordingForGuests": {
             "type": "boolean",
-            "description": "If true, the guests will not be able to record the meeting"
+            "description": "If true, the guests will not be able to record the meeting",
+            "default": false
           },
           "redirectUrlOnExit": {
             "type": "object",
@@ -8369,19 +8371,23 @@
           },
           "enableAutomaticRecordingForOrganizer": {
             "type": "boolean",
-            "description": "If true, enables the automatic recording for the event when organizer joins the call"
+            "description": "If true, enables the automatic recording for the event when organizer joins the call",
+            "default": false
           },
           "enableAutomaticTranscription": {
             "type": "boolean",
-            "description": "If true, enables the automatic transcription for the event whenever someone joins the call"
+            "description": "If true, enables the automatic transcription for the event whenever someone joins the call",
+            "default": false
           },
           "disableTranscriptionForGuests": {
             "type": "boolean",
-            "description": "If true, the guests will not be able to receive transcription of the meeting"
+            "description": "If true, the guests will not be able to receive transcription of the meeting",
+            "default": false
           },
           "disableTranscriptionForOrganizer": {
             "type": "boolean",
-            "description": "If true, the organizer will not be able to receive transcription of the meeting"
+            "description": "If true, the organizer will not be able to receive transcription of the meeting",
+            "default": false
           },
           "sendTranscriptionEmails": {
             "type": "boolean",

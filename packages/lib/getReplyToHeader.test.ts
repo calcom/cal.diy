@@ -8,11 +8,12 @@ import { getReplyToHeader } from "./getReplyToHeader";
  * Spec: https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.2
  */
 
-vi.mock("./getReplyToEmail", () => ({
-  getReplyToEmail: vi.fn((calEvent, excludeOrganizerEmail) => {
-    if (excludeOrganizerEmail) return null;
-    return calEvent.organizer?.email || null;
-  }),
+vi.mock("./getReplyToEmail", () => ({  
+  getReplyToEmail: vi.fn((calEvent, excludeOrganizerEmail) => {  
+    if (calEvent.customReplyToEmail) return calEvent.customReplyToEmail;  
+    if (excludeOrganizerEmail) return null;  
+    return calEvent.organizer?.email || null;  
+  }),  
 }));
 
 const createMockCalEvent = (organizerEmail: string) => ({
@@ -89,4 +90,16 @@ describe("getReplyToHeader", () => {
       expect(result.replyTo).not.toContain("]");
     });
   });
+
+  describe("with hideOrganizerEmail and customReplyToEmail", () => {  
+  it("uses customReplyToEmail even when hideOrganizerEmail is true", () => {  
+    const calEvent = {  
+      organizer: { email: "org@test.com" },  
+      hideOrganizerEmail: true,  
+      customReplyToEmail: "custom@test.com",  
+    };  
+    const result = getReplyToHeader(calEvent as any, undefined, true);  
+    expect(result).toEqual({ replyTo: "custom@test.com" });  
+  });  
+});
 });

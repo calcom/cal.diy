@@ -59,6 +59,7 @@ const BookerComponent = ({
   entity,
   onOverlayClickNoCalendar,
   onClickOverlayContinue,
+  overlaySocialLoginProviders,
   onOverlaySwitchStateChange,
   sessionUsername,
   rescheduleUid,
@@ -385,6 +386,7 @@ const BookerComponent = ({
                         onToggleCalendar={onToggleCalendar}
                         hasSession={hasSession}
                         handleClickContinue={onClickOverlayContinue}
+                        socialLoginProviders={overlaySocialLoginProviders}
                         handleSwitchStateChange={onOverlaySwitchStateChange}
                         handleClickNoCalendar={() => {
                           onOverlayClickNoCalendar();

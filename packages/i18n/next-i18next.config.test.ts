@@ -49,4 +49,20 @@ describe("@calcom/i18n/next-i18next.config", () => {
     expect(typeof enTranslations).toBe("object");
     expect(Object.keys(enTranslations).length).toBeGreaterThan(0);
   });
+
+  it("Indonesian translations preserve interpolation and rich-text tokens", () => {
+    const enTranslations = JSON.parse(
+      fs.readFileSync(path.join(config.localePath, "en", "common.json"), "utf-8")
+    );
+    const idTranslations = JSON.parse(
+      fs.readFileSync(path.join(config.localePath, "id", "common.json"), "utf-8")
+    );
+    const tokenPattern = /\{\{[^}]+\}\}|<\/?\d+>|\$t\([^)]*\)/g;
+    const tokens = (value: string): string[] => (value.match(tokenPattern) ?? []).sort();
+
+    for (const [key, translation] of Object.entries(idTranslations)) {
+      if (typeof enTranslations[key] !== "string" || typeof translation !== "string") continue;
+      expect(tokens(translation), key).toEqual(tokens(enTranslations[key]));
+    }
+  });
 });

@@ -1,6 +1,6 @@
 import type { NextApiRequest } from "next";
-import { describe, expect, it } from "vitest";
-import getIP, { parseIpFromHeaders } from "./getIP";
+import { afterEach, describe, expect, it } from "vitest";
+import getIP, { isIpInBanlist, parseIpFromHeaders } from "./getIP";
 
 function buildRequest(headers: Record<string, string>): Request {
   return new Request("https://example.com", { headers });
@@ -21,6 +21,24 @@ describe("parseIpFromHeaders", () => {
 
   it("returns the first element when given an array", () => {
     expect(parseIpFromHeaders(["1.2.3.4", "5.6.7.8"])).toBe("1.2.3.4");
+  });
+
+  it("trims leading/trailing whitespace from a padded string value", () => {
+    expect(parseIpFromHeaders("  1.2.3.4  , 5.6.7.8")).toBe("1.2.3.4");
+  });
+
+  it("trims whitespace after splitting on comma", () => {
+    expect(parseIpFromHeaders("1.2.3.4 , 5.6.7.8")).toBe("1.2.3.4");
+  });
+
+  it("trims leading/trailing whitespace from a padded array element", () => {
+    expect(parseIpFromHeaders(["  1.2.3.4  ", "5.6.7.8"])).toBe("1.2.3.4");
+  });
+  it("returns an empty string for an empty array instead of throwing", () => {
+    expect(parseIpFromHeaders([])).toBe("");
+  });
+  it("trims tabs and other whitespace, not just spaces", () => {
+    expect(parseIpFromHeaders("\t1.2.3.4\t, 5.6.7.8")).toBe("1.2.3.4");
   });
 });
 
@@ -71,6 +89,24 @@ describe("getIP", () => {
     it("extracts first IP from comma-separated x-forwarded-for", () => {
       const req = buildRequest({ "x-forwarded-for": "9.9.9.9, 10.0.0.1, 172.16.0.1" });
       expect(getIP(req)).toBe("9.9.9.9");
+    });
+  });
+
+  describe("banlist bypass regression (#29851)", () => {
+    const originalBanlist = process.env.IP_BANLIST;
+
+    afterEach(() => {
+      if (originalBanlist === undefined) {
+        delete process.env.IP_BANLIST;
+      } else {
+        process.env.IP_BANLIST = originalBanlist;
+      }
+    });
+
+    it("still detects a banned IP when x-forwarded-for is padded with whitespace", () => {
+      process.env.IP_BANLIST = JSON.stringify(["1.2.3.4"]);
+      const req = buildRequest({ "x-forwarded-for": "  1.2.3.4  , 5.6.7.8" });
+      expect(isIpInBanlist(req)).toBe(true);
     });
   });
 
