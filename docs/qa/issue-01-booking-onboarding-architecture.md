@@ -1,5 +1,7 @@
 # Issue 01 — Cài đặt và kiến trúc kiểm thử vòng đời booking
 
+Xem [bản tổng hợp Phần A–B](issue-08-system-goals-architecture.md) để dùng cổng web chuẩn `localhost:3000`; các cổng khác bên dưới ghi theo môi trường kiểm thử riêng.
+
 Tài liệu cho R05 Cal.diy + K02 Model-Based Testing, chuẩn bị báo cáo giữa kỳ 20/10/2026. Các đường dẫn và luồng dưới đây đã đối chiếu với mã nguồn tại `7220e6f802c4d86b2c1cfb6f36835295628c71f0` (cha: `54343aa685ae8f33159d2f485ec4a57bad5c574a`). Trạng thái **chưa kiểm chứng** chỉ rõ phần cần chạy thử.
 
 ## 1. Mốc nguồn và phạm vi
