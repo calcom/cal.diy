@@ -1,6 +1,6 @@
 import dayjs from "@calcom/dayjs";
 import { describe, expect, it } from "vitest";
-import { getEventSegmentForDay } from "./index";
+import { getEventSegmentForDay, mergeOverlappingDateRanges } from "./index";
 
 const day = dayjs("2024-01-10T00:00:00");
 const segment = (start: string, end: string, forDay = day) => {
@@ -45,3 +45,85 @@ describe("getEventSegmentForDay", () => {
     expect(segment("2024-01-10T00:00:00", "2024-01-10T00:00:00", day.subtract(1, "day"))).toBeNull();
   });
 });
+
+describe("mergeOverlappingDateRanges", () => {
+  it("preserves the end of a longer event containing a shorter event", () => {
+    const dateRanges = [
+      {
+        start: new Date("2024-01-10T09:00:00"),
+        end: new Date("2024-01-10T12:00:00"),
+      },
+      {
+        start: new Date("2024-01-10T10:00:00"),
+        end: new Date("2024-01-10T11:00:00"),
+      },
+    ];
+
+    const result = mergeOverlappingDateRanges(dateRanges);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].end.getTime()).toBe(
+      new Date("2024-01-10T12:00:00").getTime()
+    );
+  });
+});
+
+  it("extends the merged range when an overlapping event ends later", () => {
+    const dateRanges = [
+      {
+        start: new Date("2024-01-10T09:00:00"),
+        end: new Date("2024-01-10T11:00:00"),
+      },
+      {
+        start: new Date("2024-01-10T10:00:00"),
+        end: new Date("2024-01-10T13:00:00"),
+      },
+    ];
+
+    const result = mergeOverlappingDateRanges(dateRanges);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].start.getTime()).toBe(
+      new Date("2024-01-10T09:00:00").getTime()
+    );
+    expect(result[0].end.getTime()).toBe(
+      new Date("2024-01-10T13:00:00").getTime()
+    );
+  });
+
+  it("keeps non-overlapping events separate", () => {
+    const dateRanges = [
+      {
+        start: new Date("2024-01-10T09:00:00"),
+        end: new Date("2024-01-10T10:00:00"),
+      },
+      {
+        start: new Date("2024-01-10T11:00:00"),
+        end: new Date("2024-01-10T12:00:00"),
+      },
+    ];
+
+    const result = mergeOverlappingDateRanges(dateRanges);
+
+    expect(result).toHaveLength(2);
+  });
+
+  it("preserves the longer event when start times are identical", () => {
+    const dateRanges = [
+      {
+        start: new Date("2024-01-10T09:00:00"),
+        end: new Date("2024-01-10T10:00:00"),
+      },
+      {
+        start: new Date("2024-01-10T09:00:00"),
+        end: new Date("2024-01-10T12:00:00"),
+      },
+    ];
+
+    const result = mergeOverlappingDateRanges(dateRanges);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].end.getTime()).toBe(
+      new Date("2024-01-10T12:00:00").getTime()
+    );
+  });
