@@ -92,6 +92,7 @@ export const IntlSupportedTimeZones = [
   "America/Coral_Harbour",
   "America/Cordoba",
   "America/Costa_Rica",
+  "America/Coyhaique",
   "America/Creston",
   "America/Cuiaba",
   "America/Curacao",
