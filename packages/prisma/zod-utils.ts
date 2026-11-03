@@ -355,6 +355,19 @@ export const bookingCancelWithCsrfSchema = bookingCancelSchema
   })
   .refine((data) => !!data.id || !!data.uid, "At least one of the following required: 'id', 'uid'.");
 
+// Web cancel route contract: lookups must always be by high-entropy uid,
+// never by sequential/guessable integer id. Deriving from
+// bookingCancelWithCsrfSchema with `id` omitted keeps the shape in sync with
+// the shared cancel schema while dropping any `id` the client sends: Zod
+// strips unrecognized keys, so a uid+id payload still parses but continues
+// as uid-only data, while an id-only payload fails the required `uid`.
+export const bookingCancelWithCsrfUidOnlySchema = bookingCancelSchema
+  .omit({ id: true })
+  .extend({
+    csrfToken: z.string().length(64, "Invalid CSRF token"),
+  })
+  .refine((data) => !!data.uid, "'uid' is required for booking cancellation.");
+
 export const vitalSettingsUpdateSchema = z.object({
   connected: z.boolean().optional(),
   selectedParam: z.string().optional(),
