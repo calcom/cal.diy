@@ -58,7 +58,7 @@ Harness Issue #6 chạy web cục bộ với PostgreSQL 17 riêng, theo [README 
 
 ## 4. Sơ đồ container
 
-Sơ đồ dưới đây mô tả các service trong [Compose](../../docker-compose.yml) với cổng web chuẩn `localhost:3000`; cổng host trong Compose của checkout này là cấu hình riêng cho máy kiểm thử. Sơ đồ không khẳng định API v2 hoặc Studio tham gia request web của baseline MBT.
+Sơ đồ dưới đây mô tả các service trong [Compose](../../docker-compose.yml) với cổng web chuẩn `localhost:3000`. Sơ đồ không khẳng định API v2 hoặc Studio tham gia request web của baseline MBT.
 
 ```mermaid
 flowchart LR
