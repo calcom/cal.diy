@@ -58,11 +58,11 @@ Harness Issue #6 chạy web cục bộ với PostgreSQL 17 riêng, theo [README 
 
 ## 4. Sơ đồ container
 
-Sơ đồ dưới đây mô tả [cấu hình Compose](../../docker-compose.yml), không khẳng định API v2 hoặc Studio tham gia request web của baseline MBT.
+Sơ đồ dưới đây mô tả các service trong [Compose](../../docker-compose.yml) với cổng web chuẩn `localhost:3000`; cổng host trong Compose của checkout này là cấu hình riêng cho máy kiểm thử. Sơ đồ không khẳng định API v2 hoặc Studio tham gia request web của baseline MBT.
 
 ```mermaid
 flowchart LR
-  Browser[Trình duyệt] -->|host 3001 → container 3000| Web[calcom: Next.js web]
+  Browser[Trình duyệt] -->|localhost:3000| Web[calcom: Next.js web]
   ApiClient[Client API v2] -->|API_PORT mặc định 80| Api[calcom-api: NestJS]
   Operator[Người vận hành] -->|host 5555| Studio[studio: Prisma Studio tùy chọn]
   Web -->|DATABASE_URL| DB[(database: PostgreSQL 18)]
@@ -71,7 +71,7 @@ flowchart LR
   Studio -->|DATABASE_URL| DB
 ```
 
-Compose công bố PostgreSQL ở `127.0.0.1:5433`; Redis ở cổng cấu hình `REDIS_PORT` (mặc định 6379). Hai image dữ liệu được ghim digest trong Compose. `calcom` và `calcom-api` được build từ mã nguồn nên phải gắn với SHA khi thu evidence.
+PostgreSQL dùng `database:5432` trong mạng Compose; cổng host tùy môi trường. Redis ở cổng cấu hình `REDIS_PORT` (mặc định 6379). Hai image dữ liệu được ghim digest trong Compose. `calcom` và `calcom-api` được build từ mã nguồn nên phải gắn với SHA khi thu evidence.
 
 ## 5. Sơ đồ component của luồng web
 
@@ -116,7 +116,7 @@ Sơ đồ thể hiện đường gọi chính; các service còn có guard, cach
 
 | Bước | Kết quả mong đợi cho cấu hình baseline | Nguồn xác nhận |
 | --- | --- | --- |
-| Đặt A khi slot trống | Tạo một booking A; baseline event type mặc định cho `status=ACCEPTED` | [Issue 02](booking-flow-nghia.md) giải thích trạng thái ban đầu phụ thuộc cấu hình; [bằng chứng MBT](evidence/issue-06-2026-11-02T15-07-24-820Z.json) xác nhận cấu hình baseline |
+| Đặt A khi slot trống | Tạo một booking A; baseline event type mặc định cho `status=ACCEPTED` | [Issue 02](booking-flow-nghia.md) giải thích trạng thái ban đầu phụ thuộc cấu hình; [oracle của harness](../../apps/web/playwright/mbt/issue-06.e2e.ts) xác nhận |
 | Đổi A sang B hợp lệ | A thành `CANCELLED`, `rescheduled=true`; B có `fromReschedule` trỏ về A | [Issue 02](booking-flow-nghia.md) đối chiếu code; [bằng chứng MBT](evidence/issue-06-2026-11-02T15-07-24-820Z.json) chạy oracle sau thao tác |
 | Hủy B hợp lệ | B thành `CANCELLED`, lưu lý do hủy | [Issue 02](booking-flow-nghia.md) và [bằng chứng MBT](evidence/issue-06-2026-11-02T15-07-24-820Z.json) |
 | Đổi sang slot đã bị chiếm | Request baseline trả HTTP 409; A không đổi, không tạo B | [Bằng chứng MBT](evidence/issue-06-2026-11-02T15-07-24-820Z.json); đây là kết quả của fixture cụ thể, không phải mã lỗi chung cho mọi nguyên nhân hết slot |
