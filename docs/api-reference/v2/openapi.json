@@ -2093,7 +2093,7 @@
     },
     "/v2/calendars/{calendar}/event/{eventUid}": {
       "get": {
-        "operationId": "CalUnifiedCalendarsController_getCalendarEventDetails",
+        "operationId": "CalUnifiedCalendarsController_getCalendarEventDetails_2",
         "summary": "Get meeting details from calendar",
         "description": "Returns detailed information about a meeting including attendance metrics. The singular /event/ path is deprecated — use /events/ (plural) instead. For connection-scoped access use GET /connections/{connectionId}/events/{eventId}.",
         "parameters": [
@@ -2140,7 +2140,7 @@
         "tags": ["Cal Unified Calendars"]
       },
       "patch": {
-        "operationId": "CalUnifiedCalendarsController_updateCalendarEvent",
+        "operationId": "CalUnifiedCalendarsController_updateCalendarEvent_2",
         "summary": "Update meeting details in calendar",
         "description": "Updates event information in the specified calendar provider. The singular /event/ path is deprecated — use /events/ (plural) instead. For connection-scoped access use PATCH /connections/{connectionId}/events/{eventId}.",
         "parameters": [
