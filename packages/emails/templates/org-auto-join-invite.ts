@@ -1,7 +1,5 @@
-import type { TFunction } from "i18next";
-
 import { APP_NAME, EMAIL_FROM_NAME } from "@calcom/lib/constants";
-
+import type { TFunction } from "i18next";
 import renderEmail from "../src/renderEmail";
 import BaseEmail from "./_base-email";
 

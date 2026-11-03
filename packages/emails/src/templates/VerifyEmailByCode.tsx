@@ -1,8 +1,4 @@
-import {
-  APP_NAME,
-  SENDER_NAME,
-  SUPPORT_MAIL_ADDRESS,
-} from "@calcom/lib/constants";
+import { APP_NAME, SENDER_NAME, SUPPORT_MAIL_ADDRESS } from "@calcom/lib/constants";
 import type { EmailVerifyCode } from "../../lib/types/email-types";
 import { BaseEmailHtml } from "../components";
 
@@ -15,19 +11,16 @@ export const VerifyEmailByCode = (
       subject={
         props.hideLogo
           ? props.language("verify_email_subject_no_branding")
-          : props.language(
-              `verify_email_subject${props.isVerifyingEmail ? "_verifying_email" : ""}`,
-              { appName: APP_NAME }
-            )
-      }
-    >
+          : props.language(`verify_email_subject${props.isVerifyingEmail ? "_verifying_email" : ""}`, {
+              appName: APP_NAME,
+            })
+      }>
       <p
         style={{
           fontWeight: 600,
           fontSize: "32px",
           lineHeight: "38px",
-        }}
-      >
+        }}>
         <>{props.language("verify_email_email_header")}</>
       </p>
       <p style={{ fontWeight: 400 }}>
@@ -51,8 +44,7 @@ export const VerifyEmailByCode = (
                 href={`mailto:${SUPPORT_MAIL_ADDRESS}`}
                 style={{ color: "#3E3E3E" }}
                 target="_blank"
-                rel="noreferrer"
-              >
+                rel="noreferrer">
                 <>
                   {props.language("the_calcom_team", {
                     companyName: SENDER_NAME,

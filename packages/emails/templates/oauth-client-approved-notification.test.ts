@@ -1,7 +1,5 @@
-import { describe, expect, it } from "vitest";
-
 import type { TFunction } from "i18next";
-
+import { describe, expect, it } from "vitest";
 import OAuthClientApprovedEmail from "./oauth-client-approved-notification";
 
 class TestOAuthClientApprovedEmail extends OAuthClientApprovedEmail {

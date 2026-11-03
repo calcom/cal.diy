@@ -1,5 +1,4 @@
 import { getReplyToHeader } from "@calcom/lib/getReplyToHeader";
-
 import renderEmail from "../src/renderEmail";
 import AttendeeScheduledEmail from "./attendee-scheduled-email";
 

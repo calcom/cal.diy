@@ -1,6 +1,5 @@
-import type { TFunction } from "i18next";
-
 import { APP_NAME } from "@calcom/lib/constants";
+import type { TFunction } from "i18next";
 
 export type TeamInvite = {
   language: TFunction;

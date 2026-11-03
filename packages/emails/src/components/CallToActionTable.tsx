@@ -12,7 +12,7 @@ export const CallToActionTable = (props: { children: React.ReactNode }) => (
             borderRadius: "3px",
             cursor: "auto",
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
+            // @ts-expect-error
             msoPaddingAlt: "10px 25px",
           }}
           valign="middle">

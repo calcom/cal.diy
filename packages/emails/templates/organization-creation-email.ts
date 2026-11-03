@@ -1,5 +1,4 @@
 import { EMAIL_FROM_NAME } from "@calcom/lib/constants";
-
 import type { OrganizationCreation } from "../lib/types/email-types";
 import renderEmail from "../src/renderEmail";
 import BaseEmail from "./_base-email";
