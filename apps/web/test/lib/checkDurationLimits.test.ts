@@ -120,6 +120,9 @@ describe("Duration limit validation", () => {
   it("Should validate a correct limit with 'gaps'", () => {
     expect(validateIntervalLimitOrder({ PER_DAY: 60, PER_YEAR: 120 })).toBe(true);
   });
+  it("Should validate equal values regardless of key order", () => {
+    expect(validateIntervalLimitOrder({ PER_WEEK: 60, PER_DAY: 60 })).toBe(true);
+  });
   it("Should validate empty limit", () => {
     expect(validateIntervalLimitOrder({})).toBe(true);
   });
