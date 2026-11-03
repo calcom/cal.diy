@@ -22,8 +22,6 @@ services:
       - POSTGRES_DB=calendso
     networks:
       - stack
-    ports:
-      - "127.0.0.1:5433:5432"
 
   redis:
     container_name: redis
@@ -59,7 +57,7 @@ services:
     networks:
       - stack
     ports:
-      - 3001:3000
+      - 3000:3000
     env_file: .env
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}

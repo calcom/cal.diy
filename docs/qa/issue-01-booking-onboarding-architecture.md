@@ -167,5 +167,5 @@ Các điểm lệch so với `apps/web/playwright/mbt/README.md` gặp trên má
 1. **PowerShell 7 là bắt buộc.** Trên Windows PowerShell 5.1, `prepare-issue-04-env.ps1` báo lỗi `GetBytes` nhưng vẫn ghi ra `.env` hỏng (bản sao `.env.example`, thiếu `POSTGRES_USER`, `DATABASE_HOST`). Phải xóa `.env` đó rồi chạy lại bằng `pwsh`.
 2. **README không chỉ cách lấy Node 20.20.2 và JDK 21** vào `tools/issue06-env`. JDK tải mới là 21.0.13+9, khác bản 21.0.12.1 trong evidence cũ.
 3. **Lệnh `dev -p 3000` lỗi trên PowerShell 7.6.9** (`-p` mơ hồ với `-ProgressAction` / `-PipelineVariable`). Dùng `dev --port 3000`.
-4. **Cổng:** harness dùng web dev server ở cổng 3000 và PostgreSQL riêng ở cổng 5450 (container `caldiy-issue04-db`), không dùng app Compose ở cổng 3001 / DB 5433.
+4. **Cổng:** harness dùng web dev server ở cổng 3000 và PostgreSQL riêng ở cổng 5450 (container `caldiy-issue04-db`), không dùng app Compose (cổng 3000); cơ sở dữ liệu là Postgres riêng ở cổng 5450.
 5. `yarn install` lần đầu bị gián đoạn ở bước Link khi phiên làm việc kết thúc; chạy lại lệnh thì hoàn tất. Không ảnh hưởng kết quả.
