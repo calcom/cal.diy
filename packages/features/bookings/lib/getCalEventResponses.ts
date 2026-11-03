@@ -48,7 +48,14 @@ export const getCalEventResponses = ({
 
   // To set placeholder email for the booking
   if (!backwardCompatibleResponses.email) {
-    if (typeof backwardCompatibleResponses["attendeePhoneNumber"] !== "string") {
+    const emailFromPhoneNumber =
+      typeof backwardCompatibleResponses["attendeePhoneNumber"] === "string"
+        ? contructEmailFromPhoneNumber(backwardCompatibleResponses["attendeePhoneNumber"])
+        : "";
+
+    // An optional phone field left empty, or one holding no digits, leaves nothing to identify the
+    // attendee by — the same situation as the field being absent altogether.
+    if (!emailFromPhoneNumber) {
       log.error(`backwardCompatibleResponses: ${JSON.stringify(backwardCompatibleResponses)}`, {
         responses,
         bookingResponses: booking?.responses,
@@ -58,9 +65,8 @@ export const getCalEventResponses = ({
         message: "Both Phone and Email are missing",
       });
     }
-    backwardCompatibleResponses.email = contructEmailFromPhoneNumber(
-      backwardCompatibleResponses["attendeePhoneNumber"]
-    );
+
+    backwardCompatibleResponses.email = emailFromPhoneNumber;
   }
 
   if (parsedBookingFields) {
