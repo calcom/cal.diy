@@ -1,3 +1,4 @@
+import { convertFromSmallestToPresentableCurrencyUnit } from "@calcom/lib/currencyConversions";
 import type { CalendarEvent, Person } from "@calcom/types/Calendar";
 
 import { BaseScheduledEmail } from "./BaseScheduledEmail";
@@ -24,7 +25,10 @@ export const NoShowFeeChargedEmail = (
       subtitle={
         <>
           {t("no_show_fee_charged_subtitle", {
-            amount: calEvent.paymentInfo.amount / 100,
+            amount: convertFromSmallestToPresentableCurrencyUnit(
+              calEvent.paymentInfo.amount,
+              calEvent.paymentInfo.currency ?? ""
+            ),
             formatParams: { amount: { currency: calEvent.paymentInfo?.currency } },
           })}
         </>

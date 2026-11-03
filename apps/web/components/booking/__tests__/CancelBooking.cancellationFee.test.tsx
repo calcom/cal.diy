@@ -1,8 +1,6 @@
-import { render, screen, cleanup } from "@testing-library/react";
-import { describe, expect, it, vi, beforeAll, afterAll, afterEach } from "vitest";
-
 import * as shouldChargeModule from "@calcom/features/bookings/lib/payment/shouldChargeNoShowCancellationFee";
-
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import CancelBooking from "../CancelBooking";
 
 // Mock the embed-iframe module to prevent it from scheduling timers/RAF that can cause
@@ -181,7 +179,9 @@ describe("CancelBooking Cancellation Fee Warning", () => {
     );
 
     expect(
-      screen.getByText(/I acknowledge that cancelling within 1 hours will result in a/)
+      screen.getByText(
+        /I acknowledge that cancelling within 1 hours will result in a 10 usd cancellation fee/
+      )
     ).toBeInTheDocument();
   });
 
@@ -273,5 +273,54 @@ describe("CancelBooking Cancellation Fee Warning", () => {
     );
 
     expect(screen.queryByText(/I acknowledge that cancelling within/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["jpy", 5000, "5000 jpy"],
+    ["krw", 12000, "12000 krw"],
+    ["vnd", 250000, "250000 vnd"],
+  ])("should render a zero-decimal %s amount without dividing by 100", (currency, amount, expected) => {
+    vi.mocked(shouldChargeModule.shouldChargeNoShowCancellationFee).mockReturnValue(true);
+
+    render(
+      <CancelBooking
+        booking={{
+          ...mockBookingWithCancellationFee,
+          payment: { amount, currency, appId: "stripe" },
+        }}
+        profile={{ name: "Test User", slug: "test-user" }}
+        team={null}
+        isHost={false}
+        eventTypeMetadata={mockEventTypeMetadataWithFee}
+        {...mockProps}
+      />
+    );
+
+    expect(screen.getByRole("checkbox")).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`${expected} cancellation fee`))).toBeInTheDocument();
+  });
+
+  it.each([
+    ["usd", 1000, "10 usd"],
+    ["eur", 2550, "25.5 eur"],
+    ["gbp", 99, "0.99 gbp"],
+  ])("should still divide a two-decimal %s amount by 100", (currency, amount, expected) => {
+    vi.mocked(shouldChargeModule.shouldChargeNoShowCancellationFee).mockReturnValue(true);
+
+    render(
+      <CancelBooking
+        booking={{
+          ...mockBookingWithCancellationFee,
+          payment: { amount, currency, appId: "stripe" },
+        }}
+        profile={{ name: "Test User", slug: "test-user" }}
+        team={null}
+        isHost={false}
+        eventTypeMetadata={mockEventTypeMetadataWithFee}
+        {...mockProps}
+      />
+    );
+
+    expect(screen.getByText(new RegExp(`${expected} cancellation fee`))).toBeInTheDocument();
   });
 });

@@ -1,3 +1,4 @@
+import { convertFromSmallestToPresentableCurrencyUnit } from "@calcom/lib/currencyConversions";
 import { getReplyToHeader } from "@calcom/lib/getReplyToHeader";
 
 import renderEmail from "../src/renderEmail";
@@ -13,7 +14,10 @@ export default class NoShowFeeChargedEmail extends AttendeeScheduledEmail {
       subject: `${this.attendee.language.translate("no_show_fee_charged_email_subject", {
         title: this.calEvent.title,
         date: this.getFormattedDate(),
-        amount: this.calEvent.paymentInfo.amount / 100,
+        amount: convertFromSmallestToPresentableCurrencyUnit(
+          this.calEvent.paymentInfo.amount,
+          this.calEvent.paymentInfo.currency ?? ""
+        ),
         formatParams: { amount: { currency: this.calEvent.paymentInfo?.currency } },
       })}`,
       html: await renderEmail("NoShowFeeChargedEmail", {
