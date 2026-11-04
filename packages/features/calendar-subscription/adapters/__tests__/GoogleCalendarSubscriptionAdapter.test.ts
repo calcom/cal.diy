@@ -1,11 +1,10 @@
 import "../__mocks__/CalendarAuth";
 
-import { beforeEach, describe, expect, test, vi } from "vitest";
-
+import process from "node:process";
 import dayjs from "@calcom/dayjs";
 import type { SelectedCalendar } from "@calcom/prisma/client";
 import type { CredentialForCalendarServiceWithEmail } from "@calcom/types/Credential";
-
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { GoogleCalendarSubscriptionAdapter } from "../GoogleCalendarSubscription.adapter";
 
 const addMonthsFromNow = (months: number) => {
@@ -519,6 +518,56 @@ describe("GoogleCalendarSubscriptionAdapter", () => {
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].id).toBe("event-1");
+    });
+  });
+
+  describe("validate", () => {
+    it("should return false if GOOGLE_WEBHOOK_TOKEN is not configured", async () => {
+      const originalToken = process.env.GOOGLE_WEBHOOK_TOKEN;
+      delete process.env.GOOGLE_WEBHOOK_TOKEN;
+      const testAdapter = new GoogleCalendarSubscriptionAdapter();
+      const req = new Request("https://example.com", {
+        headers: { "X-Goog-Channel-Token": "some-token" },
+      });
+      const isValid = await testAdapter.validate(req);
+      expect(isValid).toBe(false);
+      process.env.GOOGLE_WEBHOOK_TOKEN = originalToken;
+    });
+
+    it("should return true when token matches GOOGLE_WEBHOOK_TOKEN", async () => {
+      const originalToken = process.env.GOOGLE_WEBHOOK_TOKEN;
+      process.env.GOOGLE_WEBHOOK_TOKEN = "valid-secret-token";
+      const testAdapter = new GoogleCalendarSubscriptionAdapter();
+      const req = new Request("https://example.com", {
+        headers: { "X-Goog-Channel-Token": "valid-secret-token" },
+      });
+      const isValid = await testAdapter.validate(req);
+      expect(isValid).toBe(true);
+      process.env.GOOGLE_WEBHOOK_TOKEN = originalToken;
+    });
+
+    it("should return false when token does not match GOOGLE_WEBHOOK_TOKEN", async () => {
+      const originalToken = process.env.GOOGLE_WEBHOOK_TOKEN;
+      process.env.GOOGLE_WEBHOOK_TOKEN = "valid-secret-token";
+      const testAdapter = new GoogleCalendarSubscriptionAdapter();
+      const req = new Request("https://example.com", {
+        headers: { "X-Goog-Channel-Token": "invalid-token" },
+      });
+      const isValid = await testAdapter.validate(req);
+      expect(isValid).toBe(false);
+      process.env.GOOGLE_WEBHOOK_TOKEN = originalToken;
+    });
+
+    it("should safely handle mismatched lengths without error", async () => {
+      const originalToken = process.env.GOOGLE_WEBHOOK_TOKEN;
+      process.env.GOOGLE_WEBHOOK_TOKEN = "valid-secret-token";
+      const testAdapter = new GoogleCalendarSubscriptionAdapter();
+      const req = new Request("https://example.com", {
+        headers: { "X-Goog-Channel-Token": "short" },
+      });
+      const isValid = await testAdapter.validate(req);
+      expect(isValid).toBe(false);
+      process.env.GOOGLE_WEBHOOK_TOKEN = originalToken;
     });
   });
 });
