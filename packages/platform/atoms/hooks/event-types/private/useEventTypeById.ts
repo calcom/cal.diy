@@ -20,5 +20,6 @@ export const useEventTypeById = (id: number | null) => {
         throw new Error(res.data.error.message);
       });
     },
+    enabled: id !== null,
   });
 };
