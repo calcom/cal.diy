@@ -3417,7 +3417,7 @@ __metadata:
     react-phone-number-input: "npm:3.4.12"
     react-schemaorg: "npm:2.0.0"
     react-select: "npm:5.8.0"
-    react-timezone-select: "npm:1.4.0"
+    react-timezone-select: "npm:1.5.6"
     react-turnstile: "npm:1.1.3"
     react-use-intercom: "npm:5.5.0"
     remove-markdown: "npm:0.5.0"
@@ -35225,17 +35225,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-timezone-select@npm:1.4.0":
-  version: 1.4.0
-  resolution: "react-timezone-select@npm:1.4.0"
+"react-timezone-select@npm:1.5.6":
+  version: 1.5.6
+  resolution: "react-timezone-select@npm:1.5.6"
   dependencies:
     react-select: "npm:^5.7.0"
-    spacetime: "npm:^7.1.4"
-    timezone-soft: "npm:^1.3.1"
+    spacetime: "npm:^7.4.1"
+    timezone-soft: "npm:^1.4.1"
   peerDependencies:
     react: ^18 || ^17.0.1 || ^16
     react-dom: ^18 || ^17.0.1 || ^16
-  checksum: 10/d208ac74aefa4b47c0deb56064311623df9bcbf8b14a2031d63157d6e389cc739ec2578252581b6bc3e8b0b80915e1978996214c259ad2e8c4236440e562c045
+  checksum: 10/dd92378a8e3d4d71b66162619eb122a10bbe63cb6bade1fbc7cfb850c45de12c008366a6ee552b9712d575f1fee4860e117c86421cbc2cb29e4fd0c46853e089
   languageName: node
   linkType: hard
 
@@ -37594,10 +37594,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"spacetime@npm:^7.1.4":
-  version: 7.1.4
-  resolution: "spacetime@npm:7.1.4"
-  checksum: 10/170bed45588dccf1dd152a9bc0e08225ee6d43b2cf8e3602e22623146b5f55cdc9bb7921a4e773681be6a68e2180111cfb7955d4433fb8791516e4f8be378484
+"spacetime@npm:^7.4.1":
+  version: 7.15.0
+  resolution: "spacetime@npm:7.15.0"
+  checksum: 10/ad79cd8eb74c6cd76ff0b8f6aa84f4a9dbf2a34d8ff5801c2864d748755d722cc054e63e29196d7e174372abaaa874d9d7acbf1ccb4474747d7afb03ec5ca7a8
   languageName: node
   linkType: hard
 
@@ -38841,10 +38841,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"timezone-soft@npm:^1.3.1":
-  version: 1.3.1
-  resolution: "timezone-soft@npm:1.3.1"
-  checksum: 10/559c239b7fa05676957e0f738cbaebcd3baee9ee2743b4ae32e7735bb3c3c3f62428872a4790c5a00baab9121abf4a3a0ea3525e721da3d5e0d597496f88905e
+"timezone-soft@npm:^1.4.1":
+  version: 1.5.2
+  resolution: "timezone-soft@npm:1.5.2"
+  checksum: 10/0bbd4c8da5d06ca9d56f5196e97c0b68dd06d3a756b963be337c0f9997d0ee092c52c3dd7f7881a8f46444d926fa4e64c636c0f01873b0185e407941a81a4bbe
   languageName: node
   linkType: hard
 
