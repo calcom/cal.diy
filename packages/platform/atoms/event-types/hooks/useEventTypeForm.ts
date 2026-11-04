@@ -284,7 +284,11 @@ export const useEventTypeForm = ({
     return updatedFields;
   };
 
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = async (values: FormValues): Promise<boolean> => {
+    if (!isFormDirty) {
+      return false;
+    }
+
     const { children } = values;
     const dirtyValues = getDirtyFields(values);
     const dirtyFieldExists = Object.keys(dirtyValues).length !== 0;
@@ -407,9 +411,12 @@ export const useEventTypeForm = ({
       return acc;
     }, {}) as EventTypeUpdateInput;
 
-    if (dirtyFieldExists) {
-      onSubmit({ ...filteredPayload, id: eventType.id });
+    if (!dirtyFieldExists) {
+      return false;
     }
+
+    onSubmit({ ...filteredPayload, id: eventType.id });
+    return true;
   };
 
   useEffect(() => {
