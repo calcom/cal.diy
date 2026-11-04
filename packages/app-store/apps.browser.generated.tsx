@@ -38,6 +38,7 @@ export const EventTypeAddonMap = {
   "pipedrive-crm": dynamic(() => import("./pipedrive-crm/components/EventTypeAppCardInterface")),
   plausible: dynamic(() => import("./plausible/components/EventTypeAppCardInterface")),
   posthog: dynamic(() => import("./posthog/components/EventTypeAppCardInterface")),
+  "privatus-analytics": dynamic(() => import("./privatus-analytics/components/EventTypeAppCardInterface")),
   qr_code: dynamic(() => import("./qr_code/components/EventTypeAppCardInterface")),
   salesforce: dynamic(() => import("./salesforce/components/EventTypeAppCardInterface")),
   stripepayment: dynamic(() => import("./stripepayment/components/EventTypeAppCardInterface")),
@@ -65,6 +66,9 @@ export const EventTypeSettingsMap = {
   metapixel: dynamic(() => import("./metapixel/components/EventTypeAppSettingsInterface")),
   paypal: dynamic(() => import("./paypal/components/EventTypeAppSettingsInterface")),
   plausible: dynamic(() => import("./plausible/components/EventTypeAppSettingsInterface")),
+  "privatus-analytics": dynamic(
+    () => import("./privatus-analytics/components/EventTypeAppSettingsInterface")
+  ),
   qr_code: dynamic(() => import("./qr_code/components/EventTypeAppSettingsInterface")),
   stripepayment: dynamic(() => import("./stripepayment/components/EventTypeAppSettingsInterface")),
 };
