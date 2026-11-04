@@ -111,3 +111,9 @@ Các chuỗi dưới đây là kế hoạch kiểm thử và oracle. Chuỗi S01
 - Issue 01 chứng minh quan hệ UID qua ảnh đã che và truy vấn sau chuỗi, nhưng không được dùng để suy ra trạng thái database trung gian. Issue 04 là nguồn quan sát cho T01/T05/T06 vì nó đọc DB ngay sau từng bước.
 - Khi mở rộng mô hình, thêm fixture cho từng trạng thái/guard còn thiếu và giữ truy vấn oracle ở dạng `select` tối thiểu, không xuất dữ liệu nhạy cảm.
 
+### Kết quả chạy thực tế ngày 04/11/2026
+
+- GraphWalker 4.3.3 `check` pass với model v2; `offline --seed 6006` sinh được các nhánh confirm, reject, hủy khi `PENDING`, reschedule và slot unavailable.
+- Application/API flow: app local chạy trên PostgreSQL 17 port 5450; `booking-confirm-reject.e2e.ts` pass `2/2`, xác nhận DB chuyển `PENDING -> ACCEPTED` và `PENDING -> REJECTED`.
+- UI flow Issue 04 chưa pass vì helper không tìm thấy `incrementMonth` trong thời hạn và webpack báo lỗi `node:path`/`node:process`; reschedule/cancel UI được ghi `NOT_VERIFIED`, không claim pass.
+
