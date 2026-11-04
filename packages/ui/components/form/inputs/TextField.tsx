@@ -101,7 +101,7 @@ const Addon = ({
 );
 
 export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(function InputField(props, ref) {
-  const id = useId();
+  const generatedId = useId();
   const { t: _t, isLocaleReady, i18n } = useLocale();
   const t = props.t || _t;
   const name = props.name || "";
@@ -130,8 +130,11 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(function
     t: __t,
     dataTestid,
     size,
+    id,
     ...passThrough
   } = props;
+
+  const inputId = id ?? generatedId;
 
   const [inputValue, setInputValue] = useState<string>("");
 
@@ -143,7 +146,7 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(function
     <div className={classNames(containerClassName)}>
       {!!name && !noLabel && (
         <Label
-          htmlFor={id}
+          htmlFor={inputId}
           {...labelProps}
           className={classNames(labelClassName, labelSrOnly && "sr-only", props.error && "text-error")}>
           {label}
@@ -174,7 +177,7 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(function
           )}
           <input
             data-testid={dataTestid ? `${dataTestid}-input` : "input-field"}
-            id={id}
+            id={inputId}
             type={type}
             placeholder={placeholder}
             className={classNames(
@@ -221,7 +224,7 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(function
         </div>
       ) : (
         <Input
-          id={id}
+          id={inputId}
           type={type}
           placeholder={placeholder}
           size={size}
