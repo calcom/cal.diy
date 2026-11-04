@@ -151,11 +151,18 @@ function getWCAGContrastColor(background: string): string {
   return luminance < 0.5 ? "#FFFFFF" : "#000000";
 }
 
+// WCAG contrast ratios are defined on relative luminance, which requires linearizing the sRGB channels
+function getRelativeLuminance({ r, g, b }: Rgb): number {
+  const [linearR, linearG, linearB] = [r, g, b].map((channel) => {
+    const srgb = channel / 255;
+    return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * linearR + 0.7152 * linearG + 0.0722 * linearB;
+}
+
 export function checkWCAGContrastColor(background: string, target: string) {
-  const backgroundRGB = hexToRgb(background);
-  const targetRGB = hexToRgb(target);
-  const bgLuminance = (0.2126 * backgroundRGB.r + 0.7152 * backgroundRGB.g + 0.0722 * backgroundRGB.b) / 255;
-  const targetLuminance = (0.2126 * targetRGB.r + 0.7152 * targetRGB.g + 0.0722 * targetRGB.b) / 255;
+  const bgLuminance = getRelativeLuminance(hexToRgb(background));
+  const targetLuminance = getRelativeLuminance(hexToRgb(target));
 
   const contrastRadio =
     (Math.max(bgLuminance, targetLuminance) + 0.05) / (Math.min(targetLuminance, bgLuminance) + 0.05);
