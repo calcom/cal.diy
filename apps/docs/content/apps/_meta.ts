@@ -6,6 +6,5 @@ export default {
   hubspot: "HubSpot",
   sendgrid: "Sendgrid",
   stripe: "Stripe",
-  twilio: "Twilio",
   zoho: "Zoho",
 };
