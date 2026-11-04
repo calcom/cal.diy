@@ -28,7 +28,7 @@ export const HorizontalLines = ({
         borderColor === "subtle" ? "divide-subtle" : "divide-default"
       )}
       style={{
-        gridTemplateRows: `repeat(${hours.length}, minmax(var(--gridDefaultSize),1fr)`,
+        gridTemplateRows: `repeat(${hours.length}, minmax(var(--gridDefaultSize), 1fr))`,
       }}>
       <div className="row-end-1 h-(--calendar-offset-top) " ref={containerOffsetRef} />
       {hours.map((hour) => (
