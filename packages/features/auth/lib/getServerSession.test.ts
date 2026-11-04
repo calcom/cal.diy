@@ -27,6 +27,7 @@ vi.mock("@calcom/lib/safeStringify", createSafeStringifyMock);
 vi.mock("next-auth/jwt", createGetTokenMock);
 
 import { getToken } from "next-auth/jwt";
+import { IdentityProvider } from "@calcom/prisma/enums";
 import { getServerSession } from "./getServerSession";
 
 type MockNextApiRequest = ReturnType<typeof createMocks<NextApiRequest>>["req"];
@@ -80,6 +81,13 @@ describe("getServerSession", () => {
 
       expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
         where: { id: 123 },
+        include: {
+          password: {
+            select: {
+              adminPasswordMeetsRequirements: true,
+            },
+          },
+        },
       });
     });
 
@@ -121,6 +129,13 @@ describe("getServerSession", () => {
 
       expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
         where: { id: 999 },
+        include: {
+          password: {
+            select: {
+              adminPasswordMeetsRequirements: true,
+            },
+          },
+        },
       });
     });
 
@@ -158,5 +173,67 @@ describe("getServerSession", () => {
         expect(whereClause).not.toHaveProperty("email");
       }
     });
+  });
+
+  it("refreshes cached admin roles using current password and 2FA status from the database", async () => {
+    const token = createMockToken({ sub: "730" });
+    setupGetTokenMock(token);
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce({
+        ...createMockUser({
+          id: 730,
+          role: "ADMIN",
+          identityProvider: IdentityProvider.CAL,
+          twoFactorEnabled: false,
+        }),
+        password: { adminPasswordMeetsRequirements: true },
+      } as never)
+      .mockResolvedValueOnce({
+        ...createMockUser({
+          id: 730,
+          role: "ADMIN",
+          identityProvider: IdentityProvider.CAL,
+          twoFactorEnabled: true,
+        }),
+        password: { adminPasswordMeetsRequirements: true },
+      } as never);
+
+    const firstSession = await getServerSession({ req: createMockRequest() });
+    const secondSession = await getServerSession({ req: createMockRequest() });
+
+    expect(firstSession?.user.role).toBe("INACTIVE_ADMIN");
+    expect(secondSession?.user.role).toBe("ADMIN");
+    expect(secondSession?.user.inactiveAdminReason).toBeUndefined();
+  });
+
+  it("restricts cached admin privileges after 2FA is disabled", async () => {
+    const token = createMockToken({ sub: "731" });
+    setupGetTokenMock(token);
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce({
+        ...createMockUser({
+          id: 731,
+          role: "ADMIN",
+          identityProvider: IdentityProvider.CAL,
+          twoFactorEnabled: true,
+        }),
+        password: { adminPasswordMeetsRequirements: true },
+      } as never)
+      .mockResolvedValueOnce({
+        ...createMockUser({
+          id: 731,
+          role: "ADMIN",
+          identityProvider: IdentityProvider.CAL,
+          twoFactorEnabled: false,
+        }),
+        password: { adminPasswordMeetsRequirements: true },
+      } as never);
+
+    const activeSession = await getServerSession({ req: createMockRequest() });
+    const inactiveSession = await getServerSession({ req: createMockRequest() });
+
+    expect(activeSession?.user.role).toBe("ADMIN");
+    expect(inactiveSession?.user.role).toBe("INACTIVE_ADMIN");
+    expect(inactiveSession?.user.inactiveAdminReason).toBe("2fa");
   });
 });
