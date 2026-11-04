@@ -738,42 +738,57 @@ export default abstract class BaseCalendarService implements Calendar {
 
         if (event.isRecurring()) {
           let maxIterations = 365;
-          if (["HOURLY", "SECONDLY", "MINUTELY"].includes(event.getRecurrenceTypes())) {
-            logger.warn(`Won't handle [${event.getRecurrenceTypes()}] recurrence`);
+          const recurrenceTypesValue = event.getRecurrenceTypes();
+          const recurrenceTypes =
+            typeof recurrenceTypesValue === "string" ? [recurrenceTypesValue] : Object.values(recurrenceTypesValue);
+          if (recurrenceTypes.some((type) => ["HOURLY", "SECONDLY", "MINUTELY"].includes(type))) {
+            logger.warn(`Won't handle [${recurrenceTypes.join(", ")}] recurrence`);
             return;
           }
 
           const start = dayjs(dateFrom);
           const end = dayjs(dateTo);
-          const startDate = ICAL.Time.fromDateTimeString(startISOString);
-          startDate.hour = event.startDate.hour;
-          startDate.minute = event.startDate.minute;
-          startDate.second = event.startDate.second;
-          const iterator = event.iterator(startDate);
-          let current: ICAL.Time;
+          const iterator = event.iterator();
+          let current = iterator.next();
+          let fastForwardIterations = Math.max(365, start.diff(dayjs(event.startDate.toJSDate()), "day") + 1);
+          const eventDuration = event.endDate.toJSDate().getTime() - event.startDate.toJSDate().getTime();
+
+          // RecurExpansion uses the supplied start time as DTSTART. Starting it at
+          // the query range silently re-anchors rules such as FREQ=WEEKLY without
+          // BYDAY. Advance from the event's real DTSTART instead, but keep the
+          // first occurrence that overlaps the requested range.
           let currentEvent: ReturnType<typeof event.getOccurrenceDetails> | undefined;
           let currentStart: ReturnType<typeof dayjs> | null = null;
           let currentError: string | undefined;
 
+          while (current && fastForwardIterations > 0) {
+            const currentEnd = dayjs(current.toJSDate()).add(eventDuration, "millisecond");
+            if (currentEnd.isAfter(start)) break;
+            current = iterator.next();
+            fastForwardIterations -= 1;
+          }
+
           while (
             maxIterations > 0 &&
-            (currentStart === null || currentStart.isAfter(end) === false) &&
-            // this iterator was poorly implemented, normally done is expected to be
-            // returned
-            (current = iterator.next())
+            current &&
+            (currentStart === null || currentStart.isAfter(end) === false)
           ) {
             maxIterations -= 1;
 
             try {
               // @see https://github.com/mozilla-comm/ical.js/issues/514
-              currentEvent = event.getOccurrenceDetails(current);
+              currentEvent = currentEvent ?? event.getOccurrenceDetails(current);
             } catch (error) {
+              currentEvent = undefined;
               if (error instanceof Error && error.message !== currentError) {
                 currentError = error.message;
                 this.log.error("error", error);
               }
             }
-            if (!currentEvent) return;
+            if (!currentEvent) {
+              current = iterator.next();
+              continue;
+            }
             // do not mix up caldav and icalendar! For the recurring events here, the timezone
             // provided is relevant, not as pointed out in https://datatracker.ietf.org/doc/html/rfc4791#section-9.6.5
             // where recurring events are always in utc (in caldav!). Thus, apply the time zone here.
@@ -784,12 +799,20 @@ export default abstract class BaseCalendarService implements Calendar {
             }
             currentStart = dayjs(currentEvent.startDate.toJSDate());
 
-            if (currentStart.isBetween(start, end) === true) {
+            if (
+              currentStart.isBefore(end) &&
+              dayjs(currentEvent.endDate.toJSDate()).isAfter(start)
+            ) {
               events.push({
                 start: currentStart.toISOString(),
                 end: dayjs(currentEvent.endDate.toJSDate()).toISOString(),
               });
             }
+
+            // Advance only after processing the current occurrence. Advancing in the
+            // loop condition skipped an occurrence exactly at the query start.
+            current = iterator.next();
+            currentEvent = undefined;
           }
           if (maxIterations <= 0) {
             logger.warn("Could not find any occurrence for recurring event in 365 iterations");
