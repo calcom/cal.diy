@@ -31,13 +31,17 @@ export class HttpError<TCode extends number = number> extends Error {
     }
   }
 
-  public static fromRequest(request: Request, response: Response, parsedError: Record<string, unknown>) {
+  public static fromRequest(
+    request: Request,
+    response: { url: string; status: number; statusText: string },
+    parsedError: Record<string, unknown>
+  ) {
     return new HttpError({
       message: response.statusText,
       url: response.url,
       method: request.method,
       statusCode: response.status,
-      data: parsedError.data as Record<string, unknown>,
+      data: parsedError,
     });
   }
 }
