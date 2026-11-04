@@ -35,5 +35,17 @@ export function errorFormatter({ shape, error }: ErrorFormatterOptions): ErrorSh
       },
     };
   }
-  return shape;
+  const causeFields = (error.cause as { fields?: unknown })?.fields;
+  const fields =
+    Array.isArray(causeFields) && causeFields.every((field) => typeof field === "string")
+      ? causeFields
+      : undefined;
+
+  return {
+    ...shape,
+    data: {
+      ...shape.data,
+      fields,
+    },
+  };
 }
