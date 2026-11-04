@@ -2,6 +2,8 @@
 
 Tài liệu này mô tả mô hình trạng thái dùng để thiết kế kiểm thử dựa trên mô hình (MBT) cho booking. Mô hình được đối chiếu với mã nguồn trên nhánh `qa/model-based-booking` và với bằng chứng chạy thử đã có trong [Issue 04](issue-04-booking-business-data.md). Các kết luận được gắn nhãn **[Code]**, **[Test]**, **[Observed]** hoặc **[Assumption]** để không nhầm suy luận với quan sát thực tế.
 
+Nguyên lý MBT, phạm vi, rủi ro và tiêu chí pass/fail của model v2 được tổng hợp tại [Phần D - Issue 17](issue-17-mbt-principles.md).
+
 ## 1. Phạm vi và quy ước
 
 Phạm vi là một booking cá nhân không recurring, không seat, không thanh toán và không tích hợp calendar ngoài. Booker, host và event type dùng dữ liệu giả; thời gian được lưu/đối chiếu bằng UTC và hiển thị thêm `Asia/Saigon`. Mô hình không đại diện cho từng bản ghi database trung gian trong transaction và không suy ra trạng thái từ nhãn UI.
@@ -40,7 +42,7 @@ stateDiagram-v2
     REJECTED --> [*]
 ```
 
-Mũi tên tạo booking và các chuyển tiếp confirm/reject được xác định từ `createBooking.ts`, `confirm.handler.ts` và bài test `booking-confirm-reject.e2e.ts`. Mũi tên `AWAITING_HOST` là phần cần giữ trong mô hình enum; chưa có quan sát chạy thử cho chuỗi này. Việc hủy `PENDING`/`AWAITING_HOST` được giữ như chuyển tiếp cần kiểm chứng thêm nếu không có fixture tương ứng. **[Code][Assumption]**
+Mũi tên tạo booking và các chuyển tiếp confirm/reject được xác định từ `createBooking.ts`, `confirm.handler.ts` và bài test `booking-confirm-reject.e2e.ts`. `AWAITING_HOST` chỉ là trạng thái được ghi nhận trong enum, không nằm trong model chạy của issue này. Việc hủy `PENDING` được thêm thành nhánh cần kiểm chứng qua ứng dụng; hủy `AWAITING_HOST` ngoài phạm vi. **[Code][Assumption]**
 
 ## 3. Bảng chuyển tiếp và oracle
 
@@ -59,37 +61,40 @@ Trong T05, `fromReschedule` là liên kết logic giữa hai booking, không ph�
 
 ### Ánh xạ sang model GraphWalker
 
-[`docs/qa/model/booking-model.json`](model/booking-model.json) mô hình hóa chuỗi booking chính bằng các vertex ổn định để harness Issue #6 ánh xạ trực tiếp:
+[`docs/qa/model/booking-model-v2.json`](model/booking-model-v2.json) mô hình hóa phạm vi mở rộng của Issue #17. Harness Issue #6 hiện tại dùng [`docs/qa/model/booking-model-v1.json`](model/booking-model-v1.json), vì vậy không được đổi tên edge/vertex của v1 cho đến khi harness tương thích được cập nhật:
 
 | Vertex GraphWalker | Trạng thái dữ liệu tương ứng |
 | --- | --- |
 | `v_NoBooking` | Chưa có booking trong phiên kiểm thử; điểm bắt đầu của model. |
-| `v_BookedA` | Booking A đang tồn tại, thường là `ACCEPTED`; nếu nhánh reschedule bắt đầu từ booking chờ xác nhận thì có thể là `PENDING`. |
-| `v_BookedB` | Booking mới B sau T05; UID B khác UID A và `fromReschedule=UID A`. Booking A đồng thời là bản ghi `CANCELLED` với `rescheduled=true`. |
-| `v_Cancelled` | Booking B sau T06 có `status=CANCELLED`; oracle kiểm tra `cancellationReason`. |
+| `v_Pending` | Booking vừa được tạo cho event type yêu cầu organizer xác nhận; `status=PENDING`. |
+| `v_BookedA` | Booking A đã được xác nhận hoặc event type xác nhận mặc định; `status=ACCEPTED`. Đây là booking trước reschedule. |
+| `v_BookedB` | Booking B mới sau reschedule; `status=ACCEPTED`, UID khác A và `fromReschedule=UID A`. |
+| `v_Rejected` | Booking bị organizer từ chối; `status=REJECTED`. |
+| `v_Cancelled` | Booking bị hủy từ `PENDING` hoặc `ACCEPTED`; `status=CANCELLED`. |
 | `v_SlotUnavailable` | Nhánh lỗi khi đổi lịch không tạo B vì slot mới không còn khả dụng; booking A vẫn là bản ghi hiện hành. |
 
-Các edge `e_CreateBookingA`, `e_RescheduleToB`, `e_CancelBookingB`, `e_RescheduleSlotUnavailable`, `e_SelectAnotherSlot` và `e_StartNewBooking` lần lượt biểu diễn T01, T05, T06, T08, việc chọn lại slot sau lỗi T08 và bắt đầu một phiên booking mới sau khi phiên trước đã kết thúc. Edge cuối giúp model không có vertex cụt để `edge_coverage(100)` có thể chạy trọn model; nó không thay đổi trạng thái của booking đã hủy. Model chỉ mô tả chuỗi booking cá nhân không recurring/seat/payment; các trạng thái `PENDING`, `REJECTED` và `AWAITING_HOST` vẫn được kiểm tra bằng các chuyển tiếp T02-T04 và phần giới hạn bên dưới.
+Các edge `e_CreateAcceptedBooking`, `e_CreatePendingBooking`, `e_ConfirmPendingBooking`, `e_RejectPendingBooking` và `e_CancelPendingBooking` bổ sung các chuỗi tạo booking cần xác nhận, confirm, reject và hủy khi `PENDING`. Các edge hủy `ACCEPTED`, reschedule và xử lý slot không khả dụng giữ lại các nhánh Issue 04. `AWAITING_HOST` được giữ trong bảng trạng thái nghiệp vụ nhưng không có vertex/edge trong model vì issue này không triển khai hoặc kiểm chứng luồng host/team.
 
 ## 4. Tiêu chí coverage
 
 Một phiên MBT đạt khi thỏa cả bốn nhóm sau:
 
-1. **State coverage:** đã xuất hiện `PENDING`, `ACCEPTED`, `REJECTED` và `CANCELLED`; `AWAITING_HOST` phải được đánh dấu chưa kiểm chứng nếu không có fixture host/team.
-2. **Transition coverage:** model phải đạt `edge_coverage(100)` cho toàn bộ 6 edge; T01, T05, T06 và T08 được ánh xạ trong model, còn T02-T04/T07 là các chuyển tiếp bổ sung ngoài chuỗi model tối thiểu.
-3. **Vertex coverage:** đạt tối thiểu `vertex_coverage(100)` để mọi vertex trong model đều được đi qua; phiên đầy đủ ưu tiên dùng `random(edge_coverage(100))`.
+1. **State coverage:** phải xuất hiện `PENDING`, `ACCEPTED`, `REJECTED` và `CANCELLED` (4/5 trạng thái nghiệp vụ); `AWAITING_HOST` được ghi rõ ngoài phạm vi.
+2. **Transition coverage:** model phải đạt `edge_coverage(100)` cho toàn bộ 12 edge, bao gồm ba nhánh `PENDING -> ACCEPTED/REJECTED/CANCELLED`.
+3. **Vertex coverage:** đạt `vertex_coverage(100)` để mọi vertex trong model đều được đi qua; `v_SlotUnavailable` là vertex lỗi kỹ thuật, không được tính là trạng thái BookingStatus.
 4. **Guard coverage:** có một ca event type xác nhận mặc định, một ca yêu cầu xác nhận, một ca token hợp lệ và một ca slot/điều kiện reschedule không hợp lệ.
 5. **Data-oracle coverage:** sau mỗi bước đọc chỉ các trường `uid`, `status`, `rescheduled`, `fromReschedule`, `startTime`, `endTime`, `cancellationReason`, `rejectionReason`, `oneTimePassword` và các cờ actor cần thiết; không ghi email, token, credential hoặc URL quản lý.
 
 ## 5. Ba chuỗi kiểm thử tối thiểu
 
-Các chuỗi dưới đây là kế hoạch kiểm thử và oracle. Chuỗi S01 đã có kết quả chạy trong Issue 04; S02 và S03 có test tự động kiểm tra chuyển tiếp T03/T04 nhưng chưa phải một phiên chạy mới của tài liệu này. Việc tạo booking `PENDING` trong các test đó là fixture Prisma, không kiểm chứng thao tác đặt qua form.
+Các chuỗi dưới đây là kế hoạch kiểm thử và oracle. Chuỗi S01 đã có kết quả chạy trong Issue 04; S02-S04 phải chạy qua form/ứng dụng và đọc oracle DB sau từng bước. Fixture Prisma trong test cũ chỉ được dùng để tham khảo token confirm/reject, không được coi là bằng chứng thay thế cho application flow.
 
 | Chuỗi | Các bước | Nhánh được phủ | Oracle cuối chuỗi |
 | --- | --- | --- | --- |
 | S01 - happy path và reschedule | T01 tạo A `ACCEPTED` → T05 đổi A sang B → T06 hủy B | tạo mặc định, UID mới, liên kết cũ-mới, hủy | A: `CANCELLED` + `rescheduled=true`; B: UID khác, `fromReschedule=A.uid`; sau hủy B: `CANCELLED` + lý do đúng; không có booking mới ngoài A/B |
-| S02 - confirm | Fixture tạo C `PENDING` trực tiếp → T03 organizer confirm | chuyển `PENDING → ACCEPTED` | C giữ nguyên UID; `status=ACCEPTED`; `oneTimePassword=null`; không tạo bản ghi thay thế. Chuỗi chỉ kiểm chứng T03 |
-| S03 - reject | Fixture tạo D `PENDING` trực tiếp → T04 organizer reject với lý do | chuyển `PENDING → REJECTED` | D giữ nguyên UID; `status=REJECTED`; `rejectionReason` khớp; `oneTimePassword=null`; không gọi oracle của `ACCEPTED`. Chuỗi chỉ kiểm chứng T04 |
+| S02 - confirm | Tạo booking từ form với event type yêu cầu xác nhận → organizer confirm | `NoBooking → PENDING → ACCEPTED` | Booking giữ nguyên UID; trạng thái cuối `ACCEPTED`; token xác nhận bị xóa |
+| S03 - reject | Tạo booking từ form với event type yêu cầu xác nhận → organizer reject với lý do | `NoBooking → PENDING → REJECTED` | Booking giữ nguyên UID; trạng thái cuối `REJECTED`; lý do khớp; token bị xóa |
+| S04 - cancel pending | Tạo booking từ form với event type yêu cầu xác nhận → hủy trước khi confirm | `NoBooking → PENDING → CANCELLED` | Booking giữ nguyên UID; trạng thái cuối `CANCELLED`; lý do hủy khớp |
 
 ### Điều kiện pass/fail
 
@@ -99,11 +104,11 @@ Các chuỗi dưới đây là kế hoạch kiểm thử và oracle. Chuỗi S01
 
 ## 6. Giới hạn và việc cần chạy thêm
 
-- Chưa kiểm chứng `AWAITING_HOST`, team/round-robin, seats, recurring, payment, calendar ngoài, email và webhook delivery.
-- Chưa kiểm chứng đầy đủ hủy booking `PENDING` hoặc `AWAITING_HOST`, retry/resubmit token và các chuyển tiếp sau khi booking đã bắt đầu.
+- `AWAITING_HOST`, team/round-robin, seats, recurring, payment, calendar ngoài, email và webhook delivery nằm ngoài phạm vi issue này; không được tính vào state coverage.
+- Chưa kiểm chứng retry/resubmit token và các chuyển tiếp sau khi booking đã bắt đầu.
 - `REJECTED` được xác nhận bằng bài test token; chưa có bằng chứng UI độc lập cho mọi đường confirm/reject.
-- Model GraphWalker dùng định dạng JSON của GraphWalker 4.3.3, đặt `v_NoBooking` làm start element và generator mặc định `random(edge_coverage(100))`. `vertex_coverage(100)` là mức tối thiểu để kiểm tra mọi vertex; các edge chưa có quan sát thực tế phải tiếp tục được đánh dấu trong harness.
-- Lệnh kiểm tra thực tế với CLI 4.3.3 cần truyền model và generator thành cùng một tham số `-m`: `java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar check -m docs/qa/model/booking-model.json "random(edge_coverage(100))"` và `java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar offline -m docs/qa/model/booking-model.json "random(edge_coverage(100))"`. Cả hai lệnh đã chạy thành công; CLI 4.3.3 không chấp nhận `check -m <file>` đơn lẻ vì option `-m` yêu cầu thêm generator/stop condition.
+- Model GraphWalker dùng định dạng JSON của GraphWalker 4.3.3, đặt `v_NoBooking` làm start element và generator mặc định `random(edge_coverage(100))`. `vertex_coverage(100)` là mức tối thiểu để kiểm tra mọi vertex; state coverage nghiệp vụ tối thiểu là 4/5 vì `AWAITING_HOST` nằm ngoài phạm vi.
+- Lệnh kiểm tra v2 với CLI 4.3.3 cần truyền model và generator thành cùng một tham số `-m`: `java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar check -m docs/qa/model/booking-model-v2.json "random(edge_coverage(100))"` và `java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar offline -m docs/qa/model/booking-model-v2.json "random(edge_coverage(100))"`. CLI 4.3.3 không chấp nhận `check -m <file>` đơn lẻ vì option `-m` yêu cầu thêm generator/stop condition.
 - Issue 01 chứng minh quan hệ UID qua ảnh đã che và truy vấn sau chuỗi, nhưng không được dùng để suy ra trạng thái database trung gian. Issue 04 là nguồn quan sát cho T01/T05/T06 vì nó đọc DB ngay sau từng bước.
 - Khi mở rộng mô hình, thêm fixture cho từng trạng thái/guard còn thiếu và giữ truy vấn oracle ở dạng `select` tối thiểu, không xuất dữ liệu nhạy cảm.
 

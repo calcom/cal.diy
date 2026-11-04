@@ -5,64 +5,19 @@
       "generator": "random(edge_coverage(100))",
       "startElementId": "v_NoBooking",
       "vertices": [
-        {
-          "id": "v_NoBooking",
-          "name": "v_NoBooking"
-        },
-        {
-          "id": "v_BookedA",
-          "name": "v_BookedA"
-        },
-        {
-          "id": "v_BookedB",
-          "name": "v_BookedB"
-        },
-        {
-          "id": "v_Cancelled",
-          "name": "v_Cancelled"
-        },
-        {
-          "id": "v_SlotUnavailable",
-          "name": "v_SlotUnavailable"
-        }
+        { "id": "v_NoBooking", "name": "v_NoBooking" },
+        { "id": "v_BookedA", "name": "v_BookedA" },
+        { "id": "v_BookedB", "name": "v_BookedB" },
+        { "id": "v_Cancelled", "name": "v_Cancelled" },
+        { "id": "v_SlotUnavailable", "name": "v_SlotUnavailable" }
       ],
       "edges": [
-        {
-          "id": "e_CreateBookingA",
-          "name": "e_CreateBookingA",
-          "sourceVertexId": "v_NoBooking",
-          "targetVertexId": "v_BookedA"
-        },
-        {
-          "id": "e_RescheduleToB",
-          "name": "e_RescheduleToB",
-          "sourceVertexId": "v_BookedA",
-          "targetVertexId": "v_BookedB"
-        },
-        {
-          "id": "e_CancelBookingB",
-          "name": "e_CancelBookingB",
-          "sourceVertexId": "v_BookedB",
-          "targetVertexId": "v_Cancelled"
-        },
-        {
-          "id": "e_RescheduleSlotUnavailable",
-          "name": "e_RescheduleSlotUnavailable",
-          "sourceVertexId": "v_BookedA",
-          "targetVertexId": "v_SlotUnavailable"
-        },
-        {
-          "id": "e_SelectAnotherSlot",
-          "name": "e_SelectAnotherSlot",
-          "sourceVertexId": "v_SlotUnavailable",
-          "targetVertexId": "v_BookedA"
-        },
-        {
-          "id": "e_StartNewBooking",
-          "name": "e_StartNewBooking",
-          "sourceVertexId": "v_Cancelled",
-          "targetVertexId": "v_NoBooking"
-        }
+        { "id": "e_CreateBookingA", "name": "e_CreateBookingA", "sourceVertexId": "v_NoBooking", "targetVertexId": "v_BookedA" },
+        { "id": "e_RescheduleToB", "name": "e_RescheduleToB", "sourceVertexId": "v_BookedA", "targetVertexId": "v_BookedB" },
+        { "id": "e_CancelBookingB", "name": "e_CancelBookingB", "sourceVertexId": "v_BookedB", "targetVertexId": "v_Cancelled" },
+        { "id": "e_RescheduleSlotUnavailable", "name": "e_RescheduleSlotUnavailable", "sourceVertexId": "v_BookedA", "targetVertexId": "v_SlotUnavailable" },
+        { "id": "e_SelectAnotherSlot", "name": "e_SelectAnotherSlot", "sourceVertexId": "v_SlotUnavailable", "targetVertexId": "v_BookedA" },
+        { "id": "e_StartNewBooking", "name": "e_StartNewBooking", "sourceVertexId": "v_Cancelled", "targetVertexId": "v_NoBooking" }
       ]
     }
   ]
