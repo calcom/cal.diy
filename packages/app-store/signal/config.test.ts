@@ -12,6 +12,27 @@ describe("Signal location urlRegExp", () => {
     ).toBe(true);
   });
 
+  it("rejects http Signal call links (signal.link) while accepting https", () => {
+    expect(signalUrlRegExp.test("http://signal.link/call/#key=cqbt-rflr-fckd-korn-mkhz-pgqb-sxrk-sght")).toBe(
+      false
+    );
+    expect(
+      signalUrlRegExp.test("https://signal.link/call/#key=cqbt-rflr-fckd-korn-mkhz-pgqb-sxrk-sght")
+    ).toBe(true);
+  });
+
+  it("rejects signal.link URLs missing /call/ path or a non-empty #key=", () => {
+    expect(signalUrlRegExp.test("https://signal.link/")).toBe(false);
+    expect(signalUrlRegExp.test("https://signal.link/call/")).toBe(false);
+    expect(signalUrlRegExp.test("https://signal.link/call/#key=")).toBe(false);
+    expect(signalUrlRegExp.test("https://signal.link/other/#key=abc")).toBe(false);
+  });
+
+  it("rejects Signal URLs with trailing junk or whitespace", () => {
+    expect(signalUrlRegExp.test("https://signal.link/call/#key=abc https://example.com")).toBe(false);
+    expect(signalUrlRegExp.test("https://signal.me/#p/+11234567890 https://example.com")).toBe(false);
+  });
+
   it("accepts signal.me profile and username URLs", () => {
     expect(signalUrlRegExp.test("https://signal.me/#p/+11234567890")).toBe(true);
     expect(
