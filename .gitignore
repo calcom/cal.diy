@@ -117,3 +117,7 @@ agents/devin-knowledge.json
 
 # pagefind
 _pagefind/
+
+# Local QA runtimes and GraphWalker binary
+/tools/issue06-env/
+/tools/graphwalker/*.jar

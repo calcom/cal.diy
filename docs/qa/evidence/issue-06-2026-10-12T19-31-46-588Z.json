@@ -1,0 +1,205 @@
+{
+    "gitSHA":  "67f426243f8553b73e0d3059e30cb0248f8e10ab",
+    "dirty":  false,
+    "utc":  "2026-10-12T19:31:46.588Z",
+    "local":  "2026-10-13 02:31:46 GMT+7",
+    "timeZone":  "Asia/Saigon",
+    "environment":  {
+                        "platform":  "win32",
+                        "node":  "v20.20.2",
+                        "java":  "openjdk version \"21.0.12.1\" 2026-08-18 LTS\r\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\r\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+                        "docker":  "Docker version 29.8.0, build 88096ef",
+                        "dockerEngine":  "29.8.0",
+                        "graphWalker":  "4.3.3 jar; offline generation succeeded",
+                        "postgres":  "postgres (PostgreSQL) 17.11"
+                    },
+    "result":  "pass",
+    "errors":  [
+
+               ],
+    "steps":  [
+                  {
+                      "element":  "v_NoBooking",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_CreateBookingA",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_BookedA",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_RescheduleSlotUnavailable",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_SlotUnavailable",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_SelectAnotherSlot",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_BookedA",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_RescheduleSlotUnavailable",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_SlotUnavailable",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_SelectAnotherSlot",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_BookedA",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_RescheduleSlotUnavailable",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_SlotUnavailable",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_SelectAnotherSlot",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_BookedA",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_RescheduleSlotUnavailable",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_SlotUnavailable",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_SelectAnotherSlot",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_BookedA",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_RescheduleToB",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_BookedB",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_CancelBookingB",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_Cancelled",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "e_StartNewBooking",
+                      "result":  "pass"
+                  },
+                  {
+                      "element":  "v_NoBooking",
+                      "result":  "pass"
+                  }
+              ],
+    "coverage":  {
+                     "edges":  {
+                                   "visited":  6,
+                                   "total":  6,
+                                   "percent":  100
+                               },
+                     "vertices":  {
+                                      "visited":  5,
+                                      "total":  5,
+                                      "percent":  100
+                                  }
+                 },
+    "limits":  [
+                   "Personal non-recurring, no seats/payment/external calendar",
+                   "PENDING/REJECTED/AWAITING_HOST and supplementary guards not covered",
+                   "No raw browser errors, trace, screenshot, video or booking identifiers in evidence"
+               ],
+    "path":  [
+                 "v_NoBooking",
+                 "e_CreateBookingA",
+                 "v_BookedA",
+                 "e_RescheduleSlotUnavailable",
+                 "v_SlotUnavailable",
+                 "e_SelectAnotherSlot",
+                 "v_BookedA",
+                 "e_RescheduleSlotUnavailable",
+                 "v_SlotUnavailable",
+                 "e_SelectAnotherSlot",
+                 "v_BookedA",
+                 "e_RescheduleSlotUnavailable",
+                 "v_SlotUnavailable",
+                 "e_SelectAnotherSlot",
+                 "v_BookedA",
+                 "e_RescheduleSlotUnavailable",
+                 "v_SlotUnavailable",
+                 "e_SelectAnotherSlot",
+                 "v_BookedA",
+                 "e_RescheduleToB",
+                 "v_BookedB",
+                 "e_CancelBookingB",
+                 "v_Cancelled",
+                 "e_StartNewBooking",
+                 "v_NoBooking"
+             ],
+    "slotUnavailable":  {
+                            "httpStatus":  409,
+                            "requestSlotBlocked":  true,
+                            "urlDateMatchesRequestStart":  false,
+                            "startUTC":  "2026-11-03T10:30:00.000Z",
+                            "endUTC":  "2026-11-03T11:00:00.000Z",
+                            "originalUnchanged":  true,
+                            "replacementCount":  0
+                        },
+    "validation":  {
+                       "modelCheck":  {
+                                          "result":  "pass",
+                                          "output":  "No issues found with the model(s)."
+                                      },
+                       "biome":  {
+                                     "exitCode":  0,
+                                     "result":  "pass",
+                                     "warnings":  "One long-function warning"
+                                 },
+                       "changedFileTypeCheck":  {
+                                                    "scope":  "Two MBT TypeScript files; full imported-dependency check not claimed",
+                                                    "diagnostics":  0,
+                                                    "result":  "pass"
+                                                },
+                       "monorepoTypeCheck":  {
+                                                 "error":  "Error: spawn tsc ENOENT",
+                                                 "result":  "chưa kiểm chứng",
+                                                 "package":  "@calcom/embed-snippet",
+                                                 "successfulTasks":  2,
+                                                 "command":  "yarn type-check:ci --force --concurrency=2"
+                                             }
+                   },
+    "delivery":  {
+                     "issue7":  "https://github.com/BoyTay/cal.diy/issues/7#issuecomment-6131239300",
+                     "recipients":  [
+                                        "anvodangiu",
+                                        "BoyTay"
+                                    ]
+                 }
+}

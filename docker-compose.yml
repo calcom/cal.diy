@@ -12,7 +12,7 @@ networks:
 services:
   database:
     container_name: database
-    image: postgres
+    image: postgres:18@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722
     restart: always
     volumes:
       - database-data:/var/lib/postgresql
@@ -25,7 +25,7 @@ services:
 
   redis:
     container_name: redis
-    image: redis:latest
+    image: redis:8@sha256:6f81e8915c60b065a524e6967e0ad1c639ba6efa84d669f823683ea04d9150ee
     restart: always
     volumes:
       - redis-data:/data
@@ -94,7 +94,7 @@ services:
       - API_KEY_PREFIX=${API_KEY_PREFIX}
       - WEB_APP_URL=${WEB_APP_URL}
       - IS_E2E=${IS_E2E:-false}
-      - REWRITE_API_V2_PREFIX=${REWRITE_API_V2_PREFIX:-true}
+      - REWRITE_API_V2_PREFIX=${REWRITE_API_V2_PREFIX:-1}
       - CALCOM_LICENSE_KEY=${CALCOM_LICENSE_KEY}
       - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
@@ -121,6 +121,11 @@ services:
   studio:
     image: calcom.docker.scarf.sh/calcom/cal.diy
     restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:5555"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
     networks:
       - stack
     ports:
