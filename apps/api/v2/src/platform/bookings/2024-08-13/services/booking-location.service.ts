@@ -186,6 +186,7 @@ export class BookingLocationService_2024_08_13 {
   }
 
   // in case of video integrations we need to clear the videoCallUrl from metadata when explicitly setting a new non-integration location
+  // in case of video integrations we need to clear the videoCallUrl from metadata
   // this ensures the frontend shows the new location instead of the old integration URL
   private getMetadataWithoutVideoCallUrl(metadata: unknown): Record<string, unknown> {
     const existingMetadata = (metadata || {}) as Record<string, unknown>;
@@ -193,3 +194,4 @@ export class BookingLocationService_2024_08_13 {
     return metadataWithoutVideoUrl;
   }
 }
+
