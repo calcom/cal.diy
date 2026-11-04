@@ -27,6 +27,11 @@ export const bookingCreateBodySchema = z.object({
   crmRecordId: z.string().nullish(),
   routedTeamMemberIds: z.array(z.number()).nullish(),
   skipContactOwner: z.boolean().optional(),
+  /**
+   * When true, bypasses requiresConfirmation on the event type and sets the booking status to ACCEPTED directly.
+   * Useful for API/programmatic bookings where the organizer wants to skip the confirmation queue.
+   */
+  forceConfirm: z.boolean().optional(),
   rrHostSubsetIds: z.array(z.number()).nullish(),
   crmAppSlug: z.string().nullish().optional(),
   cfToken: z.string().nullish().optional(),
