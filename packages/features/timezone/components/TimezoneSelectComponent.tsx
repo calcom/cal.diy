@@ -126,9 +126,9 @@ export function TimezoneSelectComponent({
           ),
         option: (state) =>
           classNames(
-            "bg-default py-2.5 px-3 rounded-md text-default ",
+            "bg-default py-2.5 px-3 rounded-md text-default cursor-pointer",
             state.isFocused && "bg-subtle",
-            state.isDisabled && "bg-cal-muted",
+            state.isDisabled && "bg-cal-muted !cursor-not-allowed",
             state.isSelected && "bg-emphasis text-default",
             timezoneClassNames?.option && timezoneClassNames.option(state)
           ),
@@ -144,7 +144,7 @@ export function TimezoneSelectComponent({
               : size === "sm"
                 ? "h-7 px-2"
                 : "h-9 py-0 px-3",
-            props.isDisabled && "bg-subtle",
+            (props.isDisabled ?? isPending) ? "bg-subtle !cursor-not-allowed" : "cursor-pointer",
             "rounded-[10px]",
             timezoneClassNames?.control && timezoneClassNames.control(state)
           ),
