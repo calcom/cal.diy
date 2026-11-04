@@ -441,7 +441,6 @@
   "apply_to_all_event_types": "Primjenjuje se na sve, uključujući buduće vrste događaja",
   "date_and_time": "Datum i vrijeme",
   "email_reminder_upcoming_event_notice": "Ovo je podsjetnik za vaš nadolazeći događaj.",
-  "email_reminder_triggered_by_workflow": "Ovaj podsjetnik je pokrenut putem Workflowa u Calu.",
   "event_upper_case": "Događaj",
   "scheduling_by": "Zakazano od strane",
   "experience_review_prompt": "Kako je bilo vaše nedavno iskustvo?",
@@ -449,6 +448,5 @@
   "meeting_satisfaction_question": "Koliko ste zadovoljni svojim posljednjim sastankom?",
   "meeting_not_joined_question": "niste prisustvovali sastanku?",
   "reschedule_cta_short": "Zakažite ponovno ovdje.",
-  "you_and_conjunction": "Vi &",
-  "email_survey_triggered_by_workflow": "Ova anketa je pokrenuta Workflow-om u Calu."
+  "you_and_conjunction": "Vi &"
 }
