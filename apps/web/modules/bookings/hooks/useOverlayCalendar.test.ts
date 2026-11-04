@@ -1,6 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
+import type { RenderHookResult } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WrappedBookerPropsMain } from "../types";
@@ -25,7 +26,9 @@ const buildConnectedCalendars = (
 
 const renderOverlayCalendar = (
   connectedCalendars: ConnectedCalendars
-): ReturnType<typeof renderHook> & { onToggleCalendar: ReturnType<typeof vi.fn> } => {
+): RenderHookResult<ReturnType<typeof useOverlayCalendar>, { connectedCalendars: ConnectedCalendars }> & {
+  onToggleCalendar: ReturnType<typeof vi.fn>;
+} => {
   const onToggleCalendar = vi.fn();
   const hook = renderHook(
     (props: { connectedCalendars: ConnectedCalendars }) =>
