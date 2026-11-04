@@ -1,7 +1,7 @@
 {
   "apply_to_all": "Aplică la toate",
   "identity_provider": "Furnizor de identitate",
-  "trial_days_left": "Aveți $t(zi, {\"count\": {{days}} }) rămase din perioada de probă PRO",
+  "trial_days_left": "Aveți $t(day, {\"count\": {{days}} }) rămase din perioada de probă PRO",
   "day_one": "{{count}} zi",
   "day_other": "{{count}} (de) zile",
   "second_one": "{{count}} secundă",

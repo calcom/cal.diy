@@ -1452,7 +1452,7 @@
   "12_hour_short": "12ម៉",
   "24_hour_short": "24ម៉",
   "redirect_success_booking": "បញ្ជូនបន្តនៅពេលកក់",
-  "you_are_being_redirected": "អ្នកកំពុងត្រូវបានបញ្ជូនបន្តទៅ {{ url }} ក្នុង $t(វិនាទី, {\"count\": {{seconds}} }).",
+  "you_are_being_redirected": "អ្នកកំពុងត្រូវបានបញ្ជូនបន្តទៅ {{ url }} ក្នុង $t(second, {\"count\": {{seconds}} }).",
   "external_redirect_url": "https://example.com/redirect-to-my-success-page",
   "redirect_url_description": "បញ្ជូនបន្តទៅ URL ផ្ទាល់ខ្លួនបន្ទាប់ពីការកក់ដោយជោគជ័យ",
   "redirect_on_no_routing_form": "ប្តូរទិសនៅពេលចូលប្រើដោយគ្មានទម្រង់នាំផ្លូវ",
