@@ -1165,6 +1165,12 @@ class CalApi {
     const existingModalEl = document.querySelector(`cal-modal-box[uid="${uid}"]`);
     // isConnectionPossible
     if (!!existingModalEl && !!this.cal.iframe) {
+      if (
+        existingModalEl instanceof ModalBox &&
+        enrichedConfig.theme !== stateData.previousEmbedConfig?.theme
+      ) {
+        existingModalEl.setTheme(getConfigProp(enrichedConfig, "theme"));
+      }
       log(`Trying to reuse modal ${uid}`);
       const lastLoadedUrlObject = this.cal.getLastLoadedLinkInframe();
       const lastLoadedPathIsRouter = lastLoadedUrlObject?.pathname?.includes("/router");
@@ -1504,6 +1510,9 @@ class CalApi {
       },
     });
 
+    if (uiConfig.theme !== undefined && this.cal.modalBox instanceof ModalBox) {
+      this.cal.modalBox.setTheme(uiConfig.theme);
+    }
     this.cal.doInIframe({ method: "ui", arg: uiConfig });
   }
 }
