@@ -1,33 +1,32 @@
 import {
-  createBookingScenario,
-  getGoogleCalendarCredential,
-  TestData,
-  getDate,
-  getOrganizer,
-  getBooker,
-  getScenarioData,
-  mockSuccessfulVideoMeetingCreation,
-  mockCalendarToHaveNoBusySlots,
   BookingLocations,
+  createBookingScenario,
+  getBooker,
+  getDate,
+  getGoogleCalendarCredential,
+  getOrganizer,
+  getScenarioData,
+  mockCalendarToHaveNoBusySlots,
+  mockSuccessfulVideoMeetingCreation,
+  TestData,
 } from "@calcom/testing/lib/bookingScenario/bookingScenario";
+import process from "node:process";
+import { appStoreMetadata } from "@calcom/app-store/appStoreMetaData";
+import dayjs from "@calcom/dayjs";
+import { ErrorCode } from "@calcom/lib/errorCodes";
+import { BookingStatus } from "@calcom/prisma/enums";
 import {
-  expectSuccessfulBookingCreationEmails,
   expectBookingToBeInDatabase,
-  expectSuccessfulCalendarEventCreationInCalendar,
   expectICalUIDAsString,
+  expectSuccessfulBookingCreationEmails,
+  expectSuccessfulCalendarEventCreationInCalendar,
 } from "@calcom/testing/lib/bookingScenario/expects";
 import { getMockRequestDataForBooking } from "@calcom/testing/lib/bookingScenario/getMockRequestDataForBooking";
 import { setupAndTeardown } from "@calcom/testing/lib/bookingScenario/setupAndTeardown";
-
+import { test } from "@calcom/testing/lib/fixtures/fixtures";
 import type { Request, Response } from "express";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { describe, expect } from "vitest";
-
-import { appStoreMetadata } from "@calcom/app-store/appStoreMetaData";
-import dayjs from "@calcom/dayjs";
-import { BookingStatus } from "@calcom/prisma/enums";
-import { test } from "@calcom/testing/lib/fixtures/fixtures";
-
 import { getNewBookingHandler } from "./getNewBookingHandler";
 
 export const Timezones = {
@@ -45,6 +44,92 @@ describe("handleNewBooking", () => {
   setupAndTeardown();
 
   describe("Booking for slot only available by date override:", () => {
+    test(
+      `should reject a booking inside availability when it does not match the configured slot interval`,
+      async () => {
+        const { dateString: plus1DateString } = getDate({ dateIncrement: 1 });
+        const newYorkTimeZone = Timezones["-05:00"];
+        const handleNewBooking = getNewBookingHandler();
+        const booker = getBooker({
+          email: "booker@example.com",
+          name: "Booker",
+        });
+
+        const startDateTimeOrganizerTz = dayjs
+          .tz(plus1DateString, newYorkTimeZone)
+          .hour(10)
+          .minute(30)
+          .second(0)
+          .millisecond(0);
+
+        const endDateTimeOrganizerTz = startDateTimeOrganizerTz.add(30, "minute");
+
+        const overrideSchedule = {
+          name: "10:00AM to 12:00PM in New York",
+          availability: [
+            {
+              days: [],
+              startTime: dayjs("1970-01-01").utc().hour(10).toDate(),
+              endTime: dayjs("1970-01-01").utc().hour(12).toDate(),
+              date: plus1DateString,
+            },
+          ],
+          timeZone: newYorkTimeZone,
+        };
+
+        const organizer = getOrganizer({
+          name: "Organizer",
+          email: "organizer@example.com",
+          id: 101,
+          schedules: [overrideSchedule],
+          credentials: [getGoogleCalendarCredential()],
+          selectedCalendars: [TestData.selectedCalendars.google],
+        });
+
+        await createBookingScenario(
+          getScenarioData({
+            eventTypes: [
+              {
+                id: 1,
+                slotInterval: 60,
+                length: 30,
+                users: [
+                  {
+                    id: 101,
+                  },
+                ],
+              },
+            ],
+            organizer,
+            apps: [TestData.apps["google-calendar"]],
+          })
+        );
+
+        await mockCalendarToHaveNoBusySlots("googlecalendar", {});
+
+        const mockBookingData = getMockRequestDataForBooking({
+          data: {
+            eventTypeId: 1,
+            responses: {
+              email: booker.email,
+              name: booker.name,
+              location: { optionValue: "", value: "New York" },
+            },
+            start: startDateTimeOrganizerTz.format(),
+            end: endDateTimeOrganizerTz.format(),
+            timeZone: Timezones["-05:00"],
+          },
+        });
+
+        await expect(
+          handleNewBooking({
+            bookingData: mockBookingData,
+          })
+        ).rejects.toThrow(ErrorCode.NoAvailableUsersFound);
+      },
+      timeout
+    );
+
     test(
       `should be able to create a booking for the exact slot overridden`,
       async ({ emails }) => {
