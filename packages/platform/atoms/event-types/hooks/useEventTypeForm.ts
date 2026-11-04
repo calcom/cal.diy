@@ -16,6 +16,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import {DisableCancelling} from "@calcom/prisma/enums"
+import values from "lodash/values";
 
 type Fields = z.infer<typeof eventTypeBookingFieldsSchema>;
 
@@ -93,7 +95,7 @@ export const useEventTypeForm = ({
       slotInterval: eventType.slotInterval,
       minimumBookingNotice: eventType.minimumBookingNotice,
       minimumRescheduleNotice: eventType.minimumRescheduleNotice ?? null,
-      disabledCancelling: eventType.disableCancelling ?? false,
+      disabledCancelling: eventType.disableCancelling ?? DisableCancelling.NOBODY,
       disabledRescheduling: eventType.disableRescheduling ?? false,
       allowReschedulingPastBookings: eventType.allowReschedulingPastBookings,
       hideOrganizerEmail: eventType.hideOrganizerEmail,
@@ -180,6 +182,7 @@ export const useEventTypeForm = ({
             })
             .optional()
             .nullable(),
+          disabledCancelling:z.enum([DisableCancelling.NOBODY , DisableCancelling.GUESTS , DisableCancelling.BOTH_HOST_GUESTS])
         })
         // TODO: Add schema for other fields later.
         .passthrough()

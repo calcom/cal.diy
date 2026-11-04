@@ -153,6 +153,12 @@ enum CancellationReasonRequirement {
   OPTIONAL_BOTH
 }
 
+enum DisableCancelling {
+  GUESTS
+  BOTH_HOST_GUESTS
+  NOBODY
+}
+
 model EventType {
   id                Int     @id @default(autoincrement())
   /// @zod.string.min(1)
@@ -222,7 +228,7 @@ model EventType {
   seatsPerTimeSlot                         Int?
   onlyShowFirstAvailableSlot               Boolean                @default(false)
   showOptimizedSlots                       Boolean?               @default(false)
-  disableCancelling                        Boolean?               @default(false)
+  disableCancelling                        DisableCancelling?     @default(NOBODY)
   disableRescheduling                      Boolean?               @default(false)
   /// @zod.number.min(0)
   minimumRescheduleNotice                  Int?

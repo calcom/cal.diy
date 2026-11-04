@@ -1,5 +1,5 @@
 import { isWithinMinimumRescheduleNotice } from "@calcom/features/bookings/lib/reschedule/isWithinMinimumRescheduleNotice";
-import { BookingStatus, SchedulingType } from "@calcom/prisma/enums";
+import { BookingStatus, DisableCancelling, SchedulingType } from "@calcom/prisma/enums";
 import type { ActionType } from "@calcom/ui/components/table";
 
 import type { BookingItemProps } from "../types";
@@ -17,7 +17,7 @@ export interface BookingActionContext {
   isRecurring: boolean;
   isTabRecurring: boolean;
   isTabUnconfirmed: boolean;
-  isDisabledCancelling: boolean;
+  isDisabledCancelling: DisableCancelling;
   isDisabledRescheduling: boolean;
   isCalVideoLocation: boolean;
   showPendingPayment: boolean;
@@ -237,6 +237,15 @@ export function isActionDisabled(actionId: string, context: BookingActionContext
     isRejected,
   } = context;
 
+  const {loggedInUser , user} = booking; // user = booking host
+  const isHost = user?.id != null && loggedInUser?.userId === user.id;
+  const effectiveDisabledCancelling = isDisabledCancelling ?? DisableCancelling.NOBODY;
+  const disabledCancelling =
+    effectiveDisabledCancelling === DisableCancelling.NOBODY ||
+    (effectiveDisabledCancelling === DisableCancelling.GUESTS && isHost)
+      ? false
+      : true;
+
   switch (actionId) {
     case "reschedule":
     case "reschedule_request":
@@ -261,7 +270,7 @@ export function isActionDisabled(actionId: string, context: BookingActionContext
         isWithinMinimumNotice
       );
     case "cancel":
-      return isDisabledCancelling || isBookingInPast || isCancelled || isRejected;
+      return disabledCancelling || isBookingInPast || isCancelled || isRejected;
     case "view_recordings":
       return !(isBookingInPast && booking.status === BookingStatus.ACCEPTED && context.isCalVideoLocation);
     case "meeting_session_details":
