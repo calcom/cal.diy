@@ -124,6 +124,12 @@ node scripts/run-issue-06-mbt.mjs
 
 `check` và `offline` không thay thế lệnh runner. Chỉ evidence từ runner sau khi application flow và DB oracle hoàn tất mới được dùng để kết luận runtime pass.
 
+### Kết quả chạy thực tế ngày 04/11/2026
+
+- Static gate: `check` pass với `No issues found with the model(s).`; `offline --seed 6006` sinh được các nhánh `PENDING -> ACCEPTED`, `PENDING -> REJECTED`, `PENDING -> CANCELLED`, reschedule và slot unavailable.
+- Application/API gate: PostgreSQL 17 local, 595 migrations, Prisma Client, Next.js local và Chromium đã được chuẩn bị; `booking-confirm-reject.e2e.ts` pass `2/2`, bao gồm DB oracle sau confirm/reject.
+- UI baseline: `issue-04-booking-lifecycle.e2e.ts` chưa pass; helper chờ `incrementMonth` quá hạn và webpack log lỗi `node:path`/`node:process`. Nhánh reschedule/cancel UI phải được phân loại `NOT_VERIFIED`, không tính là runtime pass.
+
 ## 7. Quyết định hoàn thành
 
 Issue #17 hoàn thành khi tài liệu này được review cùng model v2, static gate pass, có evidence runtime hoặc ghi rõ blocker theo phân loại trên, và PR target là `qa/model-based-booking`. Không merge một kết quả chỉ có generated path, fixture DB hoặc ảnh UI mà thiếu oracle.
