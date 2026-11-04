@@ -674,6 +674,21 @@ async function handler(
     bookerEmail,
   });
 
+  // A recurring request creates several occurrences in one call. Validate booking limits against
+  // all of them here, before any occurrence is persisted, so the request can't bypass the limit
+  // (e.g. unconfirmed occurrences that aren't yet counted) or leave partial bookings behind.
+  if (
+    !skipEventLimitsCheck &&
+    input.bookingData.isFirstRecurringSlot &&
+    input.bookingData.allRecurringDates
+  ) {
+    await deps.checkBookingAndDurationLimitsService.checkRecurringBookingLimits({
+      eventType,
+      reqBodyStarts: input.bookingData.allRecurringDates.map((date) => date.start),
+      reqBodyRescheduleUid: reqBody.rescheduleUid,
+    });
+  }
+
   // For unconfirmed bookings or round robin bookings with the same attendee and timeslot, return the original booking
   if (
     (!isConfirmedByDefault && !userReschedulingIsOwner) ||
@@ -814,10 +829,13 @@ async function handler(
   });
 
   if (!skipEventLimitsCheck) {
+    // For recurring requests, booking limits are validated up front against all occurrences (see
+    // above), so skip the per-occurrence booking-limit check here. Duration limits still run.
     await deps.checkBookingAndDurationLimitsService.checkBookingAndDurationLimits({
       eventType,
       reqBodyStart: reqBody.start,
       reqBodyRescheduleUid: reqBody.rescheduleUid,
+      skipBookingLimits: !!input.bookingData.allRecurringDates,
     });
   }
 
