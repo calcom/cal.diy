@@ -20,6 +20,7 @@ import "vitest-fetch-mock";
 import type { CredentialForCalendarServiceWithEmail } from "@calcom/types/Credential";
 
 import BuildCalendarService from "../CalendarService";
+import { shouldRetryGoogleCalendarRequest } from "../retryConfig";
 import {
   createMockJWTInstance,
   createInMemoryDelegationCredentialForCalendarService as createInMemoryDelegationCredentialForBuildCalendarService,
@@ -195,6 +196,7 @@ describe("GoogleCalendarService credential handling", () => {
 
       expect(calendarMock.calendar_v3.Calendar).toHaveBeenCalledWith({
         auth: getLastCreatedOAuth2Client(),
+        retryConfig: expect.objectContaining({ retry: 3, shouldRetry: shouldRetryGoogleCalendarRequest }),
       });
       await expectCredentialsInDb([
         expect.objectContaining({
