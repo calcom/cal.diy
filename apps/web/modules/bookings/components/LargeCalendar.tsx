@@ -40,7 +40,7 @@ export const LargeCalendar = ({
 
   const availableSlots = useAvailableTimeSlots({ schedule, eventDuration });
 
-  const startDate = selectedDate ? dayjs(selectedDate).toDate() : dayjs().toDate();
+  const startDate = selectedDate ? dayjs(selectedDate).startOf("week").toDate() : dayjs().startOf("week").toDate();
   const endDate = dayjs(startDate)
     .add(extraDays - 1, "day")
     .toDate();
