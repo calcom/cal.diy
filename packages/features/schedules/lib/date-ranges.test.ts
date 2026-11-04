@@ -57,6 +57,34 @@ describe("processWorkingHours", () => {
     expect(lastAvailableSlot.start.date()).toBe(31);
   });
 
+  it("should preserve afternoon availability on a spring DST transition", () => {
+    const item = {
+      days: [0, 1, 2, 3, 4, 5, 6],
+      startTime: new Date(Date.UTC(2026, 2, 8, 13, 0)),
+      endTime: new Date(Date.UTC(2026, 2, 8, 18, 0)),
+    };
+
+    const timeZone = "America/New_York";
+    const dateFrom = dayjs.utc("2026-03-08T00:00:00Z");
+    const dateTo = dayjs.utc("2026-03-09T00:00:00Z");
+
+    const results = Object.values(
+      processWorkingHours({}, { item, timeZone, dateFrom, dateTo, travelSchedules: [] })
+    );
+
+    expect(
+      results.map(({ start, end }) => ({
+        start: start.toISOString(),
+        end: end.toISOString(),
+      }))
+    ).toStrictEqual([
+      {
+        start: "2026-03-08T17:00:00.000Z",
+        end: "2026-03-08T22:00:00.000Z",
+      },
+    ]);
+  });
+
   it("It has the correct working hours on date of DST change (- tz)", () => {
     vi.useFakeTimers().setSystemTime(new Date("2023-11-05T13:26:14.000Z"));
 
