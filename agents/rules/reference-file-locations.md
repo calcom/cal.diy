@@ -26,7 +26,6 @@ tags: reference, navigation, file-locations
 
 ## Features
 
-- Workflow constants: `packages/features/ee/workflows/lib/constants.ts`
 - Round-robin/host prioritization: `packages/features/bookings/lib/getLuckyUser.ts`
 - Calendar cache: `packages/features/calendar-cache-sql`
 - DataTable guide: `packages/features/data-table/GUIDE.md`
