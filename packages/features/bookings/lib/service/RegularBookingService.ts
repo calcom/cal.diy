@@ -64,7 +64,7 @@ import { HttpError } from "@calcom/lib/http-error";
 import { criticalLogger } from "@calcom/lib/logger.server";
 import { getPiiFreeCalendarEvent, getPiiFreeEventType } from "@calcom/lib/piiFreeData";
 import { safeStringify } from "@calcom/lib/safeStringify";
-import { getServerErrorFromUnknown } from "@calcom/lib/server/getServerErrorFromUnknown";
+import { getServerErrorFromUnknown, isPrismaError } from "@calcom/lib/server/getServerErrorFromUnknown";
 import { getTimeFormatStringFromUserTimeFormat } from "@calcom/lib/timeFormat";
 import { distributedTracing } from "@calcom/lib/tracing/factory";
 import type { PrismaClient } from "@calcom/prisma";
@@ -1264,7 +1264,7 @@ async function handler(
     tracingLogger.info("Removed guests from the booking", guestsRemoved);
   }
 
-  const seed = `${organizerUser.username}:${dayjs(reqBody.start).utc().format()}:${Date.now()}`;
+  const seed = `${organizerUser.username}:${dayjs(reqBody.start).utc().format()}:${Date.now()}:${uuid()}`;
   const uid = translator.fromUUID(uuidv5(seed, uuidv5.URL));
 
   // For static link based video apps, it would have the static URL value instead of it's type(e.g. integrations:campfire_video)
@@ -1818,7 +1818,13 @@ async function handler(
   } catch (_err) {
     const err = getServerErrorFromUnknown(_err);
     tracingLogger.error(`Booking ${eventTypeId} failed`, "Error when saving booking to db", err.message);
-    if (err.cause && typeof err.cause === "object" && "code" in err.cause && err.cause.code === "P2002") {
+    const isUniqueConstraint =
+      (isPrismaError(_err) && _err.code === "P2002") ||
+      (typeof _err === "object" && _err !== null && "code" in _err && (_err as { code: unknown }).code === "P2002") ||
+      (typeof _err === "object" && _err !== null && "originalError" in _err && typeof (_err as { originalError: unknown }).originalError === "object" && (_err as { originalError: { code?: unknown } }).originalError?.code === "P2002") ||
+      (err.cause && typeof err.cause === "object" && "code" in err.cause && err.cause.code === "P2002");
+
+    if (isUniqueConstraint) {
       throw new HttpError({
         statusCode: 409,
         message: ErrorCode.BookingConflict,
