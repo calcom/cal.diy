@@ -12,7 +12,7 @@ networks:
 services:
   database:
     container_name: database
-    image: postgres
+    image: postgres:18
     restart: always
     volumes:
       - database-data:/var/lib/postgresql
