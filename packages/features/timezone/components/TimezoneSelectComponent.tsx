@@ -32,6 +32,7 @@ export function TimezoneSelectComponent({
   isWebTimezoneSelect = true,
   ...props
 }: TimezoneSelectComponentProps) {
+  const isDisabled = props.isDisabled ?? isPending;
   const data = useMemo(() => props.data || [], [props.data]);
 
   /*
@@ -101,9 +102,10 @@ export function TimezoneSelectComponent({
       isDisabled={isPending}
       {...reactSelectProps}
       timezones={timezones}
-      styles={{
+                styles={{
         control: (base) =>
           Object.assign({}, base, {
+            cursor: isDisabled ? "not-allowed" : "pointer",
             minHeight: size === "sm" ? "28px" : "36px",
             height: grow ? "h-auto " : size === "sm" ? "28px" : "36px",
           }),
@@ -124,9 +126,10 @@ export function TimezoneSelectComponent({
             "text-emphasis h-6 md:max-w-[145px] max-w-[250px]",
             timezoneClassNames?.input && timezoneClassNames.input(state)
           ),
-        option: (state) =>
+               option: (state) =>
           classNames(
-            "bg-default py-2.5 px-3 rounded-md text-default ",
+            "bg-default py-2.5 px-3 rounded-md text-default",
+            state.isDisabled ? "cursor-not-allowed" : "cursor-pointer",
             state.isFocused && "bg-subtle",
             state.isDisabled && "bg-cal-muted",
             state.isSelected && "bg-emphasis text-default",
@@ -134,8 +137,9 @@ export function TimezoneSelectComponent({
           ),
         placeholder: (state) => classNames("text-muted", state.isFocused && "hidden"),
         dropdownIndicator: () => "text-default",
-        control: (state) =>
+                control: (state) =>
           classNames(
+            props.isDisabled ? "cursor-not-allowed" : "cursor-pointer",
             inputStyles({ size }),
             state.isMulti
               ? state.hasValue
