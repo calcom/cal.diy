@@ -649,7 +649,7 @@ Currently Vercel Pro Plan is required to be able to Deploy this application with
 
 ### Elestio
 
-[![Deploy on Elestio](https://elest.io/images/logos/deploy-to-elestio-btn.png)](https://elest.io/open-source/cal.com)
+[![Deploy on Elestio](https://elest.io/images/logos/deploy-to-elestio-btn.png)](https://elest.io/open-source/cal)
 
 <!-- LICENSE -->
 
