@@ -107,7 +107,9 @@ export class BusyTimesService {
 
     // to also get bookings that are outside of start and end time, but the buffer falls within the start and end time
     const definedBufferTimes = getDefinedBufferTimes();
-    const maxBuffer = definedBufferTimes[definedBufferTimes.length - 1];
+    const defaultMaxBuffer = definedBufferTimes[definedBufferTimes.length - 1];
+    const eventMaxBuffer = Math.max(beforeEventBuffer ?? 0, afterEventBuffer ?? 0);
+    const maxBuffer = Math.max(defaultMaxBuffer, eventMaxBuffer);
     const startTimeAdjustedWithMaxBuffer = dayjs(startTimeDate).subtract(maxBuffer, "minute").toDate();
     const endTimeAdjustedWithMaxBuffer = dayjs(endTimeDate).add(maxBuffer, "minute").toDate();
 
