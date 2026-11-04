@@ -68,11 +68,15 @@ const _getBookingData = async <T extends z.ZodType>({
   // Extract location value, but ignore optionValue when location is organizer's default app
   let locationValue = "";
   if (responses.location) {
-    const locationType = responses.location.value;
+    const locationResponse = responses.location;
+    const locationType = typeof locationResponse === "string" ? locationResponse : locationResponse.value;
     if (locationType === OrganizerDefaultConferencingAppType) {
       locationValue = locationType;
     } else {
-      locationValue = responses.location.optionValue || locationType || "";
+      locationValue =
+        (typeof locationResponse !== "string" ? locationResponse.optionValue : undefined) ||
+        locationType ||
+        "";
     }
   }
 

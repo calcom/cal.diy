@@ -65,7 +65,10 @@ function preprocessField({
     try {
       parsedValue = JSON.parse(value);
     } catch (e) {
-      log.error(`Failed to parse JSON for field ${field.name}`, e);
+      log.debug(`Failed to parse JSON for ${field.name}, treating as plain string`, e);
+      // If the value is a plain string (e.g. "integrations:signal_video"), preserve it
+      // instead of resetting to empty which would cause fallback to the first location
+      parsedValue = { optionValue: "", value };
     }
     const optionsInputs = field.optionsInputs;
     const optionInputField = optionsInputs?.[parsedValue.value];
