@@ -1011,9 +1011,16 @@ export default abstract class BaseCalendarService implements Calendar {
   }
 
   private async getAccount(): Promise<DAVAccount> {
+    const serverUrl = new URL(this.url);
+    
+    const isDavPhpEndpoint = serverUrl.pathname.endsWith("/dav.php");
+    if (!isDavPhpEndpoint && !serverUrl.pathname.endsWith("/")) {
+      serverUrl.pathname += "/";
+    }
+
     return createAccount({
       account: {
-        serverUrl: this.url,
+        serverUrl: serverUrl.href,
         accountType: DEFAULT_CALENDAR_TYPE,
         credentials: this.credentials,
       },
