@@ -1,5 +1,6 @@
 import { UserRepository } from "@calcom/features/users/repositories/UserRepository";
 import { extractBaseEmail } from "@calcom/lib/extract-base-email";
+import { getBlacklistedGuestEmails } from "@calcom/lib/getBlacklistedGuestEmails";
 import logger from "@calcom/lib/logger";
 import { prisma } from "@calcom/prisma";
 
@@ -20,12 +21,10 @@ export const checkEmailVerificationRequired = async ({
 }) => {
   const baseEmail = extractBaseEmail(email);
 
-  const blacklistedGuestEmails = process.env.BLACKLISTED_GUEST_EMAILS
-    ? process.env.BLACKLISTED_GUEST_EMAILS.split(",")
-    : [];
+  const blacklistedGuestEmails = getBlacklistedGuestEmails();
 
   const blacklistedEmail = blacklistedGuestEmails.find(
-    (guestEmail: string) => guestEmail.toLowerCase() === baseEmail.toLowerCase()
+    (guestEmail: string) => guestEmail === baseEmail.toLowerCase()
   );
 
   if (!!blacklistedEmail && blacklistedEmail !== userSessionEmail) {

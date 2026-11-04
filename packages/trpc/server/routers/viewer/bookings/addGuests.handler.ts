@@ -12,6 +12,7 @@ import {
 import { UserRepository } from "@calcom/features/users/repositories/UserRepository";
 import { getTranslation } from "@calcom/i18n/server";
 import { extractBaseEmail } from "@calcom/lib/extract-base-email";
+import { getBlacklistedGuestEmails } from "@calcom/lib/getBlacklistedGuestEmails";
 import { parseRecurringEvent } from "@calcom/lib/isRecurringEvent";
 import logger from "@calcom/lib/logger";
 import { prisma } from "@calcom/prisma";
@@ -164,9 +165,7 @@ function deduplicateGuestEmails(guests: string[]): string[] {
 }
 
 function getBlacklistedEmails(): string[] {
-  return process.env.BLACKLISTED_GUEST_EMAILS
-    ? process.env.BLACKLISTED_GUEST_EMAILS.split(",").map((email) => email.toLowerCase())
-    : [];
+  return getBlacklistedGuestEmails();
 }
 
 async function getEmailVerificationRequirements(guestEmails: string[]): Promise<Map<string, boolean>> {
