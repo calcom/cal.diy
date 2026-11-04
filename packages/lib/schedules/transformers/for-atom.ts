@@ -1,6 +1,5 @@
 import dayjs from "@calcom/dayjs";
 import { getWorkingHours } from "@calcom/lib/availability";
-import { yyyymmdd } from "@calcom/lib/dayjs";
 import type { Availability } from "@calcom/prisma/client";
 import type { Schedule, TimeRange } from "@calcom/types/schedule";
 
@@ -32,13 +31,15 @@ export function transformDateOverridesForAtom(
 ) {
   const acc = schedule.availability.reduce(
     (acc, override) => {
-      // only if future date override
-      const currentUtcOffset = dayjs().tz(timeZone).utcOffset();
-      const currentTimeInTz = dayjs().utc().add(currentUtcOffset, "minute");
-
-      if (!override.date || dayjs(override.date).isBefore(currentTimeInTz, "day")) {
+      if (!override.date) {
         return acc;
       }
+      const overrideDate = dayjs.utc(override.date).format("YYYY-MM-DD");
+      const todayInTimeZone = dayjs().tz(timeZone).format("YYYY-MM-DD");
+      if (overrideDate < todayInTimeZone) {
+        return acc;
+      }
+
       const newValue = {
         start: dayjs
           .utc(override.date)
@@ -52,8 +53,7 @@ export function transformDateOverridesForAtom(
           .toDate(),
       };
       const dayRangeIndex = acc.findIndex(
-        // early return prevents override.date from ever being empty.
-        (item) => override.date && yyyymmdd(item.ranges[0].start) === yyyymmdd(override.date)
+        (item) => dayjs.utc(item.ranges[0].start).format("YYYY-MM-DD") === overrideDate
       );
       if (dayRangeIndex === -1) {
         acc.push({ ranges: [newValue] });
