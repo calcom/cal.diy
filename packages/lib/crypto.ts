@@ -39,3 +39,13 @@ export const symmetricDecrypt = function (text: string, key: string) {
 
   return deciphered;
 };
+
+/**
+ * Compares two strings in constant time.
+ * Helps prevent timing attacks when comparing secrets like HMACs or tokens.
+ */
+export const safeStringEqual = function (a?: string | null, b?: string | null) {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+};
