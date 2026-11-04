@@ -95,10 +95,15 @@ export type SlotsQuery = {
   isLoading?: boolean;
 };
 
+export type PrefillValue = string | number | boolean;
+
 /**
  * All types of config that are critical to be processed as soon as possible are provided as query params to the iframe
  */
-export type PrefillAndIframeAttrsConfig = Record<string, string | string[] | Record<string, string>> & {
+export type PrefillAndIframeAttrsConfig = Record<
+  string,
+  PrefillValue | PrefillValue[] | Record<string, PrefillValue> | undefined
+> & {
   // TODO: iframeAttrs shouldn't be part of it as that configures the iframe element and not the iframed app.
   iframeAttrs?: Record<string, string> & {
     id?: string;
