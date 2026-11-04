@@ -46,6 +46,7 @@ declare module "next-auth" {
     locale?: string | null;
     profile?: UserProfile;
     samlTenant?: string;
+    defaultHomeView?: "event-types" | "bookings";
   }
 }
 
@@ -78,5 +79,6 @@ declare module "next-auth/jwt" {
     orgAwareUsername?: PrismaUser["username"];
     organizationId?: number | null;
     locale?: string;
+    defaultHomeView?: "event-types" | "bookings";
   }
 }
