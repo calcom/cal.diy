@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import process from "node:process";
 
 // 262992 minutes is 6 months
 export function generateVideoToken(recordingId: string, expiresInMinutes = 262992) {

@@ -1,8 +1,8 @@
+import process from "node:process";
 import { describe, expect, it, vi } from "vitest";
-
 import { checkRateLimitAndThrowError } from "./checkRateLimitAndThrowError";
-import { rateLimiter } from "./rateLimit";
 import type { RatelimitResponse } from "./rateLimit";
+import { rateLimiter } from "./rateLimit";
 
 vi.mock("@calcom/prisma", () => {
   return {
@@ -80,8 +80,6 @@ describe("checkRateLimitAndThrowError", () => {
     const identifier = "test-identifier";
     const rateLimitingType = "core";
 
-    await expect(
-      checkRateLimitAndThrowError({ rateLimitingType, identifier })
-    ).rejects.toThrow("0 seconds");
+    await expect(checkRateLimitAndThrowError({ rateLimitingType, identifier })).rejects.toThrow("0 seconds");
   });
 });

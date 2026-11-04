@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-
 import { createColorMap } from "./getBrandColours";
 
 describe("useGetBrandingColours", () => {

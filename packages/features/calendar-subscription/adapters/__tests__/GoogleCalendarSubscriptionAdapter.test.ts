@@ -1,11 +1,10 @@
 import "../__mocks__/CalendarAuth";
 
-import { beforeEach, describe, expect, test, vi } from "vitest";
-
+import process from "node:process";
 import dayjs from "@calcom/dayjs";
 import type { SelectedCalendar } from "@calcom/prisma/client";
 import type { CredentialForCalendarServiceWithEmail } from "@calcom/types/Credential";
-
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { GoogleCalendarSubscriptionAdapter } from "../GoogleCalendarSubscription.adapter";
 
 const addMonthsFromNow = (months: number) => {

@@ -1,8 +1,5 @@
-import type { TFunction } from "i18next";
-import short from "short-uuid";
-
 import getLabelValueMapFromResponses from "@calcom/lib/bookings/getLabelValueMapFromResponses";
-import { Prisma } from "@calcom/prisma/client";
+import type { Prisma } from "@calcom/prisma/client";
 import type {
   AdditionalInformation,
   AppsStatus,
@@ -12,7 +9,8 @@ import type {
   TeamMember,
   VideoCallData,
 } from "@calcom/types/Calendar";
-
+import type { TFunction } from "i18next";
+import short from "short-uuid";
 import { WEBAPP_URL } from "./constants";
 import isSmsCalEmail from "./isSmsCalEmail";
 import {

@@ -1,5 +1,4 @@
 import { useRef } from "react";
-
 import { useIsomorphicLayoutEffect } from "./useIsomorphicLayoutEffect";
 
 export const useCallbackRef = <C>(callback: C) => {

@@ -1,6 +1,5 @@
-import { describe, test, expect } from "vitest";
-
 import type { SelectedCalendar } from "@calcom/prisma/client";
+import { describe, expect, test } from "vitest";
 
 const _mockSelectedCalendar: SelectedCalendar = {
   id: "test-calendar-id",

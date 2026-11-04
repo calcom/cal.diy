@@ -1,7 +1,6 @@
 import type { Dayjs } from "@calcom/dayjs";
 import dayjs from "@calcom/dayjs";
 import { withReporting } from "@calcom/lib/sentryWrapper";
-
 import type { IntervalLimitUnit } from "../intervalLimitSchema";
 
 function _getPeriodStartDatesBetween(
