@@ -11,7 +11,8 @@ export async function checkDurationLimits(
   durationLimits: IntervalLimit,
   eventStartDate: Date,
   eventId: number,
-  rescheduleUid?: string
+  rescheduleUid?: string,
+  timeZone?: string | null
 ) {
   const parsedDurationLimits = parseDurationLimit(durationLimits);
   if (!parsedDurationLimits) return false;
@@ -24,6 +25,7 @@ export async function checkDurationLimits(
       eventStartDate,
       eventId,
       rescheduleUid,
+      timeZone,
     })
   );
 
@@ -40,20 +42,24 @@ export async function checkDurationLimit({
   key,
   limitingNumber,
   rescheduleUid,
+  timeZone,
 }: {
   eventStartDate: Date;
   eventId: number;
   key: IntervalLimitKey;
   limitingNumber: number | undefined;
   rescheduleUid?: string;
+  timeZone?: string | null;
 }) {
   {
     if (!limitingNumber) return;
 
     const unit = intervalLimitKeyToUnit(key);
 
-    const startDate = dayjs(eventStartDate).startOf(unit).toDate();
-    const endDate = dayjs(eventStartDate).endOf(unit).toDate();
+    const eventDateInOrganizerTz = timeZone ? dayjs(eventStartDate).tz(timeZone) : dayjs(eventStartDate);
+
+    const startDate = eventDateInOrganizerTz.startOf(unit).toDate();
+    const endDate = eventDateInOrganizerTz.endOf(unit).toDate();
 
     const bookingRepo = new BookingRepository(prisma);
     const totalBookingDuration = await bookingRepo.getTotalBookingDuration({

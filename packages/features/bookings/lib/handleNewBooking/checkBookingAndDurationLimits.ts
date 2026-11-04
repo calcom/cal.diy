@@ -46,7 +46,8 @@ export class CheckBookingAndDurationLimitsService {
           eventType.durationLimits as IntervalLimit,
           startAsDate,
           eventType.id,
-          reqBodyRescheduleUid
+          reqBodyRescheduleUid,
+          eventType.schedule?.timeZone
         );
       }
     }
