@@ -53,6 +53,7 @@ import { getOrgUsernameFromEmail } from "../signup/utils/getOrgUsernameFromEmail
 import { dub } from "./dub";
 import { ErrorCode } from "./ErrorCode";
 import CalComAdapter from "./next-auth-custom-adapter";
+import { verifyTotpJwt } from "./signJwt";
 import { verifyPassword } from "./verifyPassword";
 
 type UserWithProfiles = NonNullable<
@@ -145,13 +146,29 @@ const checkIfUserShouldBelongToOrg = async (idP: IdentityProvider, email: string
 };
 
 /**
- * Authorize function for credentials provider
- * Extracted for testability
+ * Authorize function for credentials provider handling email/password and SSO 2FA verification.
+ * Extracted for testability.
+ *
+ * @param credentials - User credentials including email, password, totpCode, backupCode, and totpToken.
+ * @returns Authenticated user object or throws an ErrorCode.
  */
 export async function authorizeCredentials(
-  credentials: Record<"email" | "password" | "totpCode" | "backupCode", string> | undefined
+  credentials: Record<"email" | "password" | "totpCode" | "backupCode" | "totpToken", string> | undefined
 ): Promise<User | null> {
-  log.debug("CredentialsProvider:credentials:authorize", safeStringify({ credentials }));
+  log.debug(
+    "CredentialsProvider:credentials:authorize",
+    safeStringify({
+      credentials: credentials
+        ? {
+            email: credentials.email,
+            hasPassword: !!credentials.password,
+            hasTotpCode: !!credentials.totpCode,
+            hasBackupCode: !!credentials.backupCode,
+            hasTotpToken: !!credentials.totpToken,
+          }
+        : undefined,
+    })
+  );
   if (!credentials) {
     console.error(`For some reason credentials are missing`);
     throw new Error(ErrorCode.InternalServerError);
@@ -175,15 +192,40 @@ export async function authorizeCredentials(
     identifier: hashEmail(user.email),
   });
 
-  // Users without a password must use their identity provider (Google/SAML) to login
-  if (!user.password?.hash) {
-    throw new Error(ErrorCode.IncorrectEmailPassword);
+  let isSso2FaVerified = false;
+
+  if (credentials.totpToken) {
+    try {
+      const verified = await verifyTotpJwt(credentials.totpToken);
+      const tokenEmail = (verified.payload?.email as string) || (verified.payload?.sub as string);
+      const isSsoAccount = user.identityProvider !== IdentityProvider.CAL || !user.password?.hash;
+      if (
+        tokenEmail &&
+        tokenEmail.toLowerCase() === user.email.toLowerCase() &&
+        user.twoFactorEnabled &&
+        isSsoAccount
+      ) {
+        isSso2FaVerified = true;
+      } else {
+        throw new Error(ErrorCode.IncorrectEmailPassword);
+      }
+    } catch (e) {
+      log.error("Failed to verify SSO 2FA totp token", e);
+      throw new Error(ErrorCode.IncorrectEmailPassword);
+    }
   }
 
-  // Always verify password for users who have one
-  const isCorrectPassword = await verifyPassword(credentials.password, user.password.hash);
-  if (!isCorrectPassword) {
-    throw new Error(ErrorCode.IncorrectEmailPassword);
+  if (!isSso2FaVerified) {
+    // Users without a password must use their identity provider (Google/SAML) to login
+    if (!user.password?.hash) {
+      throw new Error(ErrorCode.IncorrectEmailPassword);
+    }
+
+    // Always verify password for users who have one
+    const isCorrectPassword = await verifyPassword(credentials.password, user.password.hash);
+    if (!isCorrectPassword) {
+      throw new Error(ErrorCode.IncorrectEmailPassword);
+    }
   }
 
   if (user.twoFactorEnabled && credentials.backupCode) {
@@ -250,6 +292,7 @@ export async function authorizeCredentials(
     if (role !== UserPermissionRole.ADMIN) return role;
     // User's identity provider is not "CAL"
     if (user.identityProvider !== IdentityProvider.CAL) return role;
+    if (isSso2FaVerified) return role;
 
     if (process.env.NEXT_PUBLIC_IS_E2E) {
       console.warn("E2E testing is enabled, skipping password and 2FA requirements for Admin");
@@ -296,6 +339,7 @@ export const CalComCredentialsProvider = CredentialsProvider({
     password: { label: "Password", type: "password", placeholder: "Your super secure password" },
     totpCode: { label: "Two-factor Code", type: "input", placeholder: "Code from authenticator app" },
     backupCode: { label: "Backup Code", type: "input", placeholder: "Two-factor backup code" },
+    totpToken: { label: "TOTP Token", type: "input", placeholder: "SSO TOTP Token" },
   },
   authorize: authorizeCredentials,
 });
@@ -958,7 +1002,7 @@ export const getOptions = ({
           if (!userWithNewEmail) {
             await prisma.user.update({ where: { id: existingUser.id }, data: { email: user.email } });
             if (existingUser.twoFactorEnabled) {
-              return loginWithTotp(existingUser.email);
+              return loginWithTotp(user.email);
             } else {
               return true;
             }
