@@ -24,6 +24,7 @@ import {
 import { Price } from "@calcom/features/bookings/components/event-meta/Price";
 import { getCalendarLinks, CalendarLinkType } from "@calcom/features/bookings/lib/getCalendarLinks";
 import { RATING_OPTIONS, validateRating } from "@calcom/features/bookings/lib/rating";
+import { isWithinMinimumCancellationNotice as isWithinMinimumCancellationNoticeUtil } from "@calcom/features/bookings/lib/isWithinMinimumCancellationNotice";
 import { isWithinMinimumRescheduleNotice as isWithinMinimumRescheduleNoticeUtil } from "@calcom/features/bookings/lib/reschedule/isWithinMinimumRescheduleNotice";
 import type { nameObjectSchema } from "@calcom/features/eventtypes/lib/eventNaming";
 import { getEventName } from "@calcom/features/eventtypes/lib/eventNaming";
@@ -410,6 +411,15 @@ export default function Success(props: PageProps) {
         eventType?.minimumRescheduleNotice ?? null
       );
   const isRescheduleDisabled = !canReschedule || isWithinMinimumRescheduleNotice;
+
+  // Check if cancel should be disabled due to minimum cancellation notice
+  const isWithinMinimumCancellationNotice = isHost
+    ? false // Organizers can always cancel
+    : isWithinMinimumCancellationNoticeUtil(
+        bookingInfo?.startTime ?? null,
+        eventType?.minimumCancellationNotice ?? null
+      );
+  const isCancelDisabled = !canCancel || isWithinMinimumCancellationNotice;
   const paymentStatusMessage = usePaymentStatus({
     bookingStatus: bookingInfo.status,
     startTime: bookingInfo.startTime,
@@ -872,8 +882,9 @@ export default function Success(props: PageProps) {
                           {/* Only show section if there's at least one actionable option */}
                           {((!props.recurringBookings &&
                             (!isBookingInPast || eventType.allowReschedulingPastBookings) &&
-                            canReschedule) ||
-                            (!isBookingInPast && canCancel)) && (
+                            canReschedule &&
+                            !isRescheduleDisabled) ||
+                            (!isBookingInPast && canCancel && !isCancelDisabled)) && (
                             <>
                               <hr className="border-subtle mb-8" />
                               <div className="text-center last:pb-0">
@@ -897,13 +908,13 @@ export default function Success(props: PageProps) {
                                           data-testid="reschedule-link">
                                           {t("reschedule")}
                                         </Link>
-                                        {!isBookingInPast && canCancel && (
+                                        {!isBookingInPast && canCancel && !isCancelDisabled && (
                                           <span className="mx-2">{t("or_lowercase")}</span>
                                         )}
                                       </span>
                                     )}
 
-                                  {!isBookingInPast && canCancel && (
+                                  {!isBookingInPast && canCancel && !isCancelDisabled && (
                                     <button
                                       data-testid="cancel"
                                       className={classNames(

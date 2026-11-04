@@ -93,6 +93,7 @@ export const useEventTypeForm = ({
       slotInterval: eventType.slotInterval,
       minimumBookingNotice: eventType.minimumBookingNotice,
       minimumRescheduleNotice: eventType.minimumRescheduleNotice ?? null,
+      minimumCancellationNotice: eventType.minimumCancellationNotice ?? null,
       disabledCancelling: eventType.disableCancelling ?? false,
       disabledRescheduling: eventType.disableRescheduling ?? false,
       allowReschedulingPastBookings: eventType.allowReschedulingPastBookings,

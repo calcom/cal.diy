@@ -86,6 +86,7 @@ export async function getBookingToDelete(id: number | undefined, uid: string | u
           seatsPerTimeSlot: true,
           disableCancelling: true,
           requiresCancellationReason: true,
+          minimumCancellationNotice: true,
           bookingFields: true,
           seatsShowAttendees: true,
           metadata: true,

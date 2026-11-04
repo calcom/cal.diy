@@ -226,6 +226,8 @@ model EventType {
   disableRescheduling                      Boolean?               @default(false)
   /// @zod.number.min(0)
   minimumRescheduleNotice                  Int?
+  /// @zod.number.min(0)
+  minimumCancellationNotice                Int?
   seatsShowAttendees                       Boolean?               @default(false)
   seatsShowAvailabilityCount               Boolean?               @default(true)
   schedulingType                           SchedulingType?

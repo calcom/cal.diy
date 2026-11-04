@@ -34,6 +34,7 @@ import type { WebhookTriggerEvents } from "@calcom/prisma/enums";
 import { BookingStatus } from "@calcom/prisma/enums";
 
 import { isCancellationReasonRequired } from "./cancellationReason";
+import { isWithinMinimumCancellationNotice } from "./isWithinMinimumCancellationNotice";
 import type { EventTypeMetadata } from "@calcom/prisma/zod-utils";
 import { bookingCancelInput } from "@calcom/prisma/zod-utils";
 import type { CalendarEvent } from "@calcom/types/Calendar";
@@ -151,7 +152,10 @@ async function handler(input: CancelBookingInput, dependencies?: Dependencies) {
   }
 
   const isCancellationUserHost =
-    bookingToDelete.userId === userId || bookingToDelete.user.email === cancelledBy;
+    bookingToDelete.userId === userId ||
+    bookingToDelete.user.email === cancelledBy ||
+    Boolean(bookingToDelete.eventType?.hosts?.some((host) => host.user.id === userId || host.user.email === cancelledBy)) ||
+    Boolean(userId && bookingToDelete.eventType?.owner?.id === userId);
 
   const isReasonRequired = isCancellationReasonRequired(
     bookingToDelete.eventType?.requiresCancellationReason,
@@ -169,6 +173,19 @@ async function handler(input: CancelBookingInput, dependencies?: Dependencies) {
     throw new HttpError({
       statusCode: 400,
       message: "Cannot cancel a booking that has already ended",
+    });
+  }
+
+  if (
+    !isCancellationUserHost &&
+    isWithinMinimumCancellationNotice(
+      bookingToDelete.startTime,
+      bookingToDelete.eventType?.minimumCancellationNotice ?? null
+    )
+  ) {
+    throw new HttpError({
+      statusCode: 400,
+      message: "Cancellation is not allowed within the minimum notice period before the event",
     });
   }
 

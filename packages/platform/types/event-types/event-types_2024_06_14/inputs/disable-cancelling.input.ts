@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsBoolean, IsOptional } from "class-validator";
+import { IsBoolean, IsInt, IsOptional, Min } from "class-validator";
 
 export class DisableCancelling_2024_06_14 {
   @IsOptional()
@@ -10,6 +10,14 @@ export class DisableCancelling_2024_06_14 {
   })
   disabled?: boolean;
 
-  // Note: minutesBefore can be added later when the feature is implemented for cancelling
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @ApiPropertyOptional({
+    description:
+      "Disable cancelling when less than the specified number of minutes before the meeting. If set, `disabled` should be false or undefined.",
+    example: 60,
+  })
+  minutesBefore?: number;
 }
 
