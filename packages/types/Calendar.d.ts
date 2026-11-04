@@ -220,6 +220,8 @@ export interface CalendarEvent {
   platformRescheduleUrl?: string | null;
   platformCancelUrl?: string | null;
   platformBookingUrl?: string | null;
+  previousStartTime?: string;
+  previousEndTime?: string;
   hideBranding?: boolean;
   oneTimePassword?: string | null;
   delegationCredentialId?: string | null;

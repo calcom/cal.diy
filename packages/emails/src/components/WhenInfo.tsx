@@ -6,8 +6,7 @@ import dayjs from "@calcom/dayjs";
 import "@calcom/dayjs/locales";
 import { getEveryFreqFor } from "@calcom/lib/recurringStrings";
 import type { TimeFormat } from "@calcom/lib/timeFormat";
-import type { CalendarEvent, Person } from "@calcom/types/Calendar";
-import type { RecurringEvent } from "@calcom/types/Calendar";
+import type { CalendarEvent, Person, RecurringEvent } from "@calcom/types/Calendar";
 
 import { Info } from "./Info";
 
@@ -40,9 +39,21 @@ export function WhenInfo(props: {
 }) {
   const { timeZone, t, calEvent: { recurringEvent } = {}, locale, timeFormat } = props;
 
+  function getPreviousRecipientStart(format: string): string | null {
+    if(!props.calEvent.previousStartTime) return null
+    return dayjs(props.calEvent.previousStartTime).tz(timeZone).locale(locale).format(format)
+  }
+
+  function getPreviousRecipientEnd(format: string): string | null  {
+    if(!props.calEvent.previousEndTime) return null
+    return dayjs(props.calEvent.previousEndTime).tz(timeZone).locale(locale).format(format)
+  }
+
   function getRecipientStart(format: string) {
     return dayjs(props.calEvent.startTime).tz(timeZone).locale(locale).format(format);
   }
+
+  const hasPreviousTime = !!(props.calEvent.previousStartTime && props.calEvent.previousEndTime);
 
   function getRecipientEnd(format: string) {
     return dayjs(props.calEvent.endTime).tz(timeZone).locale(locale).format(format);
@@ -56,16 +67,30 @@ export function WhenInfo(props: {
   return (
     <div>
       <Info
-        label={`${t("when")} ${recurringInfo !== "" ? ` - ${recurringInfo}` : ""}`}
+        label={`${t("when")}${recurringInfo ? ` - ${recurringInfo}` : ""}`}
         lineThrough={
-          !!props.calEvent.cancellationReason && !props.calEvent.cancellationReason.includes("$RCH$")
+          !!props.calEvent.cancellationReason &&
+          !props.calEvent.cancellationReason.includes("$RCH$")
         }
         description={
-          <span data-testid="when">
-            {recurringEvent?.count ? `${t("starting")} ` : ""}
-            {getRecipientStart(`dddd, LL | ${timeFormat}`)} - {getRecipientEnd(timeFormat)}{" "}
-            <span style={{ color: "#4B5563" }}>({timeZone})</span>
-          </span>
+          <div data-testid="when">
+            {hasPreviousTime && (
+              <div
+                style={{ textDecoration: "line-through", opacity: 0.6 }}
+                data-testid="previous-when">
+                {recurringEvent?.count ? `${t("starting")} ` : ""}
+                {getPreviousRecipientStart(`dddd, LL | ${timeFormat}`)} -{" "}
+                {getPreviousRecipientEnd(timeFormat)}{" "}
+                ({timeZone})
+              </div>
+            )}
+            <div>
+              {recurringEvent?.count ? `${t("starting")} ` : ""}
+              {getRecipientStart(`dddd, LL | ${timeFormat}`)} -{" "}
+              {getRecipientEnd(timeFormat)}{" "}
+              ({timeZone})
+            </div>
+          </div>
         }
         withSpacer
       />
