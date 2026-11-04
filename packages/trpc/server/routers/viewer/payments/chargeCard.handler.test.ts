@@ -35,11 +35,11 @@ describe("chargeCardHandler", () => {
     mockBookingRepo.getBookingForPaymentProcessing.mockResolvedValue(mockBooking);
   });
 
-  it("throws UNAUTHORIZED and does not charge when the user is not the organizer", async () => {
+  it("throws FORBIDDEN and does not charge when the user is not the organizer", async () => {
     mockBookingRepo.getBookingForPaymentProcessing.mockResolvedValue({ ...mockBooking, userId: 2 });
 
     await expect(chargeCardHandler({ ctx, input: { bookingId: 10 } })).rejects.toMatchObject({
-      code: "UNAUTHORIZED",
+      code: "FORBIDDEN",
     });
     expect(handleNoShowFee).not.toHaveBeenCalled();
   });

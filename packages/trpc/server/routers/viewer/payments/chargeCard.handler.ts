@@ -29,7 +29,7 @@ export const chargeCardHandler = async ({ ctx, input }: ChargeCardHandlerOptions
 
   if (booking.userId !== ctx.user.id) {
     throw new TRPCError({
-      code: "UNAUTHORIZED",
+      code: "FORBIDDEN",
       message: "Only the organizer can charge the card for this booking",
     });
   }
