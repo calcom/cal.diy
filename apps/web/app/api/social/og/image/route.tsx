@@ -4,7 +4,7 @@ import type { SatoriOptions } from "satori";
 import { z, ZodError } from "zod";
 
 import { Meeting, App, Generic, getOGImageVersion } from "@calcom/lib/OgImages";
-import { WEBAPP_URL } from "@calcom/lib/constants";
+import { WEBAPP_URL, WEBAPP_URL_INTERNAL } from "@calcom/lib/constants";
 
 export const runtime = "edge";
 
@@ -37,9 +37,9 @@ async function handler(req: NextRequest) {
 
   try {
     const fontResults = await Promise.allSettled([
-      fetch(new URL("/fonts/cal.ttf", WEBAPP_URL)).then((res) => res.arrayBuffer()),
-      fetch(new URL("/fonts/Inter-Regular.ttf", WEBAPP_URL)).then((res) => res.arrayBuffer()),
-      fetch(new URL("/fonts/Inter-Medium.ttf", WEBAPP_URL)).then((res) => res.arrayBuffer()),
+      fetch(new URL("/fonts/cal.ttf", WEBAPP_URL_INTERNAL || WEBAPP_URL)).then((res) => res.arrayBuffer()),
+      fetch(new URL("/fonts/Inter-Regular.ttf", WEBAPP_URL_INTERNAL || WEBAPP_URL)).then((res) => res.arrayBuffer()),
+      fetch(new URL("/fonts/Inter-Medium.ttf", WEBAPP_URL_INTERNAL || WEBAPP_URL)).then((res) => res.arrayBuffer()),
     ]);
 
     const fonts: SatoriOptions["fonts"] = [];
