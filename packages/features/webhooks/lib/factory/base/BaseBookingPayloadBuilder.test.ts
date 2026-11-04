@@ -144,6 +144,17 @@ describe("BookingPayloadBuilder (v2021-10-20)", () => {
       expect(payload.payload.rescheduleUid).toBe("reschedule-uid-456");
       expect(payload.payload.rescheduledBy).toBe("user@test.com");
     });
+
+    it("should include rootBookingUid from the calendar event", () => {
+      const dto = createMockDTO(WebhookTriggerEvents.BOOKING_RESCHEDULED, {
+        rescheduleUid: "reschedule-uid-456",
+        evt: { ...mockCalendarEvent, uid: "new-uid", rootBookingUid: "original-uid" },
+      });
+      const payload = builder.build(dto);
+
+      expect(payload.payload.rootBookingUid).toBe("original-uid");
+      expect(payload.payload.uid).toBe("new-uid");
+    });
   });
 
   describe("BOOKING_PAID", () => {

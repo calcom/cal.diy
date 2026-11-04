@@ -1,5 +1,6 @@
 import { ErrorWithCode } from "@calcom/lib/errors";
 import type { PrismaClient } from "@calcom/prisma";
+import { getRootBookingUid } from "../lib/getRootBookingUid";
 import { BookingRepository } from "../repositories/BookingRepository";
 import { BookingAccessService } from "./BookingAccessService";
 
@@ -43,6 +44,7 @@ export class BookingDetailsService {
       rescheduledToBooking,
       previousBooking,
       tracking: booking.tracking,
+      rootBookingUid: getRootBookingUid(booking),
     };
   }
 }

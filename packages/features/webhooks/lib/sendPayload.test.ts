@@ -109,5 +109,34 @@ describe("sendPayload", () => {
     });
   });
 
+  it("includes rootBookingUid in Zapier payloads", async () => {
+    const webhook = {
+      subscriberUrl: "https://hooks.zapier.com/hooks/catch/123",
+      appId: "zapier",
+      payloadTemplate: null,
+      version: WebhookVersion.V_2021_10_20,
+    };
 
+    await sendPayload("test-secret", "BOOKING_RESCHEDULED", "2024-01-01T10:00:00.000Z", webhook, {
+      uid: "new-uid",
+      rootBookingUid: "original-uid",
+      title: "Test",
+      startTime: "2024-01-01T10:00:00Z",
+      endTime: "2024-01-01T11:00:00Z",
+      organizer: {
+        email: "organizer@example.com",
+        name: "Organizer",
+        timeZone: "UTC",
+        language: { locale: "en", translate: (key: string) => key },
+      },
+      attendees: [],
+      type: "test",
+      description: "",
+    } as unknown as Parameters<typeof sendPayload>[4]);
+
+    const [, options] = mockFetch.mock.calls[0];
+    const body = JSON.parse(options.body as string);
+    expect(body.rootBookingUid).toBe("original-uid");
+    expect(body.uid).toBe("new-uid");
+  });
 });

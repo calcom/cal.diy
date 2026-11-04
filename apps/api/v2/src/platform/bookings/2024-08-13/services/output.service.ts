@@ -114,6 +114,7 @@ export class OutputBookingsService_2024_08_13 {
     const booking = {
       id: databaseBooking.id,
       uid: databaseBooking.uid,
+      rootBookingUid: databaseBooking.rootBookingUid || databaseBooking.uid,
       title: databaseBooking.title,
       description: databaseBooking.description,
       hosts: [this.getHost(databaseBooking.user)],
@@ -258,6 +259,7 @@ export class OutputBookingsService_2024_08_13 {
     const booking = {
       id: databaseBooking.id,
       uid: databaseBooking.uid,
+      rootBookingUid: databaseBooking.rootBookingUid || databaseBooking.uid,
       title: databaseBooking.title,
       description: databaseBooking.description,
       hosts: [this.getHost(databaseBooking.user)],
@@ -343,6 +345,7 @@ export class OutputBookingsService_2024_08_13 {
     const booking = {
       id: databaseBooking.id,
       uid: databaseBooking.uid,
+      rootBookingUid: databaseBooking.rootBookingUid || databaseBooking.uid,
       title: databaseBooking.title,
       description: databaseBooking.description,
       hosts: [this.getHost(databaseBooking.user)],
@@ -471,6 +474,7 @@ export class OutputBookingsService_2024_08_13 {
     const booking = {
       id: databaseBooking.id,
       uid: databaseBooking.uid,
+      rootBookingUid: databaseBooking.rootBookingUid || databaseBooking.uid,
       title: databaseBooking.title,
       description: databaseBooking.description,
       hosts: [this.getHost(databaseBooking.user)],

@@ -78,6 +78,7 @@ export const buildBooking = (
     oneTimePassword: null,
     creationSource: CreationSource.WEBAPP,
     ...booking,
+    rootBookingUid: booking?.rootBookingUid ?? booking?.uid ?? uid,
   };
 };
 
