@@ -1376,6 +1376,8 @@
   "continue_with_google": "Continue with Google",
   "last_used": "Last used",
   "you_will_need_to_generate": "You will need to generate an access token from your old scheduling tool.",
+  "enter_token": "Enter your {{appName}} API token",
+  "api_token": "API token",
   "import": "Import",
   "import_from": "Import from",
   "access_token": "Access token",

@@ -3065,6 +3065,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@calcom/squadcast@workspace:packages/app-store/squadcast":
+  version: 0.0.0-use.local
+  resolution: "@calcom/squadcast@workspace:packages/app-store/squadcast"
+  dependencies:
+    "@calcom/lib": "workspace:*"
+    "@calcom/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@calcom/stripepayment@workspace:packages/app-store/stripepayment":
   version: 0.0.0-use.local
   resolution: "@calcom/stripepayment@workspace:packages/app-store/stripepayment"

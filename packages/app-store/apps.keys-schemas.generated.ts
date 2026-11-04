@@ -38,6 +38,7 @@ import { appKeysSchema as posthog_zod_ts } from "./posthog/zod";
 import { appKeysSchema as qr_code_zod_ts } from "./qr_code/zod";
 import { appKeysSchema as salesforce_zod_ts } from "./salesforce/zod";
 import { appKeysSchema as shimmervideo_zod_ts } from "./shimmervideo/zod";
+import { appKeysSchema as squadcast_zod_ts } from "./squadcast/zod";
 import { appKeysSchema as stripepayment_zod_ts } from "./stripepayment/zod";
 import { appKeysSchema as tandemvideo_zod_ts } from "./tandemvideo/zod";
 import { appKeysSchema as booking_pages_tag_zod_ts } from "./templates/booking-pages-tag/zod";
@@ -89,6 +90,7 @@ export const appKeysSchemas = {
   qr_code: qr_code_zod_ts,
   salesforce: salesforce_zod_ts,
   shimmervideo: shimmervideo_zod_ts,
+  squadcast: squadcast_zod_ts,
   stripe: stripepayment_zod_ts,
   tandemvideo: tandemvideo_zod_ts,
   "booking-pages-tag": booking_pages_tag_zod_ts,
