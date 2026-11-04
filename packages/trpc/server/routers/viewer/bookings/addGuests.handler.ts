@@ -151,10 +151,15 @@ export async function getOrganizerData(userId: number | null) {
   });
 }
 
-function deduplicateGuestEmails(guests: string[]): string[] {
+/**
+ * Deduplicates guests by their base email (plus-addressing and case-insensitive),
+ * keeping the FIRST occurrence so that the surviving guest object always matches
+ * the surviving email.
+ */
+function deduplicateGuests<T extends { email: string }>(guests: T[]): T[] {
   const seenBaseEmails = new Set<string>();
   return guests.filter((guest) => {
-    const baseEmail = extractBaseEmail(guest).toLowerCase();
+    const baseEmail = extractBaseEmail(guest.email).toLowerCase();
     if (seenBaseEmails.has(baseEmail)) {
       return false;
     }
@@ -202,19 +207,13 @@ export async function sanitizeAndFilterGuests(
     language?: string;
   }>
 > {
-  const guestEmails = guests.map((guest) => guest.email);
-  const deduplicatedGuests = deduplicateGuestEmails(guestEmails);
+  const deduplicatedGuests = deduplicateGuests(guests);
   const blacklistedGuestEmails = getBlacklistedEmails();
-  const guestEmailsLowerCase = deduplicatedGuests.map((email) => extractBaseEmail(email).toLowerCase());
+  const guestEmailsLowerCase = deduplicatedGuests.map((guest) => extractBaseEmail(guest.email).toLowerCase());
   const emailToRequiresVerification = await getEmailVerificationRequirements(guestEmailsLowerCase);
 
-  // Create a map of email to guest object for easy lookup
-  const emailToGuestMap = new Map(
-    guests.map((guest) => [extractBaseEmail(guest.email).toLowerCase(), guest])
-  );
-
-  const uniqueGuestEmails = deduplicatedGuests.filter((email) => {
-    const baseGuestEmail = extractBaseEmail(email).toLowerCase();
+  const uniqueGuests = deduplicatedGuests.filter((guest) => {
+    const baseGuestEmail = extractBaseEmail(guest.email).toLowerCase();
     return (
       !booking.attendees.some(
         (attendee) => extractBaseEmail(attendee.email).toLowerCase() === baseGuestEmail
@@ -224,14 +223,11 @@ export async function sanitizeAndFilterGuests(
     );
   });
 
-  if (uniqueGuestEmails.length === 0) {
+  if (uniqueGuests.length === 0) {
     throw new TRPCError({ code: "BAD_REQUEST", message: "emails_must_be_unique_valid" });
   }
 
-  // Return the full guest objects for unique emails
-  return uniqueGuestEmails
-    .map((email) => emailToGuestMap.get(extractBaseEmail(email).toLowerCase()))
-    .filter((guest): guest is NonNullable<typeof guest> => guest !== undefined);
+  return uniqueGuests;
 }
 
 export async function updateBookingAttendees(
