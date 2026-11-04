@@ -117,6 +117,7 @@ export const ScheduleDay = <TFieldValues extends FieldValues>({
         {watchDayRange.length > 0 && (
           <div className="flex sm:gap-2">
             <DayRanges
+              weekday={weekday}
               userTimeFormat={userTimeFormat}
               labels={labels}
               control={control}
@@ -140,7 +141,9 @@ const CopyButton = ({
   getValuesFromDayRange,
   weekStart,
   labels,
+  weekday,
 }: {
+  weekday?: string;
   getValuesFromDayRange: string;
   weekStart: number;
   labels?: ScheduleLabelsType;
@@ -160,6 +163,11 @@ const CopyButton = ({
           data-testid="copy-button"
           type="button"
           tooltip={labels?.copyTime ?? t("copy_times_to_tooltip")}
+          aria-label={
+            labels?.copyTime
+              ? (weekday ? `${labels.copyTime} for ${weekday}` : labels.copyTime)
+              : (weekday ? t("copy_times_to_from_weekday", { weekday }) : t("copy_times_to_tooltip"))
+          }
           color="minimal"
           variant="icon"
           StartIcon="copy"
@@ -219,7 +227,7 @@ export const ScheduleComponent = <
             weekday={weekday}
             control={control}
             CopyButton={
-              <CopyButton weekStart={weekStart} labels={labels} getValuesFromDayRange={dayRangeName} />
+              <CopyButton weekStart={weekStart} labels={labels} getValuesFromDayRange={dayRangeName} weekday={weekday} />
             }
           />
         );
@@ -236,7 +244,9 @@ export const DayRanges = <TFieldValues extends FieldValues>({
   userTimeFormat,
   classNames,
   copyButton,
+  weekday,
 }: {
+  weekday?: string;
   name: ArrayPath<TFieldValues>;
   control?: Control<TFieldValues>;
   disabled?: boolean;
@@ -267,6 +277,7 @@ export const DayRanges = <TFieldValues extends FieldValues>({
                   className={classNames?.timeRangeField}
                   userTimeFormat={userTimeFormat}
                   timePickerClassNames={classNames?.timePicker}
+                  weekday={weekday}
                   {...field}
                 />
               )}
@@ -276,6 +287,11 @@ export const DayRanges = <TFieldValues extends FieldValues>({
                 disabled={disabled}
                 data-testid="add-time-availability"
                 tooltip={labels?.addTime ?? t("add_time_availability")}
+                aria-label={
+                  weekday
+                    ? `${labels?.addTime ?? t("add_time_availability")} for ${weekday}`
+                    : labels?.addTime ?? t("add_time_availability")
+                }
                 className="text-default"
                 type="button"
                 color="minimal"
@@ -300,7 +316,7 @@ export const DayRanges = <TFieldValues extends FieldValues>({
             )}
             {index === 0 && copyButton && <div className="block">{copyButton}</div>}
             {fields.length > 1 && (
-              <RemoveTimeButton index={index} remove={remove} className="text-default border-none" />
+              <RemoveTimeButton index={index} remove={remove} weekday={weekday} className="text-default border-none" />
             )}
           </div>
         </Fragment>
@@ -315,7 +331,9 @@ const RemoveTimeButton = ({
   disabled,
   className,
   labels,
+  weekday,
 }: {
+  weekday?: string;
   index: number | number[];
   remove: UseFieldArrayRemove;
   className?: string;
@@ -333,6 +351,11 @@ const RemoveTimeButton = ({
       onClick={() => remove(index)}
       className={className}
       tooltip={labels?.deleteTime ?? t("delete")}
+      aria-label={
+        weekday
+          ? `${labels?.deleteTime ?? t("delete")} for ${weekday}`
+          : labels?.deleteTime ?? t("delete")
+      }
     />
   );
 };
@@ -344,7 +367,9 @@ const TimeRangeField = ({
   disabled,
   userTimeFormat,
   timePickerClassNames,
+  weekday,
 }: {
+  weekday?: string;
   className?: string;
   disabled?: boolean;
   userTimeFormat: number | null;
@@ -356,6 +381,7 @@ const TimeRangeField = ({
     dropdown?: string;
   };
 } & ControllerRenderProps) => {
+  const { t } = useLocale();
   const innerClassNames: SelectInnerClassNames = {
     control: timePickerClassNames?.container,
     singleValue: timePickerClassNames?.value,
@@ -371,6 +397,7 @@ const TimeRangeField = ({
         userTimeFormat={userTimeFormat}
         className="block w-[90px] sm:w-[100px]"
         isDisabled={disabled}
+        aria-label={weekday ? `${weekday} ${t("start_time")}` : t("start_time")}
         value={value.start}
         menuPlacement="bottom"
         innerClassNames={innerClassNames}
@@ -390,6 +417,7 @@ const TimeRangeField = ({
         userTimeFormat={userTimeFormat}
         className="block w-[90px] rounded-md sm:w-[100px]"
         isDisabled={disabled}
+        aria-label={weekday ? `${weekday} ${t("end_time")}` : t("end_time")}
         value={value.end}
         min={value.start}
         innerClassNames={innerClassNames}
