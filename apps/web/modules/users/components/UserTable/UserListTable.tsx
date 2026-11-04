@@ -322,7 +322,7 @@ function UserListTableContent({
         size: 200,
         header: t("members"),
         cell: ({ row }: CellContext<UserTableUser, unknown>) => {
-          const { username, name, email, avatarUrl } = row.original;
+          const { username, name, email, avatarUrl, status } = row.original;
           const displayName = name || username || "No username";
           return (
             <div className="flex items-center gap-2">
@@ -336,8 +336,9 @@ function UserListTableContent({
               <div className="">
                 <div
                   data-testid={`member-${username}-username`}
-                  className="font-medium text-emphasis text-sm leading-none">
+                  className="font-medium text-emphasis text-sm leading-none flex items-center gap-2">
                   {displayName}
+                  {status === "PAUSED" && <Badge variant="gray">{t("paused")}</Badge>}
                 </div>
                 <div
                   data-testid={`member-${username}-email`}
