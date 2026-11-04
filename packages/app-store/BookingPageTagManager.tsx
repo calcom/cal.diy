@@ -8,6 +8,13 @@ import type { AppMeta } from "@calcom/types/App";
 
 import type { appDataSchemas } from "./apps.schemas.generated";
 
+/**
+ * Commercial ad networks that do NOT execute HIPAA Business Associate Agreements (BAAs).
+ * Under HHS OCR Guidance (45 CFR § 164.502) and FTC enforcement (FTC v. BetterHelp / GoodRx),
+ * mounting commercial ad trackers on sensitive healthcare routes transmits Protected Health Information (PHI).
+ */
+export const NON_BAA_AD_TRACKERS = ["metapixel"] as const;
+
 const PushEventPrefix = "cal_analytics_app_";
 
 // AnalyticApp has appData.tag always set
@@ -30,9 +37,19 @@ const getPushEventScript = ({ tag, appId }: { tag: Tag; appId: string }) => {
 };
 
 function getAnalyticsApps(eventType: Parameters<typeof getEventTypeAppData>[0]) {
+  const isHipaaProtected =
+    Boolean(eventType?.metadata?.apps?.["baa-for-hipaa"]?.enabled) ||
+    Boolean((eventType?.metadata as Record<string, unknown> | undefined)?.isHipaaProtected);
+
   return Object.entries(appStoreMetadata).reduce(
     (acc, entry) => {
       const [appId, app] = entry;
+
+      // Suppress ad trackers without BAA on HIPAA-protected bookings to prevent unlawful PHI disclosure
+      if (isHipaaProtected && (NON_BAA_AD_TRACKERS as readonly string[]).includes(appId)) {
+        return acc;
+      }
+
       const eventTypeAppData = getEventTypeAppData(eventType, appId as keyof typeof appDataSchemas);
 
       if (!eventTypeAppData || !app.appData?.tag) {
