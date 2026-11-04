@@ -1,6 +1,6 @@
 # Phần D - Nguyên lý MBT, phạm vi, rủi ro và tiêu chí pass/fail
 
-Tài liệu này là Phần D của bộ tài liệu kiểm thử booking. Nội dung khớp với model v2 tại [`docs/qa/model/booking-model.json`](model/booking-model.json), state model tại [`issue-05-booking-state-model.md`](issue-05-booking-state-model.md) và kiến trúc kiểm thử tại [`issue-08-system-goals-architecture.md`](issue-08-system-goals-architecture.md).
+Tài liệu này là Phần D của bộ tài liệu kiểm thử booking. Nội dung khớp với model v2 tại [`docs/qa/model/booking-model-v2.json`](model/booking-model-v2.json), state model tại [`issue-05-booking-state-model.md`](issue-05-booking-state-model.md) và kiến trúc kiểm thử tại [`issue-08-system-goals-architecture.md`](issue-08-system-goals-architecture.md). Harness Issue #6 hiện tại tiếp tục dùng model v1 tại [`docs/qa/model/booking-model-v1.json`](model/booking-model-v1.json); `docs/qa/model/booking-model.json` giữ cùng nội dung v1 để runner cũ không bị vỡ.
 
 ## 1. Nguyên lý kiểm thử dựa trên mô hình
 
@@ -117,8 +117,8 @@ Mỗi phiên phải ghi SHA/tag, `dirty` flag, thời gian UTC và `Asia/Saigon`
 Lệnh chuẩn:
 
 ```powershell
-java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar check -m docs/qa/model/booking-model.json "random(edge_coverage(100))"
-java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar offline --seed 6006 -m docs/qa/model/booking-model.json "random(edge_coverage(100))"
+java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar check -m docs/qa/model/booking-model-v2.json "random(edge_coverage(100))"
+java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar offline --seed 6006 -m docs/qa/model/booking-model-v2.json "random(edge_coverage(100))"
 node scripts/run-issue-06-mbt.mjs
 ```
 
@@ -126,9 +126,9 @@ node scripts/run-issue-06-mbt.mjs
 
 ### Kết quả chạy thực tế ngày 04/11/2026
 
-- Static gate: `check` pass với `No issues found with the model(s).`; `offline --seed 6006` sinh được các nhánh `PENDING -> ACCEPTED`, `PENDING -> REJECTED`, `PENDING -> CANCELLED`, reschedule và slot unavailable.
-- Application/API gate: PostgreSQL 17 local, 595 migrations, Prisma Client, Next.js local và Chromium đã được chuẩn bị; `booking-confirm-reject.e2e.ts` pass `2/2`, bao gồm DB oracle sau confirm/reject.
-- UI baseline: `issue-04-booking-lifecycle.e2e.ts` chưa pass; helper chờ `incrementMonth` quá hạn và webpack log lỗi `node:path`/`node:process`. Nhánh reschedule/cancel UI phải được phân loại `NOT_VERIFIED`, không tính là runtime pass.
+- Static gate: `booking-model-v2.json` được GraphWalker `check` kiểm tra không lỗi; `offline --seed 6006` sinh được các nhánh `PENDING -> ACCEPTED`, `PENDING -> REJECTED`, `PENDING -> CANCELLED`, reschedule và slot unavailable. Đây chỉ là model/static evidence.
+- Application/API gate: PostgreSQL 17 local, 595 migrations, Prisma Client, Next.js local và Chromium đã được chuẩn bị; `booking-confirm-reject.e2e.ts` pass `2/2` với booking `PENDING` được tạo bằng Prisma fixture. Kết quả này chỉ xác nhận handler/token và DB oracle, không chứng minh S02-S04 qua form.
+- UI/application flow: S02-S04 qua form và nhánh reschedule/cancel UI hiện `NOT_VERIFIED`. `issue-04-booking-lifecycle.e2e.ts` dừng ở helper `incrementMonth`; webpack cũng log `node:path`/`node:process`. Không tính các kết quả này là runtime pass.
 
 ## 7. Quyết định hoàn thành
 

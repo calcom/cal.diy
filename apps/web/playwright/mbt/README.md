@@ -62,9 +62,14 @@ Lệnh GraphWalker sinh đường đi (JSON từng dòng):
 
 ```powershell
 java -version
-java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar check -m docs/qa/model/booking-model.json "random(edge_coverage(100))"
-java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar offline --seed 6006 -m docs/qa/model/booking-model.json "random(edge_coverage(100))"
+java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar check -m docs/qa/model/booking-model-v1.json "random(edge_coverage(100))"
+java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar offline --seed 6006 -m docs/qa/model/booking-model-v1.json "random(edge_coverage(100))"
 ```
+
+The current harness uses `docs/qa/model/booking-model-v1.json`, which preserves
+the six-edge/five-vertex contract implemented by `scripts/run-issue-06-mbt.mjs`.
+Issue #17's expanded model is `docs/qa/model/booking-model-v2.json`; it is a
+design/static model until a compatible runtime harness is added.
 
 Runner tự gọi offline với seed 6006, kiểm tra liên tục các source/target và
 coverage của đường đi trước khi chạy browser. Không nhập đường đi viết tay:

@@ -61,7 +61,7 @@ Trong T05, `fromReschedule` là liên kết logic giữa hai booking, không ph�
 
 ### Ánh xạ sang model GraphWalker
 
-[`docs/qa/model/booking-model.json`](model/booking-model.json) mô hình hóa chuỗi booking chính bằng các vertex ổn định để harness Issue #6 ánh xạ trực tiếp:
+[`docs/qa/model/booking-model-v2.json`](model/booking-model-v2.json) mô hình hóa phạm vi mở rộng của Issue #17. Harness Issue #6 hiện tại dùng [`docs/qa/model/booking-model-v1.json`](model/booking-model-v1.json), vì vậy không được đổi tên edge/vertex của v1 cho đến khi harness tương thích được cập nhật:
 
 | Vertex GraphWalker | Trạng thái dữ liệu tương ứng |
 | --- | --- |
@@ -104,12 +104,11 @@ Các chuỗi dưới đây là kế hoạch kiểm thử và oracle. Chuỗi S01
 
 ## 6. Giới hạn và việc cần chạy thêm
 
-- `AWAITING_HOST`, team/round-robin, seats, recurring, payment, calendar ngoài, email và webhook delivery nằm ngoài phạm vi issue này.
-- `AWAITING_HOST`, team/round-robin và các luồng host được xem là ngoài phạm vi issue này; không được tính vào state coverage.
+- `AWAITING_HOST`, team/round-robin, seats, recurring, payment, calendar ngoài, email và webhook delivery nằm ngoài phạm vi issue này; không được tính vào state coverage.
 - Chưa kiểm chứng retry/resubmit token và các chuyển tiếp sau khi booking đã bắt đầu.
 - `REJECTED` được xác nhận bằng bài test token; chưa có bằng chứng UI độc lập cho mọi đường confirm/reject.
 - Model GraphWalker dùng định dạng JSON của GraphWalker 4.3.3, đặt `v_NoBooking` làm start element và generator mặc định `random(edge_coverage(100))`. `vertex_coverage(100)` là mức tối thiểu để kiểm tra mọi vertex; state coverage nghiệp vụ tối thiểu là 4/5 vì `AWAITING_HOST` nằm ngoài phạm vi.
-- Lệnh kiểm tra với CLI 4.3.3 cần truyền model và generator thành cùng một tham số `-m`: `java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar check -m docs/qa/model/booking-model.json "random(edge_coverage(100))"` và `java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar offline -m docs/qa/model/booking-model.json "random(edge_coverage(100))"`. CLI 4.3.3 không chấp nhận `check -m <file>` đơn lẻ vì option `-m` yêu cầu thêm generator/stop condition.
+- Lệnh kiểm tra v2 với CLI 4.3.3 cần truyền model và generator thành cùng một tham số `-m`: `java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar check -m docs/qa/model/booking-model-v2.json "random(edge_coverage(100))"` và `java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar offline -m docs/qa/model/booking-model-v2.json "random(edge_coverage(100))"`. CLI 4.3.3 không chấp nhận `check -m <file>` đơn lẻ vì option `-m` yêu cầu thêm generator/stop condition.
 - Issue 01 chứng minh quan hệ UID qua ảnh đã che và truy vấn sau chuỗi, nhưng không được dùng để suy ra trạng thái database trung gian. Issue 04 là nguồn quan sát cho T01/T05/T06 vì nó đọc DB ngay sau từng bước.
 - Khi mở rộng mô hình, thêm fixture cho từng trạng thái/guard còn thiếu và giữ truy vấn oracle ở dạng `select` tối thiểu, không xuất dữ liệu nhạy cảm.
 
