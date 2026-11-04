@@ -8,6 +8,7 @@ import { createWithEqualityFn } from "zustand/traditional";
 import type { GetBookingType } from "../lib/get-booking";
 import type { BookerLayout, BookerState } from "./types";
 import { getQueryParam, removeQueryParam, updateQueryParam } from "./utils/query-param";
+import { getInitialBookerDateState, getValidDate } from "./utils/validate-date";
 
 const _iso_3166_1_alpha_2_codes = [
   "ad",
@@ -438,8 +439,10 @@ export type BookerStore = {
 /**
  * Creates a new booker store instance
  */
-export const createBookerStore = () =>
-  createWithEqualityFn<BookerStore>((set, get) => ({
+export const createBookerStore = () => {
+  const initialDateState = getInitialBookerDateState(getQueryParam("month"), getQueryParam("date"));
+
+  return createWithEqualityFn<BookerStore>((set, get) => ({
     state: "loading",
     setState: (state: BookerState) => set({ state }),
     layout: BookerLayouts.MONTH_VIEW,
@@ -454,7 +457,7 @@ export const createBookerStore = () =>
       }
       return set({ layout });
     },
-    selectedDate: getQueryParam("date") || null,
+    selectedDate: initialDateState.selectedDate,
     setSelectedDate: ({ date: selectedDate, omitUpdatingParams = false, preventMonthSwitching = false }) => {
       // unset selected date
       if (!selectedDate) {
@@ -517,12 +520,7 @@ export const createBookerStore = () =>
     setVerificationCode: (code: string | null) => {
       set({ verificationCode: code });
     },
-    month:
-      getQueryParam("month") ||
-      (getQueryParam("date") && dayjs(getQueryParam("date")).isValid()
-        ? dayjs(getQueryParam("date")).format("YYYY-MM")
-        : null) ||
-      dayjs().format("YYYY-MM"),
+    month: initialDateState.month,
     setMonth: (month: string | null) => {
       if (!month) {
         removeQueryParam("month");
@@ -640,7 +638,26 @@ export const createBookerStore = () =>
       if (rescheduleUid && bookingData) {
         set({ selectedTimeslot: null });
       }
-      if (month) set({ month });
+      const dateState = getInitialBookerDateState(month ?? get().month, selectedDateInStore);
+      set({ month: dateState.month });
+
+      if (!isPlatform || allowUpdatingUrlParams) {
+        const monthParam = getQueryParam("month");
+        const currentMonth = get().month;
+        if (monthParam != null && currentMonth && monthParam !== currentMonth) {
+          updateQueryParam("month", currentMonth);
+        }
+
+        const dateParam = getQueryParam("date");
+        const validDate = getValidDate(dateParam);
+        if (dateParam != null && dateParam !== validDate) {
+          if (validDate) {
+            updateQueryParam("date", validDate);
+          } else {
+            removeQueryParam("date");
+          }
+        }
+      }
 
       //removeQueryParam("layout");
     },
@@ -701,6 +718,7 @@ export const createBookerStore = () =>
       set({ isSlotSelectionModalVisible });
     },
   }));
+};
 
 /**
  * Default global store instance for backward compatibility
