@@ -5,6 +5,15 @@ import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { authedProcedure } from "../../../procedures/authedProcedure";
 import { createEventPbacProcedure, ensureEmailOrPhoneNumberIsPresent } from "../util";
 
+const mockCheckPermission = vi.fn();
+vi.mock("@calcom/features/permissions/services/PermissionCheckService", () => ({
+  PermissionCheckService: class {
+    checkPermission(...args: unknown[]): unknown {
+      return mockCheckPermission(...args);
+    }
+  },
+}));
+
 describe("createEventPbacProcedure", () => {
   const mockPrisma = {
     eventType: {
@@ -28,6 +37,7 @@ describe("createEventPbacProcedure", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCheckPermission.mockResolvedValue(true);
   });
 
   describe("personal events", () => {
@@ -202,7 +212,7 @@ describe("createEventPbacProcedure", () => {
       const procedure = createEventPbacProcedure("eventType.update");
       const middleware = getMiddleware(procedure);
 
-      // PermissionCheckService stub always returns true, so org admin access is always granted
+      // Whether an org admin may act on the team is PermissionCheckService's decision; here it allows.
       await expect(
         middleware({
           ctx: mockCtx,
@@ -419,7 +429,6 @@ describe("createEventPbacProcedure", () => {
       const procedure = createEventPbacProcedure("eventType.delete");
       const middleware = getMiddleware(procedure);
 
-      // PermissionCheckService stub always returns true
       await expect(
         middleware({
           ctx: mockCtx,
@@ -431,6 +440,9 @@ describe("createEventPbacProcedure", () => {
           meta: undefined,
         })
       ).resolves.not.toThrow();
+      expect(mockCheckPermission).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 1, teamId: 10, permission: "eventType.delete" })
+      );
     });
 
     it("should allow access with custom fallback roles", async () => {
@@ -439,7 +451,6 @@ describe("createEventPbacProcedure", () => {
       const procedure = createEventPbacProcedure("eventType.create", [MembershipRole.OWNER]);
       const middleware = getMiddleware(procedure);
 
-      // PermissionCheckService stub always returns true
       await expect(
         middleware({
           ctx: mockCtx,
@@ -451,6 +462,34 @@ describe("createEventPbacProcedure", () => {
           meta: undefined,
         })
       ).resolves.not.toThrow();
+      expect(mockCheckPermission).toHaveBeenCalledWith(
+        expect.objectContaining({
+          teamId: 10,
+          permission: "eventType.create",
+          fallbackRoles: [MembershipRole.OWNER],
+        })
+      );
+    });
+
+    it("should deny a team event when PermissionCheckService refuses", async () => {
+      mockPrisma.eventType.findUnique = vi.fn().mockResolvedValue(teamEvent);
+      mockCheckPermission.mockResolvedValue(false);
+
+      const procedure = createEventPbacProcedure("eventType.delete");
+      const middleware = getMiddleware(procedure);
+
+      await expect(
+        middleware({
+          ctx: mockCtx,
+          input: { id: 2 },
+          next: mockNext,
+          path: "test",
+          type: "mutation",
+          getRawInput: async () => ({}),
+          meta: undefined,
+        })
+      ).rejects.toThrow("Permission required: eventType.delete");
+      expect(mockNext).not.toHaveBeenCalled();
     });
   });
 

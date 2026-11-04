@@ -10,14 +10,9 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import authedProcedure from "../../../procedures/authedProcedure";
 import type { TUpdateInputSchema } from "./types";
+import { PermissionCheckService } from "@calcom/features/permissions/services/PermissionCheckService";
 
 type PermissionString = string;
-class PermissionCheckService {
-  constructor(_prisma?: unknown) {}
-  async checkPermission(..._args: unknown[]) { return true; }
-  async hasPermission(..._args: unknown[]) { return true; }
-  async getTeamIdsWithPermission(..._args: unknown[]): Promise<number[]> { return []; }
-}
 
 type EventType = Awaited<ReturnType<EventTypeRepository["findAllByUpId"]>>[number];
 
