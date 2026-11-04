@@ -80,9 +80,9 @@ describe("shouldRetryGoogleCalendarRequest", () => {
 
   test("keeps gaxios defaults for statuses", () => {
     expect(shouldRetryGoogleCalendarRequest(makeError({ method: "GET", status: 429 }))).toBe(true);
-    expect(shouldRetryGoogleCalendarRequest(makeError({ method: "PATCH", status: 408 }))).toBe(true);
     expect(shouldRetryGoogleCalendarRequest(makeError({ method: "PATCH", status: 503 }))).toBe(true);
     expect(shouldRetryGoogleCalendarRequest(makeError({ method: "GET", status: 404 }))).toBe(false);
+    expect(shouldRetryGoogleCalendarRequest(makeError({ method: "PATCH", status: 408 }))).toBe(false);
     expect(shouldRetryGoogleCalendarRequest(makeError({ method: "PATCH", status: 409 }))).toBe(false);
   });
 

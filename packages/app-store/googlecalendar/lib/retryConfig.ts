@@ -2,7 +2,7 @@
  * Retry policy for the Google Calendar API client.
  *
  * gaxios (the HTTP client behind googleapis) retries only GET/HEAD/PUT/OPTIONS/DELETE
- * on 1xx/408/429/5xx by default (older releases skip 408). Creating an event does an
+ * on 1xx/429/5xx by default. Creating an event does an
  * insert (POST) followed by a PATCH that adds the Meet link to the description/location,
  * and Google answers short bursts with `403 rateLimitExceeded`, which it documents as
  * retryable with exponential backoff:
@@ -25,9 +25,9 @@ const DEFAULT_NO_RESPONSE_RETRIES = 2;
 
 type GoogleErrorBody = { error?: { errors?: Array<{ reason?: string }> } };
 
-/** gaxios's default retryable statuses: 1xx, 408, 429 and 5xx. */
+/** gaxios's default retryable statuses: 1xx, 429 and 5xx. */
 function isRetryableStatus(status: number): boolean {
-  return status < 200 || status === 408 || status === 429 || status >= 500;
+  return status < 200 || status === 429 || status >= 500;
 }
 
 /** The subset of a GaxiosError this policy reads. */
