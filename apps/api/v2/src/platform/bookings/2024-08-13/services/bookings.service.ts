@@ -122,6 +122,11 @@ export class BookingsService_2024_08_13 {
       const userIsEventTypeAdminOrOwner = authUser
         ? await this.eventTypeAccessService.userIsEventTypeAdminOrOwner(authUser, eventType)
         : false;
+      const skipAvailabilityCheck = this.getSkipAvailabilityForOverride({
+        overrideAvailabilityRequested: !!body.overrideAvailability,
+        authUser,
+        userIsEventTypeAdminOrOwner,
+      });
       await this.checkBookingRequiresAuthenticationSetting(eventType, authUser, userIsEventTypeAdminOrOwner);
 
       if (eventType.schedulingType === "MANAGED") {
@@ -142,19 +147,50 @@ export class BookingsService_2024_08_13 {
       await this.hasRequiredBookingFieldsResponses(body, eventType);
 
       if (isRecurring && isSeated) {
-        return await this.createRecurringSeatedBooking(request, body, eventType, userIsEventTypeAdminOrOwner);
+        return await this.createRecurringSeatedBooking(
+          request,
+          body,
+          eventType,
+          userIsEventTypeAdminOrOwner,
+          skipAvailabilityCheck
+        );
       }
       if (isRecurring && !isSeated) {
-        return await this.createRecurringBooking(request, body, eventType);
+        return await this.createRecurringBooking(request, body, eventType, skipAvailabilityCheck);
       }
       if (isSeated) {
-        return await this.createSeatedBooking(request, body, eventType, userIsEventTypeAdminOrOwner);
+        return await this.createSeatedBooking(
+          request,
+          body,
+          eventType,
+          userIsEventTypeAdminOrOwner,
+          skipAvailabilityCheck
+        );
       }
 
-      return await this.createRegularBooking(request, body, eventType);
+      return await this.createRegularBooking(request, body, eventType, skipAvailabilityCheck);
     } catch (error) {
       this.errorsBookingsService.handleBookingError(error, bookingTeamEventType);
     }
+  }
+
+  private getSkipAvailabilityForOverride(params: {
+    overrideAvailabilityRequested: boolean;
+    authUser: AuthOptionalUser;
+    userIsEventTypeAdminOrOwner: boolean;
+  }): boolean {
+    if (!params.overrideAvailabilityRequested) {
+      return false;
+    }
+    if (!params.authUser) {
+      throw new UnauthorizedException("overrideAvailability requires authentication");
+    }
+    if (!params.userIsEventTypeAdminOrOwner) {
+      throw new ForbiddenException(
+        "overrideAvailability is only permitted when authenticated as the event type owner or host, or as a team or organization administrator."
+      );
+    }
+    return true;
   }
 
   async checkEventTypeHasHosts(eventTypeId: number) {
@@ -399,7 +435,8 @@ export class BookingsService_2024_08_13 {
   async createRecurringBooking(
     request: Request,
     body: CreateRecurringBookingInput_2024_08_13,
-    eventType: EventTypeWithOwnerAndTeam
+    eventType: EventTypeWithOwnerAndTeam,
+    skipAvailabilityCheck: boolean
   ) {
     const bookingRequest = await this.inputService.createRecurringBookingRequest(request, body, eventType);
     const bookings = await this.recurringBookingService.createBooking({
@@ -414,6 +451,7 @@ export class BookingsService_2024_08_13 {
         platformBookingLocation: bookingRequest.platformBookingLocation,
         noEmail: bookingRequest.noEmail,
         areCalendarEventsEnabled: bookingRequest.areCalendarEventsEnabled,
+        skipAvailabilityCheck,
       },
       creationSource: "API_V2",
     });
@@ -429,7 +467,8 @@ export class BookingsService_2024_08_13 {
     request: Request,
     body: CreateRecurringBookingInput_2024_08_13,
     eventType: EventTypeWithOwnerAndTeam,
-    userIsEventTypeAdminOrOwner: boolean
+    userIsEventTypeAdminOrOwner: boolean,
+    skipAvailabilityCheck: boolean
   ) {
     const bookingRequest = await this.inputService.createRecurringBookingRequest(request, body, eventType);
     const bookings = await this.recurringBookingService.createBooking({
@@ -443,6 +482,7 @@ export class BookingsService_2024_08_13 {
         platformBookingUrl: bookingRequest.platformBookingUrl,
         platformBookingLocation: bookingRequest.platformBookingLocation,
         areCalendarEventsEnabled: bookingRequest.areCalendarEventsEnabled,
+        skipAvailabilityCheck,
       },
       creationSource: "API_V2",
     });
@@ -459,7 +499,8 @@ export class BookingsService_2024_08_13 {
   async createRegularBooking(
     request: Request,
     body: CreateBookingInput_2024_08_13,
-    eventType: EventTypeWithOwnerAndTeam
+    eventType: EventTypeWithOwnerAndTeam,
+    skipAvailabilityCheck: boolean
   ) {
     const bookingRequest = await this.inputService.createBookingRequest(request, body, eventType);
     const booking = await this.regularBookingService.createBooking({
@@ -473,6 +514,7 @@ export class BookingsService_2024_08_13 {
         platformBookingUrl: bookingRequest.platformBookingUrl,
         platformBookingLocation: bookingRequest.platformBookingLocation,
         areCalendarEventsEnabled: bookingRequest.areCalendarEventsEnabled,
+        skipAvailabilityCheck,
       },
     });
 
@@ -500,7 +542,8 @@ export class BookingsService_2024_08_13 {
     request: Request,
     body: CreateBookingInput_2024_08_13,
     eventType: EventTypeWithOwnerAndTeam,
-    userIsEventTypeAdminOrOwner: boolean
+    userIsEventTypeAdminOrOwner: boolean,
+    skipAvailabilityCheck: boolean
   ) {
     const bookingRequest = await this.inputService.createBookingRequest(request, body, eventType);
     try {
@@ -515,6 +558,7 @@ export class BookingsService_2024_08_13 {
           platformBookingUrl: bookingRequest.platformBookingUrl,
           platformBookingLocation: bookingRequest.platformBookingLocation,
           areCalendarEventsEnabled: bookingRequest.areCalendarEventsEnabled,
+          skipAvailabilityCheck,
         },
       });
 
