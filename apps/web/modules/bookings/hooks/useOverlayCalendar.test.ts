@@ -93,4 +93,27 @@ describe("useOverlayCalendar", () => {
     expect(result.current.checkIsCalendarToggled("work", 1)).toBe(false);
     expect(onToggleCalendar).not.toHaveBeenCalled();
   });
+
+  it("does not re-select default calendars when unchecking the last calendar after loading with existing selections", () => {
+    window.localStorage.setItem(
+      "toggledConnectedCalendars",
+      JSON.stringify([{ credentialId: 1, externalId: "personal" }])
+    );
+
+    const { result, onToggleCalendar } = renderOverlayCalendar(
+      buildConnectedCalendars([
+        { externalId: "personal", primary: false, isSelected: false },
+        { externalId: "work", primary: false, isSelected: true },
+      ])
+    );
+
+    expect(result.current.checkIsCalendarToggled("personal", 1)).toBe(true);
+    expect(result.current.checkIsCalendarToggled("work", 1)).toBe(false);
+
+    result.current.handleToggleConnectedCalendar("personal", 1);
+
+    expect(result.current.checkIsCalendarToggled("personal", 1)).toBe(false);
+    expect(result.current.checkIsCalendarToggled("work", 1)).toBe(false);
+    expect(onToggleCalendar).toHaveBeenCalledWith(new Set());
+  });
 });
