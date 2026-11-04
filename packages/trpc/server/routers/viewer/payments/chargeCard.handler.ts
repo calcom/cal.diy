@@ -34,6 +34,13 @@ export const chargeCardHandler = async ({ ctx, input }: ChargeCardHandlerOptions
     });
   }
 
+  if (booking.status !== "ACCEPTED" || booking.payment[0]?.paymentOption !== "HOLD") {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "This booking has no no-show fee to charge",
+    });
+  }
+
   if (booking.startTime > new Date()) {
     throw new TRPCError({
       code: "BAD_REQUEST",

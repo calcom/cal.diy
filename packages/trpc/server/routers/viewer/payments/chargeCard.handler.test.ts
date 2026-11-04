@@ -18,6 +18,7 @@ describe("chargeCardHandler", () => {
   const mockBooking = {
     id: 10,
     userId: 1,
+    status: "ACCEPTED",
     startTime: new Date(Date.now() - 60 * 60 * 1000),
     payment: [{ id: 1, amount: 5000, currency: "usd", paymentOption: "HOLD", appId: "stripe", success: false }],
   };
@@ -49,6 +50,16 @@ describe("chargeCardHandler", () => {
 
     await expect(chargeCardHandler({ ctx, input: { bookingId: 10 } })).rejects.toMatchObject({
       code: "NOT_FOUND",
+    });
+    expect(handleNoShowFee).not.toHaveBeenCalled();
+  });
+
+  it("throws BAD_REQUEST and does not charge when the booking is cancelled", async () => {
+    mockBookingRepo.getBookingForPaymentProcessing.mockResolvedValue({ ...mockBooking, status: "CANCELLED" });
+
+    await expect(chargeCardHandler({ ctx, input: { bookingId: 10 } })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "This booking has no no-show fee to charge",
     });
     expect(handleNoShowFee).not.toHaveBeenCalled();
   });
