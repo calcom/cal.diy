@@ -381,7 +381,7 @@ async function handler(input: CancelBookingInput, dependencies?: Dependencies) {
       where: {
         recurringEventId: bookingToDelete.recurringEventId,
         startTime: {
-          gte: new Date(),
+          gte,
         },
       },
     });
