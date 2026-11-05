@@ -923,46 +923,11 @@ checksums:
     multiple_duration_timeUnit: 5535f834645ae971a2a9dde63d70182d
     multiple_duration_timeUnit_short: 99542681a50bb27edb8ecfaed253efcc
     minutes: c5442938e948e2e3937fb812cf68869c
-    use_cal_ai_to_make_call_description: 5b0370a8b8c441186adc89ade6de4a8e
-    termination_uri: 612c88f0c78ebf51432205a9d5c41f49
-    sip_trunk_username: 0e19a2e859b175268d369d2af6158680
-    sip_trunk_password: 721558d2ef951fe99944593e3c7175a1
     nickname: e15cefebe5e78fba87e455bf246cee89
-    delete_phone_number: 467e594096055bc1b603870d75231495
-    workflow_validation_failed: 74ba4abc955bb78214c1e033cbd1a891
-    workflow_validation_empty_fields: f82bdee29ab695c6b8d4e6c2ba50144b
-    workflow_validation_unverified_contacts: 128de2dffd10817a5523126fc91433d2
-    supercharge_your_workflows_with_cal_ai: 4fe3c42453579fbd29c5130825c28aa7
-    supercharge_your_workflows_with_cal_ai_description: 8a5199cd2900d54bf7d9336d196284fa
-    phone_number_imported_successfully: d51423bb1e86b31624e23c81bfa551da
-    phone_number_deleted_successfully: 2e5d42ae18b8fcd3712c9ed69e9126a0
-    delete_phone_number_confirmation: 51c31ee7b06bfa3e698a6eafeb439e25
-    yes_delete_phone_number: 467e594096055bc1b603870d75231495
-    phone_number_info_tooltip: 1169b73ca882a15495605434b4047151
-    termination_uri_info_tooltip: fb9a07fad8f6d6d77d6121ba94187fb5
-    sip_trunk_username_info_tooltip: e8977e9ccdaa2d5e3ce5854fb0693d95
-    sip_trunk_password_info_tooltip: 06a1e09017e704f474988264e64105d1
-    nickname_info_tooltip: 2adee99a4e1a49dfbdba3dfc617ff6a5
-    save_and_test_call: 0868993a98ad7f3ebb7ac5d492fa335b
-    call_initiated_successfully: 57f064e20f905dbaf216f5c38f233cd2
-    please_enter_phone_number: 229ebb7f2c8a234c67d5394b2dfa758c
-    agent_updated_successfully: f510850bdb869183c552be41ab8c5df1
-    agent_created_successfully: 1489d01c489abfd673441ed8f5dd98fa
-    agent_event_type_updated_successfully: 856d142da19f588bb77224f9bad078b2
-    phone_number_unsubscribed_successfully: c07d1e5f628fc79baad8c90d20eb7d35
-    general_prompt_description: 014d882d1fc01cbced074b3f7c146b57
     prompt: 290a6f069b0cec4ceaedd2423fe96b53
-    call_to: 173654daf638498080d21ce45ec7c2a2
-    make_test_call_to_verify_configuration: af66ea7f2a8a61566bbb69e670066362
-    initial_message: 2fdfc3cdf56f4f5502850930c866953c
-    initial_message_description: f818b0feef30d0090f589774be69d46d
-    having_trouble_importing: 99b63a755850ad2ac7700a83902b0838
     learn: 6559e2075ab6947a1d4fa43e19a5d66b
-    learn_how_to_get_your_terminator: 61efa5eff0d0ea5cbe59385beaab91fd
-    phone_number_subscription_cancelled_successfully: 6b5eba60b290f87fd4ebb0cc99293ab4
     updating: 68d418a669d7a521939549c5b980dc03
     round_robin: 637150f293331057fbeb335b283cedfa
-    hi_how_are_you_doing: 1ee4bddac0904264d1651ff54b99629e
     round_robin_description: 9a76c2ae7f3c045538b682c198541e95
     managed_event: e12958bfb02d28b42576a97f1862a577
     username_placeholder: eb69c662ee8b49b0cd5828d6f5fe4229
@@ -970,12 +935,6 @@ checksums:
     managed: 1a24716d3163d55dfd94c23c48556393
     managed_event_url_clarification: 87d80fc4036d1250e245c54d81ef27be
     assign_to: bf4290b924efc1120922555d3d8c226a
-    enter_phone_number_to_test_call: e0ce3af9be08d6aca744b0c78ecee5bd
-    make_test_call: bb73d16fee65d1590ff8f53d5f567e03
-    create_new_workflow_agent: 28d636980f7ca85f9bce928693a67caa
-    create_new_workflow_agent_description: dba19c900d65937ced09025c8dceadb3
-    phone_number_for_ai_call: 2c6b2fcd19cc68bc13d6f0dac0131707
-    buy_a_phone_number_or_import_one_you_already_have: 357cb368b71216101eca1151b8bdf581
     test_agent: d264912ad7eaecf42541376f4923c153
     test_web_call: ada26a1ae7fd4e7c19d255c32e6a284e
     phone_numbers: a248f9a18d37df189bdfd3de9959e9e1
@@ -983,7 +942,6 @@ checksums:
     delete_workflow_step: ecd31fb27fa7fb42e44f6ead5151e967
     unsubscribe_phone_number: 1d1205884bb11e4ab9f0749be02a8d41
     buy_a_new_number: 777bf62e2730610fdc771128cac5803a
-    only_us_phone_numbers_can_be_purchased_here: d35feabddfa59f497a31e5e68755141e
     buy_number_for_x_per_month: 91fd01de213ec8a35cbeb4544bb9bdc0
     supported_call_destinations: ecf237e3032534525be2ec11e174d080
     no_phone_number_connected: abbd03a1a99976bf4642255033d80d24
@@ -1003,7 +961,6 @@ checksums:
     cancel_your_phone_number_subscription: a692df90016a5aefd6c482d20251a9bc
     delete_associated_phone_number: a69ba72aafedb813dfe09b66f2fe28c7
     unauthorized_create_workflow: 3492d132fb4cc4c14137c11800a14b9c
-    import_phone_number_description: 451271aab09e14d90a38de7e56b2c6e1
     phone_number_cost: 767cbc244d1d59df8194f4c8f3ddc01d
     buy_new_number: dad2a683b527f36da6acd7afba21fc2e
     buy_number_cost_x_per_month: f5f89e89314ab24af69eb48d5b42d5c0
