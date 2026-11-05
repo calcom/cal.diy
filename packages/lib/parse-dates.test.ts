@@ -41,6 +41,18 @@ describe("parseDateTimeWithTimeZone", () => {
     expect(result).toMatch(/10:30/);
   });
 
+  it("does NOT corrupt default format for subsequent calls without options after a 24-hour call", () => {
+    // First call in 24-hour mode
+    parseDateTimeWithTimeZone(TEST_DATE, LANG, TZ, {
+      selectedTimeFormat: TimeFormat.TWENTY_FOUR_HOUR,
+    });
+
+    // Second call with NO options provided — must still produce 12-hour am/pm output
+    const result = parseDateTimeWithTimeZone(TEST_DATE, LANG, TZ);
+    expect(result.toLowerCase()).toMatch(/am|pm/);
+    expect(result).toMatch(/10:30/);
+  });
+
   it("does NOT corrupt timezone across subsequent calls with different timezones", () => {
     const nyResult = parseDateTimeWithTimeZone(TEST_DATE, LANG, "America/New_York", {
       withDefaultTimeFormat: true,
@@ -64,3 +76,4 @@ describe("parseDateTimeWithTimeZone", () => {
     }
   });
 });
+
