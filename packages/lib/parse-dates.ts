@@ -37,14 +37,14 @@ export const parseDate = (
   return processDate(date, language, timeZone, options);
 };
 
-const timeOptions: Intl.DateTimeFormatOptions = {
+const BASE_TIME_OPTIONS: Intl.DateTimeFormatOptions = {
   hour12: true,
   hourCycle: "h12",
   hour: "numeric",
   minute: "numeric",
 };
 
-const dateOptions: Intl.DateTimeFormatOptions = {
+const BASE_DATE_OPTIONS: Intl.DateTimeFormatOptions = {
   weekday: "long",
   year: "numeric",
   month: "long",
@@ -57,17 +57,24 @@ export const parseDateTimeWithTimeZone = (
   timezone: string,
   options?: ExtraOptions
 ): string => {
-  timeOptions.timeZone = timezone;
-  dateOptions.timeZone = timezone;
+  // Clone per-call to avoid mutating the shared module-level defaults across
+  // subsequent invocations (fixes: https://github.com/calcom/cal.diy/issues/30510).
+  const timeOptions: Intl.DateTimeFormatOptions = { ...BASE_TIME_OPTIONS, timeZone: timezone };
+  const dateOptions: Intl.DateTimeFormatOptions = { ...BASE_DATE_OPTIONS, timeZone: timezone };
 
   if (options?.withDefaultTimeFormat) {
     timeOptions.hourCycle = "h12";
+    timeOptions.hour12 = true;
   } else if (options?.selectedTimeFormat) {
-    timeOptions.hourCycle = options.selectedTimeFormat === TimeFormat.TWELVE_HOUR ? "h12" : "h24";
-    if (timeOptions.hourCycle === "h24") {
+    if (options.selectedTimeFormat === TimeFormat.TWELVE_HOUR) {
+      timeOptions.hourCycle = "h12";
+      timeOptions.hour12 = true;
+    } else {
+      timeOptions.hourCycle = "h24";
       delete timeOptions.hour12;
     }
   }
+
   const formattedDate = new Date(date).toLocaleDateString(language, dateOptions);
   const formattedTime = new Date(date)
     .toLocaleTimeString(language, timeOptions)
