@@ -333,6 +333,41 @@ describe("CredentialsProvider authorize", () => {
   });
 
   describe("Inactive admin reason", () => {
+    const originalAdminSecurity = process.env.ADMIN_REQUIRE_2FA_AND_STRONG_PASSWORD;
+
+    beforeEach(() => {
+      process.env.ADMIN_REQUIRE_2FA_AND_STRONG_PASSWORD = "true";
+    });
+
+    afterEach(() => {
+      process.env.ADMIN_REQUIRE_2FA_AND_STRONG_PASSWORD = originalAdminSecurity;
+    });
+
+    it("does not set role to INACTIVE_ADMIN when ADMIN_REQUIRE_2FA_AND_STRONG_PASSWORD is not enabled", async () => {
+      process.env.ADMIN_REQUIRE_2FA_AND_STRONG_PASSWORD = "false";
+
+      const { isPasswordValid } = await import("@calcom/lib/auth/isPasswordValid");
+      vi.mocked(isPasswordValid).mockReturnValue(false);
+      vi.mocked(verifyPassword).mockResolvedValue(true);
+
+      const mockUser = createMockUser({
+        role: UserPermissionRole.ADMIN,
+        identityProvider: IdentityProvider.CAL,
+        twoFactorEnabled: false,
+      });
+      mockFindByEmailAndIncludeProfilesAndPassword.mockResolvedValue(mockUser);
+
+      const result = await authorizeCredentials({
+        email: mockUser.email,
+        password: "password123",
+        totpCode: "",
+        backupCode: "",
+      });
+
+      expect(result?.role).toBe(UserPermissionRole.ADMIN);
+      expect(result?.inactiveAdminReason).toBeUndefined();
+    });
+
     it("sets reason to 'both' when password is invalid and 2FA is disabled", async () => {
       const { isPasswordValid } = await import("@calcom/lib/auth/isPasswordValid");
       vi.mocked(isPasswordValid).mockReturnValue(false);

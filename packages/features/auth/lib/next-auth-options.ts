@@ -256,6 +256,18 @@ export async function authorizeCredentials(
       return role;
     }
 
+    // Require strong password and 2FA for admin accounts.
+    // In hosted Cal.com (IS_CALCOM), this security requirement is enabled by default.
+    // For self-hosted Cal.diy, it is opt-in via ADMIN_REQUIRE_2FA_AND_STRONG_PASSWORD=true.
+    const requireAdminSecurity =
+      process.env.ADMIN_REQUIRE_2FA_AND_STRONG_PASSWORD === "true" ||
+      process.env.ADMIN_REQUIRE_2FA_AND_STRONG_PASSWORD === "1" ||
+      Boolean(IS_CALCOM && process.env.ADMIN_REQUIRE_2FA_AND_STRONG_PASSWORD !== "false");
+
+    if (!requireAdminSecurity) {
+      return role;
+    }
+
     // User's password is valid and two-factor authentication is enabled
     if (isPasswordValid(credentials.password, false, true) && user.twoFactorEnabled) return role;
     // Code is running in a development environment
