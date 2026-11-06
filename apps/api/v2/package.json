@@ -63,7 +63,7 @@
     "@sentry/profiling-node": "9.46.0",
     "@snyk/protect": "latest",
     "axios": "1.15.0",
-    "body-parser": "1.20.3",
+    "body-parser": "1.20.9",
     "bull": "4.15.1",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.3",
@@ -86,7 +86,7 @@
     "uuid": "8.3.2",
     "winston": "3.17.0",
     "winston-transport": "4.9.0",
-    "zod": "3.25.76"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.8",

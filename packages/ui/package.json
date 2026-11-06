@@ -111,7 +111,7 @@
     "sonner": "1.7.4",
     "tailwind-merge": "1.13.2",
     "uuid": "11.1.0",
-    "zod": "3.25.76"
+    "zod": "4.6.7"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.0.0",

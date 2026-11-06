@@ -32,7 +32,7 @@
     "prisma": "6.16.1",
     "prisma-kysely": "2.2.0",
     "uuid": "8.3.2",
-    "zod": "3.25.76",
+    "zod": "4.6.7",
     "zod-prisma-types": "3.2.4"
   },
   "devDependencies": {
