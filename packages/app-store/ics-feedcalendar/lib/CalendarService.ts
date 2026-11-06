@@ -138,7 +138,6 @@ class ICSFeedCalendarService implements Calendar {
 
   async getAvailability(params: GetAvailabilityParams): Promise<EventBusyDate[]> {
     const { dateFrom, dateTo, selectedCalendars } = params;
-    const startISOString = new Date(dateFrom).toISOString();
 
     const calendars = await this.fetchCalendars();
 
@@ -214,7 +213,7 @@ class ICSFeedCalendarService implements Calendar {
         applyTravelDuration(event, getTravelDurationInSeconds(vevent));
 
         if (event.isRecurring()) {
-          let maxIterations = 365;
+          let maxIterations = 10000;
           if (["HOURLY", "SECONDLY", "MINUTELY"].includes(event.getRecurrenceTypes())) {
             console.error(`Won't handle [${event.getRecurrenceTypes()}] recurrence`);
             return;
@@ -222,11 +221,8 @@ class ICSFeedCalendarService implements Calendar {
 
           const start = dayjs(dateFrom);
           const end = dayjs(dateTo);
-          const startDate = ICAL.Time.fromDateTimeString(startISOString);
-          startDate.hour = event.startDate.hour;
-          startDate.minute = event.startDate.minute;
-          startDate.second = event.startDate.second;
-          const iterator = event.iterator(startDate);
+          const iterator = event.iterator();
+          const zone = vtimezone ? new ICAL.Timezone(vtimezone) : null;
           let current: ICAL.Time;
           let currentEvent;
           let currentStart = null;
@@ -253,8 +249,7 @@ class ICSFeedCalendarService implements Calendar {
             // do not mix up caldav and icalendar! For the recurring events here, the timezone
             // provided is relevant, not as pointed out in https://datatracker.ietf.org/doc/html/rfc4791#section-9.6.5
             // where recurring events are always in utc (in caldav!). Thus, apply the time zone here.
-            if (vtimezone) {
-              const zone = new ICAL.Timezone(vtimezone);
+            if (zone) {
               currentEvent.startDate = currentEvent.startDate.convertToZone(zone);
               currentEvent.endDate = currentEvent.endDate.convertToZone(zone);
             }
@@ -269,7 +264,7 @@ class ICSFeedCalendarService implements Calendar {
             }
           }
           if (maxIterations <= 0) {
-            console.warn("could not find any occurrence for recurring event in 365 iterations");
+            console.warn("could not find any occurrence for recurring event in 10000 iterations");
           }
           return;
         }
