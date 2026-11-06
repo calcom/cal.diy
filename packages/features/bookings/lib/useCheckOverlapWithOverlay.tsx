@@ -5,10 +5,12 @@ import { useOverlayCalendarStore } from "../Booker/components/OverlayCalendar/st
 
 export function useCheckOverlapWithOverlay({
   start,
+  timezone,
   selectedDuration,
   offset,
 }: {
   start: Dayjs;
+  timezone?: string;
   selectedDuration: number | null;
   offset: number;
 }) {
@@ -24,8 +26,12 @@ export function useCheckOverlapWithOverlay({
       const startOffset = start.utcOffset();
       const busyDateStart = dayjs(busyDate.start);
       const busyDateEnd = dayjs(busyDate.end);
-      const busyDateStartInOffset = dayjs.utc(busyDateStart.valueOf()).add(startOffset, "minute");
-      const busyDateEndInOffset = dayjs.utc(busyDateEnd.valueOf()).add(startOffset, "minute");
+      const busyDateStartInOffset = timezone
+        ? dayjs(busyDate.start).tz(timezone)
+        : dayjs.utc(busyDateStart.valueOf()).add(startOffset, "minute");
+      const busyDateEndInOffset = timezone
+        ? dayjs(busyDate.end).tz(timezone)
+        : dayjs.utc(busyDateEnd.valueOf()).add(startOffset, "minute");
       const selectedEndTime = dayjs(start.add(offset, "hours")).add(selectedDuration ?? 0, "minute");
 
       const isOverlapping =

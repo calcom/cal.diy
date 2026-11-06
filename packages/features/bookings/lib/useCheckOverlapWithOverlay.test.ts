@@ -67,4 +67,18 @@ describe("useCheckOverlapWithOverlay", () => {
     expect(result.overlappingTimeStart).toBe("15:00");
     expect(result.overlappingTimeEnd).toBe("16:00");
   });
+
+  it("formats overlapping times using the selected IANA timezone when provided", () => {
+    useOverlayCalendarStore.setState({
+      overlayBusyDates: [{ start: new Date("2024-01-10T10:00:00Z"), end: new Date("2024-01-10T11:00:00Z") }],
+    });
+    const slotInTz = dayjs("2024-01-10T10:30:00Z").tz("Asia/Kolkata");
+    const result = renderHook(() =>
+      useCheckOverlapWithOverlay({ start: slotInTz, timezone: "Asia/Kolkata", selectedDuration: 30, offset: 0 })
+    ).result.current;
+
+    expect(result.isOverlapping).toBe(true);
+    expect(result.overlappingTimeStart).toBe("15:30");
+    expect(result.overlappingTimeEnd).toBe("16:30");
+  });
 });
