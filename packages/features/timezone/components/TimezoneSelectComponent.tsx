@@ -106,6 +106,7 @@ export function TimezoneSelectComponent({
           Object.assign({}, base, {
             minHeight: size === "sm" ? "28px" : "36px",
             height: grow ? "h-auto " : size === "sm" ? "28px" : "36px",
+            cursor: props.isDisabled ? base.cursor : "pointer",
           }),
         menuList: (base) =>
           Object.assign({}, base, {
