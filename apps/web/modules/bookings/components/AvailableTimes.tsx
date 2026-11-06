@@ -130,6 +130,7 @@ const SlotItem = ({
   const { isOverlapping, overlappingTimeEnd, overlappingTimeStart, overlappingTitle } =
     useCheckOverlapWithOverlay({
       start: computedDateWithUsersTimezone,
+      timezone,
       selectedDuration: eventData?.length ?? 0,
       offset,
     });
