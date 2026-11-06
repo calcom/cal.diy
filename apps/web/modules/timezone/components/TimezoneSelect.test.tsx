@@ -140,6 +140,15 @@ describe("Test TimezoneSelect", () => {
       expect(timezoneEl).toHaveClass("test-css");
     });
 
+    test("Should show a pointer cursor when enabled", () => {
+      renderSelect({ value: timezoneMockValues[0] });
+
+      const timezoneEl = screen.getByText(timezoneMockValues[0]);
+      const controlEl = timezoneEl.parentElement?.parentElement?.parentElement;
+
+      expect(controlEl).toHaveStyle({ cursor: "pointer" });
+    });
+
     test("Should render with the correct CSS when isMulti is enabled", async () => {
       renderSelect({ value: timezoneMockValues[0], isMulti: true, classNames });
       openMenu();
