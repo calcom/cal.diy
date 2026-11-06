@@ -96,6 +96,8 @@ class TestCalendarService extends BaseCalendarService {
     ];
   }
 
+  override getUserTimezoneFromDB = vi.fn().mockResolvedValue("Europe/Dublin");
+
   async testUpdateEvent(uid: string, event: CalendarServiceEvent, externalCalendarId: string) {
     return this.updateEvent(uid, event);
   }
@@ -745,6 +747,212 @@ describe("CalendarService - SCHEDULE-AGENT injection", () => {
       const event = createMockEvent();
 
       await expect(service.createEvent(event, 1)).rejects.toThrow();
+    });
+  });
+});
+
+describe("CalendarService - Issue #30195 Recurring Event Availability", () => {
+  const DUBLIN_WEEKLY_ICS = `BEGIN:VCALENDAR\r
+VERSION:2.0\r
+PRODID:-//Cal.com//NONSGML//EN\r
+BEGIN:VTIMEZONE\r
+TZID:Europe/Dublin\r
+BEGIN:STANDARD\r
+DTSTART:19711031T020000\r
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r
+TZNAME:GMT\r
+TZOFFSETFROM:+0100\r
+TZOFFSETTO:+0000\r
+END:STANDARD\r
+BEGIN:DAYLIGHT\r
+DTSTART:19710328T010000\r
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r
+TZNAME:IST\r
+TZOFFSETFROM:+0000\r
+TZOFFSETTO:+0100\r
+END:DAYLIGHT\r
+END:VTIMEZONE\r
+BEGIN:VEVENT\r
+UID:weekly-tuesday-recurr-123\r
+DTSTART;TZID=Europe/Dublin:20260818T130000\r
+DTEND;TZID=Europe/Dublin:20260818T140000\r
+RRULE:FREQ=WEEKLY\r
+SUMMARY:Weekly Tuesday Sync\r
+END:VEVENT\r
+END:VCALENDAR`;
+
+  const HISTORICAL_DAILY_ICS = `BEGIN:VCALENDAR\r
+VERSION:2.0\r
+PRODID:-//Cal.com//NONSGML//EN\r
+BEGIN:VEVENT\r
+UID:historical-daily-series\r
+DTSTART:20240101T090000Z\r
+DTEND:20240101T100000Z\r
+RRULE:FREQ=DAILY\r
+SUMMARY:Daily Standup\r
+END:VEVENT\r
+END:VCALENDAR`;
+
+  const selectedCalendars = [
+    {
+      id: "1",
+      integration: "caldav",
+      externalId: "https://caldav.example.com/calendar/",
+      name: "Test Calendar",
+      primary: true,
+      readOnly: false,
+      email: "test@example.com",
+      credentialId: 1,
+      userId: 1,
+    },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("1. preserves weekly recurrence anchor without shifting when query starts on a different weekday (Sunday vs Tuesday)", async () => {
+    const service = new TestCalendarService();
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: "https://caldav.example.com/calendar/event1.ics",
+        etag: "123",
+        data: DUBLIN_WEEKLY_ICS,
+      } as never,
+    ]);
+
+    const browseAvailability = await service.getAvailability({
+      dateFrom: "2026-08-16T00:00:00Z",
+      dateTo: "2026-08-23T23:59:59Z",
+      selectedCalendars,
+    });
+
+    expect(browseAvailability).toHaveLength(1);
+    expect(browseAvailability[0]).toEqual({
+      start: "2026-08-18T12:00:00.000Z",
+      end: "2026-08-18T13:00:00.000Z",
+    });
+    expect(browseAvailability.some((e) => e.start.startsWith("2026-08-16"))).toBe(false);
+  });
+
+  it("2. returns identical busy intervals across broad browse query and narrow booking submission query", async () => {
+    const service = new TestCalendarService();
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: "https://caldav.example.com/calendar/event1.ics",
+        etag: "123",
+        data: DUBLIN_WEEKLY_ICS,
+      } as never,
+    ]);
+
+    const broadBrowse = await service.getAvailability({
+      dateFrom: "2026-08-16T00:00:00Z",
+      dateTo: "2026-08-23T23:59:59Z",
+      selectedCalendars,
+    });
+
+    const narrowSubmit = await service.getAvailability({
+      dateFrom: "2026-08-18T00:00:00Z",
+      dateTo: "2026-08-18T23:59:59Z",
+      selectedCalendars,
+    });
+
+    expect(broadBrowse).toEqual(narrowSubmit);
+    expect(narrowSubmit).toEqual([
+      {
+        start: "2026-08-18T12:00:00.000Z",
+        end: "2026-08-18T13:00:00.000Z",
+      },
+    ]);
+  });
+
+  it("3. protects busy slots: detects conflicts for candidate bookings overlapping the recurring occurrence", async () => {
+    const service = new TestCalendarService();
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: "https://caldav.example.com/calendar/event1.ics",
+        etag: "123",
+        data: DUBLIN_WEEKLY_ICS,
+      } as never,
+    ]);
+
+    const busyDates = await service.getAvailability({
+      dateFrom: "2026-08-18T00:00:00Z",
+      dateTo: "2026-08-18T23:59:59Z",
+      selectedCalendars,
+    });
+
+    const candidateSlot = {
+      start: "2026-08-18T12:15:00.000Z",
+      end: "2026-08-18T12:45:00.000Z",
+    };
+
+    const hasConflict = busyDates.some(
+      (busy) => candidateSlot.start < busy.end && candidateSlot.end > busy.start
+    );
+
+    expect(hasConflict).toBe(true);
+  });
+
+  it("4. preserves free-slot availability for non-conflicting times and weekdays", async () => {
+    const service = new TestCalendarService();
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: "https://caldav.example.com/calendar/event1.ics",
+        etag: "123",
+        data: DUBLIN_WEEKLY_ICS,
+      } as never,
+    ]);
+
+    const wednesdayAvailability = await service.getAvailability({
+      dateFrom: "2026-08-19T00:00:00Z",
+      dateTo: "2026-08-19T23:59:59Z",
+      selectedCalendars,
+    });
+    expect(wednesdayAvailability).toHaveLength(0);
+
+    const sundayAvailability = await service.getAvailability({
+      dateFrom: "2026-08-16T00:00:00Z",
+      dateTo: "2026-08-16T23:59:59Z",
+      selectedCalendars,
+    });
+    expect(sundayAvailability).toHaveLength(0);
+
+    const tuesdayBusy = await service.getAvailability({
+      dateFrom: "2026-08-18T00:00:00Z",
+      dateTo: "2026-08-18T23:59:59Z",
+      selectedCalendars,
+    });
+    const candidateFreeSlot = {
+      start: "2026-08-18T10:00:00.000Z",
+      end: "2026-08-18T11:00:00.000Z",
+    };
+    const hasConflict = tuesdayBusy.some(
+      (busy) => candidateFreeSlot.start < busy.end && candidateFreeSlot.end > busy.start
+    );
+    expect(hasConflict).toBe(false);
+  });
+
+  it("5. supports historical recurring series (>900 days past DTSTART) safely within the iteration cap", async () => {
+    const service = new TestCalendarService();
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: "https://caldav.example.com/calendar/historical.ics",
+        etag: "456",
+        data: HISTORICAL_DAILY_ICS,
+      } as never,
+    ]);
+
+    const availability = await service.getAvailability({
+      dateFrom: "2026-08-18T00:00:00Z",
+      dateTo: "2026-08-18T23:59:59Z",
+      selectedCalendars,
+    });
+
+    expect(availability).toHaveLength(1);
+    expect(availability[0]).toEqual({
+      start: "2026-08-18T09:00:00.000Z",
+      end: "2026-08-18T10:00:00.000Z",
     });
   });
 });
