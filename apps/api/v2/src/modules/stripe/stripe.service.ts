@@ -233,20 +233,16 @@ export class StripeService {
   }
 
   async createStripeCustomerId(user: Pick<User, "email" | "name" | "metadata">) {
-    let customerId: string;
-
     const stripe = this.getStripe();
-    try {
-      const customersResponse = await stripe.customers.list({
-        email: user.email,
-        limit: 1,
-      });
+    const customersResponse = await stripe.customers.list({
+      email: user.email,
+      limit: 1,
+    });
 
-      customerId = customersResponse.data[0].id;
-    } catch (error) {
-      const customer = await stripe.customers.create({ email: user.email });
-      customerId = customer.id;
-    }
+    // Only an empty lookup creates a customer: a failed lookup (auth, network, rate limit) must
+    // propagate, or it would create a duplicate customer for an email that may already have one.
+    const customerId =
+      customersResponse.data[0]?.id ?? (await stripe.customers.create({ email: user.email })).id;
 
     await this.usersRepository.updateByEmail(user.email, {
       metadata: {
