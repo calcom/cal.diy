@@ -269,6 +269,7 @@ class GoogleCalendarService implements Calendar {
           await calendar.events.patch({
             calendarId: selectedCalendar,
             eventId: event.id || "",
+            sendUpdates: "none",
             requestBody: {
               location: getLocation({
                 videoCallData: calEvent.videoCallData,
@@ -301,6 +302,7 @@ class GoogleCalendarService implements Calendar {
           // Update the same event but this time we know the hangout link
           calendarId: selectedCalendar,
           eventId: event.id || "",
+          sendUpdates: "none",
           requestBody: {
             description: getRichDescription({
               ...calEvent,
@@ -422,6 +424,7 @@ class GoogleCalendarService implements Calendar {
           // Update the same event but this time we know the hangout link
           calendarId: selectedCalendar,
           eventId: evt.data.id || "",
+          sendUpdates: "none",
           requestBody: {
             description: getRichDescription({
               ...event,
