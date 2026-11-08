@@ -269,7 +269,6 @@ class GoogleCalendarService implements Calendar {
           await calendar.events.patch({
             calendarId: selectedCalendar,
             eventId: event.id || "",
-            sendUpdates: "none",
             requestBody: {
               location: getLocation({
                 videoCallData: calEvent.videoCallData,
