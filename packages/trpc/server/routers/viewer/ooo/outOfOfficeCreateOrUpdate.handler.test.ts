@@ -221,7 +221,7 @@ describe("outOfOfficeCreateOrUpdate", () => {
       await expect(outOfOfficeCreateOrUpdate({ ctx: { user: mockUser }, input })).resolves.toEqual({});
 
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining("https://example.com/webhook"),
+        expect.stringContaining("OOO_CREATED"),
         expect.stringContaining("webhook endpoint unreachable")
       );
     });
