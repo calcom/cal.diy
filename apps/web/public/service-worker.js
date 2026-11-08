@@ -13,7 +13,7 @@ self.addEventListener("push", async (event) => {
     return;
   }
 
-  const title = notificationData.title || "New Cal.diy Notification";
+  const title = notificationData.title || "New horium.dev Notification";
   const image = notificationData.icon || "https://cal.com/api/logo?type=icon";
 
    event.waitUntil(
