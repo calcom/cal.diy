@@ -156,7 +156,9 @@ export function updateHostInEventName(eventName: string, oldHost: string, newHos
   for (const { pattern, replacement } of formats) {
     // Escape special regex characters in the pattern
     const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`\\b${escapedPattern}\\b`, "gi");
+    // `\b` only treats ASCII [A-Za-z0-9_] as word characters, so names like "Émile" or "李雷" never matched.
+    // Use Unicode-aware boundaries instead.
+    const regex = new RegExp(`(?<![\\p{L}\\p{M}\\p{N}_])${escapedPattern}(?![\\p{L}\\p{M}\\p{N}_])`, "giu");
 
     if (regex.test(updatedEventName)) {
       updatedEventName = updatedEventName.replace(regex, replacement);
