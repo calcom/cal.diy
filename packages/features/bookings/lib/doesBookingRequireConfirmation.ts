@@ -27,8 +27,9 @@ export const doesBookingRequireConfirmation = ({
     // Calculate the time difference in the specified unit
     const timeDifference = startTimeUTC.diff(currentTime, rcThreshold.unit);
 
-    // Check if the time difference exceeds the threshold
-    if (timeDifference > rcThreshold.time) {
+    // The threshold means "booked with less than X notice", and diff() truncates to whole units,
+    // so a notice of exactly X units or more must not require confirmation.
+    if (timeDifference >= rcThreshold.time) {
       requiresConfirmation = false;
     }
   }
