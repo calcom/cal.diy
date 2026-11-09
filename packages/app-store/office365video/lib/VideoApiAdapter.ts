@@ -222,17 +222,20 @@ const TeamsVideoApiAdapter = (credential: CredentialForCalendarServiceWithTenant
       : "https://graph.microsoft.com/v1.0/me";
   }
 
-  // Since the meeting link is not tied to an event we only need the create and update functions
   return {
     getAvailability: () => {
       return Promise.resolve([]);
     },
     updateMeeting: async (bookingRef: PartialReference, event: CalendarEvent) => {
       try {
+        const meetingId = bookingRef?.uid;
+        const onlineMeetingsUrl = `${await getUserEndpoint()}/onlineMeetings`;
+        // References saved before a Teams meeting id was stored have nothing to patch,
+        // so fall back to creating a fresh meeting for them.
         const response = await auth.requestRaw({
-          url: `${await getUserEndpoint()}/onlineMeetings`,
+          url: meetingId ? `${onlineMeetingsUrl}/${encodeURIComponent(meetingId)}` : onlineMeetingsUrl,
           options: {
-            method: "POST",
+            method: meetingId ? "PATCH" : "POST",
             body: JSON.stringify(translateEvent(event)),
           },
         });
@@ -264,8 +267,22 @@ const TeamsVideoApiAdapter = (credential: CredentialForCalendarServiceWithTenant
         });
       }
     },
-    deleteMeeting:() => {
-      return Promise.resolve([]);
+    deleteMeeting: async (uid: string): Promise<void> => {
+      if (!uid) return;
+
+      const response = await auth.requestRaw({
+        url: `${await getUserEndpoint()}/onlineMeetings/${encodeURIComponent(uid)}`,
+        options: { method: "DELETE" },
+      });
+
+      // A 404 means the meeting is already gone on Microsoft's side, which is the state we want.
+      if (response.ok || response.status === 404) return;
+
+      log.error(`Error deleting MS Teams meeting ${uid}`, response.status, response.statusText);
+      throw new HttpError({
+        statusCode: response.status,
+        message: `Error deleting MS Teams meeting: ${response.statusText}`,
+      });
     },
     createMeeting: async (event: CalendarEvent): Promise<VideoCallData> => {
       const url = `${await getUserEndpoint()}/onlineMeetings`;
