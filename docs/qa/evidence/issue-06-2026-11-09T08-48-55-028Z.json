@@ -1,0 +1,139 @@
+{
+  "gitSHA": "22c139567b66582bca9ebe56156c6661287ac024",
+  "dirty": true,
+  "utc": "2026-11-09T08:48:55.028Z",
+  "local": "2026-11-09 15:48:55 GMT+7",
+  "timeZone": "Asia/Saigon",
+  "environment": {
+    "platform": "win32",
+    "node": "v24.21.0",
+    "java": "spawnSync java ETIMEDOUT",
+    "docker": "Docker version 29.8.0, build 88096ef\nWARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.",
+    "dockerEngine": "WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.",
+    "graphWalker": "4.3.3 (required; not yet verified)",
+    "postgres": "WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified."
+  },
+  "result": "chưa kiểm chứng",
+  "errors": [
+    "spawnSync java ETIMEDOUT",
+    "WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.",
+    "WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.",
+    "Java 11..21 required; Java 22 or newer is rejected (including Java 25)",
+    "Missing tools/graphwalker/graphwalker-cli-4.3.3.jar",
+    "Missing node_modules; install existing locked dependencies before running"
+  ],
+  "steps": [
+    {
+      "element": "v_NoBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "v_Pending",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "v_BookedA",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "v_BookedB",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "v_Rejected",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "v_Cancelled",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "v_SlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_CreateAcceptedBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_CreatePendingBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_ConfirmPendingBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_RejectPendingBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_CancelPendingBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_CancelAcceptedBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_RescheduleToNewSlot",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_CancelRescheduledBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_RescheduleSlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_SelectAnotherSlot",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_StartNewBookingAfterCancel",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_StartNewBookingAfterReject",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ETIMEDOUT; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; WARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.\nfailed to connect to the docker API at npipe:////./pipe/docker_engine; check if the path is correct and if the daemon is running: open //./pipe/docker_engine: The system cannot find the file specified.; Java 11..21 required; Java 22 or newer is rejected (including Java 25); Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    }
+  ],
+  "coverage": {
+    "edges": {
+      "visited": 0,
+      "total": 12,
+      "percent": 0
+    },
+    "vertices": {
+      "visited": 0,
+      "total": 7,
+      "percent": 0
+    }
+  },
+  "limits": [
+    "Personal non-recurring, no seats/payment/external calendar",
+    "AWAITING_HOST and supplementary guards not covered",
+    "No raw browser errors, trace, screenshot, video or booking identifiers in evidence"
+  ]
+}

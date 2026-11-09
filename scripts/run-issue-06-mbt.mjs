@@ -3,7 +3,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import process from "node:process";
 
-const command = (exe, args) => spawnSync(exe, args, { encoding: "utf8", timeout: 120_000 });
+const command = (exe, args, timeout = 10_000) =>
+  spawnSync(exe, args, { encoding: "utf8", timeout, stdio: ["ignore", "pipe", "pipe"] });
 const sanitize = (value) => value.replace(/[A-Z]:[\\/]Users[\\/][^\\/\s]+/gi, "[user-directory]");
 const output = (result) =>
   sanitize(result.error?.message ?? `${result.stdout ?? ""}${result.stderr ?? ""}`.trim());
@@ -40,10 +41,10 @@ const evidence = {
   result: "chưa kiểm chứng",
   errors: [],
   steps: [],
-  coverage: { edges: { visited: 0, total: 6, percent: 0 }, vertices: { visited: 0, total: 5, percent: 0 } },
+  coverage: { edges: { visited: 0, total: 12, percent: 0 }, vertices: { visited: 0, total: 7, percent: 0 } },
   limits: [
     "Personal non-recurring, no seats/payment/external calendar",
-    "PENDING/REJECTED/AWAITING_HOST and supplementary guards not covered",
+    "AWAITING_HOST and supplementary guards not covered",
     "No raw browser errors, trace, screenshot, video or booking identifiers in evidence",
   ],
 };
@@ -60,7 +61,7 @@ const finish = () => {
   writeFileSync(evidenceFile, JSON.stringify(evidence, null, 2));
   console.log(`Evidence: ${evidenceFile}`);
   console.log(
-    `${evidence.result}; edge coverage ${evidence.coverage.edges.visited}/6; vertex coverage ${evidence.coverage.vertices.visited}/5`
+    `${evidence.result}; edge coverage ${evidence.coverage.edges.visited}/12; vertex coverage ${evidence.coverage.vertices.visited}/7`
   );
 };
 if (evidence.errors.length === 0) {
@@ -96,8 +97,8 @@ if (evidence.errors.length === 0) {
       if (
         path.length > 1000 ||
         path.length < 2 ||
-        new Set(path.filter((s) => s.startsWith("e_"))).size !== 6 ||
-        new Set(path.filter((s) => s.startsWith("v_"))).size !== 5
+        new Set(path.filter((s) => s.startsWith("e_"))).size !== 12 ||
+        new Set(path.filter((s) => s.startsWith("v_"))).size !== 7
       )
         throw new Error("Incomplete or oversized GraphWalker path");
       mkdirSync("test-results/mbt", { recursive: true });

@@ -1,13 +1,16 @@
-# Issue #6 — GraphWalker booking harness
+# Issue #6 / #18 — GraphWalker booking harness (Model v2)
 
-Harness thực thi đường đi model Issue #5 qua UI/API, rồi đọc DB ngay sau từng
-edge/vertex. Oracle chỉ `select` uid, status, rescheduled, fromReschedule,
-startTime, endTime, cancellationReason. UID chỉ dùng trong bộ nhớ; không xuất
-email/token/UID/URL quản lý. Không dùng tài khoản thật hoặc database production.
+Harness thực thi đường đi model Issue #16 / #17 (Model v2: 12 edge, 7 vertex) qua UI/API,
+rồi đọc DB ngay sau từng edge/vertex. Oracle chỉ `select` uid, status, rescheduled,
+fromReschedule, startTime, endTime, cancellationReason, rejectionReason, oneTimePassword.
+UID chỉ dùng trong bộ nhớ; không xuất email/token/UID/URL quản lý.
+Không dùng tài khoản thật hoặc database production.
 
 ## Môi trường
 
-Windows, PowerShell 7, Node theo phiên bản của repo (Issue 04 dùng 20.20.2),
+Windows, **PowerShell 7 (`pwsh`) là bắt buộc** (trên Windows PowerShell 5.1, script chuẩn bị
+`scripts/prepare-issue-04-env.ps1` báo lỗi `GetBytes` nhưng vẫn ghi ra `.env` hỏng; nếu lỡ chạy
+trên PS 5.1 phải xóa `.env` đó rồi chạy lại bằng `pwsh`). Node theo phiên bản repo (20.20.2),
 Yarn 4.12.0, Docker Desktop, PostgreSQL 17-alpine, Chromium Playwright,
 Temurin JDK **21**, GraphWalker **4.3.3**. Runner chấp nhận Java 11..21,
 từ chối Java >=22. **KHÔNG dùng Java 25**.
@@ -29,13 +32,18 @@ GraphWalker check trả `No issues found with the model(s).` Lần evidence cũ
 
 ## Chạy từ thư mục gốc repo
 
-Không thêm dependency hoặc sửa schema. Cài các dependency đã có trong lockfile:
+Không thêm dependency hoặc sửa schema. Thời gian ước tính: `yarn install --immutable`
+khoảng 6 phút, harness chạy khoảng 3 phút.
+
+Chuẩn bị runtime vào `tools/issue06-env` (tải zip/archive Node 20.20.2 và bất kỳ bản build Temurin JDK 21,
+không ghi cứng tên thư mục JDK 21.0.12.1+1):
 
 ```powershell
 $env:ISSUE04_NODE_EXECUTABLE = (Resolve-Path tools/issue06-env/node-v20.20.2-win-x64/node.exe).Path
 $env:PATH = (Split-Path -Parent $env:ISSUE04_NODE_EXECUTABLE) + ";" + $env:PATH
 $env:PLAYWRIGHT_BROWSERS_PATH = Join-Path (Get-Location) "tools/issue06-env/playwright-browsers"
-$env:PATH = (Resolve-Path 'tools/issue06-env/jdk-21.0.12.1+1/bin').Path + ";" + $env:PATH
+$jdkBin = (Resolve-Path tools/issue06-env/jdk-21*/bin | Select-Object -First 1).Path
+$env:PATH = "$jdkBin;$env:PATH"
 gh release download 4.3.3 --repo GraphWalker/graphwalker-project --pattern "graphwalker-cli-4.3.3.jar" --dir tools/graphwalker
 corepack yarn install --immutable
 corepack yarn playwright install chromium
@@ -51,25 +59,27 @@ prepare script chủ động từ chối ghi đè. Không commit `.env`, secret 
 Các thao tác tạo/dọn fixture chỉ tác động host/event/booking giả của phiên test;
 oracle không ghi DB. Không reset database hoặc volume dùng chung.
 
-Ở terminal riêng, khởi động web cục bộ theo Issue 04:
+Lưu ý về cổng mạng: Harness **không dùng app Compose**; harness dùng dev server
+ở cổng 3000 và PostgreSQL riêng ở cổng 5450 (container `caldiy-issue04-db`).
+
+Ở terminal riêng, khởi động web cục bộ theo Issue 04 (dùng `--port 3000`, tránh `-p` bị lỗi nhận diện cờ trên PowerShell 7.6.9):
 
 ```powershell
 $env:NEXT_PUBLIC_IS_E2E = "1"
-pwsh -File scripts/run-issue-04-local.ps1 workspace @calcom/web dev -p 3000
+pwsh -File scripts/run-issue-04-local.ps1 workspace @calcom/web dev --port 3000
 ```
 
-Lệnh GraphWalker sinh đường đi (JSON từng dòng):
+Lệnh GraphWalker sinh đường đi (JSON từng dòng) theo Model v2 (`docs/qa/model/booking-model.json`):
 
 ```powershell
 java -version
-java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar check -m docs/qa/model/booking-model-v1.json "random(edge_coverage(100))"
-java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar offline --seed 6006 -m docs/qa/model/booking-model-v1.json "random(edge_coverage(100))"
+java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar check -m docs/qa/model/booking-model.json "random(edge_coverage(100))"
+java -jar tools/graphwalker/graphwalker-cli-4.3.3.jar offline --seed 6006 -m docs/qa/model/booking-model.json "random(edge_coverage(100))"
 ```
 
-The current harness uses `docs/qa/model/booking-model-v1.json`, which preserves
-the six-edge/five-vertex contract implemented by `scripts/run-issue-06-mbt.mjs`.
-Issue #17's expanded model is `docs/qa/model/booking-model-v2.json`; it is a
-design/static model until a compatible runtime harness is added.
+Harness hiện tại dùng `docs/qa/model/booking-model.json` tương thích Model v2
+(12 edge, 7 vertex) theo hợp đồng đã thống nhất tại PR #30 (`docs/qa/model/booking-model-v2.json`).
+Model v1 lưu tại `docs/qa/model/booking-model-v1.json` để tham chiếu hồi quy.
 
 Runner tự gọi offline với seed 6006, kiểm tra liên tục các source/target và
 coverage của đường đi trước khi chạy browser. Không nhập đường đi viết tay:
@@ -81,7 +91,19 @@ node .yarn/releases/yarn-4.12.0.cjs biome check --write apps/web/playwright/mbt/
 node .yarn/releases/yarn-4.12.0.cjs type-check:ci --force
 ```
 
-## Hai edge khó
+## Các edge đặc thù trong Model v2
+
+`e_CreatePendingBooking`: đặt booking qua form công khai của event type yêu cầu xác nhận
+(`requiresConfirmation = true`). Oracle kiểm tra DB trạng thái `PENDING`, có `oneTimePassword`.
+
+`e_ConfirmPendingBooking`: organizer đăng nhập vào `/bookings/unconfirmed`, xác nhận booking.
+Oracle kiểm tra DB trạng thái chuyển thành `ACCEPTED`, `oneTimePassword` bị xóa (null).
+
+`e_RejectPendingBooking`: organizer từ chối booking từ `/bookings/unconfirmed` kèm lý do.
+Oracle kiểm tra DB trạng thái `REJECTED`, `rejectionReason` khớp lý do đã nhập.
+
+`e_CancelPendingBooking`: organizer hoặc người đặt hủy booking khi đang `PENDING`.
+Oracle kiểm tra DB trạng thái `CANCELLED` cùng `cancellationReason`.
 
 `e_RescheduleSlotUnavailable`: chọn slot qua helper trước, rồi intercept request
 reschedule ngay trước khi gửi đến server. Dùng `start/end` trong body request
@@ -93,18 +115,19 @@ booking với `fromReschedule=A`. Blocker không được tính là B và đư�
 để `e_SelectAnotherSlot` chứng minh chọn slot khác không trùng blocker.
 Nếu UI ngăn gửi request hoặc timeout, edge ghi **chưa kiểm chứng**, không pass.
 
-`e_StartNewBooking`: snapshot booking của phiên cũ, tạo host/event type giả
-mới và mở trang booking mới. DB của phiên mới phải rỗng; snapshot phiên cũ
-phải giữ nguyên, kể cả B CANCELLED. Fixture được dọn sau khi lưu evidence.
+`e_StartNewBookingAfterCancel` / `e_StartNewBookingAfterReject`: snapshot booking của phiên cũ,
+tạo host/event type giả mới và mở trang booking mới. DB của phiên mới phải rỗng; snapshot
+phiên cũ phải giữ nguyên. Fixture được dọn sau khi lưu evidence.
 
 ## Đọc và gửi kết quả
 
 Mỗi lần chạy ghi file riêng `docs/qa/evidence/issue-06-<UTC>.json`: SHA gốc,
 cờ dirty, thời điểm UTC/Asia/Saigon, môi trường, lỗi preflight, từng bước,
 coverage và giới hạn. Đường đi sinh chỉ là kế hoạch; chỉ bước hoàn tất oracle
-mới tăng coverage. Edge coverage = số edge pass / 6; vertex coverage = số
-vertex pass / 5. Pass toàn harness cần cả hai đạt 100%. Fail khi oracle sai;
-chưa kiểm chứng khi chưa hoàn tất action/DB hoặc thiếu môi trường.
+mới tăng coverage. Edge coverage = số edge pass / 12; vertex coverage = số
+vertex pass / 7. Pass toàn harness cần cả hai đạt 100%. State coverage đạt
+ít nhất 4/5 trạng thái nghiệp vụ (ACCEPTED, PENDING, REJECTED, CANCELLED).
+Fail khi oracle sai; chưa kiểm chứng khi chưa hoàn tất action/DB hoặc thiếu môi trường.
 Generate-only không chứng minh booking pass. Runner trả mã lỗi nếu không pass.
 
 Tắt reporter/trace/screenshot/video và snapshot lỗi tự động
@@ -117,20 +140,4 @@ Ngay sau mỗi lần chạy, gửi file evidence cùng coverage cho **@anvodangi
 (Issue #7, Phần G) và báo **@BoyTay** qua comment Issue #7 bằng
 `gh issue comment 7 --repo BoyTay/cal.diy --body-file <file đã lọc>`.
 
-Giới hạn: chỉ model cá nhân 6 edge/5 vertex; chưa chứng minh PENDING, REJECTED,
-AWAITING_HOST, token guards, seats, recurring, payment/calendar/email/webhook.
-
-## Kết quả thực tế ngày 13/10/2026
-
-Lần chạy trên SHA `67f426243f8553b73e0d3059e30cb0248f8e10ab`, `dirty=false`,
-đã pass 25 bước: **edge 6/6 (100%), vertex 5/5 (100%)**.
-[Evidence](../../../../docs/qa/evidence/issue-06-2026-10-12T19-31-46-588Z.json)
-ghi HTTP 409 khi slot bị chặn, A giữ nguyên, không có B và
-`urlDateMatchesRequestStart=false`: `date` không phải giờ slot đã chọn.
-Edge bắt đầu phiên mới cũng pass, giữ nguyên dữ liệu booking đã hủy.
-
-Hai lần trước dừng ở lookup UI, chỉ đạt 1/6 edge và 2/5 vertex; các edge
-chưa gửi request được ghi “chưa kiểm chứng”. Mỗi lần đã gửi log vào Issue #7.
-Biome exit 0 (còn cảnh báo độ dài hàm); kiểm tra type riêng hai file TS đạt
-0 diagnostics. `yarn type-check:ci --force --concurrency=2` toàn repo đã chạy
-nhưng dừng với **`Error: spawn tsc ENOENT`** trên Windows, không ghi là đạt.
+Giới hạn: AWAITING_HOST, seats, recurring, payment/calendar/email/webhook nằm ngoài phạm vi.
