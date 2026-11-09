@@ -54,14 +54,18 @@ export default class AttendeeWasRequestedToRescheduleEmail extends OrganizerSche
   }
 
   protected getTextBody(): string {
+    // Tags are stripped from the translated text and the HTML snippet only, so angle brackets in the organizer's name are kept.
+    const stripTags = (value: string) => value.replace(/(<([^>]+)>)/gi, "");
+    const text = (key: string, options?: Record<string, string>) => stripTags(this.t(key, options));
+
     return `
-${this.t("request_reschedule_booking")}
+${text("request_reschedule_booking")}
 ${this.t("request_reschedule_subtitle", {
   organizer: this.calEvent.organizer.name,
 })},
-${this.getWhen()}
-${this.t("need_to_reschedule_or_cancel")}
-${getManageLink(this.calEvent, this.t)}
-`.replace(/(<([^>]+)>)/gi, "");
+${stripTags(this.getWhen())}
+${text("need_to_reschedule_or_cancel")}
+${stripTags(getManageLink(this.calEvent, this.t))}
+`;
   }
 }
