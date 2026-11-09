@@ -174,4 +174,13 @@ describe("getTranslation", () => {
 
     expect(enT("welcome")).not.toBe(frT("welcome"));
   });
+
+  it("does not HTML-escape interpolated values", async () => {
+    const t = await getTranslation("en", "common");
+
+    expect(t("hosted_by", { name: "Conan O'Brien & Co" })).toBe("Hosted by Conan O'Brien & Co");
+    expect(t("event_cancelled_subject", { title: `Q&A / "Intro"`, date: "Mon" })).toBe(
+      `Canceled: Q&A / "Intro" at Mon`
+    );
+  });
 });
