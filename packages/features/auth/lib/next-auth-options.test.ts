@@ -1,3 +1,5 @@
+// @vitest-environment node
+import process from "node:process";
 import { IdentityProvider, UserPermissionRole } from "@calcom/prisma/enums";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ErrorCode } from "./ErrorCode";
@@ -451,6 +453,163 @@ describe("CredentialsProvider authorize", () => {
       } finally {
         process.env.CALENDSO_ENCRYPTION_KEY = originalKey;
       }
+    });
+  });
+
+  describe("2FA step after an identity provider login", () => {
+    const originalKey = process.env.CALENDSO_ENCRYPTION_KEY;
+
+    const signIdentityProviderLoginToken = async (email: string): Promise<string> => {
+      const { default: signJwt } = await vi.importActual<typeof import("./signJwt")>("./signJwt");
+      return signJwt({ email });
+    };
+
+    const createSsoUserWith2FA = (
+      overrides: Record<string, unknown> = {}
+    ): ReturnType<typeof createMockUser> =>
+      createMockUser({
+        identityProvider: IdentityProvider.SAML,
+        password: null,
+        twoFactorEnabled: true,
+        twoFactorSecret: "encrypted_secret",
+        ...overrides,
+      });
+
+    beforeEach(async () => {
+      process.env.CALENDSO_ENCRYPTION_KEY = "a".repeat(32);
+      const { symmetricDecrypt } = await import("@calcom/lib/crypto");
+      vi.mocked(symmetricDecrypt).mockReturnValue("a".repeat(32));
+      const { totpAuthenticatorCheck } = await import("@calcom/lib/totp");
+      vi.mocked(totpAuthenticatorCheck).mockReturnValue(true);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      process.env.CALENDSO_ENCRYPTION_KEY = originalKey;
+    });
+
+    it("logs in an SSO user without a password when the token and TOTP code are valid", async () => {
+      mockFindByEmailAndIncludeProfilesAndPassword.mockResolvedValue(createSsoUserWith2FA());
+
+      const result = await authorizeCredentials({
+        email: "test@example.com",
+        password: "",
+        totpCode: "123456",
+        backupCode: "",
+        totpToken: await signIdentityProviderLoginToken("test@example.com"),
+      });
+
+      expect(result?.email).toBe("test@example.com");
+      expect(verifyPassword).not.toHaveBeenCalled();
+    });
+
+    it("does not ask for the password of a user who also has one", async () => {
+      mockFindByEmailAndIncludeProfilesAndPassword.mockResolvedValue(
+        createSsoUserWith2FA({ password: { hash: "$2a$10$hashedpassword" } })
+      );
+
+      const result = await authorizeCredentials({
+        email: "test@example.com",
+        password: "",
+        totpCode: "123456",
+        backupCode: "",
+        totpToken: await signIdentityProviderLoginToken("test@example.com"),
+      });
+
+      expect(result?.email).toBe("test@example.com");
+      expect(verifyPassword).not.toHaveBeenCalled();
+    });
+
+    it("still requires the TOTP code", async () => {
+      mockFindByEmailAndIncludeProfilesAndPassword.mockResolvedValue(createSsoUserWith2FA());
+
+      await expect(
+        authorizeCredentials({
+          email: "test@example.com",
+          password: "",
+          totpCode: "",
+          backupCode: "",
+          totpToken: await signIdentityProviderLoginToken("test@example.com"),
+        })
+      ).rejects.toThrow(ErrorCode.SecondFactorRequired);
+    });
+
+    it("rejects an incorrect TOTP code", async () => {
+      const { totpAuthenticatorCheck } = await import("@calcom/lib/totp");
+      vi.mocked(totpAuthenticatorCheck).mockReturnValue(false);
+      mockFindByEmailAndIncludeProfilesAndPassword.mockResolvedValue(createSsoUserWith2FA());
+
+      await expect(
+        authorizeCredentials({
+          email: "test@example.com",
+          password: "",
+          totpCode: "000000",
+          backupCode: "",
+          totpToken: await signIdentityProviderLoginToken("test@example.com"),
+        })
+      ).rejects.toThrow(ErrorCode.IncorrectTwoFactorCode);
+    });
+
+    it("rejects a token issued for a different email", async () => {
+      mockFindByEmailAndIncludeProfilesAndPassword.mockResolvedValue(createSsoUserWith2FA());
+
+      await expect(
+        authorizeCredentials({
+          email: "test@example.com",
+          password: "",
+          totpCode: "123456",
+          backupCode: "",
+          totpToken: await signIdentityProviderLoginToken("someone-else@example.com"),
+        })
+      ).rejects.toThrow(ErrorCode.IncorrectEmailPassword);
+    });
+
+    it("rejects a tampered token", async () => {
+      mockFindByEmailAndIncludeProfilesAndPassword.mockResolvedValue(createSsoUserWith2FA());
+      const token = await signIdentityProviderLoginToken("test@example.com");
+
+      await expect(
+        authorizeCredentials({
+          email: "test@example.com",
+          password: "",
+          totpCode: "123456",
+          backupCode: "",
+          totpToken: `${token.slice(0, -2)}xx`,
+        })
+      ).rejects.toThrow(ErrorCode.IncorrectEmailPassword);
+    });
+
+    it("rejects an expired token", async () => {
+      mockFindByEmailAndIncludeProfilesAndPassword.mockResolvedValue(createSsoUserWith2FA());
+      const token = await signIdentityProviderLoginToken("test@example.com");
+      vi.useFakeTimers();
+      vi.setSystemTime(Date.now() + 3 * 60 * 1000);
+
+      await expect(
+        authorizeCredentials({
+          email: "test@example.com",
+          password: "",
+          totpCode: "123456",
+          backupCode: "",
+          totpToken: token,
+        })
+      ).rejects.toThrow(ErrorCode.IncorrectEmailPassword);
+    });
+
+    it("rejects a token for a user who does not have 2FA enabled", async () => {
+      mockFindByEmailAndIncludeProfilesAndPassword.mockResolvedValue(
+        createSsoUserWith2FA({ twoFactorEnabled: false })
+      );
+
+      await expect(
+        authorizeCredentials({
+          email: "test@example.com",
+          password: "",
+          totpCode: "123456",
+          backupCode: "",
+          totpToken: await signIdentityProviderLoginToken("test@example.com"),
+        })
+      ).rejects.toThrow(ErrorCode.IncorrectEmailPassword);
     });
   });
 });

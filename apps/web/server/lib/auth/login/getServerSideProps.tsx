@@ -1,10 +1,8 @@
-import process from "node:process";
 import { getServerSession } from "@calcom/features/auth/lib/getServerSession";
-import { WEBSITE_URL } from "@calcom/lib/constants";
+import verifyJwt from "@calcom/features/auth/lib/verifyJwt";
 import { getSafeRedirectUrl } from "@calcom/lib/getSafeRedirectUrl";
 import prisma from "@calcom/prisma";
 import { IS_GOOGLE_LOGIN_ENABLED } from "@server/lib/constants";
-import { jwtVerify } from "jose";
 import type { GetServerSidePropsContext } from "next";
 import { getCsrfToken } from "next-auth/react";
 
@@ -12,16 +10,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   const { req, query } = context;
 
   const session = await getServerSession({ req });
-
-  const verifyJwt = (jwt: string) => {
-    const secret = new TextEncoder().encode(process.env.CALENDSO_ENCRYPTION_KEY);
-
-    return jwtVerify(jwt, secret, {
-      issuer: WEBSITE_URL,
-      audience: `${WEBSITE_URL}/auth/login`,
-      algorithms: ["HS256"],
-    });
-  };
 
   let totpEmail = null;
   if (context.query.totp) {
