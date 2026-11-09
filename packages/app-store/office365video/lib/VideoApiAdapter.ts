@@ -230,15 +230,24 @@ const TeamsVideoApiAdapter = (credential: CredentialForCalendarServiceWithTenant
       try {
         const meetingId = bookingRef?.uid;
         const onlineMeetingsUrl = `${await getUserEndpoint()}/onlineMeetings`;
+        const body = JSON.stringify(translateEvent(event));
+        const createNewMeeting = () =>
+          auth.requestRaw({ url: onlineMeetingsUrl, options: { method: "POST", body } });
+
         // References saved before a Teams meeting id was stored have nothing to patch,
         // so fall back to creating a fresh meeting for them.
-        const response = await auth.requestRaw({
-          url: meetingId ? `${onlineMeetingsUrl}/${encodeURIComponent(meetingId)}` : onlineMeetingsUrl,
-          options: {
-            method: meetingId ? "PATCH" : "POST",
-            body: JSON.stringify(translateEvent(event)),
-          },
-        });
+        let response = meetingId
+          ? await auth.requestRaw({
+              url: `${onlineMeetingsUrl}/${encodeURIComponent(meetingId)}`,
+              options: { method: "PATCH", body },
+            })
+          : await createNewMeeting();
+
+        // The meeting may have been deleted in Teams; create a new one so the booking keeps a working link.
+        if (meetingId && response.status === 404) {
+          log.warn(`MS Teams meeting ${meetingId} not found while updating, creating a new meeting`);
+          response = await createNewMeeting();
+        }
 
         if (!response.ok) {
           throw new HttpError({

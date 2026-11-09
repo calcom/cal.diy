@@ -257,6 +257,51 @@ describe("updateMeeting", () => {
     });
   });
 
+  test("creates a new meeting when the existing Teams meeting was deleted", async () => {
+    const videoApi = VideoApiAdapter(testCredential);
+
+    mockRequestRaw.mockImplementation(({ url, options }) => {
+      if (url === URLS.UPDATE_MEETING.url && options.method === "PATCH") {
+        return Promise.resolve(new Response(null, { status: 404, statusText: "Not Found" }));
+      }
+      if (url === URLS.CREATE_MEETING.url && options.method === "POST") {
+        return Promise.resolve(
+          successResponse({
+            json: { id: "NEW_MEETING_ID", joinWebUrl: "https://new_join_web_url.example.com" },
+          })
+        );
+      }
+      throw new Error("Unexpected URL");
+    });
+
+    const event = {
+      title: "Rescheduled Meeting",
+      description: "Test Description",
+      startTime: new Date(),
+      endTime: new Date(),
+    };
+
+    const updatedMeeting = await videoApi?.updateMeeting(existingBookingRef, event);
+    expect(mockRequestRaw).toHaveBeenCalledTimes(2);
+    expect(mockRequestRaw).toHaveBeenLastCalledWith({
+      url: URLS.CREATE_MEETING.url,
+      options: {
+        method: "POST",
+        body: JSON.stringify({
+          startDateTime: event.startTime,
+          endDateTime: event.endTime,
+          subject: event.title,
+        }),
+      },
+    });
+    expect(updatedMeeting).toEqual({
+      id: "NEW_MEETING_ID",
+      password: "",
+      type: config.type,
+      url: "https://new_join_web_url.example.com",
+    });
+  });
+
   test("creates a new meeting when there is no existing meeting reference", async () => {
     const videoApi = VideoApiAdapter(testCredential);
 
