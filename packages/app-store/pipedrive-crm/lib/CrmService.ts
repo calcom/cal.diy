@@ -43,6 +43,13 @@ type PipedriveActivity = {
   person_id: number;
 };
 
+// Pipedrive reads an activity's due_date and due_time as UTC, so both must come from the
+// UTC timestamp. Using the server's local time would shift the activity on non-UTC servers.
+const toPipedriveDueDateTime = (date: Date): { due_date: string; due_time: string } => {
+  const isoString = date.toISOString();
+  return { due_date: isoString.slice(0, 10), due_time: isoString.slice(11, 16) };
+};
+
 class PipedriveCrmService implements CRM {
   private credential: CredentialPayload;
   private log: typeof logger;
@@ -247,8 +254,7 @@ class PipedriveCrmService implements CRM {
     const activityPayload = {
       subject: event.title,
       type: "meeting",
-      due_date: startDate.toISOString().split("T")[0],
-      due_time: startDate.toTimeString().split(" ")[0].substring(0, 5),
+      ...toPipedriveDueDateTime(startDate),
       duration: `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")}`,
       note: this.getMeetingBody(event),
       location: getLocation({
@@ -276,8 +282,7 @@ class PipedriveCrmService implements CRM {
 
     const activityPayload = {
       subject: event.title,
-      due_date: startDate.toISOString().split("T")[0],
-      due_time: startDate.toTimeString().split(" ")[0].substring(0, 5),
+      ...toPipedriveDueDateTime(startDate),
       duration: `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")}`,
       note: this.getMeetingBody(event),
       location: getLocation({
