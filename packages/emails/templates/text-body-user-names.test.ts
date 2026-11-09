@@ -47,6 +47,7 @@ const cases = [
   {
     template: "forgot password",
     translatedKey: "reset_password_subject",
+    action: "https://example.com/reset",
     getTextBody: () =>
       new TestForgotPasswordEmail({
         language,
@@ -57,6 +58,7 @@ const cases = [
   {
     template: "account verification",
     translatedKey: "verify_email_subject",
+    action: "https://example.com/verify",
     getTextBody: () =>
       new TestAccountVerifyEmail({
         language,
@@ -67,6 +69,7 @@ const cases = [
   {
     template: "attendee verification",
     translatedKey: "verify_email_email_header",
+    action: "123456",
     getTextBody: () =>
       new TestAttendeeVerifyEmail({
         language,
@@ -77,6 +80,7 @@ const cases = [
   {
     template: "change of email",
     translatedKey: "verify_email_email_header",
+    action: "https://example.com/verify",
     getTextBody: () =>
       new TestChangeOfEmailVerifyEmail({
         language,
@@ -89,6 +93,10 @@ const cases = [
 describe("plain-text email bodies", () => {
   it.each(cases)("$template keeps angle brackets in the user's name", ({ getTextBody }) => {
     expect(getTextBody()).toContain(`Hi ${name},`);
+  });
+
+  it.each(cases)("$template keeps its link or code", ({ getTextBody, action }) => {
+    expect(getTextBody()).toContain(action);
   });
 
   it.each(cases)("$template strips markup from the translated text", ({ getTextBody, translatedKey }) => {
@@ -104,6 +112,8 @@ describe("plain-text email bodies", () => {
         ? `${String(options?.organizer)} requested a reschedule`
         : `<b>${key}</b>`) as unknown as TFunction;
     const calEvent = buildCalendarEvent({
+      uid: "booking-uid",
+      bookerUrl: "https://cal.example.com",
       organizer: buildPerson({ name }),
       attendees: [buildPerson({ language: { locale: "en", translate } })],
     });
@@ -114,6 +124,7 @@ describe("plain-text email bodies", () => {
 
     expect(text).toContain(`${name} requested a reschedule`);
     expect(text).toContain("request_reschedule_booking");
+    expect(text).toContain("https://cal.example.com/booking/booking-uid?changes=true");
     expect(text).not.toContain("<b>");
     expect(text).not.toContain("<p");
   });
