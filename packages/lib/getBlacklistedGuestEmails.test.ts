@@ -41,6 +41,20 @@ describe("parseBlacklistedGuestEmails", () => {
       "b@example.com",
     ]);
   });
+
+  it("reduces entries with a +tag to their base address", () => {
+    expect(parseBlacklistedGuestEmails("Spam+one@Example.com, abuse+a+b@example.com")).toEqual([
+      "spam@example.com",
+      "abuse@example.com",
+    ]);
+  });
+
+  it("leaves entries without an @ untouched", () => {
+    expect(parseBlacklistedGuestEmails("not-an-email, a@example.com")).toEqual([
+      "not-an-email",
+      "a@example.com",
+    ]);
+  });
 });
 
 describe("getBlacklistedGuestEmails", () => {
