@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { useState } from "react";
-import posthog from "posthog-js";
 
 import { InstallAppButtonWithoutPlanCheck } from "@calcom/app-store/InstallAppButtonWithoutPlanCheck";
 import type { TDependencyData } from "@calcom/app-store/_appRegistry";
@@ -110,12 +109,6 @@ const AppConnectionItem = (props: IAppConnectionItem) => {
                 ) : undefined
               }
               onClick={(event) => {
-                posthog.capture("onboarding_app_connect_clicked", {
-                  app_title: title,
-                  app_type: type,
-                  app_slug: slug,
-                  has_dependency: !!dependency,
-                });
                 // Save cookie key to return url step
                 document.cookie = `return-to=${window.location.href};path=/;max-age=3600;SameSite=Lax`;
                 buttonProps && buttonProps.onClick && buttonProps?.onClick(event);

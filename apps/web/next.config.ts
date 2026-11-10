@@ -347,10 +347,6 @@ const nextConfig = (phase: string): NextConfig => {
           destination: `${process.env.NEXT_PUBLIC_WEBAPP_URL}/icons/sprite.svg`,
         },
         {
-          source: "/_proxy/dub/track/:path",
-          destination: "https://api.dub.co/track/:path",
-        },
-        {
           source: "/:user/avatar.png",
           destination: "/api/user/avatar?username=:user",
         },

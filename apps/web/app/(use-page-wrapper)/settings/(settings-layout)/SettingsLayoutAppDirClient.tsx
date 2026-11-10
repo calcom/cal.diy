@@ -44,37 +44,30 @@ const getTabs = (
         {
           name: "profile",
           href: "/settings/my-account/profile",
-          trackingMetadata: { section: "my_account", page: "profile" },
         },
         {
           name: "general",
           href: "/settings/my-account/general",
-          trackingMetadata: { section: "my_account", page: "general" },
         },
         {
           name: "calendars",
           href: "/settings/my-account/calendars",
-          trackingMetadata: { section: "my_account", page: "calendars" },
         },
         {
           name: "conferencing",
           href: "/settings/my-account/conferencing",
-          trackingMetadata: { section: "my_account", page: "conferencing" },
         },
         {
           name: "appearance",
           href: "/settings/my-account/appearance",
-          trackingMetadata: { section: "my_account", page: "appearance" },
         },
         {
           name: "out_of_office",
           href: "/settings/my-account/out-of-office",
-          trackingMetadata: { section: "my_account", page: "out_of_office" },
         },
         {
           name: "push_notifications",
           href: "/settings/my-account/push-notifications",
-          trackingMetadata: { section: "my_account", page: "push_notifications" },
         },
         // TODO
         // { name: "referrals", href: "/settings/my-account/referrals" },
@@ -88,12 +81,10 @@ const getTabs = (
         {
           name: "password",
           href: "/settings/security/password",
-          trackingMetadata: { section: "security", page: "password" },
         },
         {
           name: "2fa_auth",
           href: "/settings/security/two-factor-auth",
-          trackingMetadata: { section: "security", page: "2fa_auth" },
         },
       ],
     },
@@ -106,22 +97,18 @@ const getTabs = (
         {
           name: "webhooks",
           href: "/settings/developer/webhooks",
-          trackingMetadata: { section: "developer", page: "webhooks" },
         },
         {
           name: "oAuth",
           href: "/settings/developer/oauth",
-          trackingMetadata: { section: "developer", page: "oauth_clients" },
         },
         {
           name: "api_keys",
           href: "/settings/developer/api-keys",
-          trackingMetadata: { section: "developer", page: "api_keys" },
         },
         {
           name: "api_docs",
           href: "/docs",
-          trackingMetadata: { section: "developer", page: "api_docs" },
         },
         // TODO: Add profile level for embeds
         // { name: "embeds", href: "/v2/settings/developer/embeds" },
@@ -134,12 +121,10 @@ const getTabs = (
         {
           name: "profile",
           href: "/settings/organizations/profile",
-          trackingMetadata: { section: "organization", page: "profile" },
         },
         {
           name: "general",
           href: "/settings/organizations/general",
-          trackingMetadata: { section: "organization", page: "general" },
         },
         {
           name: "guest_notifications",
@@ -151,36 +136,30 @@ const getTabs = (
                 name: "members",
                 href: `${WEBAPP_URL}/settings/organizations/${orgBranding?.slug}/members`,
                 isExternalLink: true,
-                trackingMetadata: { section: "organization", page: "members" },
               },
             ]
           : []),
         {
           name: "privacy_and_security",
           href: "/settings/organizations/privacy",
-          trackingMetadata: { section: "organization", page: "privacy_and_security" },
         },
         {
           name: "SSO",
           href: "/settings/organizations/sso",
-          trackingMetadata: { section: "organization", page: "sso" },
         },
         {
           name: "directory_sync",
           href: "/settings/organizations/dsync",
-          trackingMetadata: { section: "organization", page: "directory_sync" },
         },
         {
           name: "api_docs",
           href: "/docs",
-          trackingMetadata: { section: "organization", page: "api_docs" },
         },
         ...(HAS_ORG_OPT_IN_FEATURES
           ? [
               {
                 name: "features",
                 href: "/settings/organizations/features",
-                trackingMetadata: { section: "organization", page: "features" },
               },
             ]
           : []),
@@ -195,37 +174,30 @@ const getTabs = (
         {
           name: "features",
           href: "/settings/admin/flags",
-          trackingMetadata: { section: "admin", page: "features" },
         },
         {
           name: "license",
           href: "/auth/setup?step=1",
-          trackingMetadata: { section: "admin", page: "license" },
         },
         {
           name: "apps",
           href: "/settings/admin/apps/calendar",
-          trackingMetadata: { section: "admin", page: "apps" },
         },
         {
           name: "users",
           href: "/settings/admin/users",
-          trackingMetadata: { section: "admin", page: "users" },
         },
         {
           name: "lockedSMS",
           href: "/settings/admin/lockedSMS",
-          trackingMetadata: { section: "admin", page: "locked_sms" },
         },
         {
           name: "oAuth",
           href: "/settings/admin/oauth",
-          trackingMetadata: { section: "admin", page: "oauth" },
         },
         {
           name: "Playground",
           href: "/settings/admin/playground",
-          trackingMetadata: { section: "admin", page: "playground" },
         },
       ],
     },
@@ -236,13 +208,11 @@ const getTabs = (
       tab.children?.push({
         name: "create_org",
         href: "/settings/organizations/new",
-        trackingMetadata: { section: "admin", page: "create_org" },
       });
 
       tab.children?.push({
         name: "create_license_key",
         href: "/settings/license-key/new",
-        trackingMetadata: { section: "admin", page: "create_license_key" },
       });
     }
   }
@@ -300,7 +270,6 @@ const useTabs = ({
           newArray.push({
             name: "delegation_credential",
             href: "/settings/organizations/delegation-credential",
-            trackingMetadata: { section: "organization", page: "delegation_credential" },
           });
         }
 
@@ -310,7 +279,6 @@ const useTabs = ({
             newArray.push({
               name: "roles_and_permissions",
               href: "/settings/organizations/roles",
-              trackingMetadata: { section: "organization", page: "roles_and_permissions" },
             });
           }
 
@@ -318,7 +286,6 @@ const useTabs = ({
             newArray.push({
               name: "billing",
               href: "/settings/organizations/billing",
-              trackingMetadata: { section: "organization", page: "billing" },
             });
           }
         } else {
@@ -326,7 +293,6 @@ const useTabs = ({
             newArray.push({
               name: "billing",
               href: "/settings/organizations/billing",
-              trackingMetadata: { section: "organization", page: "billing" },
             });
           }
           // Show roles page (modal will appear if PBAC not enabled)
@@ -335,7 +301,6 @@ const useTabs = ({
               name: "roles",
               href: "/settings/organizations/roles",
               isBadged: true, // Show "New" badge,
-              trackingMetadata: { section: "organization", page: "roles" },
             });
           }
         }
@@ -464,7 +429,6 @@ const SettingsSidebarContainer = ({
                     name={t(child.name)}
                     isExternalLink={child.isExternalLink}
                     href={child.href || "/"}
-                    trackingMetadata={child.trackingMetadata}
                     textClassNames="text-emphasis font-medium text-sm"
                     className={`h-auto min-h-7 w-fit px-2! py-1! ${
                       tab.children && index === tab.children?.length - 1 && "mb-3!"

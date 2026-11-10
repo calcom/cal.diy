@@ -1188,7 +1188,7 @@ export const getOptions = ({
       if ((isENVDev || IS_CALCOM) && isNewUser) {
         if (process.env.DUB_API_KEY) {
           const clickId = getDubId();
-          // check if there's a clickId (dub_id) cookie set by @dub/analytics
+          // check if there's a clickId (dub_id) cookie set by Dub
           if (clickId) {
             // here we use waitUntil – meaning this code will run async to not block the main thread
             waitUntil(

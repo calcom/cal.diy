@@ -2,7 +2,6 @@
 
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import posthog from "posthog-js";
 import { useEffect } from "react";
 
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -47,9 +46,6 @@ function VerifyEmailPage() {
 
   useEffect(() => {
     if (data?.isVerified) {
-      posthog.capture("verify_email_already_verified", {
-        onboarding_v3_enabled: flags["onboarding-v3"],
-      });
       const gettingStartedPath = flags["onboarding-v3"] ? "/onboarding/getting-started" : "/getting-started";
       router.replace(gettingStartedPath);
     }
@@ -88,7 +84,6 @@ function VerifyEmailPage() {
                     color="minimal"
                     loading={mutation.isPending}
                     onClick={() => {
-                      posthog.capture("verify_email_resend_clicked");
                       showToast(t("send_email"), "success");
                       mutation.mutate();
                     }}>

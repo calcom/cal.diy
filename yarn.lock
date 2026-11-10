@@ -3298,7 +3298,6 @@ __metadata:
     "@coss/ui": "workspace:*"
     "@daily-co/daily-js": "npm:0.83.1"
     "@daily-co/daily-react": "npm:0.23.2"
-    "@dub/analytics": "npm:0.0.27"
     "@dub/embed-core": "npm:0.0.18"
     "@dub/embed-react": "npm:0.0.18"
     "@formkit/auto-animate": "npm:1.0.0-beta.5"
@@ -3403,7 +3402,6 @@ __metadata:
     openid-client: "npm:6.5.0"
     otplib: "npm:12.0.1"
     postcss: "npm:8.5.6"
-    posthog-js: "npm:1.274.1"
     qrcode: "npm:1.5.1"
     raw-body: "npm:2.5.2"
     react: "npm:18.2.0"
@@ -4138,15 +4136,6 @@ __metadata:
   version: 1.1.0
   resolution: "@dmsnell/diff-match-patch@npm:1.1.0"
   checksum: 10/fe4127b57a3f972839688d8b6abf325c2633106a1ee1da900e584c3057ed543797f009749fb6b77879e3dac0096755b09a9a224f9bd97a40eefba8f4665d5ace
-  languageName: node
-  linkType: hard
-
-"@dub/analytics@npm:0.0.27":
-  version: 0.0.27
-  resolution: "@dub/analytics@npm:0.0.27"
-  dependencies:
-    server-only: "npm:^0.0.1"
-  checksum: 10/bc7b6a31d09d66d6cf559db872ff3dad2494de9ca6a3b507bd59bb5795b08e727d7b1b74133ed34cf6826a9543e624cbbeb2285fcf473c823afc01b216b0f452
   languageName: node
   linkType: hard
 
@@ -10184,13 +10173,6 @@ __metadata:
   version: 1.0.0-next.25
   resolution: "@polka/url@npm:1.0.0-next.25"
   checksum: 10/4ab1d7a37163139c0e7bfc9d1e3f6a2a0db91a78b9f0a21f571d6aec2cdaeaacced744d47886c117aa7579aa5694b303fe3e0bd1922bb9cb3ce6bf7c2dc09801
-  languageName: node
-  linkType: hard
-
-"@posthog/core@npm:1.2.4":
-  version: 1.2.4
-  resolution: "@posthog/core@npm:1.2.4"
-  checksum: 10/83de0b21fe101df220f2481eb6a435d8aed2921675064718c051839ba4ede5cc2133a22250bb9f0389c535e9ad8584488f356bea8ce2a9b2d914b683b1088c92
   languageName: node
   linkType: hard
 
@@ -20404,7 +20386,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-js@npm:^3, core-js@npm:^3.38.1":
+"core-js@npm:^3":
   version: 3.39.0
   resolution: "core-js@npm:3.39.0"
   checksum: 10/a3d34e669783dfc878e545f1983f60d9ff48a3867cd1d7ff8839b849e053002a208c7c14a5ca354b8e0b54982901e2f83dc87c3d9b95de0a94b4071d1c74e5f6
@@ -23686,13 +23668,6 @@ __metadata:
     biskviit: "npm:1.0.1"
     encoding: "npm:0.1.12"
   checksum: 10/fc8a4b54574736fca1711c550dba3fe55f6a42291700078d202c405527d6d5c9745de61cfbe673867f519046bef75fe950fe5fedcd4681d710bdd06860cfe5b2
-  languageName: node
-  linkType: hard
-
-"fflate@npm:^0.4.8":
-  version: 0.4.8
-  resolution: "fflate@npm:0.4.8"
-  checksum: 10/c0c75029bcbefd0b47cede4ad2a3698f571e38d3d93dfbb96d744c655ec3bf5e31111044c2c01fa3965109874f5be8b5a6b3686b958392693689665cbabf3ece
   languageName: node
   linkType: hard
 
@@ -34185,27 +34160,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"posthog-js@npm:1.274.1":
-  version: 1.274.1
-  resolution: "posthog-js@npm:1.274.1"
-  dependencies:
-    "@posthog/core": "npm:1.2.4"
-    core-js: "npm:^3.38.1"
-    fflate: "npm:^0.4.8"
-    preact: "npm:^10.19.3"
-    web-vitals: "npm:^4.2.4"
-  peerDependencies:
-    "@rrweb/types": 2.0.0-alpha.17
-    rrweb-snapshot: 2.0.0-alpha.17
-  peerDependenciesMeta:
-    "@rrweb/types":
-      optional: true
-    rrweb-snapshot:
-      optional: true
-  checksum: 10/dd2d4d0a824670aa9eee81f62057fc13d931772aab5946acf39a9b2b0c2c02bfff5dc7ffdbcfa5bd950ec34046e4b859f1835a926fefa825dbe06241d51fb4ac
-  languageName: node
-  linkType: hard
-
 "posthog-node@npm:5.14.0":
   version: 5.14.0
   resolution: "posthog-node@npm:5.14.0"
@@ -34226,7 +34180,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"preact@npm:^10.19.3, preact@npm:^10.6.3":
+"preact@npm:^10.6.3":
   version: 10.24.3
   resolution: "preact@npm:10.24.3"
   checksum: 10/e9c4c901a4ddd475a1072355b5c6c944b05797445e0d68f317ad0dbc976b831523573693ea75d2e12e7902042e3729af435377816d25558bf693ecf6b516c707
@@ -40999,13 +40953,6 @@ __metadata:
   version: 3.3.3
   resolution: "web-streams-polyfill@npm:3.3.3"
   checksum: 10/8e7e13501b3834094a50abe7c0b6456155a55d7571312b89570012ef47ec2a46d766934768c50aabad10a9c30dd764a407623e8bfcc74fcb58495c29130edea9
-  languageName: node
-  linkType: hard
-
-"web-vitals@npm:^4.2.4":
-  version: 4.2.4
-  resolution: "web-vitals@npm:4.2.4"
-  checksum: 10/68cd1c2625a04b26e7eab67110623396afc6c9ef8c3a76f4e780aefe5b7d4ca1691737a0b99119e1d1ca9a463c4d468c0f0090b1875b6d784589d3a4a8503313
   languageName: node
   linkType: hard
 
