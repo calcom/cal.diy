@@ -149,7 +149,6 @@ export const getHandler = async ({ ctx, input }: MeOptions) => {
     requiresBookerEmailVerification: user.requiresBookerEmailVerification,
     ...profileData,
     secondaryEmails,
-    isPremium: userMetadataPrased?.isPremium,
     ...(passwordAdded ? { passwordAdded } : {}),
     canUpdateTeams,
   };

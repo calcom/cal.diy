@@ -1,7 +1,6 @@
 "use client";
 
 import getStripe from "@calcom/app-store/stripepayment/lib/client";
-import { getPremiumPlanPriceValue } from "@calcom/app-store/stripepayment/lib/utils";
 import {
   fetchSignup,
   hasCheckoutSession,
@@ -35,7 +34,7 @@ import { Button } from "@calcom/ui/components/button";
 import { CheckboxField, Form, PasswordField, SelectField, TextField } from "@calcom/ui/components/form";
 import { Icon } from "@calcom/ui/components/icon";
 import { showToast } from "@calcom/ui/components/toast";
-import { InfoIcon, ShieldCheckIcon, StarIcon } from "@coss/ui/icons";
+import { InfoIcon, ShieldCheckIcon } from "@coss/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { getServerSideProps } from "@lib/signup/getServerSideProps";
 import dynamic from "next/dynamic";
@@ -99,8 +98,6 @@ function truncateDomain(domain: string) {
 
 function UsernameField({
   username,
-  setPremium,
-  premium,
   setUsernameTaken,
   orgSlug,
   usernameTaken,
@@ -108,8 +105,6 @@ function UsernameField({
   ...props
 }: React.ComponentProps<typeof TextField> & {
   username: string;
-  setPremium: (value: boolean) => void;
-  premium: boolean;
   usernameTaken: boolean;
   orgSlug?: string;
   setUsernameTaken: (value: boolean) => void;
@@ -125,12 +120,10 @@ function UsernameField({
       // If the username can't be changed, there is no point in doing the username availability check
       if (disabled) return;
       if (!debouncedUsername) {
-        setPremium(false);
         setUsernameTaken(false);
         return;
       }
       fetchUsername(debouncedUsername, orgSlug ?? null).then(({ data }) => {
-        setPremium(data.premium);
         setUsernameTaken(!data.available);
       });
     }
@@ -142,7 +135,6 @@ function UsernameField({
     orgSlug,
     formState.isSubmitting,
     formState.isSubmitSuccessful,
-    setPremium,
     setUsernameTaken,
   ]);
 
@@ -161,16 +153,6 @@ function UsernameField({
               <div className="flex items-center text-error">
                 <InfoIcon className="mr-1 inline-block h-4 w-4" />
                 <p>{t("already_in_use_error")}</p>
-              </div>
-            ) : premium ? (
-              <div data-testid="premium-username-warning" className="flex items-center">
-                <StarIcon className="mr-1 inline-block h-4 w-4" />
-                <p>
-                  {t("premium_username", {
-                    price: getPremiumPlanPriceValue(),
-                    interpolation: { escapeValue: false },
-                  })}
-                </p>
               </div>
             ) : null}
           </div>
@@ -198,7 +180,6 @@ export default function Signup({
   onboardingV3Enabled,
 }: SignupProps) {
   const isOrgInviteByLink = orgSlug && !prepopulateFormValues?.username;
-  const [premiumUsername, setPremiumUsername] = useState(false);
   const [usernameTaken, setUsernameTaken] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isMicrosoftLoading, setIsMicrosoftLoading] = useState(false);
@@ -477,12 +458,10 @@ export default function Signup({
                           orgSlug={orgSlug}
                           label={t("username")}
                           username={watch("username") || ""}
-                          premium={premiumUsername}
                           usernameTaken={usernameTaken}
                           disabled={!!orgSlug}
                           setUsernameTaken={(value) => setUsernameTaken(value)}
                           data-testid="signup-usernamefield"
-                          setPremium={(value) => setPremiumUsername(value)}
                           addOnLeading={
                             orgSlug
                               ? truncateDomain(
@@ -562,9 +541,7 @@ export default function Signup({
                           isSubmitting ||
                           usernameTaken
                         }>
-                        {premiumUsername && !usernameTaken
-                          ? `${t("get_started")} (${getPremiumPlanPriceValue()})`
-                          : t("get_started")}
+                        {t("get_started")}
                       </Button>
                     </Form>
                   </div>
@@ -582,10 +559,7 @@ export default function Signup({
                             <>
                               {/* eslint-disable @next/next/no-img-element */}
                               <img
-                                className={classNames(
-                                  "mr-2 h-4 w-4 text-subtle",
-                                  premiumUsername && "opacity-50"
-                                )}
+                                className="mr-2 h-4 w-4 text-subtle"
                                 src="/google-icon-colored.svg"
                                 alt="Continue with Google Icon"
                               />
@@ -599,7 +573,7 @@ export default function Signup({
                             const GOOGLE_AUTH_URL = `${baseUrl}/auth/sso/google`;
                             const searchQueryParams = new URLSearchParams();
                             if (prepopulateFormValues?.username) {
-                              // If username is present we save it in query params to check for premium
+                              // If username is present we save it in query params so it survives the SSO redirect
                               searchQueryParams.set("username", prepopulateFormValues.username);
                               localStorage.setItem("username", prepopulateFormValues.username);
                             }
@@ -627,10 +601,7 @@ export default function Signup({
                             <>
                               {/* eslint-disable @next/next/no-img-element */}
                               <img
-                                className={classNames(
-                                  "text-subtle mr-2 h-4 w-4",
-                                  premiumUsername && "opacity-50"
-                                )}
+                                className="text-subtle mr-2 h-4 w-4"
                                 src="/microsoft-logo.svg"
                                 alt="Continue with Microsoft Icon"
                               />
@@ -644,7 +615,7 @@ export default function Signup({
                             const MICROSOFT_AUTH_URL = `${baseUrl}/auth/sso/microsoft`;
                             const searchQueryParams = new URLSearchParams();
                             if (prepopulateFormValues?.username) {
-                              // If username is present we save it in query params to check for premium
+                              // If username is present we save it in query params so it survives the SSO redirect
                               searchQueryParams.set("username", prepopulateFormValues.username);
                               localStorage.setItem("username", prepopulateFormValues.username);
                             }

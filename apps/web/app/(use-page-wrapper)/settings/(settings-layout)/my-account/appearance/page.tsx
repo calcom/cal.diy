@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 
 import { getServerSession } from "@calcom/features/auth/lib/getServerSession";
 import { IS_SELF_HOSTED } from "@calcom/lib/constants";
-import hasKeyInMetadata from "@calcom/lib/hasKeyInMetadata";
 import { meRouter } from "@calcom/trpc/server/routers/viewer/me/_router";
 import { getCachedHasTeamPlan } from "@calcom/web/app/cache/membership";
 
@@ -41,9 +40,7 @@ const Page = async () => {
   if (!user) {
     redirect(redirectUrl);
   }
-  const isCurrentUsernamePremium =
-    user && hasKeyInMetadata(user, "isPremium") ? !!user.metadata.isPremium : false;
-  const hasPaidPlan = IS_SELF_HOSTED ? true : hasTeamPlan?.hasTeamPlan || isCurrentUsernamePremium;
+  const hasPaidPlan = IS_SELF_HOSTED ? true : !!hasTeamPlan?.hasTeamPlan;
 
   return <AppearancePage user={user} hasPaidPlan={hasPaidPlan} />;
 };

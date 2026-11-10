@@ -37,7 +37,6 @@ vi.mock("@calcom/lib/logger", () => ({
 }));
 vi.mock("@calcom/lib/auth/hashPassword", () => ({ hashPassword: vi.fn().mockResolvedValue("hashed") }));
 vi.mock("@calcom/lib/slugify", () => ({ default: vi.fn((s: string) => s.toLowerCase()) }));
-vi.mock("@calcom/lib/constants", () => ({ IS_PREMIUM_USERNAME_ENABLED: false }));
 vi.mock("@calcom/lib/server/username", () => ({
   isUsernameReservedDueToMigration: vi.fn().mockResolvedValue(false),
 }));
