@@ -19,7 +19,7 @@ export const generateMetadata = async () => {
   );
 };
 
-const ServerPage = async (props: { searchParams: Promise<{ fromTeamOnboarding?: string }> }) => {
+const ServerPage = async () => {
   const session = await getServerSession({ req: buildLegacyRequest(await headers(), await cookies()) });
 
   if (!session?.user?.id) {
@@ -28,12 +28,7 @@ const ServerPage = async (props: { searchParams: Promise<{ fromTeamOnboarding?: 
 
   const userEmail = session.user.email || "";
   const userName = session.user.name || "";
-  const searchParams = await props.searchParams;
-  const fromTeamOnboarding = searchParams?.fromTeamOnboarding === "true";
-
-  return (
-    <PersonalSettingsView userEmail={userEmail} userName={userName} fromTeamOnboarding={fromTeamOnboarding} />
-  );
+  return <PersonalSettingsView userEmail={userEmail} userName={userName} />;
 };
 
 export default ServerPage;

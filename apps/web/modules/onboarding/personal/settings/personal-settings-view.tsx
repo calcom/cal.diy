@@ -17,20 +17,14 @@ import { z } from "zod";
 import { OnboardingCard } from "../../components/OnboardingCard";
 import { OnboardingLayout } from "../../components/OnboardingLayout";
 import { OnboardingBrowserView } from "../../components/onboarding-browser-view";
-import { OnboardingContinuationPrompt } from "../../components/onboarding-continuation-prompt";
 import { useOnboardingStore } from "../../store/onboarding-store";
 
 type PersonalSettingsViewProps = {
   userEmail: string;
   userName?: string;
-  fromTeamOnboarding?: boolean;
 };
 
-export const PersonalSettingsView = ({
-  userEmail,
-  userName,
-  fromTeamOnboarding = false,
-}: PersonalSettingsViewProps) => {
+export const PersonalSettingsView = ({ userEmail, userName }: PersonalSettingsViewProps) => {
   const router = useRouter();
   const { t } = useLocale();
   const { data: user } = trpc.viewer.me.get.useQuery();
@@ -119,14 +113,6 @@ export const PersonalSettingsView = ({
           subtitle={t("personal_details_subtitle")}
           footer={
             <div className="flex w-full items-center justify-end gap-4">
-              {!fromTeamOnboarding && (
-                <Button
-                  color="minimal"
-                  className="rounded-[10px]"
-                  onClick={() => router.push("/onboarding/getting-started")}>
-                  {t("back")}
-                </Button>
-              )}
               <Button
                 type="submit"
                 form="personal-settings-form"

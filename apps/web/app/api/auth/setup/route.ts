@@ -50,6 +50,8 @@ async function handler(req: NextRequest) {
       role: "ADMIN",
       name: parsedQuery.data.full_name,
       emailVerified: new Date(),
+      // The setup wizard already collects everything the admin needs, so skip the onboarding flow.
+      completedOnboarding: true,
       locale: "en", // TODO: We should revisit this
       identityProvider: IdentityProvider.CAL,
       creationSource: CreationSource.WEBAPP,
