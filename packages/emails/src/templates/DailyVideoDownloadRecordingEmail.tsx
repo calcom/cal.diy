@@ -89,7 +89,7 @@ export const DailyVideoDownloadRecordingEmail = (
 
       <p style={{ fontWeight: 500, lineHeight: "20px", marginTop: "8px" }}>
         {props.language("link_valid_for_12_hrs_description")}{" "}
-        <a href="https://cal.com/docs/enterprise-features/teams/cal-video-recordings">
+        <a href="https://github.com/OpenCal-Community/cal.diy/wiki/Cal-Video-Recordings">
           {props.language("here")}
         </a>
       </p>

@@ -135,5 +135,5 @@ See `references/webhooks.md` for available triggers and payload formats.
 
 ## Additional Resources
 
-- [Full API Reference](https://cal.com/docs/api-reference/v2)
+- [Full API Reference](https://github.com/OpenCal-Community/cal.diy/wiki/API-v2)
 - [OpenAPI Specification](https://api.cal.com/v2/docs)

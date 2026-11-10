@@ -15,8 +15,8 @@ Changelog can be viewed [here](https://github.com/calcom/cal.diy/blob/main/packa
 want to use version without any suffix e.g. `1.0.103`.
 
 ### Documentation 
-Documentation on how to get started with platform solution is [here](https://cal.com/docs/platform/quickstart) and list of atoms can be viewed
-[here](https://cal.com/docs/platform/atoms/cal-provider)
+Documentation on how to get started with platform solution is [here](https://github.com/OpenCal-Community/cal.diy/wiki/Platform-Quickstart) and list of atoms can be viewed
+[here](https://github.com/OpenCal-Community/cal.diy/wiki/Atoms-CalProvider)
 
 ## Contributors guide
 

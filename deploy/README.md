@@ -1,1 +1,1 @@
-Visit https://cal.com/docs/introduction/quick-start/self-hosting/installation#requirements for full instructions
+Visit https://github.com/OpenCal-Community/cal.diy/wiki/Self-Hosting-Installation#requirements for full instructions

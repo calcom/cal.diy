@@ -648,7 +648,7 @@ function FieldEditDialog({
                 <LearnMoreLink
                   t={t}
                   i18nKey="booking_questions_description"
-                  href="https://cal.com/help/event-types/booking-questions"
+                  href="https://github.com/OpenCal-Community/cal.diy/wiki/Booking-Questions"
                 />
               }
             />

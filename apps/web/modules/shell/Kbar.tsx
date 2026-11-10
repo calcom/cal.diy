@@ -425,7 +425,7 @@ function renderResultItem(item: string | Action, active: boolean, t: (key: strin
 
 function NoResultsFound({ searchQuery }: { searchQuery: string }): JSX.Element {
   const { t } = useLocale();
-  const helpUrl = `https://cal.com/help/welcome?search=${encodeURIComponent(searchQuery)}`;
+  const helpUrl = `https://github.com/OpenCal-Community/cal.diy/issues?q=${encodeURIComponent(searchQuery)}`;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
