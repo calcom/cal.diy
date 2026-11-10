@@ -6,8 +6,6 @@ export async function checkRegularUsername(_username: string, currentOrgDomain?:
   const isCheckingUsernameInGlobalNamespace = !currentOrgDomain;
   const username = slugify(_username);
 
-  const premium = !!process.env.NEXT_PUBLIC_IS_E2E && username.length < 5;
-
   const profiles = currentOrgDomain
     ? await ProfileRepository.findManyByOrgSlugOrRequestedSlug({
         orgSlug: currentOrgDomain,
@@ -20,7 +18,6 @@ export async function checkRegularUsername(_username: string, currentOrgDomain?:
   if (user) {
     return {
       available: false as const,
-      premium,
       message: "A user exists with that username",
     };
   }
@@ -31,6 +28,5 @@ export async function checkRegularUsername(_username: string, currentOrgDomain?:
 
   return {
     available: isUsernameAvailable,
-    premium,
   };
 }

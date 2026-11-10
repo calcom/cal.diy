@@ -1,6 +1,5 @@
 type ResponseUsernameApi = {
   available: boolean;
-  premium: boolean;
   message?: string;
   suggestion?: string;
 };

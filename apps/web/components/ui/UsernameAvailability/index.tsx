@@ -1,4 +1,4 @@
-import { IS_SELF_HOSTED, WEBSITE_URL } from "@calcom/lib/constants";
+import { WEBSITE_URL } from "@calcom/lib/constants";
 import { trpc } from "@calcom/trpc/react";
 import type { AppRouter } from "@calcom/trpc/types/server/routers/_app";
 import useRouterQuery from "@lib/hooks/useRouterQuery";
@@ -23,22 +23,14 @@ interface ICustomUsernameProps extends UsernameAvailabilityFieldProps {
   setInputUsernameValue: (value: string) => void;
   disabled?: boolean | undefined;
   addOnLeading?: ReactNode;
-  isPremium: boolean;
 }
 
-const PremiumTextfield = dynamic(() => import("./PremiumTextfield").then((m) => m.PremiumTextfield), {
-  ssr: false,
-});
 const UsernameTextfield = dynamic(() => import("./UsernameTextfield").then((m) => m.UsernameTextfield), {
   ssr: false,
 });
 
 export const UsernameAvailability = (props: ICustomUsernameProps) => {
-  const { isPremium, disabled, ...otherProps } = props;
-  const UsernameAvailabilityComponent = isPremium ? PremiumTextfield : UsernameTextfield;
-  // PremiumTextfield uses `readonly` prop, UsernameTextfield uses `disabled` prop
-  const componentProps = isPremium ? { ...otherProps, readonly: disabled } : { ...otherProps, disabled };
-  return <UsernameAvailabilityComponent {...componentProps} />;
+  return <UsernameTextfield {...props} />;
 };
 
 export const UsernameAvailabilityField = ({
@@ -66,8 +58,6 @@ export const UsernameAvailabilityField = ({
     ? "".replace(/^(https?:|)\/\//, "")
     : `${WEBSITE_URL?.replace(/^(https?:|)\/\//, "")}`;
 
-  const isPremium = !IS_SELF_HOSTED && !user.organization?.id;
-
   return (
     <Controller
       control={formMethods.control}
@@ -83,7 +73,6 @@ export const UsernameAvailabilityField = ({
           onErrorMutation={onErrorMutation}
           disabled={disabled ?? !!user.organization?.id}
           addOnLeading={`${usernamePrefix}/`}
-          isPremium={isPremium}
         />
       )}
     />
