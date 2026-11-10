@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { shallow } from "zustand/shallow";
 
-import dayjs from "@calcom/dayjs";
+import type { Dayjs } from "@calcom/dayjs";
 import classNames from "@calcom/ui/classNames";
 
 import { useCalendarStore } from "@calcom/features/calendars/weeklyview/state/store";
+import { getEventSegmentForDay } from "@calcom/features/calendars/weeklyview/utils";
 import { calculateEventLayouts, createLayoutMap } from "@calcom/features/calendars/weeklyview/utils/overlap";
 import { Event } from "./Event";
 
 type Props = {
-  day: dayjs.Dayjs;
+  day: Dayjs;
 };
 
 export function EventList({ day }: Props) {
@@ -25,11 +26,15 @@ export function EventList({ day }: Props) {
 
   const [hoveredEventId, setHoveredEventId] = useState<number | null>(null);
 
-  const dayEvents = useMemo(() => {
-    return events.filter((event) => {
-      return dayjs(event.start).isSame(day, "day") && !event.options?.allDay;
+  const daySegments = useMemo(() => {
+    return events.flatMap((event) => {
+      if (event.options?.allDay) return [];
+      const segment = getEventSegmentForDay(event, day);
+      return segment ? [{ event, segment }] : [];
     });
   }, [events, day]);
+
+  const dayEvents = useMemo(() => daySegments.map(({ event }) => event), [daySegments]);
 
   const layoutMap = useMemo(() => {
     const layouts = calculateEventLayouts(dayEvents);
@@ -38,10 +43,9 @@ export function EventList({ day }: Props) {
 
   const eventCalculations = useMemo(() => {
     return new Map(
-      dayEvents.map((event) => {
-        const eventStart = dayjs(event.start);
-        const eventEnd = dayjs(event.end);
-        const eventDuration = eventEnd.diff(eventStart, "minutes");
+      daySegments.map(({ event, segment }) => {
+        const eventStart = segment.start;
+        const eventDuration = segment.end.diff(eventStart, "minutes");
         const eventStartHour = eventStart.hour();
         const eventStartDiff = (eventStartHour - (startHour || 0)) * 60 + eventStart.minute();
 
@@ -55,7 +59,7 @@ export function EventList({ day }: Props) {
         ];
       })
     );
-  }, [dayEvents, startHour]);
+  }, [daySegments, startHour]);
 
   // Find which overlap group the hovered event belongs to
   const hoveredEventLayout = hoveredEventId ? layoutMap.get(hoveredEventId) : null;
