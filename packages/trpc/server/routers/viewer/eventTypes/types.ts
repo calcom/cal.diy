@@ -83,7 +83,7 @@ const childSchema: z.ZodType<ChildInput> = z.object({
     email: z.string(),
     eventTypeSlugs: z.array(z.string()),
   }),
-  hidden: z.boolean(),
+  hidden: z.boolean().optional(),
 });
 
 const destinationCalendarInputSchema: z.ZodType<DestinationCalendarInput> = z

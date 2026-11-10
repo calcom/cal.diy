@@ -16,7 +16,7 @@ export type ChildrenEventType = {
     profile: UserProfile;
   };
   slug: string;
-  hidden: boolean;
+  hidden?: boolean;
 };
 
 /**
@@ -27,7 +27,7 @@ export type ChildrenEventType = {
  */
 export function stripChildrenForPayload(children: ChildrenEventType[]) {
   return children.map((child) => ({
-    hidden: child.hidden,
+    ...(child.hidden !== undefined ? { hidden: child.hidden } : {}),
     owner: {
       id: child.owner.id,
       name: child.owner.name,

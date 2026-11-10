@@ -4,6 +4,7 @@ import type { PrismaClient } from "@calcom/prisma";
 import { Prisma } from "@calcom/prisma/client";
 import { SchedulingType } from "@calcom/prisma/enums";
 import { allManagedEventTypePropsForZod, EventTypeMetaDataSchema } from "@calcom/prisma/zod-utils";
+import { TRPCError } from "@trpc/server";
 
 const log = logger.getSubLogger({ prefix: ["handleChildrenEventTypes"] });
 
@@ -42,9 +43,15 @@ const MANAGED_SCALAR_KEYS = Object.keys(allManagedEventTypePropsForZod) as Array
   keyof typeof allManagedEventTypePropsForZod
 >;
 
+/**
+ * Coerces scalar values, ensuring JSON columns use Prisma.DbNull instead of literal null.
+ */
 const coerceValue = (key: string, value: unknown) => {
   if (JSON_PROPS.has(key)) {
-    return value === null || value === undefined ? Prisma.DbNull : (value as Prisma.InputJsonValue);
+    if (value === null || value === undefined) {
+      return Prisma.DbNull;
+    }
+    return value as Prisma.InputJsonValue;
   }
   return value;
 };
@@ -68,6 +75,50 @@ const buildPropagatedData = (
   return data;
 };
 
+/**
+ * Merges parent-managed metadata into an existing child's metadata, preserving
+ * child-specific app configurations, integration credentials, and any unlocked fields.
+ */
+const buildMergedChildMetadata = (
+  parentMeta: unknown,
+  childMeta: unknown,
+  unlocked: Record<string, boolean | undefined>
+): Prisma.InputJsonValue => {
+  const pMeta = (parentMeta && typeof parentMeta === "object" ? parentMeta : {}) as Record<string, unknown>;
+  const cMeta = (childMeta && typeof childMeta === "object" ? childMeta : {}) as Record<string, unknown>;
+
+  const parentApps = (pMeta.apps && typeof pMeta.apps === "object" ? pMeta.apps : undefined) as
+    | Record<string, unknown>
+    | undefined;
+  const childApps = (cMeta.apps && typeof cMeta.apps === "object" ? cMeta.apps : undefined) as
+    | Record<string, unknown>
+    | undefined;
+
+  let mergedApps: Record<string, unknown> | undefined;
+  if (parentApps || childApps) {
+    mergedApps = { ...(parentApps || {}), ...(childApps || {}) };
+  }
+
+  const merged: Record<string, unknown> = {
+    ...cMeta,
+    ...pMeta,
+    managedEventConfig: pMeta.managedEventConfig,
+  };
+
+  if (mergedApps !== undefined) {
+    merged.apps = mergedApps;
+  }
+
+  // Preserve unlocked fields on child metadata if child had custom values
+  for (const [key, isUnlocked] of Object.entries(unlocked)) {
+    if (isUnlocked && cMeta[key] !== undefined) {
+      merged[key] = cMeta[key];
+    }
+  }
+
+  return merged as Prisma.InputJsonValue;
+};
+
 type HandleChildrenEventTypesArgs = {
   eventTypeId: number;
   updatedEventType: { slug: string; schedulingType: SchedulingType | null };
@@ -83,7 +134,7 @@ type HandleChildrenEventTypesArgs = {
  *
  * Lock semantics for `hidden`:
  * - locked (default, not in unlockedFields): every child inherits the parent's `hidden`.
- * - unlocked: each child keeps its own `hidden` value supplied in the payload.
+ * - unlocked: each child keeps its own `hidden` value supplied in the payload or db.
  */
 export default async function handleChildrenEventTypes({
   eventTypeId,
@@ -100,7 +151,7 @@ export default async function handleChildrenEventTypes({
   // Fetch the freshly-updated parent scalar values to copy onto children.
   const parent = await prisma.eventType.findUniqueOrThrow({
     where: { id: eventTypeId },
-    select: { ...allManagedEventTypePropsForZod },
+    select: { ...allManagedEventTypePropsForZod, teamId: true },
   });
 
   const metadata = EventTypeMetaDataSchema.safeParse(parent.metadata);
@@ -138,8 +189,28 @@ export default async function handleChildrenEventTypes({
   const newUserIds = currentUserIds.filter((userId) => !previousUserIds.includes(userId));
   const oldUserIds = currentUserIds.filter((userId) => previousUserIds.includes(userId));
 
+  // Validate that newly added child owners are accepted members of the parent team
+  if (newUserIds.length && parent.teamId) {
+    const validMemberships = await prisma.membership.findMany({
+      where: {
+        teamId: parent.teamId,
+        userId: { in: newUserIds },
+        accepted: true,
+      },
+      select: { userId: true },
+    });
+    const validUserIdSet = new Set(validMemberships.map((m) => m.userId));
+    const unauthorizedUserIds = newUserIds.filter((userId) => !validUserIdSet.has(userId));
+    if (unauthorizedUserIds.length > 0) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: `User(s) ${unauthorizedUserIds.join(", ")} are not accepted members of the team.`,
+      });
+    }
+  }
+
   // Children carry the parent's metadata (including managedEventConfig.unlockedFields)
-  // so the child editor knows which fields are locked. Copied verbatim on creation and updates.
+  // so the child editor knows which fields are locked.
   const childMetadata = coerceValue("metadata", parent.metadata) as
     | Prisma.InputJsonValue
     | Prisma.NullableJsonNullValueInput;
@@ -157,7 +228,12 @@ export default async function handleChildrenEventTypes({
           );
           return Promise.resolve();
         }
-        const hidden = isHiddenLocked ? parent.hidden : (childInput?.hidden ?? false);
+        let hidden = false;
+        if (isHiddenLocked) {
+          hidden = parent.hidden;
+        } else if (childInput?.hidden !== undefined) {
+          hidden = childInput.hidden;
+        }
         return prisma.eventType.create({
           data: {
             ...(createBase as Prisma.EventTypeCreateInput),
@@ -173,45 +249,40 @@ export default async function handleChildrenEventTypes({
     );
   }
 
-  // 2) Update existing children with the parent's locked managed props and refreshed metadata.
+  // 2) Update existing children with the parent's locked managed props, merged metadata, and visibility.
   if (oldUserIds.length) {
     const updateData = buildPropagatedData(parent, UPDATE_EXCLUDED_PROPS, unlockedFields);
-    if (isHiddenLocked) {
-      // Hidden is locked: all existing children inherit parent's hidden value and metadata in one query.
-      await prisma.eventType.updateMany({
-        where: { parentId: eventTypeId, userId: { in: oldUserIds } },
-        data: {
-          ...(updateData as Prisma.EventTypeUpdateManyMutationInput),
-          metadata: childMetadata,
-          hidden: parent.hidden,
-        },
-      });
-    } else {
-      // Hidden is unlocked: update locked props and metadata across all existing children.
-      await prisma.eventType.updateMany({
-        where: { parentId: eventTypeId, userId: { in: oldUserIds } },
-        data: {
-          ...(updateData as Prisma.EventTypeUpdateManyMutationInput),
-          metadata: childMetadata,
-        },
-      });
 
-      // If specific child inputs provide an updated hidden value, apply them individually.
-      await Promise.all(
-        oldUserIds.map((userId) => {
-          const childInput = children.find((child) => child.owner.id === userId);
-          if (childInput?.hidden !== undefined) {
-            return prisma.eventType.updateMany({
-              where: { parentId: eventTypeId, userId },
-              data: {
-                hidden: childInput.hidden,
-              },
-            });
-          }
-          return Promise.resolve();
-        })
-      );
-    }
+    const existingChildren = await prisma.eventType.findMany({
+      where: { parentId: eventTypeId, userId: { in: oldUserIds } },
+      select: { id: true, userId: true, metadata: true, hidden: true },
+    });
+
+    await Promise.all(
+      existingChildren.map((child) => {
+        const childInput = children.find((c) => c.owner.id === child.userId);
+        const mergedMetadata = buildMergedChildMetadata(parent.metadata, child.metadata, unlockedFields);
+
+        // Determine hidden update:
+        // - If locked: parent's hidden value always wins.
+        // - If unlocked: only apply if explicitly provided in childInput (preserving existing db visibility if omitted).
+        let hiddenUpdate: { hidden?: boolean } = {};
+        if (isHiddenLocked) {
+          hiddenUpdate = { hidden: parent.hidden };
+        } else if (childInput?.hidden !== undefined) {
+          hiddenUpdate = { hidden: childInput.hidden };
+        }
+
+        return prisma.eventType.update({
+          where: { id: child.id },
+          data: {
+            ...(updateData as Prisma.EventTypeUpdateInput),
+            metadata: mergedMetadata,
+            ...hiddenUpdate,
+          },
+        });
+      })
+    );
   }
 
   // 3) Remove children for unassigned users.

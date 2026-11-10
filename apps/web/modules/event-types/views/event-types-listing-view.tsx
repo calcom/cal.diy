@@ -837,28 +837,30 @@ export const InfiniteEventTypeList = ({
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
-                          {!isChildHiddenLocked && (
-                            <div className="flex h-9 cursor-pointer flex-row items-center justify-between rounded-b-lg px-4 py-2 transition hover:bg-subtle">
-                              <Skeleton
-                                as={Label}
-                                htmlFor="hiddenSwitch"
-                                className="mt-2 inline cursor-pointer self-center pr-2">
-                                {type.hidden ? t("show_eventtype_on_profile") : t("hide_from_profile")}
-                              </Skeleton>
-                              <Switch
-                                id="hiddenSwitch"
-                                name="Hidden"
-                                disabled={lockedByOrg}
-                                checked={!type.hidden}
-                                onCheckedChange={() => {
-                                  setHiddenMutation.mutate({
-                                    id: type.id,
-                                    hidden: !type.hidden,
-                                  });
-                                }}
-                              />
-                            </div>
-                          )}
+                          <div className="flex h-9 cursor-pointer flex-row items-center justify-between rounded-b-lg px-4 py-2 transition hover:bg-subtle">
+                            <Skeleton
+                              as={Label}
+                              htmlFor="hiddenSwitch"
+                              className="mt-2 inline cursor-pointer self-center pr-2">
+                              {isChildHiddenLocked
+                                ? t("locked_by_team_admin")
+                                : type.hidden
+                                  ? t("show_eventtype_on_profile")
+                                  : t("hide_from_profile")}
+                            </Skeleton>
+                            <Switch
+                              id="hiddenSwitch"
+                              name="Hidden"
+                              disabled={lockedByOrg || isChildHiddenLocked}
+                              checked={!type.hidden}
+                              onCheckedChange={() => {
+                                setHiddenMutation.mutate({
+                                  id: type.id,
+                                  hidden: !type.hidden,
+                                });
+                              }}
+                            />
+                          </div>
                         </DropdownMenuContent>
                       </DropdownMenuPortal>
                     </Dropdown>

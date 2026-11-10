@@ -120,49 +120,45 @@ function EventTypeSingleLayout({
       }
       CTA={
         <div className="flex items-center justify-end">
-          {(!isChildrenManagedEventType || !isChildHiddenLocked) && (
-            <>
-              <div
-                className={classNames(
-                  "hidden cursor-pointer items-center rounded-md transition sm:hover:bg-cal-muted",
-                  formMethods.watch("hidden") ? "pl-2" : "",
-                  "lg:flex"
-                )}>
-                {formMethods.watch("hidden") && (
-                  <Skeleton
-                    as={Label}
-                    htmlFor="hiddenSwitch"
-                    className="mt-2 hidden cursor-pointer self-center whitespace-nowrap pr-2 sm:inline">
-                    {t("hidden")}
-                  </Skeleton>
-                )}
-                <Tooltip
-                  sideOffset={4}
-                  content={
-                    eventTypesLockedByOrg
-                      ? t("locked")
-                      : isChildHiddenLocked
-                        ? t("locked_by_team_admin")
-                        : formMethods.watch("hidden")
-                          ? t("show_eventtype_on_profile")
-                          : t("hide_from_profile")
-                  }
-                  side="bottom">
-                  <div className="self-center rounded-md">
-                    <Switch
-                      id="hiddenSwitch"
-                      disabled={eventTypesLockedByOrg || isChildHiddenLocked}
-                      checked={!formMethods.watch("hidden")}
-                      onCheckedChange={(e) => {
-                        formMethods.setValue("hidden", !e, { shouldDirty: true });
-                      }}
-                    />
-                  </div>
-                </Tooltip>
+          <div
+            className={classNames(
+              "hidden cursor-pointer items-center rounded-md transition sm:hover:bg-cal-muted",
+              formMethods.watch("hidden") ? "pl-2" : "",
+              "lg:flex"
+            )}>
+            {formMethods.watch("hidden") && (
+              <Skeleton
+                as={Label}
+                htmlFor="hiddenSwitch"
+                className="mt-2 hidden cursor-pointer self-center whitespace-nowrap pr-2 sm:inline">
+                {t("hidden")}
+              </Skeleton>
+            )}
+            <Tooltip
+              sideOffset={4}
+              content={
+                eventTypesLockedByOrg
+                  ? t("locked")
+                  : isChildHiddenLocked
+                    ? t("locked_by_team_admin")
+                    : formMethods.watch("hidden")
+                      ? t("show_eventtype_on_profile")
+                      : t("hide_from_profile")
+              }
+              side="bottom">
+              <div className="self-center rounded-md">
+                <Switch
+                  id="hiddenSwitch"
+                  disabled={eventTypesLockedByOrg || isChildHiddenLocked}
+                  checked={!formMethods.watch("hidden")}
+                  onCheckedChange={(e) => {
+                    formMethods.setValue("hidden", !e, { shouldDirty: true });
+                  }}
+                />
               </div>
-              <VerticalDivider className="hidden lg:block" />
-            </>
-          )}
+            </Tooltip>
+          </div>
+          <VerticalDivider className="hidden lg:block" />
 
           {/* TODO: Figure out why combined isnt working - works in storybook */}
           <ButtonGroup combined containerProps={{ className: "border-default hidden lg:flex" }}>
@@ -267,24 +263,26 @@ function EventTypeSingleLayout({
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              {!isChildHiddenLocked && (
-                <div className="flex h-9 cursor-pointer flex-row items-center justify-between px-4 py-2 transition hover:bg-subtle">
-                  <Skeleton
-                    as={Label}
-                    htmlFor="hiddenSwitch"
-                    className="mt-2 inline cursor-pointer self-center pr-2">
-                    {formMethods.watch("hidden") ? t("show_eventtype_on_profile") : t("hide_from_profile")}
-                  </Skeleton>
-                  <Switch
-                    id="hiddenSwitch"
-                    disabled={eventTypesLockedByOrg}
-                    checked={!formMethods.watch("hidden")}
-                    onCheckedChange={(e) => {
-                      formMethods.setValue("hidden", !e, { shouldDirty: true });
-                    }}
-                  />
-                </div>
-              )}
+              <div className="flex h-9 cursor-pointer flex-row items-center justify-between px-4 py-2 transition hover:bg-subtle">
+                <Skeleton
+                  as={Label}
+                  htmlFor="hiddenSwitch"
+                  className="mt-2 inline cursor-pointer self-center pr-2">
+                  {isChildHiddenLocked
+                    ? t("locked_by_team_admin")
+                    : formMethods.watch("hidden")
+                      ? t("show_eventtype_on_profile")
+                      : t("hide_from_profile")}
+                </Skeleton>
+                <Switch
+                  id="hiddenSwitch"
+                  disabled={eventTypesLockedByOrg || isChildHiddenLocked}
+                  checked={!formMethods.watch("hidden")}
+                  onCheckedChange={(e) => {
+                    formMethods.setValue("hidden", !e, { shouldDirty: true });
+                  }}
+                />
+              </div>
             </DropdownMenuContent>
           </Dropdown>
           <div className="border-default border-l-2" />
