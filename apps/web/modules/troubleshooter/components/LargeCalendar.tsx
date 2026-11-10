@@ -67,10 +67,11 @@ export const LargeCalendar = ({ extraDays }: { extraDays: number }) => {
     //   .toDate(),
 
     const calendarEvents = busyEvents?.busy.map((event, idx) => {
-      const translatedTitle = event.title ? t(event.title) : t("busy_time.busy");
+      // Only our own "busy_time.*" titles are translation keys, booking and calendar event titles are shown as is
+      const title = event.title?.startsWith("busy_time.") ? t(event.title) : event.title;
       return {
         id: idx,
-        title: translatedTitle,
+        title: title || t("busy_time.busy"),
         start: new Date(event.start),
         end: new Date(event.end),
         source: event.source,

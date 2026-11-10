@@ -113,3 +113,21 @@ export function calculateHourSizeInPx(
   const offsetFromTop = gridElementRef?.getBoundingClientRect().top ?? 65;
   return (window.innerHeight - offsetFromTop - gapOnBottom) / (endHour - startHour);
 }
+
+/**
+ * Returns the part of an event that falls on the given day, or null when the event doesn't touch that day.
+ * Events spanning midnight (multi-day, all-day) are rendered as one segment per day they cover.
+ */
+export function getEventSegmentForDay(event: { start: Date | string; end: Date | string }, day: dayjs.Dayjs) {
+  const dayStart = day.startOf("day");
+  const dayEnd = dayStart.add(1, "day");
+  const eventStart = dayjs(event.start);
+  const eventEnd = dayjs(event.end);
+
+  const startsBeforeDayEnds = eventStart.isBefore(dayEnd);
+  // An event ending exactly at midnight belongs to the previous day only
+  const endsAfterDayStarts = eventEnd.isAfter(dayStart) || !eventStart.isBefore(dayStart);
+  if (!startsBeforeDayEnds || !endsAfterDayStarts) return null;
+
+  return { start: dayjs.max(eventStart, dayStart), end: dayjs.min(eventEnd, dayEnd) };
+}
