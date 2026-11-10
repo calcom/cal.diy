@@ -51,6 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!capture) {
       res.redirect(`/booking/${bookingUid}?paypalPaymentStatus=failed`);
+      return;
     }
     if (IS_PRODUCTION) {
       res.redirect(`/booking/${bookingUid}?paypalPaymentStatus=success`);
