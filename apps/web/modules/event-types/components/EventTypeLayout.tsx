@@ -77,9 +77,17 @@ function EventTypeSingleLayout({
     formMethods.getValues("schedulingType") === SchedulingType.MANAGED ||
     isUserOrganizationAdmin;
 
-  const isManagedEventType = false;
-  const isChildrenManagedEventType = false;
-  const shouldLockDisableProps = (_field: string) => ({ disabled: false, LockedIcon: false as const, isLocked: false });
+  const isManagedEventType = formMethods.getValues("schedulingType") === SchedulingType.MANAGED;
+  const isChildrenManagedEventType =
+    formMethods.getValues("metadata")?.managedEventConfig !== undefined && !isManagedEventType;
+  const isChildHiddenLocked =
+    isChildrenManagedEventType &&
+    !formMethods.getValues("metadata")?.managedEventConfig?.unlockedFields?.hidden;
+  const shouldLockDisableProps = (_field: string) => ({
+    disabled: false,
+    LockedIcon: false as const,
+    isLocked: false,
+  });
   const shouldLockIndicator = (_field: string) => false;
   const EventTypeTabs = tabsNavigation;
   const permalink = `${bookerUrl}/${
@@ -112,7 +120,7 @@ function EventTypeSingleLayout({
       }
       CTA={
         <div className="flex items-center justify-end">
-          {!formMethods.getValues("metadata")?.managedEventConfig && (
+          {(!isChildrenManagedEventType || !isChildHiddenLocked) && (
             <>
               <div
                 className={classNames(
@@ -131,13 +139,19 @@ function EventTypeSingleLayout({
                 <Tooltip
                   sideOffset={4}
                   content={
-                    formMethods.watch("hidden") ? t("show_eventtype_on_profile") : t("hide_from_profile")
+                    eventTypesLockedByOrg
+                      ? t("locked")
+                      : isChildHiddenLocked
+                        ? t("locked_by_team_admin")
+                        : formMethods.watch("hidden")
+                          ? t("show_eventtype_on_profile")
+                          : t("hide_from_profile")
                   }
                   side="bottom">
                   <div className="self-center rounded-md">
                     <Switch
                       id="hiddenSwitch"
-                      disabled={eventTypesLockedByOrg}
+                      disabled={eventTypesLockedByOrg || isChildHiddenLocked}
                       checked={!formMethods.watch("hidden")}
                       onCheckedChange={(e) => {
                         formMethods.setValue("hidden", !e, { shouldDirty: true });
@@ -253,21 +267,24 @@ function EventTypeSingleLayout({
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <div className="flex h-9 cursor-pointer flex-row items-center justify-between px-4 py-2 transition hover:bg-subtle">
-                <Skeleton
-                  as={Label}
-                  htmlFor="hiddenSwitch"
-                  className="mt-2 inline cursor-pointer self-center pr-2">
-                  {formMethods.watch("hidden") ? t("show_eventtype_on_profile") : t("hide_from_profile")}
-                </Skeleton>
-                <Switch
-                  id="hiddenSwitch"
-                  checked={!formMethods.watch("hidden")}
-                  onCheckedChange={(e) => {
-                    formMethods.setValue("hidden", !e, { shouldDirty: true });
-                  }}
-                />
-              </div>
+              {!isChildHiddenLocked && (
+                <div className="flex h-9 cursor-pointer flex-row items-center justify-between px-4 py-2 transition hover:bg-subtle">
+                  <Skeleton
+                    as={Label}
+                    htmlFor="hiddenSwitch"
+                    className="mt-2 inline cursor-pointer self-center pr-2">
+                    {formMethods.watch("hidden") ? t("show_eventtype_on_profile") : t("hide_from_profile")}
+                  </Skeleton>
+                  <Switch
+                    id="hiddenSwitch"
+                    disabled={eventTypesLockedByOrg}
+                    checked={!formMethods.watch("hidden")}
+                    onCheckedChange={(e) => {
+                      formMethods.setValue("hidden", !e, { shouldDirty: true });
+                    }}
+                  />
+                </div>
+              )}
             </DropdownMenuContent>
           </Dropdown>
           <div className="border-default border-l-2" />
