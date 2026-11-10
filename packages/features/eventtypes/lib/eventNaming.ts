@@ -49,31 +49,32 @@ export function getEventName(eventNameObj: EventNameObjectType, forAttendeeView 
     if (eventLocationType) {
       locationString = eventLocationType.label;
     }
-    eventName = eventName.replace("{Location}", locationString);
-    eventName = eventName.replace("{LOCATION}", locationString);
+    eventName = eventName
+      .replaceAll("{Location}", () => locationString)
+      .replaceAll("{LOCATION}", () => locationString);
   }
 
   let dynamicEventName = eventName
     // Need this for compatibility with older event names
-    .replaceAll("{Event type title}", eventNameObj.eventType)
-    .replaceAll("{Scheduler}", attendeeName)
-    .replaceAll("{Organiser}", eventNameObj.host)
-    .replaceAll("{Organiser first name}", eventNameObj.host.split(" ")[0])
-    .replaceAll("{USER}", attendeeName)
-    .replaceAll("{ATTENDEE}", attendeeName)
-    .replaceAll("{HOST}", eventNameObj.host)
-    .replaceAll("{HOST/ATTENDEE}", forAttendeeView ? eventNameObj.host : attendeeName)
-    .replaceAll("{Event duration}", `${String(eventNameObj.eventDuration)} mins`)
+    .replaceAll("{Event type title}", () => eventNameObj.eventType)
+    .replaceAll("{Scheduler}", () => attendeeName)
+    .replaceAll("{Organiser}", () => eventNameObj.host)
+    .replaceAll("{Organiser first name}", () => eventNameObj.host.split(" ")[0])
+    .replaceAll("{USER}", () => attendeeName)
+    .replaceAll("{ATTENDEE}", () => attendeeName)
+    .replaceAll("{HOST}", () => eventNameObj.host)
+    .replaceAll("{HOST/ATTENDEE}", () => (forAttendeeView ? eventNameObj.host : attendeeName))
+    .replaceAll("{Event duration}", () => `${String(eventNameObj.eventDuration)} mins`)
     .replaceAll(
       "{Scheduler first name}",
-      attendeeName === eventNameObj.t("scheduler") ? "{Scheduler first name}" : attendeeName.split(" ")[0]
+      () => (attendeeName === eventNameObj.t("scheduler") ? "{Scheduler first name}" : attendeeName.split(" ")[0])
     );
 
   const { bookingFields } = eventNameObj || {};
   const { name } = bookingFields || {};
 
   if (name && typeof name === "object" && !Array.isArray(name) && typeof name.lastName === "string") {
-    dynamicEventName = dynamicEventName.replaceAll("{Scheduler last name}", name.lastName.toString());
+    dynamicEventName = dynamicEventName.replaceAll("{Scheduler last name}", () => name.lastName.toString());
   }
 
   const customInputvariables = dynamicEventName.match(/\{(.+?)}/g)?.map((variable) => {
@@ -103,9 +104,9 @@ export function getEventName(eventNameObj: EventNameObjectType, forAttendeeView 
         fieldValue = bookingFieldValue.toString();
       }
 
-      dynamicEventName = dynamicEventName.replace(`{${variable}}`, fieldValue || "");
+      dynamicEventName = dynamicEventName.replaceAll(`{${variable}}`, () => fieldValue || "");
     } else {
-      dynamicEventName = dynamicEventName.replace(`{${variable}}`, "");
+      dynamicEventName = dynamicEventName.replaceAll(`{${variable}}`, "");
     }
   });
 
@@ -159,7 +160,7 @@ export function updateHostInEventName(eventName: string, oldHost: string, newHos
     const regex = new RegExp(`\\b${escapedPattern}\\b`, "gi");
 
     if (regex.test(updatedEventName)) {
-      updatedEventName = updatedEventName.replace(regex, replacement);
+      updatedEventName = updatedEventName.replace(regex, () => replacement);
       return updatedEventName;
     }
   }
