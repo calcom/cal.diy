@@ -7,7 +7,7 @@ import { Prisma } from "@calcom/prisma/client";
 
 import { HttpError } from "../http-error";
 import { TracedError } from "../tracing/error";
-import { getServerErrorFromUnknown } from "./getServerErrorFromUnknown";
+import { getServerErrorFromUnknown, isPrismaError } from "./getServerErrorFromUnknown";
 
 const test400Codes = [
   ErrorCode.RequestBodyWithouEnd,
@@ -203,6 +203,22 @@ describe("Prisma error handling", () => {
 
     expect(result.statusCode).toBe(400);
     expect(result.message).toBe("Foreign key constraint failed");
+  });
+
+  test("should handle Prisma P2002 error (unique constraint violation) and preserve code on cause", () => {
+    const prismaError = new Error(
+      "Unique constraint failed on the constraint: Booking_idempotencyKey_key"
+    ) as any;
+    prismaError.code = "P2002";
+    prismaError.clientVersion = "5.0.0";
+    Object.setPrototypeOf(prismaError, Prisma.PrismaClientKnownRequestError.prototype);
+
+    const result = getServerErrorFromUnknown(prismaError);
+
+    expect(result.statusCode).toBe(400);
+    expect(result.cause).toBeDefined();
+    expect((result.cause as any).code).toBe("P2002");
+    expect(isPrismaError(result.cause)).toBe(true);
   });
 });
 
