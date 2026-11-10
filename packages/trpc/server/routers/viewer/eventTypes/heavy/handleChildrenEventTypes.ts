@@ -97,6 +97,21 @@ const buildMergedChildMetadata = (
   let mergedApps: Record<string, unknown> | undefined;
   if (parentApps || childApps) {
     mergedApps = { ...(parentApps || {}), ...(childApps || {}) };
+    if (parentApps && childApps) {
+      for (const appKey of Object.keys(childApps)) {
+        if (
+          typeof childApps[appKey] === "object" &&
+          childApps[appKey] !== null &&
+          typeof parentApps[appKey] === "object" &&
+          parentApps[appKey] !== null
+        ) {
+          mergedApps[appKey] = {
+            ...(parentApps[appKey] as Record<string, unknown>),
+            ...(childApps[appKey] as Record<string, unknown>),
+          };
+        }
+      }
+    }
   }
 
   const merged: Record<string, unknown> = {
@@ -190,7 +205,14 @@ export default async function handleChildrenEventTypes({
   const oldUserIds = currentUserIds.filter((userId) => previousUserIds.includes(userId));
 
   // Validate that newly added child owners are accepted members of the parent team
-  if (newUserIds.length && parent.teamId) {
+  if (newUserIds.length) {
+    if (!parent.teamId) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Cannot assign event to users outside of team membership",
+      });
+    }
+
     const validMemberships = await prisma.membership.findMany({
       where: {
         teamId: parent.teamId,
@@ -204,7 +226,7 @@ export default async function handleChildrenEventTypes({
     if (unauthorizedUserIds.length > 0) {
       throw new TRPCError({
         code: "FORBIDDEN",
-        message: `User(s) ${unauthorizedUserIds.join(", ")} are not accepted members of the team.`,
+        message: `Cannot assign event to users outside of team membership: ${unauthorizedUserIds.join(", ")}`,
       });
     }
   }
@@ -258,31 +280,33 @@ export default async function handleChildrenEventTypes({
       select: { id: true, userId: true, metadata: true, hidden: true },
     });
 
-    await Promise.all(
-      existingChildren.map((child) => {
-        const childInput = children.find((c) => c.owner.id === child.userId);
-        const mergedMetadata = buildMergedChildMetadata(parent.metadata, child.metadata, unlockedFields);
+    const updateOperations = existingChildren.map((child) => {
+      const childInput = children.find((c) => c.owner.id === child.userId);
+      const mergedMetadata = buildMergedChildMetadata(parent.metadata, child.metadata, unlockedFields);
 
-        // Determine hidden update:
-        // - If locked: parent's hidden value always wins.
-        // - If unlocked: only apply if explicitly provided in childInput (preserving existing db visibility if omitted).
-        let hiddenUpdate: { hidden?: boolean } = {};
-        if (isHiddenLocked) {
-          hiddenUpdate = { hidden: parent.hidden };
-        } else if (childInput?.hidden !== undefined) {
-          hiddenUpdate = { hidden: childInput.hidden };
-        }
+      // Determine hidden update:
+      // - If locked: parent's hidden value always wins.
+      // - If unlocked: only apply if explicitly provided in childInput (preserving existing db visibility if omitted).
+      let hiddenUpdate: { hidden?: boolean } = {};
+      if (isHiddenLocked) {
+        hiddenUpdate = { hidden: parent.hidden };
+      } else if (childInput?.hidden !== undefined) {
+        hiddenUpdate = { hidden: childInput.hidden };
+      }
 
-        return prisma.eventType.update({
-          where: { id: child.id },
-          data: {
-            ...(updateData as Prisma.EventTypeUpdateInput),
-            metadata: mergedMetadata,
-            ...hiddenUpdate,
-          },
-        });
-      })
-    );
+      return prisma.eventType.update({
+        where: { id: child.id },
+        data: {
+          ...(updateData as Prisma.EventTypeUpdateInput),
+          metadata: mergedMetadata,
+          ...hiddenUpdate,
+        },
+      });
+    });
+
+    if (updateOperations.length > 0) {
+      await prisma.$transaction(updateOperations);
+    }
   }
 
   // 3) Remove children for unassigned users.

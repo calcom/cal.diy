@@ -76,7 +76,7 @@ const hostGroupSchema: z.ZodType<HostGroupInput> = z.object({
   name: z.string(),
 });
 
-const childSchema: z.ZodType<ChildInput> = z.object({
+export const childSchema: z.ZodType<ChildInput> = z.object({
   owner: z.object({
     id: z.number(),
     name: z.string(),
