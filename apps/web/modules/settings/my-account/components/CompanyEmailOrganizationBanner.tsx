@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import posthog from "posthog-js";
 
 import { useFlagMap } from "@calcom/features/flags/context/provider";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
@@ -23,13 +22,10 @@ export const CompanyEmailOrganizationBanner = ({ onDismissAction }: CompanyEmail
       ? "/onboarding/organization/details?migrate=true"
       : "/settings/organizations/new";
 
-    posthog.capture("company_email_banner_upgrade_clicked");
-
     router.push(redirectPath);
   };
 
   const handleDismiss = () => {
-    posthog.capture("company_email_banner_dismissed");
     onDismissAction();
   };
 

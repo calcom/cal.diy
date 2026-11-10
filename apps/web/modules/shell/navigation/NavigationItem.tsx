@@ -9,7 +9,6 @@ import { SkeletonText } from "@calcom/ui/components/skeleton";
 import { Tooltip } from "@calcom/ui/components/tooltip";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import posthog from "posthog-js";
 import type React from "react";
 import { Fragment, useEffect, useState } from "react";
 import { useShouldDisplayNavigationItem } from "./useShouldDisplayNavigationItem";
@@ -30,13 +29,6 @@ const usePersistedExpansionState = (itemName: string) => {
   };
 
   return [isExpanded, setPersistedExpansion] as const;
-};
-
-const trackNavigationClick = (itemName: string, parentItemName?: string) => {
-  posthog.capture("navigation_item_clicked", {
-    item_name: itemName,
-    parent_name: parentItemName,
-  });
 };
 
 export type NavigationItemType = {
@@ -125,7 +117,6 @@ export const NavigationItem: React.FC<{
                         aria-current={childIsCurrent ? "page" : undefined}
                         onClick={() => {
                           setIsTooltipOpen(false);
-                          trackNavigationClick(childItem.name, item.name);
                         }}
                         className={classNames(
                           "group relative block rounded-md px-3 py-1 text-sm font-medium",
@@ -205,7 +196,6 @@ export const NavigationItem: React.FC<{
         <Tooltip side="right" content={t(item.name)} className="lg:hidden">
           <Link
             data-test-id={item.name}
-            onClick={() => trackNavigationClick(item.name)}
             href={item.href}
             aria-label={t(item.name)}
             target={item.target}

@@ -2,7 +2,6 @@ import { IS_DUB_REFERRALS_ENABLED } from "@calcom/lib/constants";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
 import { showToast } from "@calcom/ui/components/toast";
-import posthog from "posthog-js";
 import type { NavigationItemType } from "./navigation/NavigationItem";
 
 type BottomNavItemsProps = {
@@ -35,9 +34,6 @@ export function useBottomNavItems({ publicPageUrl }: BottomNavItemsProps): Navig
           name: "referral_text",
           href: "/refer",
           icon: "gift",
-          onClick: () => {
-            posthog.capture("refer_and_earn_clicked");
-          },
         }
       : null,
 

@@ -32,7 +32,6 @@ import {
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { parseAsBoolean, useQueryState } from "nuqs";
-import posthog from "posthog-js";
 import { useMemo, useReducer, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -772,7 +771,6 @@ function UserListTableContent({
                       showModal: true,
                     },
                   });
-                  posthog.capture("add_organization_member_clicked");
                 }}
                 data-testid="new-organization-member-button">
                 {t("add")}

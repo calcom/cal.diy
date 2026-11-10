@@ -14,7 +14,6 @@ import { Form, Input, Label, Select, Switch } from "@calcom/ui/components/form";
 import { RadioField, RadioGroup } from "@calcom/ui/components/radio";
 import { showToast } from "@calcom/ui/components/toast";
 import { useSession } from "next-auth/react";
-import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDataTable } from "~/data-table/hooks";
@@ -157,7 +156,6 @@ export function SaveFilterSegmentButton() {
         <Button
           StartIcon="bookmark"
           color="secondary"
-          onClick={() => posthog.capture("insights_routing_save_filter_clicked")}
           disabled={!canSaveSegment}
           data-testid="save-filter-segment-button">
           {t("save")}

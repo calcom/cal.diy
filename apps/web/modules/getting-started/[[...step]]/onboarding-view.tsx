@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useTransition } from "react";
 import { Toaster } from "sonner";
 import { z } from "zod";
-import posthog from "posthog-js";
 
 import { APP_NAME } from "@calcom/lib/constants";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
@@ -133,13 +132,7 @@ const OnboardingPage = (props: PageProps) => {
     });
   };
 
-  const goToNextStep = (wasSkipped: boolean = false) => {
-    posthog.capture("onboarding_step_completed", {
-      step: currentStep,
-      step_index: currentStepIndex,
-      from: from,
-      was_skipped: wasSkipped,
-    });
+  const goToNextStep = () => {
     const nextIndex = currentStepIndex + 1;
     const newStep = steps[nextIndex];
     startTransition(() => {
@@ -202,7 +195,7 @@ const OnboardingPage = (props: PageProps) => {
                   data-testid="skip-step"
                   onClick={(event) => {
                     event.preventDefault();
-                    goToNextStep(true);
+                    goToNextStep();
                   }}
                   className="mt-8 cursor-pointer px-4 py-2 font-sans text-sm font-medium">
                   {headers[currentStepIndex]?.skipText}
@@ -215,10 +208,6 @@ const OnboardingPage = (props: PageProps) => {
               color="minimal"
               data-testid="sign-out"
               onClick={() => {
-                posthog.capture("onboarding_sign_out_clicked", {
-                  step: currentStep,
-                  step_index: currentStepIndex,
-                });
                 signOut({ callbackUrl: "/auth/logout" });
               }}
               className="mt-8 cursor-pointer px-4 py-2 font-sans text-sm font-medium">
