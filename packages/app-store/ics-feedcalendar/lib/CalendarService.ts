@@ -149,6 +149,12 @@ class ICSFeedCalendarService implements Calendar {
 
     calendars.forEach(({ vcalendar }) => {
       const vevents = vcalendar.getAllSubcomponents("vevent");
+      const recurringMasterUids = new Set(
+        vevents
+          .filter((v) => !v.hasProperty("recurrence-id") && (v.hasProperty("rrule") || v.hasProperty("rdate")))
+          .map((v) => String(v.getFirstPropertyValue("uid")))
+      );
+
       vevents.forEach((vevent) => {
         // if event status is free or transparent, DON'T return (unlike usual getAvailability)
         //
@@ -158,7 +164,7 @@ class ICSFeedCalendarService implements Calendar {
         // if (vevent?.getFirstPropertyValue("transp") === "TRANSPARENT") return;
 
         // Skip standalone recurrence exceptions because they are handled by the master recurring event
-        if (vevent.hasProperty("recurrence-id")) {
+        if (vevent.hasProperty("recurrence-id") && recurringMasterUids.has(String(vevent.getFirstPropertyValue("uid")))) {
           return;
         }
 
@@ -263,7 +269,7 @@ class ICSFeedCalendarService implements Calendar {
           if (exceptions) {
             for (const exceptionKey of Object.keys(exceptions)) {
               const ex = exceptions[exceptionKey];
-              if (!ex) continue;
+              if (!ex || ex.uid !== event.uid) continue;
               handledExceptionIds.add(exceptionKey);
               if (ex.recurrenceId) {
                 handledExceptionIds.add(ex.recurrenceId.toString());

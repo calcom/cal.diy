@@ -926,5 +926,54 @@ describe("CalendarService - SCHEDULE-AGENT injection", () => {
       expect(availability[0].start).toBe("2026-10-26T09:00:00.000Z");
       expect(availability[0].end).toBe("2026-10-26T09:30:00.000Z");
     });
+
+    it("should include standalone RECURRENCE-ID instances when no recurring master is in the calendar", async () => {
+      const service = new TestCalendarService();
+      // CalDAV expand:true or pre-expanded feed with only RECURRENCE-ID components
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:expanded-series-1\r\nRECURRENCE-ID:20261026T100000Z\r\nSUMMARY:Expanded Instance\r\nDTSTART:20261026T100000Z\r\nDTEND:20261026T110000Z\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/expanded.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T00:00:00Z",
+        dateTo: "2026-10-26T23:59:59Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toHaveLength(1);
+      expect(availability[0].start).toBe("2026-10-26T10:00:00.000Z");
+      expect(availability[0].end).toBe("2026-10-26T11:00:00.000Z");
+    });
+
+    it("should not let exceptions from another series suppress occurrences of a matching master event", async () => {
+      const service = new TestCalendarService();
+      // Series A (weekly on Mondays at 10:00) and Series B (cancelled exception at the same slot Monday 2026-10-26T10:00:00Z)
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:series-A\r\nSUMMARY:Series A Meeting\r\nDTSTART:20261019T100000Z\r\nDTEND:20261019T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:series-B\r\nSUMMARY:Series B Meeting\r\nDTSTART:20261019T100000Z\r\nDTEND:20261019T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:series-B\r\nRECURRENCE-ID:20261026T100000Z\r\nSUMMARY:Series B Cancelled\r\nSTATUS:CANCELLED\r\nDTSTART:20261026T100000Z\r\nDTEND:20261026T110000Z\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/two-series.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T00:00:00Z",
+        dateTo: "2026-10-26T23:59:59Z",
+        selectedCalendars,
+      });
+
+      // Series A occurrence on 2026-10-26 at 10:00 must NOT be suppressed by Series B's cancelled exception
+      expect(availability).toHaveLength(1);
+      expect(availability[0].start).toBe("2026-10-26T10:00:00.000Z");
+      expect(availability[0].end).toBe("2026-10-26T11:00:00.000Z");
+    });
   });
 });
