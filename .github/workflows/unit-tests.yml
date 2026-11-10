@@ -1,8 +1,6 @@
 name: Unit
 on:
   workflow_call:
-env:
-  LINGO_DOT_DEV_API_KEY: ${{ secrets.CI_LINGO_DOT_DEV_API_KEY }}
 permissions:
   contents: read
 jobs:
