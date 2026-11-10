@@ -17,7 +17,6 @@ env:
   NEXTAUTH_URL: ${{ secrets.CI_NEXTAUTH_URL }}
   NODE_OPTIONS: --max-old-space-size=29000
   REDIS_URL: "redis://localhost:6379"
-  LINGO_DOT_DEV_API_KEY: ${{ secrets.CI_LINGO_DOT_DEV_API_KEY }}
   STRIPE_PRIVATE_KEY: ${{ secrets.CI_STRIPE_PRIVATE_KEY }}
   STRIPE_API_KEY: ${{ secrets.CI_STRIPE_PRIVATE_KEY }}
   STRIPE_CLIENT_ID: ${{ secrets.CI_STRIPE_CLIENT_ID }}
