@@ -454,7 +454,7 @@ model User {
   requiresBookerEmailVerification Boolean? @default(false)
 
   /// @zod.import(["import { userMetadata } from '../../zod-utils'"]).custom.use(userMetadata)
-  metadata           Json?
+  metadata           Json?              @default("{}")
   verified           Boolean?           @default(false)
   role               UserPermissionRole @default(USER)
   apiKeys            ApiKey[]
