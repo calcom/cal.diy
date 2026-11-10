@@ -1,12 +1,12 @@
-> [!WARNING]  
-> Use at your own risk. Cal.diy is the open source community edition of Cal.com and it is intended for users who want to self-host their own Cal.diy instance. It is strictly recommended for personal, non-production use. Please review all installation and configuration steps carefully. Self-hosting requires advanced knowledge of server administration, database management, and securing sensitive data. Proceed only if you are comfortable with these responsibilities.
+> [!NOTE]
+> This is the **OpenCal-Community edition** of Cal.diy: an independent, community-run fork with no company behind it, no paid plans and no usage tracking. It is not affiliated with or supported by Cal.com, Inc.
 
-> [!TIP]
-> For any commercial and enterprise-ready scheduling infrastructure, use Cal.com, not Cal.diy; hosted by us or get invited to on-prem enterprise access here: <a href="https://cal.com/sales">https://cal.com/sales</a>
+> [!WARNING]
+> Self-hosting means you are responsible for your instance. Please review all installation and configuration steps carefully. Running Cal.diy needs working knowledge of server administration, databases and keeping sensitive data secure.
 
 <!-- PROJECT LOGO -->
 <p align="center">
-  <a href="https://github.com/calcom/cal.diy">
+  <a href="https://github.com/OpenCal-Community/cal.diy">
    <img src="https://user-images.githubusercontent.com/8019099/210054112-5955e812-a76e-4160-9ddd-58f2c72f1cce.png" alt="Logo">
   </a>
 
@@ -15,20 +15,22 @@
   <p align="center">
     The community-driven, open-source scheduling platform.
     <br />
-    <a href="https://github.com/calcom/cal.diy"><strong>GitHub</strong></a>
+    <a href="https://github.com/OpenCal-Community/cal.diy"><strong>GitHub</strong></a>
     <br />
-    <a href="https://github.com/calcom/cal.diy/issues">Issues</a>
+    <a href="https://github.com/OpenCal-Community/cal.diy/issues">Issues</a>
+    &middot;
+    <a href="https://github.com/OpenCal-Community/cal.diy/wiki">Wiki</a>
     &middot;
     <a href="./CONTRIBUTING.md">Contributing</a>
   </p>
 </p>
 
 <p align="center">
-   <a href="https://github.com/calcom/cal.diy/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-purple" alt="License"></a>
-   <a href="https://github.com/calcom/cal.diy/stargazers"><img src="https://img.shields.io/github/stars/calcom/cal.diy" alt="Github Stars"></a>
-   <a href="https://github.com/calcom/cal.diy/pulse"><img src="https://img.shields.io/github/commit-activity/m/calcom/cal.diy" alt="Commits-per-month"></a>
-   <a href="https://hub.docker.com/r/calcom/cal.diy"><img src="https://img.shields.io/docker/pulls/calcom/cal.diy" alt="Docker Pulls"></a>
-   <a href="https://github.com/calcom/cal.diy/issues?q=is:issue+is:open+label:%22%F0%9F%99%8B%F0%9F%8F%BB%E2%80%8D%E2%99%82%EF%B8%8Fhelp+wanted%22"><img src="https://img.shields.io/badge/Help%20Wanted-Contribute-blue"></a>
+   <a href="https://github.com/OpenCal-Community/cal.diy/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-purple" alt="License"></a>
+   <a href="https://github.com/OpenCal-Community/cal.diy/stargazers"><img src="https://img.shields.io/github/stars/OpenCal-Community/cal.diy" alt="Github Stars"></a>
+   <a href="https://github.com/OpenCal-Community/cal.diy/pulse"><img src="https://img.shields.io/github/commit-activity/m/OpenCal-Community/cal.diy" alt="Commits-per-month"></a>
+   <a href="https://github.com/OpenCal-Community/cal.diy/pkgs/container/cal.diy"><img src="https://img.shields.io/badge/image-ghcr.io%2Fopencal--community%2Fcal.diy-blue?logo=docker" alt="Container image"></a>
+   <a href="https://github.com/OpenCal-Community/cal.diy/issues?q=is:issue+is:open+label:%22%F0%9F%99%8B%F0%9F%8F%BB%E2%80%8D%E2%99%82%EF%B8%8Fhelp+wanted%22"><img src="https://img.shields.io/badge/Help%20Wanted-Contribute-blue"></a>
    <a href="https://contributor-covenant.org/version/1/4/code-of-conduct/"><img src="https://img.shields.io/badge/Contributor%20Covenant-1.4-purple" /></a>
 </p>
 
@@ -38,18 +40,19 @@
 
 <img width="100%" alt="booking-screen" src="https://github.com/calcom/cal.diy/assets/8019099/407e727e-ff19-4ca4-bcae-049dca05cf02">
 
-**Cal.diy** is the community-driven, fully open-source scheduling platform — a fork of [Cal.com](https://cal.com) with all enterprise/commercial code removed.
+**Cal.diy** is a fully open-source scheduling platform you run on your own server. This repository is the **independent OpenCal-Community edition**: a community fork of [calcom/cal.diy](https://github.com/calcom/cal.diy), which is itself built from [Cal.com](https://cal.com) with the enterprise and commercial code removed.
 
-Cal.diy is **100% MIT-licensed** with no proprietary "Enterprise Edition" features. It's designed for individuals and self-hosters who want full control over their scheduling infrastructure without any commercial dependencies.
+It is **100% MIT-licensed**, made for individuals and self-hosters who want full control of their scheduling without any commercial strings attached.
 
-### What's different from Cal.com?
+### What's different?
 
-- **No enterprise features** — Teams, Organizations, Insights, Workflows, SSO/SAML, and other EE-only features have been removed
-- **No license key required** — Everything works out of the box, no Cal.com account or license needed
-- **100% open source** — The entire codebase is licensed under MIT, no "Open Core" split
-- **Community-maintained** — Contributions are welcome and go directly into this project (see [CONTRIBUTING.md](./CONTRIBUTING.md))
+- **No paid plans or billing.** There is no plan picker, no subscription billing and no Stripe price IDs to configure. The setup wizard only asks for your admin account and takes you to the dashboard.
+- **No usage tracking.** Cal.com's telemetry, product analytics and referral tracking have been removed, so there is nothing to opt out of.
+- **No license key and no Cal.com account.** Everything works out of the box.
+- **No enterprise features.** Teams, Organizations, Insights, Workflows, SSO/SAML and other EE-only features are not included.
+- **Community-maintained.** Help, docs and decisions live on GitHub: [Issues](https://github.com/OpenCal-Community/cal.diy/issues) and the [Wiki](https://github.com/OpenCal-Community/cal.diy/wiki). See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-> **Note:** Cal.diy is a self-hosted project. There is no hosted/managed version. You run it on your own infrastructure.
+> **Note:** There is no hosted version. You run Cal.diy on your own infrastructure.
 
 ### Built With
 
@@ -80,14 +83,14 @@ Here’s what you need to run Cal.diy.
 
 ### Setup
 
-1. Clone the repo (or fork https://github.com/calcom/cal.diy/fork)
+1. Clone the repo (or fork https://github.com/OpenCal-Community/cal.diy/fork)
 
    ```sh
-   git clone https://github.com/calcom/cal.diy.git
+   git clone https://github.com/OpenCal-Community/cal.diy.git
    ```
 
    > If you are on Windows, run the following command in Git Bash with admin privileges:
-   > `git clone -c core.symlinks=true https://github.com/calcom/cal.diy.git`
+   > `git clone -c core.symlinks=true https://github.com/OpenCal-Community/cal.diy.git`
 
 2. Go to the project folder
 
@@ -186,7 +189,7 @@ for Logger level to be set at info, for example.
 
 2. This will open a fully configured workspace in your browser with all the necessary dependencies already installed.
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/calcom/cal.diy)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/OpenCal-Community/cal.diy)
 
 #### Manual setup
 
@@ -365,9 +368,15 @@ Executable doesn't exist at /Users/alice/Library/Caches/ms-playwright/chromium-1
 
 ### Docker
 
-The Docker image can be found on DockerHub at [https://hub.docker.com/r/calcom/cal.diy](https://hub.docker.com/r/calcom/cal.diy).
+The official image is published to the GitHub Container Registry as [`ghcr.io/opencal-community/cal.diy`](https://github.com/OpenCal-Community/cal.diy/pkgs/container/cal.diy):
 
-**Note for ARM Users**: Use the {version}-arm suffix for pulling images. Example: `docker pull calcom/cal.diy:v5.6.19-arm`.
+```bash
+docker pull ghcr.io/opencal-community/cal.diy:latest
+```
+
+`docker-compose.yml` already uses this image.
+
+**Note for ARM users:** use the `-arm` suffix on a release tag, for example `docker pull ghcr.io/opencal-community/cal.diy:v5.6.19-arm`.
 
 #### Requirements
 
@@ -380,7 +389,7 @@ Note: `docker compose` without the hyphen is now the primary method of using doc
 1. Clone the repository
 
    ```bash
-   git clone --recursive https://github.com/calcom/cal.diy.git
+   git clone --recursive https://github.com/OpenCal-Community/cal.diy.git
    ```
 
 2. Change into the directory
@@ -447,7 +456,7 @@ Note: `docker compose` without the hyphen is now the primary method of using doc
 
    Update the appropriate values in your .env file, then proceed.
 
-4. (optional) Pre-Pull the images by running the following command:
+4. (optional) Pre-pull the images (this pulls `ghcr.io/opencal-community/cal.diy:latest`):
 
    ```bash
    docker compose pull
@@ -475,9 +484,7 @@ Note: `docker compose` without the hyphen is now the primary method of using doc
 
    **Note: to run in attached mode for debugging, remove `-d` from your desired run command.**
 
-6. Open a browser to [http://localhost:3000](http://localhost:3000), or your defined NEXT_PUBLIC_WEBAPP_URL. The first time you run Cal.diy, a setup wizard will initialize. Define your first user, and you're ready to go!
-
-   **Note for first-time setup (Calendar integration)**: During the setup wizard, you may encounter a "Connect your Calendar" step that appears to be required. If you do not wish to connect a calendar at this time, you can skip this step by navigating directly to the dashboard at `<NEXT_PUBLIC_WEBAPP_URL>/event-types`. Calendar integrations can be added later from the Settings > Integrations page.
+6. Open a browser to [http://localhost:3000](http://localhost:3000), or your defined NEXT_PUBLIC_WEBAPP_URL. The first time you run Cal.diy, a setup wizard asks you to create the admin account and then takes you straight to the dashboard. Calendar and other integrations can be added later from Settings > Integrations.
 
 #### Updating Cal.diy
 
@@ -505,7 +512,7 @@ Note: `docker compose` without the hyphen is now the primary method of using doc
 1. Clone the repository
 
    ```bash
-   git clone https://github.com/calcom/cal.diy.git
+   git clone https://github.com/OpenCal-Community/cal.diy.git
    ```
 
 2. Change into the directory
@@ -587,17 +594,12 @@ If building the image yourself, these variables must be provided at the time of 
 | NEXT_PUBLIC_WEBAPP_URL | Base URL injected into static files | optional | `http://localhost:3000` |
 | NEXT_PUBLIC_WEBSITE_TERMS_URL | custom URL for terms and conditions website | optional | |
 | NEXT_PUBLIC_WEBSITE_PRIVACY_POLICY_URL | custom URL for privacy policy website | optional | |
-| CALCOM_TELEMETRY_DISABLED | Allow Cal.diy to collect anonymous usage data (set to `1` to disable) | optional | |
 
 #### Troubleshooting
 
 ##### SSL edge termination
 
 If running behind a load balancer which handles SSL certificates, you will need to add the environmental variable `NODE_TLS_REJECT_UNAUTHORIZED=0` to prevent requests from being rejected. Only do this if you know what you are doing and trust the services/load-balancers directing traffic to your service.
-
-##### Failed to commit changes: Invalid 'prisma.user.create()'
-
-Certain versions may have trouble creating a user if the field `metadata` is empty. Using an empty json object `{}` as the field value should resolve this issue. Also, the `id` field will autoincrement, so you may also try leaving the value of `id` as empty.
 
 ##### CLIENT_FETCH_ERROR
 
@@ -625,31 +627,11 @@ docker-calcom-1  | @calcom/web:start:   message: 'request to http://testing.loca
 docker-calcom-1  | @calcom/web:start: }
 ```
 
-### Railway
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/cal)
-
-You can deploy Cal.diy on [Railway](https://railway.app). The team at Railway also have a [detailed blog post](https://blog.railway.app/p/calendso) on deploying on their platform.
-
-### Northflank
-
-[![Deploy on Northflank](https://assets.northflank.com/deploy_to_northflank_smm_36700fb050.svg)](https://northflank.com/stacks/deploy-calcom)
-
-You can deploy Cal.diy on [Northflank](https://northflank.com). The team at Northflank also have a [detailed blog post](https://northflank.com/guides/deploy-calcom-with-northflank) on deploying on their platform.
-
 ### Vercel
 
 Currently Vercel Pro Plan is required to be able to Deploy this application with Vercel, due to limitations on the number of serverless functions on the free plan.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcalcom%2Fcal.diy&env=DATABASE_URL,NEXT_PUBLIC_WEBAPP_URL,NEXTAUTH_URL,NEXTAUTH_SECRET,CRON_API_KEY,CALENDSO_ENCRYPTION_KEY&envDescription=See%20all%20available%20env%20vars&envLink=https%3A%2F%2Fgithub.com%2Fcalcom%2Fcal.diy%2Fblob%2Fmain%2F.env.example&project-name=cal&repo-name=cal.diy&build-command=cd%20../..%20%26%26%20yarn%20build&root-directory=apps%2Fweb%2F)
-
-### Render
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/calcom/docker)
-
-### Elestio
-
-[![Deploy on Elestio](https://elest.io/images/logos/deploy-to-elestio-btn.png)](https://elest.io/open-source/cal.com)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FOpenCal-Community%2Fcal.diy&env=DATABASE_URL,NEXT_PUBLIC_WEBAPP_URL,NEXTAUTH_URL,NEXTAUTH_SECRET,CRON_API_KEY,CALENDSO_ENCRYPTION_KEY&envDescription=See%20all%20available%20env%20vars&envLink=https%3A%2F%2Fgithub.com%2FOpenCal-Community%2Fcal.diy%2Fblob%2Fmain%2F.env.example&project-name=cal&repo-name=cal.diy&build-command=cd%20../..%20%26%26%20yarn%20build&root-directory=apps%2Fweb%2F)
 
 <!-- LICENSE -->
 
@@ -799,7 +781,7 @@ Note: If you don't configure Unkey, Cal.diy will work normally without rate limi
 
 We welcome contributions! Whether it's fixing a typo, improving documentation, or building new features, your help makes Cal.diy better.
 
-> **Important:** Cal.diy is a community fork. Contributions to this repo do **not** flow to Cal.com's production platform. See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+> **Important:** This is an independent community fork. Contributions here do **not** flow to Cal.com or to upstream calcom/cal.diy. See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
 
 - Check out our [Contributing Guide](./CONTRIBUTING.md) for detailed steps.
 - Please follow our coding standards and commit message conventions to keep the project consistent.
@@ -808,21 +790,21 @@ Even small improvements matter — thank you for helping us grow!
 
 ### Good First Issues
 
-We have a list of [help wanted](https://github.com/calcom/cal.diy/issues?q=is:issue+is:open+label:%22%F0%9F%99%8B%F0%9F%8F%BB%E2%80%8D%E2%99%82%EF%B8%8Fhelp+wanted%22) that contain small features and bugs which have a relatively limited scope. This is a great place to get started, gain experience, and get familiar with our contribution process.
+We have a list of [help wanted](https://github.com/OpenCal-Community/cal.diy/issues?q=is:issue+is:open+label:%22%F0%9F%99%8B%F0%9F%8F%BB%E2%80%8D%E2%99%82%EF%B8%8Fhelp+wanted%22) that contain small features and bugs which have a relatively limited scope. This is a great place to get started, gain experience, and get familiar with our contribution process.
 
 <!-- CONTRIBUTORS -->
 
 ### Contributors
 
-<a href="https://github.com/calcom/cal.diy/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=calcom/cal.diy" />
+<a href="https://github.com/OpenCal-Community/cal.diy/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=OpenCal-Community/cal.diy" />
 </a>
 
 <!-- TRANSLATIONS -->
 
 ### Translations
 
-Don't code but still want to contribute? help translate Cal.diy into your language.
+Don't code but still want to contribute? Help translate Cal.diy into your language. Translations live in `packages/i18n/locales/<language>/common.json`: edit the file for your language and open a pull request.
 
 <!-- ACKNOWLEDGEMENTS -->
 

@@ -35,7 +35,7 @@ services:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"
 
   calcom:
-    image: calcom.docker.scarf.sh/calcom/cal.diy
+    image: ghcr.io/opencal-community/cal.diy:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -109,7 +109,7 @@ services:
 
   # Optional use of Prisma Studio. In production, comment out or remove the section below to prevent unwanted access to your database.
   studio:
-    image: calcom.docker.scarf.sh/calcom/cal.diy
+    image: ghcr.io/opencal-community/cal.diy:latest
     restart: always
     networks:
       - stack
