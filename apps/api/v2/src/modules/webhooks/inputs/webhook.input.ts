@@ -8,7 +8,7 @@ export class CreateWebhookInputDto {
   @IsOptional()
   @ApiProperty({
     description:
-      "The template of the payload that will be sent to the subscriberUrl, check cal.com/docs/core-features/webhooks for more information",
+      "The template of the payload that will be sent to the subscriberUrl, check https://github.com/OpenCal-Community/cal.diy/wiki/Webhooks for more information",
     example: JSON.stringify({
       content: "A new event has been scheduled",
       type: "{{type}}",
