@@ -354,6 +354,55 @@ describe("event tests", () => {
 
       expect(result).toBe("location: unknownNonsense");
     });
+
+    it("should replace multiple {Location} occurrences in eventName", () => {
+      const tFunc = vi.fn(() => "foo");
+
+      const result = event.getEventName({
+        attendeeName: "example attendee",
+        eventType: "example event type",
+        host: "example host",
+        location: "unknownNonsense",
+        eventName: "{Location} call ({Location})",
+        eventDuration: 15,
+        t: tFunc as TFunction,
+      });
+
+      expect(result).toBe("unknownNonsense call (unknownNonsense)");
+    });
+
+    it("should preserve literal dollar signs ($&, $$, $') in variables without mangling patterns", () => {
+      const tFunc = vi.fn(() => "foo");
+
+      const result = event.getEventName({
+        eventName: "{Event type title} with {Scheduler} and {HOST}",
+        eventType: "Pricing $' review",
+        attendeeName: "Cash$$Flow",
+        host: "A$&B",
+        eventDuration: 15,
+        t: tFunc as TFunction,
+      });
+
+      expect(result).toBe("Pricing $' review with Cash$$Flow and A$&B");
+    });
+
+    it("should preserve dollar signs in custom booking field values and replace all occurrences", () => {
+      const tFunc = vi.fn(() => "foo");
+
+      const result = event.getEventName({
+        attendeeName: "example attendee",
+        eventType: "example event type",
+        host: "example host",
+        eventName: "Intro: {company} - {company}",
+        eventDuration: 15,
+        bookingFields: {
+          company: "A$&B Corp $100",
+        },
+        t: tFunc as TFunction,
+      });
+
+      expect(result).toBe("Intro: A$&B Corp $100 - A$&B Corp $100");
+    });
   });
 
   it("should support templating of event duration", () => {
@@ -546,6 +595,11 @@ describe("event tests", () => {
       const eventName = "John and John.Doe and John_Doe";
       const result = updateHostInEventName(eventName, oldHost, newHost);
       expect(result).toBe("John and Jane.Smith and John_Doe");
+    });
+
+    it("should preserve dollar signs in new host replacement", () => {
+      const result = updateHostInEventName("Meeting with John Doe", "John Doe", "Jane $& Doe");
+      expect(result).toBe("Meeting with Jane $& Doe");
     });
   });
 });
