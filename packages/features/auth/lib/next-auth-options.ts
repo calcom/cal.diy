@@ -20,7 +20,6 @@ import {
   GOOGLE_OAUTH_SCOPES,
   HOSTED_CAL_FEATURES,
   IS_CALCOM,
-  IS_TEAM_BILLING_ENABLED,
   MICROSOFT_CALENDAR_SCOPES,
   WEBAPP_URL,
 } from "@calcom/lib/constants";
@@ -36,7 +35,7 @@ import type { TrackingData } from "@calcom/lib/tracking";
 import prisma from "@calcom/prisma";
 import type { Membership, Team } from "@calcom/prisma/client";
 import { CreationSource, IdentityProvider, MembershipRole, UserPermissionRole } from "@calcom/prisma/enums";
-import { teamMetadataSchema, userMetadata } from "@calcom/prisma/zod-utils";
+import { userMetadata } from "@calcom/prisma/zod-utils";
 import type { UserProfile } from "@calcom/types/UserProfile";
 import { calendar_v3 } from "@googleapis/calendar";
 import { waitUntil } from "@vercel/functions";
@@ -115,16 +114,8 @@ type UserTeams = {
   })[];
 };
 
-export const checkIfUserBelongsToActiveTeam = <T extends UserTeams>(user: T) =>
-  user.teams.some((m: { team: { metadata: unknown } }) => {
-    if (!IS_TEAM_BILLING_ENABLED) {
-      return true;
-    }
-
-    const metadata = teamMetadataSchema.safeParse(m.team.metadata);
-
-    return metadata.success && metadata.data?.subscriptionId;
-  });
+// Without team billing every team is active, so membership in any team is enough.
+export const checkIfUserBelongsToActiveTeam = <T extends UserTeams>(user: T) => user.teams.length > 0;
 
 const checkIfUserShouldBelongToOrg = async (idP: IdentityProvider, email: string) => {
   const [orgUsername, apexDomain] = email.split("@");

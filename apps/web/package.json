@@ -24,8 +24,7 @@
     "lint:fix": "biome lint --write .",
     "lint:report": "biome lint --reporter json . > ../../lint-results/web.json",
     "check-changed-files": "ts-node scripts/ts-check-changed-files.ts",
-    "translate-locales": "ts-node scripts/check-missing-translations.ts",
-    "stripe:listen": "stripe listen --forward-to http://localhost:3000/api/stripe/webhook"
+    "translate-locales": "ts-node scripts/check-missing-translations.ts"
   },
   "engines": {
     "yarn": "3.4.1"

@@ -61,7 +61,6 @@ vi.mock("@calcom/lib/constants", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@calcom/lib/constants")>();
   return {
     ...actual,
-    IS_TEAM_BILLING_ENABLED: false,
     ENABLE_PROFILE_SWITCHER: false,
     WEBAPP_URL: "http://localhost:3000",
   };

@@ -4,7 +4,6 @@ import type * as constants from "@calcom/lib/constants";
 
 const initialConstants = {
   IS_PRODUCTION: false,
-  IS_TEAM_BILLING_ENABLED: false,
   WEBSITE_URL: "",
   PUBLIC_INVALIDATE_AVAILABLE_SLOTS_ON_BOOKING_FORM: true,
   CLOUDFLARE_SITE_ID: "test-site-id",
@@ -32,9 +31,6 @@ beforeEach(() => {
 });
 
 export const constantsScenarios = {
-  enableTeamBilling: () => {
-    mockedConstants.IS_TEAM_BILLING_ENABLED = true;
-  },
   setWebsiteUrl: (url: string) => {
     mockedConstants.WEBSITE_URL = url;
   },
