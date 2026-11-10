@@ -664,7 +664,7 @@ export const EventLimitsTab = ({ eventType, customClassNames }: EventLimitsTabPr
                 <LearnMoreLink
                   t={t}
                   i18nKey="limit_booking_frequency_description"
-                  href="https://cal.com/help/event-types/booking-frequency"
+                  href="https://github.com/OpenCal-Community/cal.diy/wiki/Booking-Frequency"
                 />
               }
               checked={isChecked}
@@ -801,7 +801,7 @@ export const EventLimitsTab = ({ eventType, customClassNames }: EventLimitsTabPr
                 <LearnMoreLink
                   t={t}
                   i18nKey="limit_future_bookings_description"
-                  href="https://cal.com/help/event-types/limit-future-bookings"
+                  href="https://github.com/OpenCal-Community/cal.diy/wiki/Limit-Future-Bookings"
                 />
               }
               {...periodTypeLocked}

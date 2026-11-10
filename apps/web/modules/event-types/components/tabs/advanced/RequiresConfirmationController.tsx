@@ -102,7 +102,7 @@ export default function RequiresConfirmationController({
                 <LearnMoreLink
                   t={t}
                   i18nKey="requires_confirmation_description"
-                  href="https://cal.com/help/event-types/how-to-requires"
+                  href="https://github.com/OpenCal-Community/cal.diy/wiki/Requires-Confirmation"
                 />
               }
               checked={requiresConfirmation}
