@@ -23,12 +23,6 @@ export type AppConfig = {
   next: {
     authSecret: string;
   };
-  stripe: {
-    apiKey: string;
-    webhookSecret: string;
-    teamMonthlyPriceId: string;
-    isTeamBillingEnabled: boolean;
-  };
   app: {
     baseUrl: string;
   };

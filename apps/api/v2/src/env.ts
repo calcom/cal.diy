@@ -15,7 +15,6 @@ export type Environment = {
   LOG_LEVEL: keyof typeof logLevels;
   REDIS_URL: string;
   STRIPE_API_KEY: string;
-  STRIPE_WEBHOOK_SECRET: string;
   WEB_APP_URL: string;
   IS_E2E: string;
   CALCOM_LICENSE_KEY: string;
@@ -30,8 +29,6 @@ export type Environment = {
   RATE_LIMIT_DEFAULT_BLOCK_DURATION_MS: number;
   AXIOM_DATASET: string;
   AXIOM_TOKEN: string;
-  STRIPE_TEAM_MONTHLY_PRICE_ID: string;
-  IS_TEAM_BILLING_ENABLED: boolean;
   // Used to enable/disable the rewrite of /api/v2 to /v2, active by default.
   REWRITE_API_V2_PREFIX: string;
   DATABASE_READ_POOL_MAX: number;

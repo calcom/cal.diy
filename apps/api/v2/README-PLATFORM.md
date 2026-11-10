@@ -103,10 +103,7 @@ I point userId to 10 aka `admin@example.com`.
 ## Local development - part 3
 Proceed to `apps/api/v2/README.md` step 6 to setup prisma and seed database if you need to.
 
-## Local development - part 4 (Stripe)
-If you want to test platform billing locally then please proceed to `packages/platform/atoms/STRIPE.md` tutorial.
-
-## Local development - part 5
+## Local development - part 4
 If you followed steps above then examples app environment is setup.
 
 If you also want to test apple connect calendar atom, then you need to create app specific password using your apple email and
