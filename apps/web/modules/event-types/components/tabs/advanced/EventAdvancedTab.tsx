@@ -60,6 +60,8 @@ import type { CustomEventTypeModalClassNames } from "./CustomEventTypeModal";
 import CustomEventTypeModal from "./CustomEventTypeModal";
 import type { EmailNotificationToggleCustomClassNames } from "./DisableAllEmailsSetting";
 import { DisableAllEmailsSetting } from "./DisableAllEmailsSetting";
+import type { DisableCancellingCustomClassNames } from "./DisableCancellingController";
+import DisableCancellingController from "./DisableCancellingController";
 import type { DisableReschedulingCustomClassNames } from "./DisableReschedulingController";
 import DisableReschedulingController from "./DisableReschedulingController";
 import { FormBuilder } from "./FormBuilder";
@@ -78,6 +80,7 @@ export type EventAdvancedTabCustomClassNames = {
     };
   };
   requiresConfirmation?: RequiresConfirmationCustomClassNames;
+  disableCancelling?: DisableCancellingCustomClassNames;
   disableRescheduling?: DisableReschedulingCustomClassNames;
   bookerEmailVerification?: SettingsToggleClassNames;
   canSendCalVideoTranscriptionEmails?: SettingsToggleClassNames;
@@ -531,6 +534,7 @@ export const EventAdvancedTab = ({
     multiplePrivateLinksLocked.disabled = true;
   }
 
+  const [disableCancelling, setDisableCancelling] = useState(eventType.disableCancelling || false);
   const [disableRescheduling, setDisableRescheduling] = useState(eventType.disableRescheduling || false);
 
   const [allowReschedulingCancelledBookings, setallowReschedulingCancelledBookings] = useState(
@@ -716,29 +720,11 @@ export const EventAdvancedTab = ({
 
       {!isPlatform && (
         <>
-          <Controller
-            name="disabledCancelling"
-            render={({ field: { onChange, value } }) => (
-              <SettingsToggle
-                labelClassName="text-sm"
-                toggleSwitchAtTheEnd={true}
-                switchContainerClassName="border-subtle rounded-lg border py-6 px-4 sm:px-6"
-                title={t("disable_cancelling")}
-                data-testid="disable-cancelling-toggle"
-                {...disableCancellingLocked}
-                description={
-                  <LearnMoreLink
-                    t={t}
-                    i18nKey="description_disable_cancelling"
-                    href="https://cal.com/help/event-types/disable-canceling-rescheduling#disable-cancelling"
-                  />
-                }
-                checked={value}
-                onCheckedChange={(val) => {
-                  onChange(val);
-                }}
-              />
-            )}
+          <DisableCancellingController
+            eventType={eventType}
+            disableCancelling={disableCancelling}
+            onDisableCancelling={setDisableCancelling}
+            customClassNames={customClassNames?.disableCancelling}
           />
 
           <DisableReschedulingController

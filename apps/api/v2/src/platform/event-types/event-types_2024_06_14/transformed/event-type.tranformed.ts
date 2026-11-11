@@ -49,6 +49,7 @@ export type InputEventTransformed_2024_06_14 = Omit<
   disableRescheduling?: boolean;
   disableCancelling?: boolean;
   minimumRescheduleNotice?: number | null;
+  minimumCancellationNotice?: number | null;
   canSendCalVideoTranscriptionEmails?: boolean;
   calVideoSettings?: {
     disableRecordingForOrganizer?: boolean;

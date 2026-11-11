@@ -666,8 +666,23 @@ export class InputEventTypesService_2024_06_14 {
       return {};
     }
 
+    if (disableCancelling.disabled === true) {
+      return {
+        disableCancelling: true,
+        minimumCancellationNotice: null,
+      };
+    }
+
+    if (disableCancelling.minutesBefore && disableCancelling.minutesBefore > 0) {
+      return {
+        disableCancelling: false,
+        minimumCancellationNotice: disableCancelling.minutesBefore,
+      };
+    }
+
     return {
-      disableCancelling: disableCancelling.disabled === true,
+      disableCancelling: false,
+      minimumCancellationNotice: null,
     };
   }
 

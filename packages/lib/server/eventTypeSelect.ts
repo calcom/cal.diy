@@ -40,6 +40,7 @@ export const eventTypeSelect = {
   disableCancelling: true,
   disableRescheduling: true,
   minimumRescheduleNotice: true,
+  minimumCancellationNotice: true,
   allowReschedulingCancelledBookings: true,
   hideCalendarNotes: true,
   minimumBookingNotice: true,

@@ -90,6 +90,7 @@ type Input = Pick<
   | "disableCancelling"
   | "disableRescheduling"
   | "minimumRescheduleNotice"
+  | "minimumCancellationNotice"
   | "canSendCalVideoTranscriptionEmails"
   | "interfaceLanguage"
   | "allowReschedulingPastBookings"
