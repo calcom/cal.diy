@@ -1,5 +1,5 @@
 import { createEvent as createIcsEvent } from "ics";
-import { createCalendarObject, updateCalendarObject } from "tsdav";
+import { createCalendarObject, fetchCalendarObjects, updateCalendarObject } from "tsdav";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("ics", () => ({
@@ -745,6 +745,235 @@ describe("CalendarService - SCHEDULE-AGENT injection", () => {
       const event = createMockEvent();
 
       await expect(service.createEvent(event, 1)).rejects.toThrow();
+    });
+  });
+
+  describe("CalendarService - Recurring Events & Recurrence Expansion", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    const selectedCalendars = [
+      {
+        externalId: "https://caldav.example.com/calendar/",
+        integration: "caldav",
+        credentialId: 1,
+      },
+    ];
+
+    it("should not produce a busy block for weekly event without BYDAY queried on another weekday", async () => {
+      const service = new TestCalendarService();
+      // Monday 2025-08-25 event with RRULE:FREQ=WEEKLY (no BYDAY)
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:weekly-no-byday\r\nSUMMARY:Weekly Monday Meeting\r\nDTSTART:20250825T143000Z\r\nDTEND:20250825T160000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/weekly.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      // Query on Thursday 2026-10-29
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-29T00:00:00Z",
+        dateTo: "2026-10-29T23:59:59Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toEqual([]);
+    });
+
+    it("should produce a busy block for weekly event without BYDAY queried on the correct weekday", async () => {
+      const service = new TestCalendarService();
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:weekly-no-byday\r\nSUMMARY:Weekly Monday Meeting\r\nDTSTART:20250825T143000Z\r\nDTEND:20250825T160000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/weekly.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      // Query on Monday 2026-10-26 (contains 14:30Z)
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T12:00:00Z",
+        dateTo: "2026-10-26T18:00:00Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toHaveLength(1);
+      expect(availability[0].start).toBe("2026-10-26T14:30:00.000Z");
+      expect(availability[0].end).toBe("2026-10-26T16:00:00.000Z");
+    });
+
+    it("should produce no busy blocks for an expired series with COUNT", async () => {
+      const service = new TestCalendarService();
+      // Monday 2025-08-25 event with COUNT=3 (ends 2025-09-08)
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:weekly-count-3\r\nSUMMARY:Three Weeks Only\r\nDTSTART:20250825T143000Z\r\nDTEND:20250825T160000Z\r\nRRULE:FREQ=WEEKLY;COUNT=3\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/weekly-count.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      // Query on Monday 2026-11-02 (long after series expired)
+      const availability = await service.getAvailability({
+        dateFrom: "2026-11-02T12:00:00Z",
+        dateTo: "2026-11-02T18:00:00Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toEqual([]);
+    });
+
+    it("should continue recurrence progression when an early exception is moved past dateTo", async () => {
+      const service = new TestCalendarService();
+      // Weekly series starting 2020-01-06 (Monday).
+      // Exception for 2020-01-13 moved far into the future (2030-01-13).
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:series-with-future-exception\r\nSUMMARY:Weekly Meeting\r\nDTSTART:20200106T100000Z\r\nDTEND:20200106T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:series-with-future-exception\r\nRECURRENCE-ID:20200113T100000Z\r\nSUMMARY:Rescheduled Way Out\r\nDTSTART:20300113T100000Z\r\nDTEND:20300113T110000Z\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/future-exc.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      // Query window in 2026 (Monday 2026-10-26)
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T00:00:00Z",
+        dateTo: "2026-10-26T23:59:59Z",
+        selectedCalendars,
+      });
+
+      // Recurrence loop must not have stopped in 2020 because of the 2030 exception
+      expect(availability).toHaveLength(1);
+      expect(availability[0].start).toBe("2026-10-26T10:00:00.000Z");
+    });
+
+    it("should capture an exception rescheduled into the query window", async () => {
+      const service = new TestCalendarService();
+      // Series on Wednesdays. Occurrence from 2026-12-02 rescheduled to Monday 2026-10-26.
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:series-with-window-exception\r\nSUMMARY:Wednesday Sync\r\nDTSTART:20260902T100000Z\r\nDTEND:20260902T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:series-with-window-exception\r\nRECURRENCE-ID:20261202T100000Z\r\nSUMMARY:Moved Into October\r\nDTSTART:20261026T100000Z\r\nDTEND:20261026T110000Z\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/window-exc.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      // Query window for Monday 2026-10-26
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T00:00:00Z",
+        dateTo: "2026-10-26T23:59:59Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toHaveLength(1);
+      expect(availability[0].start).toBe("2026-10-26T10:00:00.000Z");
+    });
+
+    it("should exclude cancelled recurrence exceptions (STATUS:CANCELLED)", async () => {
+      const service = new TestCalendarService();
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:series-with-cancelled-occ\r\nSUMMARY:Weekly Meeting\r\nDTSTART:20261019T100000Z\r\nDTEND:20261019T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:series-with-cancelled-occ\r\nRECURRENCE-ID:20261026T100000Z\r\nSUMMARY:Cancelled Meeting\r\nSTATUS:CANCELLED\r\nDTSTART:20261026T100000Z\r\nDTEND:20261026T110000Z\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/cancelled-exc.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      // Query on Monday 2026-10-26
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T00:00:00Z",
+        dateTo: "2026-10-26T23:59:59Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toEqual([]);
+    });
+
+    it("should handle long-running daily recurrence without COUNT using period jump optimization", async () => {
+      const service = new TestCalendarService();
+      // Daily event starting in 2010 (~6000 days before 2026 query window)
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:daily-ancient\r\nSUMMARY:Daily Standup\r\nDTSTART:20100101T090000Z\r\nDTEND:20100101T093000Z\r\nRRULE:FREQ=DAILY\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/daily.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T00:00:00Z",
+        dateTo: "2026-10-26T23:59:59Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toHaveLength(1);
+      expect(availability[0].start).toBe("2026-10-26T09:00:00.000Z");
+      expect(availability[0].end).toBe("2026-10-26T09:30:00.000Z");
+    });
+
+    it("should include standalone RECURRENCE-ID instances when no recurring master is in the calendar", async () => {
+      const service = new TestCalendarService();
+      // CalDAV expand:true or pre-expanded feed with only RECURRENCE-ID components
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:expanded-series-1\r\nRECURRENCE-ID:20261026T100000Z\r\nSUMMARY:Expanded Instance\r\nDTSTART:20261026T100000Z\r\nDTEND:20261026T110000Z\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/expanded.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T00:00:00Z",
+        dateTo: "2026-10-26T23:59:59Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toHaveLength(1);
+      expect(availability[0].start).toBe("2026-10-26T10:00:00.000Z");
+      expect(availability[0].end).toBe("2026-10-26T11:00:00.000Z");
+    });
+
+    it("should not let exceptions from another series suppress occurrences of a matching master event", async () => {
+      const service = new TestCalendarService();
+      // Series A (weekly on Mondays at 10:00) and Series B (cancelled exception at the same slot Monday 2026-10-26T10:00:00Z)
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:series-A\r\nSUMMARY:Series A Meeting\r\nDTSTART:20261019T100000Z\r\nDTEND:20261019T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:series-B\r\nSUMMARY:Series B Meeting\r\nDTSTART:20261019T100000Z\r\nDTEND:20261019T110000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nUID:series-B\r\nRECURRENCE-ID:20261026T100000Z\r\nSUMMARY:Series B Cancelled\r\nSTATUS:CANCELLED\r\nDTSTART:20261026T100000Z\r\nDTEND:20261026T110000Z\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/two-series.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T00:00:00Z",
+        dateTo: "2026-10-26T23:59:59Z",
+        selectedCalendars,
+      });
+
+      // Series A occurrence on 2026-10-26 at 10:00 must NOT be suppressed by Series B's cancelled exception
+      expect(availability).toHaveLength(1);
+      expect(availability[0].start).toBe("2026-10-26T10:00:00.000Z");
+      expect(availability[0].end).toBe("2026-10-26T11:00:00.000Z");
     });
   });
 });

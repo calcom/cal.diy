@@ -149,6 +149,12 @@ class ICSFeedCalendarService implements Calendar {
 
     calendars.forEach(({ vcalendar }) => {
       const vevents = vcalendar.getAllSubcomponents("vevent");
+      const recurringMasterUids = new Set(
+        vevents
+          .filter((v) => !v.hasProperty("recurrence-id") && (v.hasProperty("rrule") || v.hasProperty("rdate")))
+          .map((v) => String(v.getFirstPropertyValue("uid")))
+      );
+
       vevents.forEach((vevent) => {
         // if event status is free or transparent, DON'T return (unlike usual getAvailability)
         //
@@ -156,6 +162,11 @@ class ICSFeedCalendarService implements Calendar {
         // public holidays have them marked as transparent. if that is explicitly
         // added to cal.com as an ICS feed, it should probably not be ignored.
         // if (vevent?.getFirstPropertyValue("transp") === "TRANSPARENT") return;
+
+        // Skip standalone recurrence exceptions because they are handled by the master recurring event
+        if (vevent.hasProperty("recurrence-id") && recurringMasterUids.has(String(vevent.getFirstPropertyValue("uid")))) {
+          return;
+        }
 
         const event = new ICAL.Event(vevent);
         const title = String(vevent.getFirstPropertyValue("summary"));
@@ -214,7 +225,6 @@ class ICSFeedCalendarService implements Calendar {
         applyTravelDuration(event, getTravelDurationInSeconds(vevent));
 
         if (event.isRecurring()) {
-          let maxIterations = 365;
           if (["HOURLY", "SECONDLY", "MINUTELY"].includes(event.getRecurrenceTypes())) {
             console.error(`Won't handle [${event.getRecurrenceTypes()}] recurrence`);
             return;
@@ -222,24 +232,128 @@ class ICSFeedCalendarService implements Calendar {
 
           const start = dayjs(dateFrom);
           const end = dayjs(dateTo);
-          const startDate = ICAL.Time.fromDateTimeString(startISOString);
-          startDate.hour = event.startDate.hour;
-          startDate.minute = event.startDate.minute;
-          startDate.second = event.startDate.second;
-          const iterator = event.iterator(startDate);
-          let current: ICAL.Time;
+
+          // For single daily or weekly recurrence rules without COUNT, seed the iterator a whole number
+          // of periods after DTSTART, ending at least one period before the query window. This preserves
+          // the weekday and interval phase without walking years of historical occurrences.
+          let iterator: ICAL.RecurExpansion;
+          const rrules = event.component.getAllProperties("rrule");
+          const isSingleRule = rrules.length === 1;
+          const recur = isSingleRule
+            ? (rrules[0].getFirstValue() as ICAL.Recur & { interval?: number })
+            : null;
+
+          if (recur && !recur.count && (recur.freq === "DAILY" || recur.freq === "WEEKLY")) {
+            const interval = recur.interval || 1;
+            const periodDays = recur.freq === "DAILY" ? interval : 7 * interval;
+            const diffDays = start.diff(dayjs(event.startDate.toJSDate()), "day");
+            const periodsBefore = Math.floor(diffDays / periodDays);
+
+            if (periodsBefore > 1) {
+              const jumpDays = (periodsBefore - 1) * periodDays;
+              const seedTime = event.startDate.clone();
+              seedTime.adjust(jumpDays, 0, 0, 0);
+              iterator = event.iterator(seedTime);
+            } else {
+              iterator = event.iterator();
+            }
+          } else {
+            iterator = event.iterator();
+          }
+
+          // Handle recurrence exceptions separately so exceptions moved into the query window are
+          // captured, and exceptions moved outside the window do not prematurely terminate recurrence expansion.
+          const handledExceptionIds = new Set<string>();
+          const exceptions = (event as unknown as { exceptions?: Record<string, ICAL.Event> }).exceptions;
+
+          if (exceptions) {
+            for (const exceptionKey of Object.keys(exceptions)) {
+              const ex = exceptions[exceptionKey];
+              if (!ex || ex.uid !== event.uid) continue;
+              handledExceptionIds.add(exceptionKey);
+              if (ex.recurrenceId) {
+                handledExceptionIds.add(ex.recurrenceId.toString());
+                try {
+                  const utcZone = (ICAL.Timezone as unknown as { utcTimezone: ICAL.Timezone }).utcTimezone;
+                  if (utcZone) {
+                    handledExceptionIds.add(ex.recurrenceId.convertToZone(utcZone).toString());
+                  }
+                } catch {
+                  // ignore zone conversion error for lookup key
+                }
+              }
+
+              const status = ex.component?.getFirstPropertyValue("status");
+              if (typeof status === "string" && status.toUpperCase() === "CANCELLED") {
+                continue;
+              }
+
+              let exStart = ex.startDate;
+              let exEnd = ex.endDate;
+              if (vtimezone) {
+                const zone = new ICAL.Timezone(vtimezone);
+                exStart = exStart.convertToZone(zone);
+                exEnd = exEnd.convertToZone(zone);
+              }
+
+              const exStartDayjs = dayjs(exStart.toJSDate());
+              if (exStartDayjs.isBetween(start, end) === true) {
+                const exTitle = String(ex.component?.getFirstPropertyValue("summary") || title);
+                events.push({
+                  start: exStartDayjs.toISOString(),
+                  end: dayjs(exEnd.toJSDate()).toISOString(),
+                  title: exTitle,
+                });
+              }
+            }
+          }
+
+          let maxIterations = 5000;
+          let current: ICAL.Time | null = null;
           let currentEvent;
           let currentStart = null;
           let currentError;
 
-          while (
-            maxIterations > 0 &&
-            (currentStart === null || currentStart.isAfter(end) === false) &&
-            // this iterator was poorly implemented, normally done is expected to be
-            // returned
-            (current = iterator.next())
-          ) {
+          while (maxIterations > 0) {
             maxIterations -= 1;
+
+            try {
+              current = iterator.next();
+            } catch (error) {
+              console.warn("Error advancing recurring event iterator:", error);
+              break;
+            }
+
+            if (!current) break;
+
+            // Recurrence progression check: if the scheduled recurrence time is after the query window,
+            // subsequent occurrences in the series cannot fall within the window.
+            let recurrenceZoneTime = current;
+            if (vtimezone) {
+              const zone = new ICAL.Timezone(vtimezone);
+              recurrenceZoneTime = current.convertToZone(zone);
+            }
+            if (dayjs(recurrenceZoneTime.toJSDate()).isAfter(end)) {
+              break;
+            }
+
+            // If this recurrence ID was handled as an exception, skip the base recurrence occurrence
+            const currentKey = current.toString();
+            let currentUtcKey: string | null = null;
+            try {
+              const utcZone = (ICAL.Timezone as unknown as { utcTimezone: ICAL.Timezone }).utcTimezone;
+              if (utcZone) {
+                currentUtcKey = current.convertToZone(utcZone).toString();
+              }
+            } catch {
+              // ignore zone conversion error
+            }
+            if (
+              handledExceptionIds.has(currentKey) ||
+              (currentUtcKey && handledExceptionIds.has(currentUtcKey))
+            ) {
+              continue;
+            }
 
             try {
               // @see https://github.com/mozilla-comm/ical.js/issues/514
@@ -249,7 +363,13 @@ class ICSFeedCalendarService implements Calendar {
                 currentError = error.message;
               }
             }
-            if (!currentEvent) return;
+            if (!currentEvent) break;
+
+            const occStatus = currentEvent.item?.component?.getFirstPropertyValue("status");
+            if (typeof occStatus === "string" && occStatus.toUpperCase() === "CANCELLED") {
+              continue;
+            }
+
             // do not mix up caldav and icalendar! For the recurring events here, the timezone
             // provided is relevant, not as pointed out in https://datatracker.ietf.org/doc/html/rfc4791#section-9.6.5
             // where recurring events are always in utc (in caldav!). Thus, apply the time zone here.
@@ -269,7 +389,7 @@ class ICSFeedCalendarService implements Calendar {
             }
           }
           if (maxIterations <= 0) {
-            console.warn("could not find any occurrence for recurring event in 365 iterations");
+            console.warn("could not find all occurrences for recurring event within 5000 iterations");
           }
           return;
         }
