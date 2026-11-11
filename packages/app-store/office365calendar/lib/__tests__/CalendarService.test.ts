@@ -38,7 +38,28 @@ const availabilityParams = {
   mode: "overlay" as const,
 };
 
-const mockCalendarView = () => {
+const busyEvent = (
+  subject: string,
+  hour: number
+): { showAs: string; subject: string; start: { dateTime: string }; end: { dateTime: string } } => ({
+  showAs: "busy",
+  subject,
+  start: { dateTime: `2024-01-10T${String(hour).padStart(2, "0")}:00:00.0000000` },
+  end: { dateTime: `2024-01-10T${String(hour).padStart(2, "0")}:30:00.0000000` },
+});
+
+const batchResponse = (
+  responses: Array<{ id: string; status: number; body?: object; headers?: Record<string, string> }>
+): void => {
+  requestRawMock.mockResolvedValueOnce(
+    new Response(JSON.stringify({ responses }), { headers: { "content-encoding": "gzip" } })
+  );
+};
+
+const getRequestedBatch = (call: number = 0): Array<{ id: string; url: string; method: string }> =>
+  JSON.parse(requestRawMock.mock.calls[call][0].options.body).requests;
+
+const mockCalendarView = (): void => {
   requestRawMock.mockResolvedValueOnce(
     // The batch response is only parsed when it comes back gzip encoded, which is what Microsoft Graph sends
     new Response(
@@ -76,7 +97,8 @@ const mockCalendarView = () => {
   );
 };
 
-const getRequestedUrl = () => JSON.parse(requestRawMock.mock.calls[0][0].options.body).requests[0].url;
+const getRequestedUrl = (): string =>
+  JSON.parse(requestRawMock.mock.calls[0][0].options.body).requests[0].url;
 
 describe("Office365CalendarService", () => {
   beforeEach(() => {
@@ -102,5 +124,161 @@ describe("Office365CalendarService", () => {
     await BuildCalendarService(credential).getAvailability(availabilityParams);
 
     expect(getRequestedUrl()).toContain("$select=showAs,start,end&");
+  });
+
+  test("rejects when a selected calendar returns a 503 batch subresponse", async () => {
+    batchResponse([{ id: "0", status: 503, body: { error: { message: "Unavailable" } } }]);
+
+    await expect(BuildCalendarService(credential).getAvailability(availabilityParams)).rejects.toThrow(
+      "status 503"
+    );
+  });
+
+  test("rejects instead of returning partial busy times when one of two calendars fails", async () => {
+    batchResponse([
+      { id: "0", status: 200, body: { value: [busyEvent("First calendar", 10)] } },
+      { id: "1", status: 503, body: { error: { message: "Unavailable" } } },
+    ]);
+
+    await expect(
+      BuildCalendarService(credential).getAvailability({
+        ...availabilityParams,
+        selectedCalendars: [
+          ...availabilityParams.selectedCalendars,
+          { integration: "office365_calendar", externalId: "second-calendar" },
+        ],
+      })
+    ).rejects.toThrow("status 503");
+  });
+
+  test("preserves a successful result while retrying a throttled calendar", async () => {
+    batchResponse([
+      { id: "1", status: 429, headers: { "Retry-After": "0" }, body: {} },
+      { id: "0", status: 200, body: { value: [busyEvent("First calendar", 10)] } },
+    ]);
+    batchResponse([{ id: "1", status: 200, body: { value: [busyEvent("Second calendar", 11)] } }]);
+
+    const result = await BuildCalendarService(credential).getAvailability({
+      ...availabilityParams,
+      selectedCalendars: [
+        ...availabilityParams.selectedCalendars,
+        { integration: "office365_calendar", externalId: "second-calendar" },
+      ],
+    });
+
+    expect(result).toEqual([
+      { start: "2024-01-10T10:00:00.0000000Z", end: "2024-01-10T10:30:00.0000000Z", title: "First calendar" },
+      {
+        start: "2024-01-10T11:00:00.0000000Z",
+        end: "2024-01-10T11:30:00.0000000Z",
+        title: "Second calendar",
+      },
+    ]);
+    expect(getRequestedBatch(1).map((request: { id: string }) => request.id)).toEqual(["1"]);
+  });
+
+  test("does not discard a non-429 failure in a batch that also contains a 429", async () => {
+    batchResponse([
+      { id: "0", status: 429, headers: { "Retry-After": "0" }, body: {} },
+      { id: "1", status: 503, body: { error: { message: "Unavailable" } } },
+    ]);
+    batchResponse([{ id: "0", status: 200, body: { value: [busyEvent("Retried calendar", 10)] } }]);
+
+    await expect(
+      BuildCalendarService(credential).getAvailability({
+        ...availabilityParams,
+        selectedCalendars: [
+          ...availabilityParams.selectedCalendars,
+          { integration: "office365_calendar", externalId: "second-calendar" },
+        ],
+      })
+    ).rejects.toThrow("status 503");
+    expect(getRequestedBatch(1).map((request: { id: string }) => request.id)).toEqual(["0"]);
+  });
+
+  test("returns busy times when a throttled request succeeds on retry", async () => {
+    batchResponse([{ id: "0", status: 429, headers: { "Retry-After": "0" }, body: {} }]);
+    batchResponse([{ id: "0", status: 200, body: { value: [busyEvent("Retried event", 12)] } }]);
+
+    await expect(BuildCalendarService(credential).getAvailability(availabilityParams)).resolves.toEqual([
+      { start: "2024-01-10T12:00:00.0000000Z", end: "2024-01-10T12:30:00.0000000Z", title: "Retried event" },
+    ]);
+  });
+
+  test("fails closed when a throttled request exhausts its retries", async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      batchResponse([{ id: "0", status: 429, headers: { "Retry-After": "0" }, body: {} }]);
+    }
+
+    await expect(BuildCalendarService(credential).getAvailability(availabilityParams)).rejects.toThrow(
+      "status 429"
+    );
+    expect(requestRawMock).toHaveBeenCalledTimes(3);
+  });
+
+  test("rejects when an @odata.nextLink page fails", async () => {
+    batchResponse([
+      {
+        id: "0",
+        status: 200,
+        body: {
+          value: [busyEvent("First page", 10)],
+          "@odata.nextLink": "https://graph.microsoft.com/v1.0/next",
+        },
+      },
+    ]);
+    batchResponse([{ id: "0", status: 503, body: { error: { message: "Unavailable" } } }]);
+
+    await expect(BuildCalendarService(credential).getAvailability(availabilityParams)).rejects.toThrow(
+      "status 503"
+    );
+  });
+
+  test("combines events from successful paginated responses", async () => {
+    batchResponse([
+      {
+        id: "0",
+        status: 200,
+        body: {
+          value: [busyEvent("First page", 10)],
+          "@odata.nextLink": "https://graph.microsoft.com/v1.0/next",
+        },
+      },
+    ]);
+    batchResponse([{ id: "0", status: 200, body: { value: [busyEvent("Second page", 11)] } }]);
+
+    await expect(BuildCalendarService(credential).getAvailability(availabilityParams)).resolves.toEqual([
+      { start: "2024-01-10T10:00:00.0000000Z", end: "2024-01-10T10:30:00.0000000Z", title: "First page" },
+      { start: "2024-01-10T11:00:00.0000000Z", end: "2024-01-10T11:30:00.0000000Z", title: "Second page" },
+    ]);
+  });
+
+  test("returns an empty array for a successfully retrieved empty calendar", async () => {
+    batchResponse([{ id: "0", status: 200, body: { value: [] } }]);
+
+    await expect(BuildCalendarService(credential).getAvailability(availabilityParams)).resolves.toEqual([]);
+  });
+
+  test.each([
+    { name: "missing", responses: [] },
+    { name: "unexpected", responses: [{ id: "99", status: 200, body: { value: [] } }] },
+    {
+      name: "duplicate",
+      responses: [
+        { id: "0", status: 200, body: { value: [] } },
+        { id: "0", status: 200, body: { value: [] } },
+      ],
+    },
+    { name: "malformed", responses: [{ id: "0", status: 200, body: {} }] },
+    {
+      name: "malformed event",
+      responses: [
+        { id: "0", status: 200, body: { value: [{ start: { dateTime: "2024-01-10T10:00:00Z" } }] } },
+      ],
+    },
+  ])("rejects safely when the batch response is $name", async ({ responses }) => {
+    batchResponse(responses);
+
+    await expect(BuildCalendarService(credential).getAvailability(availabilityParams)).rejects.toThrow();
   });
 });
