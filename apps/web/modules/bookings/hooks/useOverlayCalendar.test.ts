@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WrappedBookerPropsMain } from "../types";
 import { useOverlayCalendar } from "./useOverlayCalendar";
@@ -92,5 +92,30 @@ describe("useOverlayCalendar", () => {
     expect(result.current.checkIsCalendarToggled("personal", 1)).toBe(true);
     expect(result.current.checkIsCalendarToggled("work", 1)).toBe(false);
     expect(onToggleCalendar).not.toHaveBeenCalled();
+  });
+
+  it("does not re-select default calendars when unchecking the last calendar if localStorage had selections", () => {
+    window.localStorage.setItem(
+      "toggledConnectedCalendars",
+      JSON.stringify([{ credentialId: 1, externalId: "personal" }])
+    );
+
+    const { result } = renderOverlayCalendar(
+      buildConnectedCalendars([
+        { externalId: "personal", primary: false, isSelected: false },
+        { externalId: "work", primary: false, isSelected: true },
+      ])
+    );
+
+    expect(result.current.checkIsCalendarToggled("personal", 1)).toBe(true);
+    expect(result.current.checkIsCalendarToggled("work", 1)).toBe(false);
+
+    // Uncheck the last selected calendar
+    act(() => {
+      result.current.handleToggleConnectedCalendar("personal", 1);
+    });
+
+    expect(result.current.checkIsCalendarToggled("personal", 1)).toBe(false);
+    expect(result.current.checkIsCalendarToggled("work", 1)).toBe(false);
   });
 });
