@@ -19,6 +19,10 @@ runs:
       uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        # Fork PRs only reach this step after trust-check in pr.yml passes (author has write
+        # access, or a maintainer added 'run-ci' after the latest push). That gate is the review
+        # actions/checkout v4.4.0+ requires before checking out fork code in pull_request_target.
+        allow-unsafe-pr-checkout: true
         fetch-depth: 2
         sparse-checkout-cone-mode: false
         sparse-checkout: |
