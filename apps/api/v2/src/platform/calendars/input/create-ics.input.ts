@@ -1,52 +1,48 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import type { ValidatorConstraintInterface } from "class-validator";
 import {
   ArrayNotEmpty,
+  IsArray,
   IsBoolean,
+  IsNotEmpty,
   IsOptional,
   Validate,
   ValidatorConstraint,
-  ValidatorConstraintInterface,
 } from "class-validator";
-import { IsNotEmpty, IsArray } from "class-validator";
 
-// Custom constraint to validate ICS URLs
 @ValidatorConstraint({ async: false })
 export class IsICSUrlConstraint implements ValidatorConstraintInterface {
-  validate(url: unknown) {
+  validate(url: unknown): boolean {
     if (typeof url !== "string") return false;
 
-    // Check if it's a valid URL and ends with .ics
     try {
       const urlObject = new URL(url);
-      return (
-        (urlObject.protocol === "http:" || urlObject.protocol === "https:") &&
-        urlObject.pathname.endsWith(".ics")
-      );
-    } catch (error) {
+      return urlObject.protocol === "http:" || urlObject.protocol === "https:";
+    } catch {
       return false;
     }
   }
 
-  defaultMessage() {
-    return "The URL must be a valid ICS URL (ending with .ics)";
+  defaultMessage(): string {
+    return "The URL must be a valid HTTP or HTTPS URL";
   }
 }
 
 export class CreateIcsFeedInputDto {
   @ApiProperty({
-    example: ["https://cal.com/ics/feed.ics", "http://cal.com/ics/feed.ics"],
+    example: ["https://cal.com/ics/feed.ics", "https://caldav.example.com/calendars/user?export"],
     description: "An array of ICS URLs",
     type: "array",
     items: {
       type: "string",
-      example: "https://cal.com/ics/feed.ics",
+      example: "https://caldav.example.com/calendars/user?export",
     },
     required: true,
   })
   @IsArray()
   @ArrayNotEmpty()
   @IsNotEmpty({ each: true })
-  @Validate(IsICSUrlConstraint, { each: true }) // Apply the custom validator to each element in the array
+  @Validate(IsICSUrlConstraint, { each: true })
   urls!: string[];
 
   @IsBoolean()
