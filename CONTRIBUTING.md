@@ -150,7 +150,7 @@ export class HashedLinkService { ... }
 
 ## Developing
 
-[See README](https://github.com/calcom/cal.diy#development)
+[See README](https://github.com/calcom/cal.diy#development) and the [OS-Specific Setup Guide](docs/setup-os.md).
 
 ## Building
 
