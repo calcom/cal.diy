@@ -1,3 +1,4 @@
+import { canonicalizeTimezone } from "@calcom/lib/timezone";
 import { cityMapping as allCities } from "city-timezones";
 
 export type CityTimezones = Awaited<ReturnType<typeof cityTimezonesHandler>>;
@@ -23,6 +24,10 @@ export const cityTimezonesHandler = async () => {
   uniqueCities.forEach((city) => {
     if (city.city === "London") city.timezone = "Europe/London";
     if (city.city === "Londonderry") city.city = "London";
+    // The city-timezones dependency still ships pre-rename IANA link ids
+    // (e.g. Europe/Kiev). Map them to their canonical ids so the picker
+    // only ever offers current names.
+    city.timezone = canonicalizeTimezone(city.timezone);
   });
 
   return uniqueCities;
