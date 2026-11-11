@@ -393,14 +393,16 @@ export class EventTypesAtomService {
     usernameOrTeamSlug = usernameOrTeamSlug.toLowerCase();
 
     try {
-      let event = await getPublicEvent(
-        usernameOrTeamSlug,
-        eventSlug,
-        isTeamEvent,
-        orgSlug,
-        this.dbRead.prisma as unknown as PrismaClient,
-        true
-      );
+      let event = await getPublicEvent({
+        username: usernameOrTeamSlug,
+        eventSlug: eventSlug,
+        isTeamEvent: isTeamEvent,
+        org: orgSlug,
+        prisma: this.dbRead.prisma as unknown as PrismaClient,
+        // Platform and atoms access is gated behind a license, so unpublished org events can be served safely.
+        // If restriction is ever needed, introduce a `fromRedirectOfNonOrgLink` query param instead.
+        fromRedirectOfNonOrgLink: true
+      });
 
       const usernamePossiblyNotFromProfile = username && orgId && !event;
       if (usernamePossiblyNotFromProfile) {
@@ -408,14 +410,16 @@ export class EventTypesAtomService {
         if (user) {
           const profile = await this.usersService.getUserMainProfile(user);
           if (profile?.username) {
-            event = await getPublicEvent(
-              profile.username,
-              eventSlug,
-              isTeamEvent,
-              orgSlug,
-              this.dbRead.prisma as unknown as PrismaClient,
-              true
-            );
+            event = await getPublicEvent({
+              username: profile.username,
+              eventSlug: eventSlug,
+              isTeamEvent: isTeamEvent,
+              org: orgSlug,
+              prisma: this.dbRead.prisma as unknown as PrismaClient,
+              // Platform and atoms access is gated behind a license, so unpublished org events can be served safely.
+              // If restriction is ever needed, introduce a `fromRedirectOfNonOrgLink` query param instead.
+              fromRedirectOfNonOrgLink: true
+            });
           }
         }
       }
