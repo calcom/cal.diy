@@ -10,5 +10,5 @@
   "devDependencies": {
     "@calcom/types": "workspace:*"
   },
-  "description": "Famulor AI assistants reach your customers, make calls independently & enhance your customer experience - fully integrated into Cal.com."
+  "description": "Famulor AI voice agents check availability, book, cancel and reschedule Cal.diy bookings during calls and chats."
 }
