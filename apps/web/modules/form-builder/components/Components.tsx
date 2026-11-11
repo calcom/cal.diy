@@ -209,20 +209,37 @@ export const Components: Record<FieldType, Component> = {
   },
   email: {
     propsType: propsTypes.email,
-    factory: (props) => {
+    factory: function EmailInput(props) {
       if (!props) {
         return <div />;
       }
 
+      const { t } = useLocale();
+      const email = typeof props.value === "string" ? props.value : "";
+      const suggestion = suggestEmailDomain(email);
+
       return (
-        <InputField
-          type="email"
-          id={props.name}
-          noLabel={true}
-          autoComplete="email"
-          {...props}
-          onChange={(e) => props.setValue(e.target.value)}
-        />
+        <div>
+          <InputField
+            type="email"
+            id={props.name}
+            noLabel={true}
+            autoComplete="email"
+            {...props}
+            onChange={(e) => props.setValue(e.target.value)}
+          />
+          {!props.readOnly && suggestion && (
+            <p className="text-subtle mt-1 text-sm">
+              {t("did_you_mean_email", { email: suggestion })}{" "}
+              <button
+                type="button"
+                className="text-emphasis underline"
+                onClick={() => props.setValue(suggestion)}>
+                {t("use_suggested_email")}
+              </button>
+            </p>
+          )}
+        </div>
       );
     },
   },
@@ -557,3 +574,49 @@ export const Components: Record<FieldType, Component> = {
   },
 } as const;
 // Should use `satisfies` to check if the `type` is from supported types. But satisfies doesn't work with Next.js config
+
+const COMMON_EMAIL_DOMAINS = [
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+  "icloud.com",
+  "live.com",
+  "aol.com",
+  "protonmail.com",
+];
+
+function suggestEmailDomain(email: string) {
+  const atIndex = email.lastIndexOf("@");
+  if (atIndex <= 0 || atIndex === email.length - 1 || email.indexOf("@") !== atIndex) return null;
+
+  const domain = email.slice(atIndex + 1).toLowerCase();
+  const suggestion = COMMON_EMAIL_DOMAINS.find((candidate) => isOneEditAway(domain, candidate));
+  return suggestion ? `${email.slice(0, atIndex)}@${suggestion}` : null;
+}
+
+function isOneEditAway(left: string, right: string) {
+  if (Math.abs(left.length - right.length) > 1 || left === right) return false;
+
+  let leftIndex = 0;
+  let rightIndex = 0;
+  let edits = 0;
+
+  while (leftIndex < left.length && rightIndex < right.length) {
+    if (left[leftIndex] === right[rightIndex]) {
+      leftIndex++;
+      rightIndex++;
+      continue;
+    }
+
+    if (++edits > 1) return false;
+    if (left.length > right.length) leftIndex++;
+    else if (right.length > left.length) rightIndex++;
+    else {
+      leftIndex++;
+      rightIndex++;
+    }
+  }
+
+  return edits + Number(leftIndex < left.length || rightIndex < right.length) === 1;
+}
