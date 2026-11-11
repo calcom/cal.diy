@@ -150,8 +150,15 @@ const EventTypeWeb = ({
     onError: (err) => {
       let message = "";
       if (err instanceof HttpError) {
-        const message = `${err.statusCode}: ${err.message}`;
-        showToast(message, "error");
+        showToast(`${err.statusCode}: ${err.message}`, "error");
+        return;
+      }
+
+      // No tRPC error shape means the response wasn't from our API (e.g. a 413 from the
+      // body size limit), so err.message is a raw JSON parse error that would confuse users.
+      if (!err.data) {
+        showToast(t("unexpected_error_try_again"), "error");
+        return;
       }
 
       if (err.data?.code === "UNAUTHORIZED") {
