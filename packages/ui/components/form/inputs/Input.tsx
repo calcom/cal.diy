@@ -104,7 +104,7 @@ type TextAreaFieldProps = {
 
 export const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>(
   function TextField(props, ref) {
-    const id = useId();
+    const generatedId = useId();
     const { t: _t } = useLocale();
     const t = props.t || _t;
     const methods = useFormContext();
@@ -115,16 +115,18 @@ export const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>
       placeholder = t(`${props.name}_placeholder`) !== `${props.name}_placeholder`
         ? `${props.name}_placeholder`
         : "",
+      id,
       ...passThrough
     } = props;
+    const textAreaId = id ?? generatedId;
     return (
       <div>
         {!!props.name && (
-          <Label htmlFor={id} {...labelProps}>
+          <Label htmlFor={textAreaId} {...labelProps}>
             {label}
           </Label>
         )}
-        <TextArea ref={ref} placeholder={placeholder} {...passThrough} />
+        <TextArea id={textAreaId} ref={ref} placeholder={placeholder} {...passThrough} />
         {methods?.formState?.errors[props.name]?.message && (
           <Alert
             className="mt-1"
