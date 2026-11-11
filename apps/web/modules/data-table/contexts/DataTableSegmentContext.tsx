@@ -8,6 +8,7 @@ import type {
   UseSegments,
 } from "@calcom/features/data-table/lib/types";
 import { SYSTEM_SEGMENT_PREFIX } from "@calcom/features/data-table/lib/types";
+import { isEqual } from "@calcom/lib/isEqual";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useSegmentsNoop } from "../hooks/useSegmentsNoop";
 import { useDataTableState } from "./DataTableStateContext";
@@ -252,8 +253,6 @@ export function DataTableSegmentProvider({
 
   const hasStateChanged = useMemo(() => {
     if (!selectedSegment) return false;
-
-    const isEqual = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
     return (
       !isEqual(activeFilters, selectedSegment.activeFilters) ||
