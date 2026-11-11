@@ -403,18 +403,18 @@ export class UserAvailabilityService {
       user,
     });
 
-    if (
-      !(
-        schedule?.availability ||
-        (eventType?.availability.length ? eventType.availability : user.availability)
-      )
-    ) {
+    const rawAvailability =
+      (schedule?.availability && schedule.availability.length > 0 ? schedule.availability : null) ||
+      (eventType?.availability && eventType.availability.length > 0 ? eventType.availability : null) ||
+      (user.availability && user.availability.length > 0 ? user.availability : null) ||
+      schedule?.availability ||
+      user.availability;
+
+    if (!rawAvailability || rawAvailability.length === 0) {
       throw new HttpError({ statusCode: 400, message: ErrorCode.AvailabilityNotFoundInSchedule });
     }
 
-    const availability = (
-      schedule?.availability || (eventType?.availability.length ? eventType.availability : user.availability)
-    ).map((a) => ({
+    const availability = rawAvailability.map((a) => ({
       ...a,
       userId: user.id,
     }));
