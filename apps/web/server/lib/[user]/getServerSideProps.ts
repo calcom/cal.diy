@@ -19,7 +19,10 @@ import type { EmbedProps } from "app/WithEmbedSSR";
 import type { GetServerSideProps } from "next";
 import type { z } from "zod";
 
-const log = logger.getSubLogger({ prefix: ["[[pages/[user]]]"] });
+const log: ReturnType<typeof logger.getSubLogger> = logger.getSubLogger({
+  prefix: ["[[pages/[user]]]"],
+});
+
 type UserPageProps = {
   profile: {
     name: string;
@@ -75,40 +78,56 @@ type UserPageProps = {
   isOrgSEOIndexable: boolean | undefined;
 } & EmbedProps;
 
-export const getServerSideProps: GetServerSideProps<UserPageProps> = async (context) => {
-  const currentOrgDomain = null;
-  const isValidOrgDomain = false;
+const getQueryString = (query: GetServerSidePropsContext["query"]): string => {
+  const searchParams = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((v) => {
+        searchParams.append(key, v);
+      });
+    } else if (value !== undefined && value !== null) {
+      searchParams.append(key, value);
+    }
+  });
+  const queryString = searchParams.toString();
+  if (queryString) {
+    return `?${queryString}`;
+  }
+  return "";
+};
+
+export const getServerSideProps: GetServerSideProps<UserPageProps> = async (context: GetServerSidePropsContext) => {
+  const { currentOrgDomain, isValidOrgDomain } = orgDomainConfig(context.req, context.params?.orgSlug);
   const usernameList = getUsernameList(context.query.user as string);
   const isARedirectFromNonOrgLink = context.query.orgRedirection === "true";
   const dataFetchStart = Date.now();
+
+  let orgDomain = null;
+  if (isValidOrgDomain) {
+    orgDomain = currentOrgDomain;
+  }
 
   const redirect = await handleOrgRedirect({
     slugs: usernameList,
     redirectType: RedirectType.User,
     eventTypeSlug: null,
     context,
-    currentOrgDomain: isValidOrgDomain ? currentOrgDomain : null,
+    currentOrgDomain: orgDomain,
   });
 
   if (redirect) {
     return redirect;
   }
 
-  const usersInOrgContext = await getUsersInOrgContext(
-    usernameList,
-    isValidOrgDomain ? currentOrgDomain : null
-  );
+  const usersInOrgContext = await getUsersInOrgContext(usernameList, orgDomain);
 
   const isDynamicGroup = usersInOrgContext.length > 1;
   log.debug(safeStringify({ usersInOrgContext, isValidOrgDomain, currentOrgDomain, isDynamicGroup }));
 
   if (isDynamicGroup) {
     const destinationUrl = encodeURI(`/${usernameList.join("+")}/dynamic`);
+    const destinationWithQuery = `${destinationUrl}${getQueryString(context.query)}`;
 
-    // EXAMPLE - context.params: { orgSlug: 'acme', user: 'member0+owner1' }
-    // EXAMPLE - context.query: { redirect: 'undefined', orgRedirection: 'undefined', user: 'member0+owner1' }
-    const originalQueryString = new URLSearchParams(context.query as Record<string, string>).toString();
-    const destinationWithQuery = `${destinationUrl}?${originalQueryString}`;
     log.debug(`Dynamic group detected, redirecting to ${destinationUrl}`);
     return {
       redirect: {
@@ -118,7 +137,7 @@ export const getServerSideProps: GetServerSideProps<UserPageProps> = async (cont
     } as const;
   }
 
-  const isNonOrgUser = (user: { profile: UserProfile }) => {
+  const isNonOrgUser = (user: { profile: UserProfile }): boolean => {
     return !user.profile?.organization;
   };
 
@@ -130,7 +149,7 @@ export const getServerSideProps: GetServerSideProps<UserPageProps> = async (cont
     } as const;
   }
 
-  const [user] = usersInOrgContext; //to be used when dealing with single user, not dynamic group
+  const [user] = usersInOrgContext;
 
   const branding = getBrandingForUser({ user });
 
@@ -164,25 +183,26 @@ export const getServerSideProps: GetServerSideProps<UserPageProps> = async (cont
 
   const eventTypes = await getEventTypesPublic(user.id);
 
-  // if profile only has one public event-type, redirect to it
   if (eventTypes.length === 1 && context.query.redirect !== "false") {
-    // Redirect but don't change the URL
     const urlDestination = `/${user.profile.username}/${eventTypes[0].slug}`;
-    const { query } = context;
-    const urlQuery = new URLSearchParams(encode(query));
+    const urlQuery = getQueryString(context.query);
 
     return {
       redirect: {
         permanent: false,
-        destination: `${encodeURI(urlDestination)}?${urlQuery}`,
+        destination: `${encodeURI(urlDestination)}${urlQuery}`,
       },
     };
   }
 
   const safeBio = markdownToSafeHTML(user.bio) || "";
-
   const markdownStrippedBio = stripMarkdown(user?.bio || "");
   const org = usersInOrgContext[0].profile.organization;
+
+  let logoUrlObj = {};
+  if (org?.logoUrl) {
+    logoUrlObj = { logoUrl: org.logoUrl };
+  }
 
   return {
     props: {
@@ -195,7 +215,7 @@ export const getServerSideProps: GetServerSideProps<UserPageProps> = async (cont
         profile: user.profile,
       })),
       entity: {
-        ...(org?.logoUrl ? { logoUrl: org?.logoUrl } : {}),
+        ...logoUrlObj,
         considerUnpublished: !isARedirectFromNonOrgLink && org?.slug === null,
         orgSlug: currentOrgDomain,
         name: org?.name ?? null,
@@ -203,7 +223,6 @@ export const getServerSideProps: GetServerSideProps<UserPageProps> = async (cont
       eventTypes,
       safeBio,
       profile,
-      // Dynamic group has no theme preference right now. It uses system theme.
       themeBasis: user.username,
       markdownStrippedBio,
       isOrgSEOIndexable: org?.organizationSettings?.allowSEOIndexing ?? false,
@@ -211,7 +230,10 @@ export const getServerSideProps: GetServerSideProps<UserPageProps> = async (cont
   };
 };
 
-export async function getUsersInOrgContext(usernameList: string[], orgSlug: string | null) {
+export async function getUsersInOrgContext(
+  usernameList: string[],
+  orgSlug: string | null
+): Promise<Awaited<ReturnType<UserRepository["findUsersByUsername"]>>> {
   const userRepo = new UserRepository(prisma);
 
   const usersInOrgContext = await userRepo.findUsersByUsername({
@@ -223,10 +245,6 @@ export async function getUsersInOrgContext(usernameList: string[], orgSlug: stri
     return usersInOrgContext;
   }
 
-  // note(Lauris): platform members (people who run platform) are part of platform organization while
-  // the platform organization does not have a domain. In this case there is no org domain but also platform member
-  // "User.organization" is not null so "UserRepository.findUsersByUsername" returns empty array and we do this as a last resort
-  // call to find platform member.
   return await userRepo.findPlatformMembersByUsernames({
     usernameList,
   });
