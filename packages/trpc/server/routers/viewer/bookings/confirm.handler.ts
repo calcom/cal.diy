@@ -27,7 +27,7 @@ import { getTimeFormatStringFromUserTimeFormat } from "@calcom/lib/timeFormat";
 import type { TraceContext } from "@calcom/lib/tracing";
 import { prisma } from "@calcom/prisma";
 import { Prisma } from "@calcom/prisma/client";
-import { BookingStatus, WebhookTriggerEvents } from "@calcom/prisma/enums";
+import { BookingStatus, UserPermissionRole, WebhookTriggerEvents } from "@calcom/prisma/enums";
 import type { EventTypeMetadata } from "@calcom/prisma/zod-utils";
 import type { CalendarEvent } from "@calcom/types/Calendar";
 import { TRPCError } from "@trpc/server";
@@ -57,6 +57,7 @@ export const confirmHandler = async ({ ctx, input }: ConfirmOptions) => {
     confirmed,
     emailsEnabled,
     platformClientParams,
+    forceConfirm,
   } = input;
 
   const booking = await prisma.booking.findUniqueOrThrow({
@@ -77,7 +78,7 @@ export const confirmHandler = async ({ ctx, input }: ConfirmOptions) => {
       eventType: {
         select: {
           id: true,
-          owner: true,
+          userId: true,
           teamId: true,
           recurringEvent: true,
           title: true,
@@ -180,6 +181,39 @@ export const confirmHandler = async ({ ctx, input }: ConfirmOptions) => {
   // This is done to avoid exposing extra information to the requester.
   if (booking.status === BookingStatus.ACCEPTED) {
     throw new TRPCError({ code: "BAD_REQUEST", message: "Booking already confirmed" });
+  }
+
+  if (confirmed) {
+    const isEventOwner = !!(booking.eventType?.userId && booking.eventType.userId === ctx.user.id);
+    const callerIsOwnerOrAdmin = isEventOwner || ctx.user.role === UserPermissionRole.ADMIN;
+    const effectiveForceConfirm = forceConfirm && callerIsOwnerOrAdmin;
+
+    if (!effectiveForceConfirm) {
+      // Defensive: booking.user is non-null (guarded earlier), which implies a non-null
+      // userId via the Prisma relation. Narrow the type explicitly before the conflict query
+      // so a null FK can never match all bookings without a userId.
+      if (!booking.userId) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "booking_has_no_user" });
+      }
+      // Scope intentionally limited to the primary organizer; team co-host conflict detection
+      // is out of scope for this PR and left to existing booking-creation guards.
+      const conflict = await prisma.booking.findFirst({
+        where: {
+          userId: booking.userId,
+          status: BookingStatus.ACCEPTED,
+          id: { not: bookingId },
+          startTime: { lt: booking.endTime },
+          endTime: { gt: booking.startTime },
+        },
+        select: { id: true },
+      });
+      if (conflict) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "booking_conflict_exists",
+        });
+      }
+    }
   }
 
   // If booking requires payment and is not paid, we don't allow confirmation

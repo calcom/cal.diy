@@ -70,7 +70,14 @@ import { getTimeFormatStringFromUserTimeFormat } from "@calcom/lib/timeFormat";
 import { distributedTracing } from "@calcom/lib/tracing/factory";
 import type { PrismaClient } from "@calcom/prisma";
 import type { AssignmentReasonEnum, DestinationCalendar, Prisma, User } from "@calcom/prisma/client";
-import { BookingStatus, CreationSource, SchedulingType, WebhookTriggerEvents } from "@calcom/prisma/enums";
+import {
+  BookingStatus,
+  CreationSource,
+  SchedulingType,
+  WebhookTriggerEvents,
+  WorkflowTriggerEvents,
+  UserPermissionRole,
+} from "@calcom/prisma/enums";
 import { userMetadata as userMetadataSchema } from "@calcom/prisma/zod-utils";
 import type {
   AdditionalInformation,
@@ -569,6 +576,7 @@ async function handler(
     routedTeamMemberIds,
     rrHostSubsetIds,
     _isDryRun: isDryRun = false,
+    forceConfirm,
     ...reqBody
   } = bookingData;
 
@@ -666,14 +674,34 @@ async function handler(
     metadata: eventTypeMetaDataSchemaWithTypedApps.parse(eventType.metadata),
   });
 
-  const { userReschedulingIsOwner, isConfirmedByDefault } = await getRequiresConfirmationFlags({
-    eventType,
-    bookingStartTime: reqBody.start,
-    userId,
-    originalRescheduledBookingOrganizerId: originalRescheduledBooking?.user?.id,
-    paymentAppData,
-    bookerEmail,
-  });
+  const { userReschedulingIsOwner, isConfirmedByDefault: isConfirmedByDefaultFromFlags } =
+    await getRequiresConfirmationFlags({
+      eventType,
+      bookingStartTime: reqBody.start,
+      userId,
+      originalRescheduledBookingOrganizerId: originalRescheduledBooking?.user?.id,
+      paymentAppData,
+      bookerEmail,
+    });
+
+  // Allow callers to force-confirm a booking even when the event type requires confirmation.
+  // When forceConfirm is true, the booking is created as ACCEPTED regardless of requiresConfirmation.
+  // Security Fix: Only the event type owner or an admin can use the forceConfirm flag.
+  let effectiveForceConfirm = false;
+  if (forceConfirm) {
+    const isOwner = !!(userId && eventType.userId === userId);
+    let callerIsOwnerOrAdmin = isOwner;
+    if (!callerIsOwnerOrAdmin && userId) {
+      const caller = await deps.prismaClient.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+      callerIsOwnerOrAdmin = caller?.role === UserPermissionRole.ADMIN;
+    }
+    effectiveForceConfirm = callerIsOwnerOrAdmin;
+  }
+
+  const isConfirmedByDefault = isConfirmedByDefaultFromFlags || effectiveForceConfirm;
 
   // For unconfirmed bookings or round robin bookings with the same attendee and timeslot, return the original booking
   if (
@@ -1325,8 +1353,8 @@ async function handler(
   const destinationCalendar = eventType.destinationCalendar
     ? [eventType.destinationCalendar]
     : organizerUser.destinationCalendar
-      ? [organizerUser.destinationCalendar]
-      : null;
+    ? [organizerUser.destinationCalendar]
+    : null;
 
   let organizerEmail = organizerUser.email || "Email-less";
   if (eventType.useEventTypeDestinationCalendarEmail && destinationCalendar?.[0]?.primaryEmail) {
@@ -1900,10 +1928,6 @@ async function handler(
         });
       }
     }
-    // This gets overridden when updating the event - to check if notes have been hidden or not. We just reset this back
-    // to the default description when we are sending the emails.
-    evt.description = eventType.description;
-
     const updateManager = !skipCalendarSyncTaskCreation
       ? await eventManager.reschedule(
           evt,
@@ -1915,6 +1939,9 @@ async function handler(
           skipDeleteEventsAndMeetings
         )
       : placeholderCreatedEvent;
+    // This gets overridden when updating the event - to check if notes have been hidden or not. We just reset this back
+    // to the default description when we are sending the emails.
+    evt.description = eventType.description;
 
     results = updateManager.results;
     referencesToCreate = updateManager.referencesToCreate;

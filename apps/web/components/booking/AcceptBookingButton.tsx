@@ -1,6 +1,7 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Button } from "@calcom/ui/components/button";
 
+import { ForceConfirmDialog } from "../dialog/ForceConfirmDialog";
 import { useBookingConfirmation } from "./hooks/useBookingConfirmation";
 
 interface AcceptBookingButtonProps {
@@ -28,7 +29,13 @@ export function AcceptBookingButton({
 }: AcceptBookingButtonProps) {
   const { t } = useLocale();
 
-  const { bookingConfirm, isPending } = useBookingConfirmation({
+  const {
+    bookingConfirm,
+    bookingForceConfirm,
+    forceConfirmDialogIsOpen,
+    setForceConfirmDialogIsOpen,
+    isPending,
+  } = useBookingConfirmation({
     isRecurring,
     isTabRecurring,
     isTabUnconfirmed,
@@ -37,15 +44,24 @@ export function AcceptBookingButton({
   const confirmLabel = (isTabRecurring || isTabUnconfirmed) && isRecurring ? t("confirm_all") : t("confirm");
 
   return (
-    <Button
-      color={color}
-      size={size}
-      className={className}
-      onClick={() => bookingConfirm({ bookingId, confirmed: true, recurringEventId })}
-      disabled={isPending}
-      data-booking-uid={bookingUid}
-      data-testid="confirm">
-      {confirmLabel}
-    </Button>
+    <>
+      <ForceConfirmDialog
+        isOpenDialog={forceConfirmDialogIsOpen}
+        setIsOpenDialog={setForceConfirmDialogIsOpen}
+        onConfirm={bookingForceConfirm}
+        isPending={isPending}
+      />
+
+      <Button
+        color={color}
+        size={size}
+        className={className}
+        onClick={() => bookingConfirm({ bookingId, confirmed: true, recurringEventId })}
+        disabled={isPending}
+        data-booking-uid={bookingUid}
+        data-testid="confirm">
+        {confirmLabel}
+      </Button>
+    </>
   );
 }
