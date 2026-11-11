@@ -385,6 +385,7 @@ export const userMetadata = z
     sessionTimeout: z.number().optional(), // Minutes
     defaultConferencingApp: schemaDefaultConferencingApp.optional(),
     defaultBookerLayouts: bookerLayouts.optional(),
+    defaultHomeView: z.enum(["event-types", "bookings"]).optional(),
     emailChangeWaitingForVerification: z
       .string()
       .transform((data) => data.toLowerCase())
