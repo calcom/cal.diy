@@ -449,6 +449,13 @@ jobs:
           echo "A maintainer must review the code and add the 'run-ci' label to trigger CI checks."
           exit 1
         if: needs.trust-check.outputs.is-trusted != 'true' && needs.trust-check.result == 'success'
+      # The conditional check below reads prepare's outputs, which are empty when prepare fails,
+      # so without this step a failed prepare skips every check and still reports success.
+      - name: Fail if prepare did not succeed
+        run: |
+          echo "::error::Prepare job did not succeed (result: ${{ needs.prepare.result }}), so no checks ran."
+          exit 1
+        if: needs.trust-check.outputs.is-trusted == 'true' && needs.prepare.result != 'success'
       - name: Fail if conditional jobs failed
         run: exit 1
         if: |
