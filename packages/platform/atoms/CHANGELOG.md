@@ -1,5 +1,11 @@
 ## 2.1.0
 
+## 2.3.4
+
+### Patch Changes
+
+- [#25666](https://github.com/calcom/cal.diy/pull/25666) [`da143ae`](https://github.com/calcom/cal.diy/commit/da143ae546080593f49bdb52adc8f29891add1ca) Thanks [@gusdudey2k](https://github.com/gusdudey2k)! - fix: unlocked fields not saved for managed event type
+
 ## 2.2.0
 
 ### Minor Changes
