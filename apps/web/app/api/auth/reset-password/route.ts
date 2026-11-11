@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { validPassword } from "@calcom/features/auth/lib/validPassword";
 import { hashPassword } from "@calcom/lib/auth/hashPassword";
+import { isPasswordValid } from "@calcom/lib/auth/isPasswordValid";
 import { checkRateLimitAndThrowError } from "@calcom/lib/checkRateLimitAndThrowError";
 import getIP from "@calcom/lib/getIP";
 import { piiHasher } from "@calcom/lib/server/PiiHasher";
@@ -60,6 +61,7 @@ async function handler(req: NextRequest) {
   });
 
   const hashedPassword = await hashPassword(rawPassword);
+  const adminPasswordMeetsRequirements = isPasswordValid(rawPassword, false, true);
   // this can fail if a password request has been made for an email that has since changed or-
   // never existed within Cal. In this case we do not want to disclose the email's existence.
   // instead, we just return 404
@@ -71,8 +73,14 @@ async function handler(req: NextRequest) {
       data: {
         password: {
           upsert: {
-            create: { hash: hashedPassword },
-            update: { hash: hashedPassword },
+            create: {
+              hash: hashedPassword,
+              adminPasswordMeetsRequirements,
+            },
+            update: {
+              hash: hashedPassword,
+              adminPasswordMeetsRequirements,
+            },
           },
         },
         emailVerified: new Date(),

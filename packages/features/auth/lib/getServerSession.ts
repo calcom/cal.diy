@@ -1,3 +1,4 @@
+import { getRoleWithAdminSecurityRequirements } from "@calcom/features/auth/lib/adminSecurity";
 import { UserRepository } from "@calcom/features/users/repositories/UserRepository";
 import { getUserAvatarUrl } from "@calcom/lib/getAvatarUrl";
 import logger from "@calcom/lib/logger";
@@ -9,13 +10,21 @@ import type { AuthOptions, Session } from "next-auth";
 import { getToken } from "next-auth/jwt";
 
 class LicenseKeySingleton {
-  static async getInstance(..._args: unknown[]) { return new LicenseKeySingleton(); }
-  async checkLicense() { return true; }
-  async validateLicenseKey() { return true; }
+  static async getInstance(..._args: unknown[]) {
+    return new LicenseKeySingleton();
+  }
+  async checkLicense() {
+    return true;
+  }
+  async validateLicenseKey() {
+    return true;
+  }
 }
 class DeploymentRepository {
   constructor(_prisma?: unknown) {}
-  async findFirst(..._args: unknown[]) { return null; }
+  async findFirst(..._args: unknown[]) {
+    return null;
+  }
 }
 
 const log = logger.getSubLogger({ prefix: ["getServerSession"] });
@@ -54,13 +63,6 @@ export async function getServerSession(options: {
     return null;
   }
 
-  const cachedSession = CACHE.get(JSON.stringify(token));
-
-  if (cachedSession) {
-    log.debug("Returning cached session", safeStringify(cachedSession));
-    return cachedSession;
-  }
-
   const userId = token.sub ? Number(token.sub) : null;
 
   if (!userId || userId <= 0) {
@@ -70,11 +72,44 @@ export async function getServerSession(options: {
 
   const userFromDb = await prisma.user.findUnique({
     where: { id: userId },
+    include: {
+      password: {
+        select: {
+          adminPasswordMeetsRequirements: true,
+        },
+      },
+    },
   });
 
   if (!userFromDb) {
     log.warn("No user found for valid token", { userId });
     return null;
+  }
+
+  const adminSecurity = getRoleWithAdminSecurityRequirements({
+    role: userFromDb.role,
+    identityProvider: userFromDb.identityProvider,
+    passwordMeetsRequirements:
+      userFromDb.password?.adminPasswordMeetsRequirements ??
+      (token.role === "ADMIN" || token.inactiveAdminReason === "2fa"),
+    twoFactorEnabled: userFromDb.twoFactorEnabled,
+  });
+  const cachedSession = CACHE.get(JSON.stringify(token));
+
+  if (cachedSession) {
+    const refreshedCachedSession = {
+      ...cachedSession,
+      user: {
+        ...cachedSession.user,
+        role: adminSecurity.role,
+        inactiveAdminReason: adminSecurity.inactiveAdminReason,
+      },
+    };
+    log.debug(
+      "Returning cached session with refreshed admin security status",
+      safeStringify(refreshedCachedSession)
+    );
+    return refreshedCachedSession;
   }
 
   const deploymentRepo = new DeploymentRepository(prisma);
@@ -110,7 +145,8 @@ export async function getServerSession(options: {
       emailVerified: user.emailVerified,
       email_verified: user.emailVerified !== null,
       completedOnboarding: user.completedOnboarding,
-      role: user.role,
+      role: adminSecurity.role,
+      inactiveAdminReason: adminSecurity.inactiveAdminReason,
       image: getUserAvatarUrl({
         avatarUrl: user.avatarUrl,
       }),

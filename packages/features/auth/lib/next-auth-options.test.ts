@@ -12,6 +12,10 @@ vi.mock("@calcom/prisma", () => ({
   default: {
     user: {
       update: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    userPassword: {
+      update: vi.fn(),
     },
   },
 }));
@@ -55,6 +59,7 @@ vi.mock("@calcom/lib/auth/isPasswordValid", () => ({
 
 vi.mock("@calcom/lib/env", () => ({
   isENVDev: false,
+  isENVE2E: false,
 }));
 
 vi.mock("@calcom/lib/constants", async (importOriginal) => {
@@ -109,6 +114,7 @@ const mockUpdateProfilePhotoGoogle = vi.fn();
 const mockGetIdentityProvider = vi.fn();
 const mockWaitUntil = vi.fn();
 const mockPrismaUserFindFirst = vi.fn();
+const mockPrismaUserFindUnique = vi.fn();
 const mockPrismaUserCreate = vi.fn();
 const mockPrismaUserUpdate = vi.fn();
 const mockPrismaTeamFindFirst = vi.fn();
@@ -891,6 +897,7 @@ describe("Azure AD JWT callback", () => {
     prismaDefault.user = {
       ...prismaDefault.user,
       findFirst: mockPrismaUserFindFirst,
+      findUnique: mockPrismaUserFindUnique,
     };
     prismaDefault.selectedCalendar = {
       create: mockPrismaSelectedCalendarCreate,
@@ -946,6 +953,7 @@ describe("Azure AD JWT callback", () => {
         teams: [],
         movedToProfileId: null,
       });
+
       mockCredentialRepoFindFirst.mockResolvedValue(null);
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -1284,6 +1292,118 @@ describe("Azure AD JWT callback", () => {
           }),
         })
       );
+    });
+  });
+
+  describe("JWT role refresh", () => {
+    it("recalculates the role from trusted data and ignores a client-supplied role", async () => {
+      mockPrismaUserFindUnique.mockResolvedValue({
+        role: UserPermissionRole.ADMIN,
+        identityProvider: IdentityProvider.CAL,
+        twoFactorEnabled: false,
+        password: { adminPasswordMeetsRequirements: true },
+      });
+
+      const result = await jwtCallback({
+        token: {
+          sub: "12",
+          email: "admin@example.com",
+          role: UserPermissionRole.ADMIN,
+          inactiveAdminReason: "password",
+          profileId: 1,
+          upId: "usr_12",
+          locale: "en",
+        },
+        trigger: "update",
+        session: {
+          role: UserPermissionRole.ADMIN,
+          profileId: 9,
+          upId: "client-profile",
+          locale: "fr",
+        },
+      } as any);
+
+      expect(mockPrismaUserFindUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 12 },
+          select: expect.objectContaining({
+            role: true,
+            identityProvider: true,
+            twoFactorEnabled: true,
+          }),
+        })
+      );
+      expect(result).toMatchObject({
+        role: "INACTIVE_ADMIN",
+        inactiveAdminReason: "2fa",
+        profileId: 9,
+        upId: "client-profile",
+        locale: "fr",
+      });
+    });
+
+    it("clears the inactive reason when trusted database requirements are met", async () => {
+      mockPrismaUserFindUnique.mockResolvedValue({
+        role: UserPermissionRole.ADMIN,
+        identityProvider: IdentityProvider.CAL,
+        twoFactorEnabled: true,
+        password: { adminPasswordMeetsRequirements: true },
+      });
+
+      const result = await jwtCallback({
+        token: {
+          sub: "13",
+          email: "admin@example.com",
+          role: "INACTIVE_ADMIN",
+          inactiveAdminReason: "both",
+        },
+        trigger: "update",
+        session: { role: "INACTIVE_ADMIN" },
+      } as any);
+
+      expect(result).toMatchObject({ role: UserPermissionRole.ADMIN });
+      expect(result.inactiveAdminReason).toBeUndefined();
+    });
+
+    it("refreshes a user's role after a strong password is saved without accepting client role data", async () => {
+      mockPrismaUserFindUnique
+        .mockResolvedValueOnce({
+          role: UserPermissionRole.ADMIN,
+          identityProvider: IdentityProvider.CAL,
+          twoFactorEnabled: true,
+          password: { adminPasswordMeetsRequirements: false },
+        })
+        .mockResolvedValueOnce({
+          role: UserPermissionRole.ADMIN,
+          identityProvider: IdentityProvider.CAL,
+          twoFactorEnabled: true,
+          password: { adminPasswordMeetsRequirements: true },
+        });
+
+      const token = {
+        sub: "14",
+        email: "admin@example.com",
+        role: "INACTIVE_ADMIN",
+        inactiveAdminReason: "password",
+      };
+
+      const beforePasswordChange = await jwtCallback({
+        token,
+        trigger: "update",
+        session: { role: UserPermissionRole.ADMIN },
+      } as any);
+      const afterPasswordChange = await jwtCallback({
+        token: beforePasswordChange,
+        trigger: "update",
+        session: { role: "INACTIVE_ADMIN" },
+      } as any);
+
+      expect(beforePasswordChange).toMatchObject({
+        role: "INACTIVE_ADMIN",
+        inactiveAdminReason: "password",
+      });
+      expect(afterPasswordChange).toMatchObject({ role: UserPermissionRole.ADMIN });
+      expect(afterPasswordChange.inactiveAdminReason).toBeUndefined();
     });
   });
 });
