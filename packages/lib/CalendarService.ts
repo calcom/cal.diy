@@ -340,6 +340,18 @@ const buildVTimezone = (timezone: string, eventStart: string): string => {
         "END:STANDARD"
       );
     }
+    // The year's first DST transition can be after the event. Establish the
+    // offset already in effect so every event has a preceding observance.
+    const initialMoment = dayjs.tz(`${eventYear}-01-01T00:00:00`, timezone);
+    const initialOffset = formatOffset(initialMoment);
+    const initialObservance = initialOffset === trueDaylightOffset ? "DAYLIGHT" : "STANDARD";
+    lines.push(
+      `BEGIN:${initialObservance}`,
+      `TZOFFSETFROM:${initialOffset}`,
+      `TZOFFSETTO:${initialOffset}`,
+      `DTSTART:${formatTransitionDtstart(initialMoment)}`,
+      `END:${initialObservance}`
+    );
   } else {
     lines.push(
       "BEGIN:STANDARD",
