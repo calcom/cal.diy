@@ -9,7 +9,7 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { DialogContent } from "@calcom/ui/components/dialog";
 
-import { getDurationFormatted } from "../event-meta/Duration";
+import { getDurationFormatted, getDurationAccessibleLabel } from "../event-meta/Duration";
 import { FromTime } from "@calcom/features/bookings/Booker/utils/dates";
 import { useEvent } from "@calcom/web/modules/schedules/hooks/useEvent";
 import { useBookerTime } from "@calcom/features/bookings/Booker/hooks/useBookerTime";
@@ -65,7 +65,10 @@ export const BookEventFormWrapperComponent = ({
         </Badge>
         {(selectedDuration || eventLength) && (
           <Badge variant="grayWithoutHover" startIcon="clock" size="lg">
-            <span>{getDurationFormatted(selectedDuration || eventLength, t)}</span>
+            <span className="sr-only">
+              {getDurationAccessibleLabel(selectedDuration || eventLength, t)}
+            </span>
+            <span aria-hidden="true">{getDurationFormatted(selectedDuration || eventLength, t)}</span>
           </Badge>
         )}
 

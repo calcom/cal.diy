@@ -4,6 +4,7 @@ import { getPaymentAppData } from "@calcom/app-store/_utils/payments/getPaymentA
 import { eventTypeMetaDataSchemaWithTypedApps } from "@calcom/app-store/zod-utils";
 import { Price } from "@calcom/features/bookings/components/event-meta/Price";
 import { PriceIcon } from "@calcom/web/modules/bookings/components/event-meta/PriceIcon";
+import { getDurationAccessibleLabel } from "@calcom/lib/formatEventDuration";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { parseRecurringEvent } from "@calcom/lib/isRecurringEvent";
 import { markdownToSafeHTML } from "@calcom/lib/markdownToSafeHTML";
@@ -69,14 +70,16 @@ export const EventTypeDescription = ({
             metadata.multipleDuration.map((dur, idx) => (
               <li key={idx}>
                 <Badge variant="gray" startIcon="clock">
-                  {dur}m
+                  <span className="sr-only">{getDurationAccessibleLabel(dur, t)}</span>
+                  <span aria-hidden="true">{dur}m</span>
                 </Badge>
               </li>
             ))
           ) : (
             <li>
               <Badge variant="gray" startIcon="clock">
-                {eventType.length}m
+                <span className="sr-only">{getDurationAccessibleLabel(eventType.length, t)}</span>
+                <span aria-hidden="true">{eventType.length}m</span>
               </Badge>
             </li>
           )}
