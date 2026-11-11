@@ -1,3 +1,4 @@
+import type { Dayjs } from "@calcom/dayjs";
 import dayjs from "@calcom/dayjs";
 import type { CalendarEvent } from "@calcom/features/calendars/weeklyview/types/events";
 import type { BookingStatus } from "@calcom/prisma/enums";
@@ -12,6 +13,7 @@ type EventProps = {
   onEventClick?: (event: CalendarEvent) => void;
   disabled?: boolean;
   isHovered?: boolean;
+  segmentDay?: Dayjs | Date | string;
 };
 
 const eventClasses = cva(
@@ -64,6 +66,7 @@ export function Event({
   disabled,
   onEventClick,
   isHovered = false,
+  segmentDay,
 }: EventProps) {
   const selected = currentlySelectedEventId === event.id;
   const { options } = event;
@@ -77,7 +80,7 @@ export function Event({
   const timeFormat = dayjs(event.start).isSame(event.end, "day") ? "HH:mm" : "MMM D, HH:mm";
   const eventTime = `${dayjs(event.start).format(timeFormat)} - ${dayjs(event.end).format(timeFormat)}`;
 
-  const dayOfWeek = dayjs(event.start).day();
+  const dayOfWeek = dayjs(segmentDay ?? event.start).day();
   const tooltipSide = dayOfWeek >= 1 && dayOfWeek <= 4 ? "right" : "left";
 
   const tooltipContent = (
