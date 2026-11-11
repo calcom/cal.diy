@@ -130,6 +130,8 @@ export class BookingsController_2024_08_13 {
       If you are creating a seated booking for an event type with 'show attendees' disabled, then to retrieve attendees in the response either set 'show attendees' to true on event type level or
       you have to provide an authentication method of event type owner, host, team admin or owner or org admin or owner.
 
+      To create a booking that overlaps busy time or existing bookings (organizer override), set \`overrideAvailability\` to \`true\` in the JSON body while authenticated as the event type owner, host, team admin or owner, or org admin or owner.
+
       For event types that have SMS reminders enabled, you need to pass the attendee's phone number in the request body via \`attendee.phoneNumber\` (e.g., "+19876543210" in international format). This is an optional field, but becomes required when SMS reminders are enabled for the event type. For the complete attendee object structure, see the attendee schema in the \`/docs\` Swagger endpoint.
 
       <Note>Please make sure to pass in the cal-api-version header value as mentioned in the Headers section. Not passing the correct value will default to an older version of this endpoint.</Note>
