@@ -12,6 +12,7 @@ import { cloneDeep } from "lodash";
 import { uuid } from "short-uuid";
 import { findBookingQuery } from "../../handleNewBooking/findBookingQuery";
 import type { IEventTypePaymentCredentialType } from "../../handleNewBooking/types";
+import { OFFICE365_CALENDAR_TYPE, withSeatCalendarReferences } from "../lib/seatCalendarReferences";
 import type { HandleSeatsResultBooking, NewSeatedBookingObject, SeatedBooking } from "../types";
 
 export type AddSeatInput = {
@@ -113,6 +114,14 @@ export async function addSeatToBooking(input: AddSeatInput, prismaClient: Prisma
   });
 }
 
+/**
+ * Adds a new attendee seat to an existing seated booking.
+ *
+ * @param rescheduleSeatedBookingObject - Booking context for the seated booking flow.
+ * @param seatedBooking - Existing seated booking that receives the new seat.
+ * @param metadata - Optional metadata to persist on the new seat booking.
+ * @returns The updated booking response with the created seat reference.
+ */
 const createNewSeat = async (
   rescheduleSeatedBookingObject: NewSeatedBookingObject,
   seatedBooking: SeatedBooking,
@@ -216,7 +225,42 @@ const createNewSeat = async (
   const credentials = await refreshCredentials(allCredentials);
   const apps = eventTypeAppMetadataOptionalSchema.parse(eventType?.metadata?.apps);
   const eventManager = new EventManager({ ...organizerUser, credentials }, apps);
-  await eventManager.updateCalendarAttendees(evt, seatedBooking);
+  const hasOffice365CalendarReference = seatedBooking.references.some(
+    (reference) => reference.type === OFFICE365_CALENDAR_TYPE
+  );
+  const excludedCalendarTypes: string[] = [];
+
+  if (hasOffice365CalendarReference) {
+    const attendeeSeatCalendarEvent = {
+      ...evt,
+      attendees: [attendeeWithSeat],
+    };
+    const attendeeSeatCalendarManager =
+      await eventManager.createCalendarEventForSeatedAttendee(attendeeSeatCalendarEvent);
+    const attendeeSeatOffice365References = attendeeSeatCalendarManager.referencesToCreate.filter(
+      (reference) => reference.type === OFFICE365_CALENDAR_TYPE && reference.uid
+    );
+
+    if (attendeeUniqueId && attendeeSeatOffice365References.length > 0) {
+      await prisma.bookingSeat.update({
+        where: {
+          referenceUid: attendeeUniqueId,
+        },
+        data: {
+          metadata: withSeatCalendarReferences({
+            metadata: newBookingSeat?.metadata,
+            integration: OFFICE365_CALENDAR_TYPE,
+            references: attendeeSeatOffice365References,
+          }),
+        },
+      });
+      excludedCalendarTypes.push(OFFICE365_CALENDAR_TYPE);
+    }
+  }
+
+  await eventManager.updateCalendarAttendees(evt, seatedBooking, {
+    excludedCalendarTypes,
+  });
 
   const foundBooking = await findBookingQuery(seatedBooking.id);
 
