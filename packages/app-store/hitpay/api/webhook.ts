@@ -1,4 +1,3 @@
-import { createHmac } from "node:crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
 import type z from "zod";
 
@@ -11,6 +10,7 @@ import prisma from "@calcom/prisma";
 
 import appConfig from "../config.json";
 import type { hitpayCredentialKeysSchema } from "../lib/hitpayCredentialKeysSchema";
+import { isValidWebhookSignature } from "../lib/verifyWebhookSignature";
 
 export const config = {
   api: {
@@ -31,19 +31,12 @@ interface WebhookReturn {
 
 type ExcludedWebhookReturn = Omit<WebhookReturn, "hmac">;
 
-function generateSignatureArray<T>(secret: string, vals: T) {
-  const source: string[] = [];
-  Object.keys(vals as { [K: string]: string })
-    .sort()
-    .forEach((key) => {
-      source.push(`${key}${(vals as { [K: string]: string })[key]}`);
-    });
-  const payload = source.join("");
-  const hmac = createHmac("sha256", secret);
-  const signed = hmac.update(payload, "utf-8").digest("hex");
-  return signed;
-}
-
+/**
+ * Handles incoming HitPay payment webhooks with constant-time HMAC signature verification.
+ *
+ * @param req - The incoming Next.js API request.
+ * @param res - The outgoing Next.js API response.
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method !== "POST") {
@@ -103,8 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const { saltKey } = keyObj;
-    const signed = generateSignatureArray(saltKey, excluded as ExcludedWebhookReturn);
-    if (signed !== obj.hmac) {
+    if (!isValidWebhookSignature(saltKey, excluded as ExcludedWebhookReturn, obj.hmac)) {
       throw new HttpCode({ statusCode: 400, message: "Bad Request" });
     }
 
