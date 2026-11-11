@@ -1,11 +1,10 @@
-import type { NextResponse } from "next/server";
-
+import process from "node:process";
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import { ErrorWithCode } from "@calcom/lib/errors";
 import slugify from "@calcom/lib/slugify";
 import prisma from "@calcom/prisma";
 import { RedirectType } from "@calcom/prisma/enums";
-
+import type { NextResponse } from "next/server";
 import { IS_PREMIUM_USERNAME_ENABLED } from "../constants";
 import logger from "../logger";
 import notEmpty from "../notEmpty";

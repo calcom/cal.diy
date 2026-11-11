@@ -1,5 +1,4 @@
 import type React from "react";
-
 import { CAL_URL, LOGO, LOGO_DARK, WEBAPP_URL } from "./constants";
 
 // Ensures tw prop is typed.

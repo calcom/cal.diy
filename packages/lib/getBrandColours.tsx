@@ -1,5 +1,4 @@
 import { useBrandColors } from "@calcom/embed-core/embed-iframe";
-
 import { DEFAULT_DARK_BRAND_COLOR, DEFAULT_LIGHT_BRAND_COLOR } from "./constants";
 
 const BRAND_COLOR = DEFAULT_LIGHT_BRAND_COLOR;
@@ -104,9 +103,7 @@ function normalizeHexCode(hex: string | null, dark: boolean) {
   if (hex.length === 3) {
     hex = hex
       .split("")
-      .map(function (hex) {
-        return hex + hex;
-      })
+      .map((hex) => hex + hex)
       .join("");
   }
 

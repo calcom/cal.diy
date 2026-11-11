@@ -1,5 +1,5 @@
 import type { CalendarEvent } from "@calcom/types/Calendar";
-
+import type CloseCom from "./CloseCom";
 import type {
   CloseComCustomActivityCreate,
   CloseComCustomActivityFieldGet,
@@ -8,7 +8,6 @@ import type {
   CloseComFieldOptions,
   CloseComLead,
 } from "./CloseCom";
-import type CloseCom from "./CloseCom";
 import { APP_NAME } from "./constants";
 
 export async function getCloseComContactIds(

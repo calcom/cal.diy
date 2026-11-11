@@ -1,6 +1,5 @@
 import { renderHook } from "@testing-library/react-hooks";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
 import { useUserAgentData } from "./useUserAgentData";
 
 describe("useUserAgentData hook", () => {

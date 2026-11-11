@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
-import type { ReactNode, ReactElement, FC } from "react";
-import React, { isValidElement, Fragment, createElement, cloneElement } from "react";
+import type React from "react";
+import type { FC, ReactElement, ReactNode } from "react";
+import { cloneElement, createElement, Fragment, isValidElement } from "react";
 
 type ServerTransProps = {
   i18nKey: string; // Translation key

@@ -1,12 +1,10 @@
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-
-import { useAppContextWithSchema } from "@calcom/app-store/EventTypeAppContext";
 import AppCard from "@calcom/app-store/_components/AppCard";
+import { useAppContextWithSchema } from "@calcom/app-store/EventTypeAppContext";
 import type { EventTypeAppCardComponent } from "@calcom/app-store/types";
 import { WEBAPP_URL } from "@calcom/lib/constants";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
-
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 import checkForMultiplePaymentApps from "../../_utils/payments/checkForMultiplePaymentApps";
 import useIsAppEnabled from "../../_utils/useIsAppEnabled";
 import type { appDataSchema } from "../zod";

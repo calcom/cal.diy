@@ -1,5 +1,4 @@
 import type { AppOnboardingSteps } from "@calcom/lib/apps/appOnboardingSteps";
-
 // biome-ignore lint/style/useNodejsImportProtocol: Vite env
 import { stringify } from "querystring";
 

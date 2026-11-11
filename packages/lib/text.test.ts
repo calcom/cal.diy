@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-
 import { truncate } from "./text";
 
 describe("Text util tests", () => {

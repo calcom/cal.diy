@@ -1,9 +1,8 @@
-import type z from "zod";
-
-import { TITLE_FIELD, SMS_REMINDER_NUMBER_FIELD } from "@calcom/lib/bookings/SystemField";
+import { SMS_REMINDER_NUMBER_FIELD, TITLE_FIELD } from "@calcom/lib/bookings/SystemField";
 import type { dbReadResponseSchema as bookingResponse } from "@calcom/lib/dbReadResponseSchema";
-import type { CalEventResponses } from "@calcom/types/Calendar";
 import type { Prisma } from "@calcom/prisma/client";
+import type { CalEventResponses } from "@calcom/types/Calendar";
+import type z from "zod";
 
 export default function getLabelValueMapFromResponses(
   calEvent: {

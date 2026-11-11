@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-
 import { symmetricDecrypt, symmetricEncrypt } from "./crypto";
 
 describe("crypto", () => {

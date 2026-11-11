@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export function useTraceUpdate(props: { [s: string]: unknown } | ArrayLike<unknown>) {
   const prev = useRef(props);

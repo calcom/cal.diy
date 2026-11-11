@@ -1,5 +1,4 @@
 import { AppOnboardingSteps } from "@calcom/lib/apps/appOnboardingSteps";
-
 import { getAppOnboardingUrl } from "./getAppOnboardingUrl";
 
 export const getAppOnboardingRedirectUrl = (slug: string, teamId?: number) => {

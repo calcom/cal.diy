@@ -1,9 +1,7 @@
-import { describe, test, expect, vi, beforeEach } from "vitest";
-
 import type { CalendarSubscriptionEventItem } from "@calcom/features/calendar-subscription/lib/CalendarSubscriptionPort.interface";
 import type { ICalendarCacheEventRepository } from "@calcom/features/calendar-subscription/lib/cache/CalendarCacheEventRepository.interface";
 import type { SelectedCalendar } from "@calcom/prisma/client";
-
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { CalendarCacheEventService } from "../CalendarCacheEventService";
 
 const mockSelectedCalendar: SelectedCalendar = {

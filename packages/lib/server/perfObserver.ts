@@ -1,5 +1,5 @@
 import { PerformanceObserver } from "node:perf_hooks";
-
+import process from "node:process";
 import logger from "../logger";
 
 declare global {
