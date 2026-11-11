@@ -23,29 +23,40 @@ export const getErrorString = ({
 /**
  * An alternative to Object.fromEntries that allows duplicate keys and converts the values corresponding to them in an array
  *
- * NOTE: This is a duplicate of the function in @calcom/lib/hooks/useRouterQuery.ts. It has to be here because embed is published to npm and shouldn't refer to any private package
+ * NOTE: This is a duplicate of @calcom/lib/fromEntriesWithDuplicateKeys. It has to be here because embed is published to npm and shouldn't refer to any private package. Keep them in sync.
  */
-export function fromEntriesWithDuplicateKeys(entries: IterableIterator<[string, string]> | null) {
+export function fromEntriesWithDuplicateKeys(
+  entries?: Iterable<readonly [string, string]> | null
+): Record<string, string | string[]> {
   const result: Record<string, string | string[]> = {};
 
-  if (entries === null) {
+  if (!entries) {
     return result;
   }
 
-  // Consider setting atleast ES2015 as target
-  // @ts-ignore TS2802: IterableIterator iteration requires downlevelIteration
-  for (const [key, value] of entries) {
-    if (result.hasOwnProperty(key)) {
-      let currentValue = result[key];
-      if (!Array.isArray(currentValue)) {
-        currentValue = [currentValue];
+  // `for...of` over a bare Iterable needs downlevelIteration, which this repo does not enable
+  // under its es5 target, so the entries are materialised first.
+  for (const [key, value] of Array.from(entries)) {
+    // Assigning "__proto__" on an object literal invokes the Object.prototype setter and can
+    // replace the result's prototype, so that key is dropped. Every other key, "constructor"
+    // included, only ever shadows an inherited member and is kept as ordinary data.
+    if (key === "__proto__") {
+      continue;
+    }
+
+    // result.hasOwnProperty(key) breaks once a param is itself named "hasOwnProperty".
+    if (Object.prototype.hasOwnProperty.call(result, key)) {
+      const currentValue = result[key];
+      if (Array.isArray(currentValue)) {
+        currentValue.push(value);
+      } else {
+        result[key] = [currentValue, value];
       }
-      currentValue.push(value);
-      result[key] = currentValue;
     } else {
       result[key] = value;
     }
   }
+
   return result;
 }
 
