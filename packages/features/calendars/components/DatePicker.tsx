@@ -191,10 +191,9 @@ const Days = ({
   const getPadding = (day: number) => (browsingDate.set("date", day).day() - weekStart + 7) % 7;
   const totalDays = daysInMonth(browsingDate);
 
-  const showNextMonthDays = isSecondWeekOver && !isCompact;
+  const showNextMonthDays = isSecondWeekOver;
 
-  // Only apply end-of-month logic for main monthly view (not compact sidebar)
-  if (showNextMonthDays) {
+  if (showNextMonthDays && !isCompact) {
     const startDay = 8;
     const pad = getPadding(startDay);
     days = Array(pad).fill(null);
@@ -207,17 +206,25 @@ const Days = ({
     const extraDays = (remainingInRow > 0 ? 7 - remainingInRow : 0) + 7;
     const nextMonth = browsingDate.add(1, "month");
 
-    // Add days starting from day 1 of next month
     for (let i = 0; i < extraDays; i++) {
       days.push(nextMonth.set("date", 1 + i));
     }
   } else {
-    // Traditional calendar grid logic for compact sidebar or early in month
     const pad = getPadding(1);
     days = Array(pad).fill(null);
 
     for (let day = 1; day <= totalDays; day++) {
       days.push(browsingDate.set("date", day));
+    }
+
+    if (showNextMonthDays && isCompact) {
+      const remainingInRow = days.length % 7;
+      const extraDays = remainingInRow > 0 ? 7 - remainingInRow : 0;
+      const nextMonth = browsingDate.add(1, "month");
+
+      for (let i = 0; i < extraDays; i++) {
+        days.push(nextMonth.set("date", 1 + i));
+      }
     }
   }
 
