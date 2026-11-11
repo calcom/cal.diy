@@ -32,8 +32,9 @@ export const Select = <
     menu?: string;
     menuList?: string;
   };
+  reactSelectRef?: React.Ref<any>;
 }) => {
-  const { classNames, innerClassNames, menuPlacement = "auto", ...restProps } = props;
+  const { classNames, innerClassNames, menuPlacement = "auto", reactSelectRef, ...restProps } = props;
   const reactSelectProps = React.useMemo(() => {
     return getReactSelectProps<Option, IsMulti, Group>({
       components: components || {},
@@ -47,6 +48,7 @@ export const Select = <
   // We cant create a generate function for this as we can't force state changes - onSelect styles dont change for example
   return (
     <ReactSelect
+      ref={reactSelectRef}
       {...reactSelectProps}
       menuPlacement={menuPlacement}
       styles={{
@@ -171,7 +173,9 @@ export function SelectWithValidation<
   onChange,
   value,
   ...remainingProps
-}: SelectProps<Option, IsMulti, Group> & { required?: boolean }) {
+  }: SelectProps<Option, IsMulti, Group> & { required?: boolean }) {
+  const selectRef = React.useRef<any>(null);
+  
   const [hiddenInputValue, _setHiddenInputValue] = React.useState(() => {
     if (value instanceof Array || !value) {
       return "";
@@ -199,6 +203,7 @@ export function SelectWithValidation<
   return (
     <div className={cx("relative", remainingProps.className)}>
       <Select
+        reactSelectRef={selectRef}
         value={value}
         {...remainingProps}
         onChange={(value, ...remainingArgs) => {
@@ -220,8 +225,7 @@ export function SelectWithValidation<
           }}
           value={hiddenInputValue}
           onChange={() => {}}
-          // TODO:Not able to get focus to work
-          // onFocus={() => selectRef.current?.focus()}
+          onFocus={() => selectRef.current?.focus()}
           required={required}
         />
       )}
