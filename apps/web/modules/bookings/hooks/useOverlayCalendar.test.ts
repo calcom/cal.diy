@@ -4,6 +4,7 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WrappedBookerPropsMain } from "../types";
+import { useOverlayCalendarStore } from "@calcom/features/bookings/Booker/components/OverlayCalendar/store";
 import { useOverlayCalendar } from "./useOverlayCalendar";
 
 vi.mock("@calcom/features/bookings/lib", () => ({
@@ -92,5 +93,19 @@ describe("useOverlayCalendar", () => {
     expect(result.current.checkIsCalendarToggled("personal", 1)).toBe(true);
     expect(result.current.checkIsCalendarToggled("work", 1)).toBe(false);
     expect(onToggleCalendar).not.toHaveBeenCalled();
+  });
+
+  it("stores overlay busy dates directly without timezone offset shifting", () => {
+    const rawBusyDates = [
+      { start: new Date("2024-01-10T10:00:00Z"), end: new Date("2024-01-10T11:00:00Z") },
+    ];
+    renderHook(() =>
+      useOverlayCalendar({
+        connectedCalendars: [],
+        overlayBusyDates: rawBusyDates,
+        onToggleCalendar: vi.fn(),
+      })
+    );
+    expect(useOverlayCalendarStore.getState().overlayBusyDates).toEqual(rawBusyDates);
   });
 });
