@@ -14,6 +14,7 @@ import {
 import { CredentialRepository } from "@calcom/features/credentials/repositories/CredentialRepository";
 import { CalendarAppDelegationCredentialInvalidGrantError } from "@calcom/lib/CalendarAppError";
 import { HttpError } from "@calcom/lib/http-error";
+import { isAuthorizedCronRequest } from "@calcom/lib/cron-auth";
 import logger from "@calcom/lib/logger";
 import { safeStringify } from "@calcom/lib/safeStringify";
 import { SelectedCalendarRepository } from "@calcom/features/selectedCalendar/repositories/SelectedCalendarRepository";
@@ -27,7 +28,7 @@ const log = logger.getSubLogger({ prefix: ["[api]", "[delegation]", "[selected-c
 const validateRequest = (req: NextRequest) => {
   const url = new URL(req.url);
   const apiKey = req.headers.get("authorization") || url.searchParams.get("apiKey");
-  if (![process.env.CRON_API_KEY, `Bearer ${process.env.CRON_SECRET}`].includes(`${apiKey}`)) {
+  if (!isAuthorizedCronRequest(apiKey)) {
     throw new HttpError({ statusCode: 401, message: "Unauthorized" });
   }
 };
