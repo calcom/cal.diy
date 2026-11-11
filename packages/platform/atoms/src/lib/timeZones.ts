@@ -1,3 +1,5 @@
+const normalizeTimezone = (tz: string): string => (tz === "Europe/Kiev" ? "Europe/Kyiv" : tz);
+
 export const formatTimezones = (
   timeZones: {
     city: string;
@@ -14,7 +16,8 @@ export const filterPropsTimezones = (
   propsTimezones: string[],
   availableTimezones: { city: string; timezone: string }[]
 ) => {
+  const normalizedPropsTimezones = new Set(propsTimezones.map(normalizeTimezone));
   return availableTimezones.filter((availableTimezone) =>
-    propsTimezones.includes(availableTimezone.timezone)
+    normalizedPropsTimezones.has(normalizeTimezone(availableTimezone.timezone))
   );
 };
