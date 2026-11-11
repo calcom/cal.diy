@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
+import { timingSafeEqualStrings } from "@calcom/lib/crypto";
 import logger from "@calcom/lib/logger";
 import { defaultHandler } from "@calcom/lib/server/defaultHandler";
 import { defaultResponder } from "@calcom/lib/server/defaultResponder";
@@ -56,14 +57,20 @@ async function postHandler(req: NextApiRequest, res: NextApiResponse) {
 
   // used for events handler binding in lark open platform, see
   // https://open.larksuite.com/document/ukTMukTMukTM/uUTNz4SN1MjL1UzM?lang=en-US
-  if (req.body.type === "url_verification" && req.body.token === open_verification_token) {
+  if (
+    req.body.type === "url_verification" &&
+    timingSafeEqualStrings(req.body.token, open_verification_token)
+  ) {
     log.debug("update token", req.body);
     return res.status(200).json({ challenge: req.body.challenge });
   }
 
   // used for receiving app_ticket, see
   // https://open.larksuite.com/document/uAjLw4CM/ukTMukTMukTM/application-v6/event/app_ticket-events
-  if (req.body.event?.type === "app_ticket" && open_verification_token === req.body.token) {
+  if (
+    req.body.event?.type === "app_ticket" &&
+    timingSafeEqualStrings(open_verification_token, req.body.token)
+  ) {
     const {
       body: {
         event: { app_ticket: appTicket },
