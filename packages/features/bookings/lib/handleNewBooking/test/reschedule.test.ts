@@ -136,6 +136,7 @@ describe("handleNewBooking", () => {
                       meetingUrl: "https://UNUSED_URL",
                       externalCalendarId: "MOCK_EXTERNAL_CALENDAR_ID",
                       credentialId: undefined,
+                      thirdPartyRecurringEventId: "MOCK_RECURRING_EVENT_ID",
                     },
                   ],
                   iCalUID,
@@ -204,6 +205,18 @@ describe("handleNewBooking", () => {
            */
           expect(createdBooking.startTime?.toISOString()).toBe(`${plus1DateString}T04:00:00.000Z`);
           expect(createdBooking.endTime?.toISOString()).toBe(`${plus1DateString}T04:15:00.000Z`);
+
+          const rescheduledReferences = await prismaMock.bookingReference.findMany({
+            where: { bookingId: createdBooking.id },
+          });
+          expect(rescheduledReferences).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: appStoreMetadata.googlecalendar.type,
+                thirdPartyRecurringEventId: "MOCK_RECURRING_EVENT_ID",
+              }),
+            ])
+          );
 
           await expectBookingInDBToBeRescheduledFromTo({
             from: {
