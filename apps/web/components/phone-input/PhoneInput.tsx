@@ -174,21 +174,21 @@ const useDefaultCountry = () => {
         return;
       }
 
-      const data = query.data;
-      if (!data?.countryCode) {
+      const countryFromGeo = query.data?.countryCode;
+      if (countryFromGeo && isSupportedCountry(countryFromGeo)) {
+        setDefaultCountry(countryFromGeo.toLowerCase() as CountryCode);
         return;
       }
 
-      if (isSupportedCountry(data?.countryCode)) {
-        setDefaultCountry(data.countryCode.toLowerCase() as CountryCode);
-      } else {
+      if (typeof navigator !== "undefined" && navigator.language) {
         const navCountry = navigator.language.split("-")[1]?.toUpperCase();
         if (navCountry && isSupportedCountry(navCountry)) {
           setDefaultCountry(navCountry.toLowerCase() as CountryCode);
-        } else {
-          setDefaultCountry("us");
+          return;
         }
       }
+
+      setDefaultCountry("us");
     },
     [query.data, defaultPhoneCountryFromStore]
   );
