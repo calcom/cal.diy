@@ -76,7 +76,7 @@ function BasePhoneInput({
         autoComplete: "tel",
       }}
       onChange={(val: string) => {
-        onChange(val.startsWith("+") ? val : `+${val}`);
+        onChange(val.startsWith("+") ? val : );
       }}
       containerClass={classNames(
         "hover:border-emphasis focus-within:border-emphasis border-default !bg-default rounded-md border focus-within:outline-none focus-within:ring-0 focus-within:ring-brand-default disabled:cursor-not-allowed",
@@ -117,9 +117,9 @@ function BasePhoneInputWeb({
     <PhoneInput
       {...rest}
       value={value ? value.trim().replace(/^\+?/, "+") : undefined}
-      // react-phone-input-2 treats `country` as a fallback. Keeping it stable 
-      // preserves calling-code-only values like `+371` during async updates, 
-      // while full international numbers still resolve their country from `value`.
+      // react-phone-input-2 treats  as a fallback. Keeping it stable 
+      // preserves calling-code-only values like  during async updates, 
+      // while full international numbers still resolve their country from .
       country={defaultCountry}
       enableSearch
       disableSearchIcon
@@ -131,7 +131,7 @@ function BasePhoneInputWeb({
         autoComplete: "tel",
       }}
       onChange={(val: string) => {
-        onChange(val.startsWith("+") ? val : `+${val}`);
+        onChange(val.startsWith("+") ? val : );
       }}
       containerClass={classNames(
         "hover:border-emphasis focus-within:border-emphasis border-default !bg-default rounded-md border focus-within:outline-none focus-within:ring-0 focus-within:ring-brand-default disabled:cursor-not-allowed",
@@ -181,8 +181,14 @@ const useDefaultCountry = () => {
       }
 
       if (typeof navigator !== "undefined" && navigator.language) {
-        const navCountry = navigator.language.split("-")[1]?.toUpperCase();
-        if (navCountry && isSupportedCountry(navCountry)) {
+        let navCountry: string | undefined;
+        try {
+          navCountry = new Intl.Locale(navigator.language).region;
+        } catch {
+          const parts = navigator.language.split("-");
+          navCountry = parts[parts.length - 1];
+        }
+        if (navCountry && isSupportedCountry(navCountry.toUpperCase())) {
           setDefaultCountry(navCountry.toLowerCase() as CountryCode);
           return;
         }
