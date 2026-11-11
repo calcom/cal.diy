@@ -156,7 +156,7 @@ test.describe("OAuth Provider", () => {
     );
 
     // check if user is redirected to login page
-    await expect(page.getByRole("heading", { name: "Cal.diy" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "horium.dev" })).toBeVisible();
     await expect(page.getByTestId("login-subtitle")).toBeVisible();
     await page.locator("#email").fill(user.email);
     await page.locator("#password").fill(getDefaultPassword(user.username!));

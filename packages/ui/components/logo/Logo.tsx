@@ -17,12 +17,12 @@ export function Logo({
     <h3 className={classNames("logo", inline && "inline", className)}>
       <strong>
         {icon ? (
-          <img className="mx-auto w-9 dark:invert" alt="Cal.diy" title="Cal.diy" src={`${src}?type=icon`} />
+          <img className="mx-auto w-9 dark:invert" alt="horium.dev" title="horium.dev" src={`${src}?type=icon`} />
         ) : (
           <img
             className={classNames(small ? "h-4 w-auto" : "h-5 w-auto", "dark:invert")}
-            alt="Cal.diy"
-            title="Cal.diy"
+            alt="horium.dev"
+            title="horium.dev"
             src={src}
           />
         )}
