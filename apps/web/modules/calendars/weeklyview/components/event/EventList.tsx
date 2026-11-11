@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { shallow } from "zustand/shallow";
-
 import type { Dayjs } from "@calcom/dayjs";
-import classNames from "@calcom/ui/classNames";
-
 import { useCalendarStore } from "@calcom/features/calendars/weeklyview/state/store";
 import { getEventSegmentForDay } from "@calcom/features/calendars/weeklyview/utils";
 import { calculateEventLayouts, createLayoutMap } from "@calcom/features/calendars/weeklyview/utils/overlap";
+import classNames from "@calcom/ui/classNames";
+import { useEffect, useMemo, useState } from "react";
+import { shallow } from "zustand/shallow";
 import { Event } from "./Event";
 
 type Props = {
@@ -37,9 +35,14 @@ export function EventList({ day }: Props) {
   const dayEvents = useMemo(() => daySegments.map(({ event }) => event), [daySegments]);
 
   const layoutMap = useMemo(() => {
-    const layouts = calculateEventLayouts(dayEvents);
+    const layoutEvents = daySegments.map(({ event, segment }) => ({
+      ...event,
+      start: segment.start.toDate(),
+      end: segment.end.toDate(),
+    }));
+    const layouts = calculateEventLayouts(layoutEvents);
     return createLayoutMap(layouts);
-  }, [dayEvents]);
+  }, [daySegments]);
 
   const eventCalculations = useMemo(() => {
     return new Map(
@@ -62,7 +65,7 @@ export function EventList({ day }: Props) {
   }, [daySegments, startHour]);
 
   // Find which overlap group the hovered event belongs to
-  const hoveredEventLayout = hoveredEventId ? layoutMap.get(hoveredEventId) : null;
+  const hoveredEventLayout = hoveredEventId !== null ? layoutMap.get(hoveredEventId) : null;
   const hoveredGroupIndex = hoveredEventLayout?.groupIndex ?? null;
 
   // Find the event ID that matches the selected booking UID (only for events on this day)
@@ -127,6 +130,7 @@ export function EventList({ day }: Props) {
             }}>
             <Event
               event={event}
+              day={day}
               eventDuration={eventDuration}
               onEventClick={eventOnClick}
               isHovered={isHovered}
