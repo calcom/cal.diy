@@ -1,5 +1,5 @@
 import short from "short-uuid";
-import { v5 as uuidv5 } from "uuid";
+import { v4 as uuidv4, v5 as uuidv5 } from "uuid";
 
 import dayjs from "@calcom/dayjs";
 import { getRescheduleLink } from "@calcom/lib/CalEventParser";
@@ -207,7 +207,7 @@ export class CalendarEventBuilder implements ICalendarEventBuilder {
     }
     const seed = `${mainOrganizer.username}:${dayjs(this.calendarEvent.startTime)
       .utc()
-      .format()}:${new Date().getTime()}`;
+      .format()}:${new Date().getTime()}:${uuidv4()}`;
     const uid = translator.fromUUID(uuidv5(seed, uuidv5.URL));
     this.calendarEvent.uid = uid;
   }
