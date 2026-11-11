@@ -1,7 +1,42 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import z from "zod";
 
-import { excludeOrRequireEmailSchema } from "./zod-utils";
+import { EventTypeMetaDataSchema, excludeOrRequireEmailSchema } from "./zod-utils";
+
+describe("EventTypeMetaDataSchema booking disclosure", () => {
+  it("accepts optional text and HTTP(S) links", () => {
+    expect(
+      EventTypeMetaDataSchema.parse({
+        bookingDisclosure: {
+          text: "By submitting this form, you agree to our policies.",
+          privacyPolicyUrl: "https://example.com/privacy",
+          termsOfServiceUrl: "https://example.com/terms",
+        },
+      })
+    ).toMatchObject({
+      bookingDisclosure: {
+        text: "By submitting this form, you agree to our policies.",
+      },
+    });
+  });
+
+  it("accepts cleared optional links and rejects unsafe schemes", () => {
+    expect(
+      EventTypeMetaDataSchema.parse({
+        bookingDisclosure: {
+          privacyPolicyUrl: "",
+          termsOfServiceUrl: "",
+        },
+      })
+    ).toBeTruthy();
+
+    expect(() =>
+      EventTypeMetaDataSchema.parse({
+        bookingDisclosure: { privacyPolicyUrl: "javascript:alert(1)" },
+      })
+    ).toThrow();
+  });
+});
 
 describe("excludeOrRequireEmailSchema", () => {
   const parse = (input: string) => z.object({ v: excludeOrRequireEmailSchema }).safeParse({ v: input });
