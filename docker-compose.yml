@@ -135,4 +135,14 @@ services:
       - npx
       - prisma
       - studio
+      - --port
+      - "5555"
+    # The base image HEALTHCHECK probes the webapp on :3000, which studio
+    # never serves, so it would always report unhealthy. Probe studio instead.
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:5555"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 # END SECTION: Optional use of Prisma Studio.
