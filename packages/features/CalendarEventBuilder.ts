@@ -186,6 +186,7 @@ export class CalendarEventBuilder {
         customReplyToEmail: eventType.customReplyToEmail,
         disableRescheduling: eventType.disableRescheduling ?? false,
         disableCancelling: eventType.disableCancelling ?? false,
+        metadata: eventType.metadata as { confirmationEmailSubject?: string | null } | null,
       })
       .withMetadataAndResponses({
         additionalNotes,
@@ -317,6 +318,7 @@ export class CalendarEventBuilder {
     customReplyToEmail?: string | null;
     disableRescheduling?: boolean;
     disableCancelling?: boolean;
+    metadata?: { confirmationEmailSubject?: string | null } | null;
   }) {
     this.event = {
       ...this.event,
@@ -333,6 +335,7 @@ export class CalendarEventBuilder {
       customReplyToEmail: eventType.customReplyToEmail,
       disableRescheduling: eventType.disableRescheduling ?? false,
       disableCancelling: eventType.disableCancelling ?? false,
+      customEmailSubject: (eventType.metadata as Record<string, unknown> | null)?.confirmationEmailSubject as string | null ?? null,
     };
     return this;
   }
