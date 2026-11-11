@@ -288,8 +288,8 @@ const getStaticLinkLocationByValue = (value: string | undefined | null) => {
     return null;
   }
   return locations.find((l) => {
-    if (l.default || l.linkType == "dynamic" || !l.urlRegExp) {
-      return;
+    if (l.default || !l.urlRegExp) {
+      return false;
     }
     return new RegExp(l.urlRegExp).test(value);
   });
