@@ -2,6 +2,7 @@ import process from "node:process";
 import { ALL_APPS } from "@calcom/app-store/utils";
 import { getAssignmentReasonCategory } from "@calcom/features/bookings/lib/getAssignmentReasonCategory";
 import { getCalEventResponses } from "@calcom/features/bookings/lib/getCalEventResponses";
+import { getRootBookingUid } from "@calcom/features/bookings/lib/getRootBookingUid";
 import type { BookingRepository } from "@calcom/features/bookings/repositories/BookingRepository";
 import {
   type EventTypeBrandingData,
@@ -207,6 +208,7 @@ export class CalendarEventBuilder {
       })
       .withRecurring(recurring)
       .withUid(uid)
+      .withRootBookingUid(getRootBookingUid(booking))
       .withOneTimePassword(oneTimePassword)
       .withOrganization(organizationId)
       .withAssignmentReason(
@@ -473,6 +475,17 @@ export class CalendarEventBuilder {
     this.event = {
       ...this.event,
       uid,
+    };
+    return this;
+  }
+
+  withRootBookingUid(rootBookingUid?: string | null) {
+    if (!rootBookingUid) {
+      return this;
+    }
+    this.event = {
+      ...this.event,
+      rootBookingUid,
     };
     return this;
   }

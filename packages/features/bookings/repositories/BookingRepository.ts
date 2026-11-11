@@ -167,6 +167,7 @@ const buildWhereClauseForActiveBookings = ({
 const selectStatementToGetBookingForCalEventBuilder = {
   id: true,
   uid: true,
+  rootBookingUid: true,
   title: true,
   startTime: true,
   endTime: true,
@@ -1955,6 +1956,7 @@ export class BookingRepository implements IBookingRepository {
         idempotencyKey,
         iCalUID,
         iCalSequence,
+        rootBookingUid: uid,
         eventType: {
           connect: { id: eventTypeId },
         },

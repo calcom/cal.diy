@@ -139,6 +139,16 @@ class BaseBookingOutput_2024_08_13 {
   @Expose()
   uid!: string;
 
+  @ApiProperty({
+    type: String,
+    example: "booking_uid_123",
+    description:
+      "Persistent identifier for this booking across reschedules. Equals uid on the original booking and stays the same when a new uid is issued.",
+  })
+  @IsString()
+  @Expose()
+  rootBookingUid!: string;
+
   @ApiProperty({ type: String, example: "Consultation" })
   @IsString()
   @Expose()

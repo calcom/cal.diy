@@ -34,6 +34,7 @@ import type { WebhookTriggerEvents } from "@calcom/prisma/enums";
 import { BookingStatus } from "@calcom/prisma/enums";
 
 import { isCancellationReasonRequired } from "./cancellationReason";
+import { getRootBookingUid } from "./getRootBookingUid";
 import type { EventTypeMetadata } from "@calcom/prisma/zod-utils";
 import { bookingCancelInput } from "@calcom/prisma/zod-utils";
 import type { CalendarEvent } from "@calcom/types/Calendar";
@@ -261,6 +262,7 @@ async function handler(input: CancelBookingInput, dependencies?: Dependencies) {
     },
     attendees: attendeesList,
     uid: bookingToDelete?.uid,
+    rootBookingUid: getRootBookingUid(bookingToDelete),
     bookingId: bookingToDelete?.id,
     /* Include recurringEvent information only when cancelling all bookings */
     recurringEvent: allRemainingBookings
