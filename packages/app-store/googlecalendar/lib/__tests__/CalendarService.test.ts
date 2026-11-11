@@ -622,7 +622,7 @@ describe("createEvent", () => {
           },
           "summary": "Test Meeting",
         },
-        "sendUpdates": "none",
+        "sendUpdates": "all",
       }
     `);
 
