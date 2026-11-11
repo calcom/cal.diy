@@ -25,10 +25,10 @@ import {
   handleCustomInputs,
   handlePeriodType,
 } from "../util";
+import handleChildrenEventTypes from "./handleChildrenEventTypes";
 import type { TUpdateInputSchema } from "./update.schema";
 
 const isUrlScanningEnabled = (..._args: unknown[]) => false;
-const updateChildrenEventTypes = async (..._args: unknown[]) => {};
 const allowDisablingHostConfirmationEmails = (..._args: unknown[]): boolean => false;
 const allowDisablingAttendeeConfirmationEmails = (..._args: unknown[]): boolean => false;
 
@@ -740,17 +740,15 @@ export const updateHandler = async ({ ctx, input }: UpdateOptions) => {
     calVideoSettingsForChildren = null;
   }
 
-  // Handling updates to children event types (managed events types)
-  await updateChildrenEventTypes({
+  // Handling updates to children event types (managed events types).
+  // Propagates the parent's locked managed props (including the `hidden` /
+  // "Hide from profile" toggle) to the assigned child event types.
+  await handleChildrenEventTypes({
     eventTypeId: id,
-    currentUserId: ctx.user.id,
-    oldEventType: eventType,
     updatedEventType,
+    oldEventType: eventType,
     children,
-    profileId: ctx.user.profile.id,
     prisma: ctx.prisma,
-    updatedValues,
-    calVideoSettings: calVideoSettingsForChildren,
   });
 
   // Clean up empty host groups
