@@ -16,6 +16,11 @@ import { Select } from "@calcom/ui/components/form";
 import { InfoIcon, PlusIcon } from "@coss/ui/icons";
 import { Tooltip } from "@calcom/ui/components/tooltip";
 
+/**
+ * Authorize component handles the OAuth 2.0 authorization prompt.
+ * Parses scopes from the query parameter (supporting both space and comma delimiters)
+ * and allows the user to grant or deny access to the client application.
+ */
 export function Authorize() {
   const { t } = useLocale();
   const { status } = useSession();
