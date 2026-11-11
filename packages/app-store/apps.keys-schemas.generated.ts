@@ -29,6 +29,7 @@ import { appKeysSchema as matomo_zod_ts } from "./matomo/zod";
 import { appKeysSchema as metapixel_zod_ts } from "./metapixel/zod";
 import { appKeysSchema as mock_payment_app_zod_ts } from "./mock-payment-app/zod";
 import { appKeysSchema as nextcloudtalk_zod_ts } from "./nextcloudtalk/zod";
+import { appKeysSchema as nostrcalendar_zod_ts } from "./nostrcalendar/zod";
 import { appKeysSchema as office365calendar_zod_ts } from "./office365calendar/zod";
 import { appKeysSchema as office365video_zod_ts } from "./office365video/zod";
 import { appKeysSchema as paypal_zod_ts } from "./paypal/zod";
@@ -80,6 +81,7 @@ export const appKeysSchemas = {
   metapixel: metapixel_zod_ts,
   "mock-payment-app": mock_payment_app_zod_ts,
   nextcloudtalk: nextcloudtalk_zod_ts,
+  nostrcalendar: nostrcalendar_zod_ts,
   office365calendar: office365calendar_zod_ts,
   office365video: office365video_zod_ts,
   paypal: paypal_zod_ts,
