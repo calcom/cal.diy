@@ -1,0 +1,27 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "TOAB Jitsi App",
+  "slug": "toab_jitsi",
+  "type": "toab_jitsi_video",
+  "logo": "icon.svg",
+  "url": "https://toab-jitsi.com/",
+  "variant": "conferencing",
+  "categories": ["conferencing"],
+  "publisher": "Anirban Das",
+  "email": "AnirbanStifler@gmail.com",
+  "description": "Add TOAB Jitsi video meetings to your Cal.com bookings.",
+  "appData": {
+    "location": {
+      "linkType": "dynamic",
+      "type": "integrations:toab_jitsi",
+      "label": "TOAB Jitsi App"
+    }
+  },
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "event-type-location-video-dynamic",
+  "dirName": "toab_jitsi",
+  "isOAuth": false,
+  "extendsFeature": "EventType",
+  "concurrentMeetings": true
+}

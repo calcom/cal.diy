@@ -74,6 +74,7 @@ export const apiHandlers = {
   "event-type-app-card": import("./templates/event-type-app-card/api"),
   "event-type-location-video-static": import("./templates/event-type-location-video-static/api"),
   "general-app-settings": import("./templates/general-app-settings/api"),
+  toab_jitsi: import("./toab_jitsi/api"),
   twipla: import("./twipla/api"),
   umami: import("./umami/api"),
   vital: import("./vital/api"),
