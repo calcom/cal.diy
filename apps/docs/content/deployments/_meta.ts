@@ -7,4 +7,5 @@ export default {
   railway: "Railway",
   render: "Render",
   vercel: "Vercel",
+  zopday: "ZopDay",
 };
