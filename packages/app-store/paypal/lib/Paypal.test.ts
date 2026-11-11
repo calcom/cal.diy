@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "vitest-fetch-mock";
 
 import Paypal from "./Paypal";
@@ -65,5 +65,41 @@ describe("Paypal.createOrder", () => {
       currency_code: currency,
       value: expected,
     });
+  });
+});
+
+describe("Paypal.getAccessToken", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
+    fetchMock.resetMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.resetAllMocks();
+  });
+
+  it("caches the token for expires_in seconds converted to milliseconds", async () => {
+    fetchMock
+      .mockResponseOnce(JSON.stringify({ access_token: "token-1", expires_in: 3600 }))
+      .mockResponseOnce(JSON.stringify({ access_token: "token-2", expires_in: 3600 }));
+
+    const paypal = new Paypal({ clientId: "test-client-id", secretKey: "test-secret-key" });
+
+    await paypal.getAccessToken();
+    expect(paypal.accessToken).toBe("token-1");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // 60s exceeds the old ms bug (3600ms) but is still well within the 3600s TTL.
+    await vi.advanceTimersByTimeAsync(60 * 1000);
+    await paypal.getAccessToken();
+    expect(paypal.accessToken).toBe("token-1");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(3600 * 1000);
+    await paypal.getAccessToken();
+    expect(paypal.accessToken).toBe("token-2");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
