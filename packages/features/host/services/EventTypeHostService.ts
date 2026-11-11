@@ -192,13 +192,19 @@ export class EventTypeHostService implements IEventTypeHostService {
         teamId,
       });
 
-      const members: ExportedWeightMember[] = memberships.map((m) => ({
-        userId: m.user.id,
-        name: m.user.name,
-        email: m.user.email,
-        avatarUrl: m.user.avatarUrl,
-        weight: null,
-      }));
+      // Filter out PAUSED members
+      const activeMemberships = await this.membershipRepository.findActiveMembershipsByTeamId(teamId);
+      const activeUserIds = new Set(activeMemberships.map((m) => m.userId));
+
+      const members: ExportedWeightMember[] = memberships
+        .filter((m) => activeUserIds.has(m.user.id))
+        .map((m) => ({
+          userId: m.user.id,
+          name: m.user.name,
+          email: m.user.email,
+          avatarUrl: m.user.avatarUrl,
+          weight: null,
+        }));
 
       return { members };
     }
