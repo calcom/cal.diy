@@ -74,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     },
   });
 
-  tokenInfo.data.expiryDate = Math.round(Date.now() + tokenInfo.data.expires_in);
+  tokenInfo.data.expiryDate = Math.round(Date.now() + tokenInfo.data.expires_in * 1000);
   tokenInfo.data.accountServer = accountsServer;
 
   await createOAuthAppCredential({ appId: appConfig.slug, type: appConfig.type }, tokenInfo.data, req);
