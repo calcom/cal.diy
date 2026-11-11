@@ -1,10 +1,8 @@
-import { describe, expect, test } from "vitest";
-import { ZodError } from "zod";
-
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import { ErrorWithCode } from "@calcom/lib/errors";
 import { Prisma } from "@calcom/prisma/client";
-
+import { describe, expect, test } from "vitest";
+import { ZodError } from "zod";
 import { HttpError } from "../http-error";
 import { TracedError } from "../tracing/error";
 import { getServerErrorFromUnknown } from "./getServerErrorFromUnknown";
@@ -181,10 +179,10 @@ describe("ZodError handling", () => {
 
 describe("Prisma error handling", () => {
   test("should handle Prisma P2025 error (record not found)", () => {
-    const prismaError = new Error("Record to delete does not exist.") as any;
-    prismaError.code = "P2025";
-    prismaError.clientVersion = "5.0.0";
-    Object.setPrototypeOf(prismaError, Prisma.PrismaClientKnownRequestError.prototype);
+    const prismaError = new Prisma.PrismaClientKnownRequestError("Record to delete does not exist.", {
+      code: "P2025",
+      clientVersion: "5.0.0",
+    });
 
     const result = getServerErrorFromUnknown(prismaError);
 
@@ -193,11 +191,27 @@ describe("Prisma error handling", () => {
     expect(result.cause).toBe(prismaError);
   });
 
+  test("should handle Prisma P2002 error (unique constraint violation) as 409", () => {
+    const prismaError = new Prisma.PrismaClientKnownRequestError(
+      'Unique constraint failed on the fields: ("idempotencyKey")',
+      {
+        code: "P2002",
+        clientVersion: "5.0.0",
+      }
+    );
+
+    const result = getServerErrorFromUnknown(prismaError);
+
+    expect(result.statusCode).toBe(409);
+    expect(result.message).toBe('Unique constraint failed on the fields: ("idempotencyKey")');
+    expect(result.cause).toBe(prismaError);
+  });
+
   test("should handle other Prisma errors as 400", () => {
-    const prismaError = new Error("Foreign key constraint failed") as any;
-    prismaError.code = "P2003";
-    prismaError.clientVersion = "5.0.0";
-    Object.setPrototypeOf(prismaError, Prisma.PrismaClientKnownRequestError.prototype);
+    const prismaError = new Prisma.PrismaClientKnownRequestError("Foreign key constraint failed", {
+      code: "P2003",
+      clientVersion: "5.0.0",
+    });
 
     const result = getServerErrorFromUnknown(prismaError);
 
