@@ -16,6 +16,14 @@ function parseName(name: z.infer<typeof nameObjectSchema> | string | undefined) 
   else return "Nameless";
 }
 
+// A string passed to String.replace/replaceAll is not inserted as-is: "$&", "$`", "$'" and
+// "$$" are substitution patterns. Names and booking answers can contain them, so values are
+// passed through a replacer function, which is always inserted literally.
+const literal =
+  (value: string): (() => string) =>
+  () =>
+    value;
+
 export type EventNameObjectType = {
   attendeeName: z.infer<typeof nameObjectSchema> | string;
   eventType: string;
@@ -49,31 +57,33 @@ export function getEventName(eventNameObj: EventNameObjectType, forAttendeeView 
     if (eventLocationType) {
       locationString = eventLocationType.label;
     }
-    eventName = eventName.replace("{Location}", locationString);
-    eventName = eventName.replace("{LOCATION}", locationString);
+    eventName = eventName.replaceAll("{Location}", literal(locationString));
+    eventName = eventName.replaceAll("{LOCATION}", literal(locationString));
   }
 
   let dynamicEventName = eventName
     // Need this for compatibility with older event names
-    .replaceAll("{Event type title}", eventNameObj.eventType)
-    .replaceAll("{Scheduler}", attendeeName)
-    .replaceAll("{Organiser}", eventNameObj.host)
-    .replaceAll("{Organiser first name}", eventNameObj.host.split(" ")[0])
-    .replaceAll("{USER}", attendeeName)
-    .replaceAll("{ATTENDEE}", attendeeName)
-    .replaceAll("{HOST}", eventNameObj.host)
-    .replaceAll("{HOST/ATTENDEE}", forAttendeeView ? eventNameObj.host : attendeeName)
+    .replaceAll("{Event type title}", literal(eventNameObj.eventType))
+    .replaceAll("{Scheduler}", literal(attendeeName))
+    .replaceAll("{Organiser}", literal(eventNameObj.host))
+    .replaceAll("{Organiser first name}", literal(eventNameObj.host.split(" ")[0]))
+    .replaceAll("{USER}", literal(attendeeName))
+    .replaceAll("{ATTENDEE}", literal(attendeeName))
+    .replaceAll("{HOST}", literal(eventNameObj.host))
+    .replaceAll("{HOST/ATTENDEE}", literal(forAttendeeView ? eventNameObj.host : attendeeName))
     .replaceAll("{Event duration}", `${String(eventNameObj.eventDuration)} mins`)
     .replaceAll(
       "{Scheduler first name}",
-      attendeeName === eventNameObj.t("scheduler") ? "{Scheduler first name}" : attendeeName.split(" ")[0]
+      literal(
+        attendeeName === eventNameObj.t("scheduler") ? "{Scheduler first name}" : attendeeName.split(" ")[0]
+      )
     );
 
   const { bookingFields } = eventNameObj || {};
   const { name } = bookingFields || {};
 
   if (name && typeof name === "object" && !Array.isArray(name) && typeof name.lastName === "string") {
-    dynamicEventName = dynamicEventName.replaceAll("{Scheduler last name}", name.lastName.toString());
+    dynamicEventName = dynamicEventName.replaceAll("{Scheduler last name}", literal(name.lastName.toString()));
   }
 
   const customInputvariables = dynamicEventName.match(/\{(.+?)}/g)?.map((variable) => {
@@ -103,7 +113,7 @@ export function getEventName(eventNameObj: EventNameObjectType, forAttendeeView 
         fieldValue = bookingFieldValue.toString();
       }
 
-      dynamicEventName = dynamicEventName.replace(`{${variable}}`, fieldValue || "");
+      dynamicEventName = dynamicEventName.replace(`{${variable}}`, literal(fieldValue || ""));
     } else {
       dynamicEventName = dynamicEventName.replace(`{${variable}}`, "");
     }
