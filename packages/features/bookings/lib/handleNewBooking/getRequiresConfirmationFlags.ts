@@ -60,9 +60,12 @@ const _determineRequiresConfirmation = async (
   }
 
   if (rcThreshold) {
-    // diff() truncates to whole units, so `>` would also require confirmation for e.g. 2h30m notice
-    // on a "less than 2 hours" threshold.
-    const timeDifference = dayjs(dayjs(bookingStartTime).utc().format()).diff(dayjs(), rcThreshold.unit);
+    // Keep the fraction: a truncated diff would require confirmation for e.g. 2h45m notice on a 2.5h threshold.
+    const timeDifference = dayjs(dayjs(bookingStartTime).utc().format()).diff(
+      dayjs(),
+      rcThreshold.unit,
+      true
+    );
     if (timeDifference >= rcThreshold.time) {
       requiresConfirmation = false;
     }

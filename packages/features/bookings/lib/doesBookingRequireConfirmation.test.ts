@@ -70,4 +70,29 @@ describe("doesBookingRequireConfirmation", () => {
       })
     ).toBe(true);
   });
+
+  it("handles a fractional threshold without truncating the notice", () => {
+    expect(
+      doesBookingRequireConfirmation(bookingStartingIn(2 * HOUR + 15 * MINUTE, { time: 2.5, unit: "hours" }))
+    ).toBe(true);
+    expect(
+      doesBookingRequireConfirmation(bookingStartingIn(2 * HOUR + 45 * MINUTE, { time: 2.5, unit: "hours" }))
+    ).toBe(false);
+  });
+
+  it("measures the notice from when the booking was made, not from when payment completes", () => {
+    const booking = bookingStartingIn(HOUR + 55 * MINUTE, { time: 2, unit: "hours" }).booking;
+    // Booked 10 minutes ago with 2h05m notice; payment only completes now.
+    expect(
+      doesBookingRequireConfirmation({
+        booking: { ...booking, createdAt: new Date(NOW.getTime() - 10 * MINUTE) },
+      })
+    ).toBe(false);
+    // Booked 1 minute ago with 1h56m notice.
+    expect(
+      doesBookingRequireConfirmation({
+        booking: { ...booking, createdAt: new Date(NOW.getTime() - MINUTE) },
+      })
+    ).toBe(true);
+  });
 });
