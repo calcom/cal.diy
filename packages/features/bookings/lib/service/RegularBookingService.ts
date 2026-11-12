@@ -60,6 +60,7 @@ import { DEFAULT_GROUP_ID, ENABLE_ASYNC_TASKER } from "@calcom/lib/constants";
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import { ErrorWithCode } from "@calcom/lib/errors";
 import { extractBaseEmail } from "@calcom/lib/extract-base-email";
+import { getBlacklistedGuestEmails } from "@calcom/lib/getBlacklistedGuestEmails";
 import { HttpError } from "@calcom/lib/http-error";
 import { criticalLogger } from "@calcom/lib/logger.server";
 import { getPiiFreeCalendarEvent, getPiiFreeEventType } from "@calcom/lib/piiFreeData";
@@ -1216,9 +1217,7 @@ async function handler(
     },
   ];
 
-  const blacklistedGuestEmails = process.env.BLACKLISTED_GUEST_EMAILS
-    ? process.env.BLACKLISTED_GUEST_EMAILS.split(",")
-    : [];
+  const blacklistedGuestEmails = getBlacklistedGuestEmails();
 
   const guestEmails = (reqGuests || []).map((email) => extractBaseEmail(email).toLowerCase());
   const guestUsers = await deps.userRepository.findManyByEmailsWithEmailVerificationSettings({
@@ -1235,7 +1234,7 @@ async function handler(
   const guests = (reqGuests || []).reduce((guestArray, guest) => {
     const baseGuestEmail = extractBaseEmail(guest).toLowerCase();
 
-    if (blacklistedGuestEmails.some((e) => e.toLowerCase() === baseGuestEmail)) {
+    if (blacklistedGuestEmails.includes(baseGuestEmail)) {
       guestsRemoved.push(guest);
       return guestArray;
     }
@@ -2061,7 +2060,10 @@ async function handler(
     referencesToCreate = createManager.referencesToCreate;
     videoCallUrl = evt.videoCallData?.url ? evt.videoCallData.url : null;
 
-    if (results.length > 0 && results.every((res) => !res.success)) {
+    const additionalInformation: AdditionalInformation = {};
+    const allIntegrationsFailed = results.length > 0 && results.every((res) => !res.success);
+
+    if (allIntegrationsFailed) {
       const error = {
         errorCode: "BookingCreatingMeetingFailed",
         message: "Booking failed",
@@ -2071,9 +2073,8 @@ async function handler(
         `EventManager.create failure in some of the integrations ${organizerUser.username}`,
         safeStringify({ error, results })
       );
+      evt.appsStatus = handleAppsStatus(results, booking, reqAppsStatus);
     } else {
-      const additionalInformation: AdditionalInformation = {};
-
       if (results.length) {
         // Handle Google Meet results
         // We use the original booking location since the evt location changes to daily
@@ -2148,24 +2149,25 @@ async function handler(
           });
         }
       }
-      if (!noEmail) {
-        if (!isDryRun && !(eventType.seatsPerTimeSlot && rescheduleUid)) {
-          await emailsAndSmsHandler.send({
-            action: BookingActionMap.confirmed,
-            data: {
-              eventType: {
-                metadata: eventType.metadata,
-                schedulingType: eventType.schedulingType,
-              },
-              eventNameObject,
-              evt,
-              additionalInformation,
-              additionalNotes,
-              customInputs,
+    }
+
+    if (!noEmail) {
+      if (!isDryRun && !(eventType.seatsPerTimeSlot && rescheduleUid)) {
+        await emailsAndSmsHandler.send({
+          action: BookingActionMap.confirmed,
+          data: {
+            eventType: {
+              metadata: eventType.metadata,
+              schedulingType: eventType.schedulingType,
             },
-          });
-          bookingEmailsAndSmsTaskerAction = BookingActionMap.confirmed;
-        }
+            eventNameObject,
+            evt,
+            additionalInformation,
+            additionalNotes,
+            customInputs,
+          },
+        });
+        bookingEmailsAndSmsTaskerAction = BookingActionMap.confirmed;
       }
     }
   } else {
