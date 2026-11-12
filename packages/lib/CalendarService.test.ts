@@ -113,7 +113,7 @@ const selectedCalendars: IntegrationCalendar[] = [
   },
 ];
 
-const mockCalendarObjects = (iCalString: string) => {
+const mockCalendarObjects = (iCalString: string): void => {
   vi.mocked(fetchCalendarObjects).mockResolvedValue([
     {
       url: "https://caldav.example.com/calendar/event.ics",
@@ -145,6 +145,21 @@ describe("CalendarService - recurring availability", () => {
         end: "2024-01-22T11:00:00.000Z",
       },
     ]);
+  });
+
+  it("does not expand unsupported hourly recurrences", async () => {
+    const service = new TestCalendarService();
+    mockCalendarObjects(
+      `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:hourly\r\nDTSTART:20240101T100000Z\r\nDTEND:20240101T110000Z\r\nRRULE:FREQ=HOURLY\r\nEND:VEVENT\r\nEND:VCALENDAR`
+    );
+
+    const events = await service.getAvailability({
+      dateFrom: "2024-01-15T10:00:00.000Z",
+      dateTo: "2024-01-15T12:00:00.000Z",
+      selectedCalendars,
+    });
+
+    expect(events).toEqual([]);
   });
 
   it("includes a recurrence that starts exactly at the query start", async () => {

@@ -738,9 +738,7 @@ export default abstract class BaseCalendarService implements Calendar {
 
         if (event.isRecurring()) {
           let maxIterations = 365;
-          const recurrenceTypesValue = event.getRecurrenceTypes();
-          const recurrenceTypes =
-            typeof recurrenceTypesValue === "string" ? [recurrenceTypesValue] : Object.values(recurrenceTypesValue);
+          const recurrenceTypes = Object.keys(event.getRecurrenceTypes());
           if (recurrenceTypes.some((type) => ["HOURLY", "SECONDLY", "MINUTELY"].includes(type))) {
             logger.warn(`Won't handle [${recurrenceTypes.join(", ")}] recurrence`);
             return;
