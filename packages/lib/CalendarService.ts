@@ -768,11 +768,7 @@ export default abstract class BaseCalendarService implements Calendar {
             fastForwardIterations -= 1;
           }
 
-          while (
-            maxIterations > 0 &&
-            current &&
-            (currentStart === null || currentStart.isAfter(end) === false)
-          ) {
+          while (maxIterations > 0 && current && (currentStart === null || currentStart.isAfter(end) === false)) {
             maxIterations -= 1;
 
             try {
@@ -799,10 +795,7 @@ export default abstract class BaseCalendarService implements Calendar {
             }
             currentStart = dayjs(currentEvent.startDate.toJSDate());
 
-            if (
-              currentStart.isBefore(end) &&
-              dayjs(currentEvent.endDate.toJSDate()).isAfter(start)
-            ) {
+            if (currentStart.isBefore(end) && dayjs(currentEvent.endDate.toJSDate()).isAfter(start)) {
               events.push({
                 start: currentStart.toISOString(),
                 end: dayjs(currentEvent.endDate.toJSDate()).toISOString(),
