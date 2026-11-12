@@ -1,7 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-
 import dayjs from "@calcom/dayjs";
-
+import { describe, expect, it, vi } from "vitest";
 import {
   buildDateRanges,
   intersect,
