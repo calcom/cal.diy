@@ -7,6 +7,7 @@ import { useBookerTime } from "@calcom/features/bookings/Booker/hooks/useBookerT
 import type { BookerEvent } from "@calcom/features/bookings/types";
 import { Calendar } from "@calcom/web/modules/calendars/weeklyview/components/Calendar";
 import type { CalendarEvent } from "@calcom/features/calendars/weeklyview/types/events";
+import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { localStorage } from "@calcom/lib/webstorage";
 
 import type { useScheduleForEventReturnType } from "@calcom/web/modules/schedules/hooks/useEvent";
@@ -26,6 +27,7 @@ export const LargeCalendar = ({
     data?: Pick<BookerEvent, "length"> | null;
   };
 }) => {
+  const { t } = useLocale();
   const selectedDate = useBookerStoreContext((state) => state.selectedDate);
   const setSelectedTimeslot = useBookerStoreContext((state) => state.setSelectedTimeslot);
   const selectedEventDuration = useBookerStoreContext((state) => state.selectedDuration);
@@ -54,14 +56,14 @@ export const LargeCalendar = ({
         id,
         start: dayjs(event.start).toDate(),
         end: dayjs(event.end).toDate(),
-        title: "Busy",
+        title: event.title || t("busy_time.busy"),
         options: {
           status: "ACCEPTED",
           borderOnly: true,
         },
       } as CalendarEvent;
     });
-  }, [overlayEvents, displayOverlay]);
+  }, [overlayEvents, displayOverlay, t]);
 
   return (
     <div className="h-full [--calendar-dates-sticky-offset:66px]">

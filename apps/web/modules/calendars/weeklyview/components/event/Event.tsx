@@ -73,6 +73,10 @@ export function Event({
 
   const Component = onEventClick ? "button" : "div";
 
+  // Events spanning several days need the date, the time alone would be ambiguous
+  const timeFormat = dayjs(event.start).isSame(event.end, "day") ? "HH:mm" : "MMM D, HH:mm";
+  const eventTime = `${dayjs(event.start).format(timeFormat)} - ${dayjs(event.end).format(timeFormat)}`;
+
   const dayOfWeek = dayjs(event.start).day();
   const tooltipSide = dayOfWeek >= 1 && dayOfWeek <= 4 ? "right" : "left";
 
@@ -86,11 +90,7 @@ export function Event({
         )}
         <div className="flex-1">
           <div className="font-semibold leading-tight">{event.title}</div>
-          {!event.options?.hideTime && (
-            <div className="text-inverted-muted mt-1 text-xs">
-              {dayjs(event.start).format("HH:mm")} - {dayjs(event.end).format("HH:mm")}
-            </div>
-          )}
+          {!event.options?.hideTime && <div className="text-inverted-muted mt-1 text-xs">{eventTime}</div>}
           {event.description && (
             <div className="text-inverted-muted mt-1 text-xs leading-snug">{event.description}</div>
           )}
@@ -140,7 +140,7 @@ export function Event({
               <span>{event.title}</span>
               {!event.options?.hideTime && (
                 <p className="text-subtle mt-1 w-full whitespace-nowrap text-left text-[10px] leading-none">
-                  {dayjs(event.start).format("HH:mm")} - {dayjs(event.end).format("HH:mm")}
+                  {eventTime}
                 </p>
               )}
             </div>
@@ -150,7 +150,7 @@ export function Event({
           )}
           {displayType !== "single-line" && !event.options?.hideTime && (
             <p className="text-subtle mt-1 whitespace-nowrap text-left text-[10px] leading-none">
-              {dayjs(event.start).format("HH:mm")} - {dayjs(event.end).format("HH:mm")}
+              {eventTime}
             </p>
           )}
           {displayType === "full" && event.description && (

@@ -52,7 +52,7 @@ runs:
         path: |
           **/node_modules/
           !**/.next/node_modules/
-        key: ${{ runner.os }}-yarn-nm-cache-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
+        key: ${{ runner.os }}-yarn-nm-cache-${{ inputs.node_version }}-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
         lookup-only: true
 
     - name: Check yarn install state cache (lookup-only)
@@ -61,7 +61,7 @@ runs:
       id: yarn-install-state-cache-check
       with:
         path: .yarn/ci-cache/
-        key: ${{ runner.os }}-yarn-install-state-cache-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
+        key: ${{ runner.os }}-yarn-install-state-cache-${{ inputs.node_version }}-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
         lookup-only: true
 
     # Compute whether all caches hit (only in skip mode)
@@ -98,7 +98,7 @@ runs:
         path: |
           **/node_modules/
           !**/.next/node_modules/
-        key: ${{ runner.os }}-yarn-nm-cache-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
+        key: ${{ runner.os }}-yarn-nm-cache-${{ inputs.node_version }}-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
 
     # Invalidated on yarn.lock changes
     - name: Restore yarn install state
@@ -107,7 +107,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: .yarn/ci-cache/
-        key: ${{ runner.os }}-yarn-install-state-cache-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
+        key: ${{ runner.os }}-yarn-install-state-cache-${{ inputs.node_version }}-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
 
     - name: Install dependencies
       if: ${{ inputs.skip-install-if-cache-hit != 'true' || steps.all-caches-check.outputs.all-hit != 'true' }}
