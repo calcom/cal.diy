@@ -766,7 +766,11 @@ export default abstract class BaseCalendarService implements Calendar {
             fastForwardIterations -= 1;
           }
 
-          while (maxIterations > 0 && current && (currentStart === null || currentStart.isAfter(end) === false)) {
+          while (
+            maxIterations > 0 &&
+            current &&
+            (currentStart === null || currentStart.isAfter(end) === false)
+          ) {
             maxIterations -= 1;
 
             try {

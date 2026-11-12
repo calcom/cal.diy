@@ -18,6 +18,7 @@ vi.mock("tsdav", () => ({
 
 vi.mock("@calcom/lib/logger", () => ({
   default: {
+    warn: vi.fn(),
     getSubLogger: () => ({
       debug: vi.fn(),
       error: vi.fn(),
