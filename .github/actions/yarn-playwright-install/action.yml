@@ -26,6 +26,14 @@ runs:
         key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
         lookup-only: true
 
+    # In skip mode, yarn-install only checks its caches and leaves node_modules empty,
+    # so `yarn playwright install` below would fail without a real install first
+    - name: Ensure dependencies on Playwright cache miss
+      if: ${{ inputs.skip-install-if-cache-hit == 'true' && steps.playwright-cache-check.outputs.cache-hit != 'true' }}
+      uses: ./.github/actions/yarn-install
+      with:
+        skip-install-if-cache-hit: "false"
+
     # Only restore cache if not in skip mode, or if skip mode but cache check missed
     - name: Cache playwright binaries
       if: ${{ inputs.skip-install-if-cache-hit != 'true' || steps.playwright-cache-check.outputs.cache-hit != 'true' }}
