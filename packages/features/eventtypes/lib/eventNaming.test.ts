@@ -354,6 +354,50 @@ describe("event tests", () => {
 
       expect(result).toBe("location: unknownNonsense");
     });
+
+    it("should template every {Location} in the event name", () => {
+      const result = event.getEventName({
+        attendeeName: "example attendee",
+        eventType: "example event type",
+        host: "example host",
+        location: "unknownNonsense",
+        eventName: "{Location} call ({Location})",
+        eventDuration: 15,
+        t: vi.fn(() => "foo") as TFunction,
+      });
+
+      expect(result).toBe("unknownNonsense call (unknownNonsense)");
+    });
+
+    it("should insert names containing $ patterns literally", () => {
+      const result = event.getEventName({
+        attendeeName: "Cash$$Flow",
+        eventType: "Pricing $' review",
+        host: "A$&B",
+        eventName: "{Event type title} with {Scheduler} and {HOST}",
+        eventDuration: 15,
+        t: vi.fn(() => "foo") as TFunction,
+      });
+
+      expect(result).toBe("Pricing $' review with Cash$$Flow and A$&B");
+    });
+
+    it("should insert booking field answers containing $ patterns literally", () => {
+      const result = event.getEventName({
+        attendeeName: "example attendee",
+        eventType: "example event type",
+        host: "example host",
+        eventName: "Intro: {company} - {budget}",
+        eventDuration: 15,
+        bookingFields: {
+          company: "A$&B Corp",
+          budget: "$$5k, paid $' later",
+        },
+        t: vi.fn(() => "foo") as TFunction,
+      });
+
+      expect(result).toBe("Intro: A$&B Corp - $$5k, paid $' later");
+    });
   });
 
   it("should support templating of event duration", () => {
