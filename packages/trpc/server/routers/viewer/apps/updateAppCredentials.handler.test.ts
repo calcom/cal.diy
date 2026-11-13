@@ -1,11 +1,8 @@
 import { prisma } from "@calcom/prisma";
 import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  sanitizeJsonObject,
-  type UpdateAppCredentialsOptions,
-  updateAppCredentialsHandler,
-} from "./updateAppCredentials.handler";
+import type { UpdateAppCredentialsOptions } from "./updateAppCredentials.handler";
+import { sanitizeJsonObject, updateAppCredentialsHandler } from "./updateAppCredentials.handler";
 
 vi.mock("@calcom/prisma", () => ({
   prisma: {
