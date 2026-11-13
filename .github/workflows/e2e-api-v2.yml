@@ -78,6 +78,7 @@ jobs:
           sparse-checkout: .github
       - uses: ./.github/actions/cache-checkout
       - uses: ./.github/actions/yarn-install
+      - run: yarn prisma generate
       - uses: ./.github/actions/cache-db
       - name: Build platform packages with Turbo
         run: |

@@ -92,17 +92,18 @@ jobs:
               return;
             }
 
-            // Check 3: Was 'run-ci' label added AFTER this SHA was pushed by someone with write access?
-            // This enables re-runs triggered by the run-ci.yml workflow
+            // Check 3: Was 'run-ci' label added by someone with write access AFTER the push that
+            // created this run? This enables re-runs triggered by the run-ci.yml workflow.
             // NOTE: We use workflow run created_at instead of commit timestamp because
             // git commit timestamps can be arbitrarily backdated by attackers
             if (pr.labels?.some(l => l.name === 'run-ci')) {
-              // Skip stale check if this is a re-run (run_attempt > 1)
-              // Re-runs are explicitly triggered by maintainers
-              const runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT || '1', 10);
-              if (runAttempt > 1) {
-                console.log(`Re-run detected (attempt ${runAttempt}), trusting existing 'run-ci' label`);
-                core.setOutput('is-trusted', true);
+              // Re-runs reuse the original event payload, so this run checks out the SHA from that
+              // payload. If the PR head has moved on, an approval for the new head says nothing
+              // about the SHA this run would execute.
+              const checkedOutSha = context.payload.pull_request.head.sha;
+              if (checkedOutSha !== headSha) {
+                console.log(`Run is for ${checkedOutSha} but PR head is ${headSha}; not trusting stale run`);
+                core.setOutput('is-trusted', false);
                 return;
               }
 
@@ -118,39 +119,29 @@ jobs:
                 .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
 
               if (labelEvent) {
-                // Get workflow runs to find when this SHA was first pushed
-                const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+                // This run's created_at is the time of the push that triggered it and is kept across
+                // re-runs, while every new push (including re-pushing an older SHA) creates a new run.
+                // Comparing against the oldest run for the SHA instead would let an author re-push a
+                // previously seen SHA after approval of different code.
+                const { data: thisRun } = await github.rest.actions.getWorkflowRun({
                   owner,
                   repo,
-                  workflow_id: 'pr.yml',
-                  head_sha: headSha,
-                  per_page: 100,
+                  run_id: context.runId,
                 });
 
-                // Filter runs to this PR (in case same SHA exists in multiple PRs)
-                const matchingRuns = runs.filter(run =>
-                  !run.pull_requests?.length || run.pull_requests.some(p => p.number === prNumber)
-                );
+                const labelTime = new Date(labelEvent.created_at);
+                const pushTime = new Date(thisRun.created_at);
 
-                if (matchingRuns.length > 0) {
-                  const labelTime = new Date(labelEvent.created_at);
-                  // Use the oldest run's created_at as the push time
-                  const originalRun = matchingRuns[matchingRuns.length - 1];
-                  const pushTime = new Date(originalRun.created_at);
-
-                  if (labelTime > pushTime) {
-                    const adder = labelEvent.actor.login;
-                    if (await hasWriteAccess(adder)) {
-                      console.log(`Approved via 'run-ci' label added by ${adder} after push (label: ${labelTime.toISOString()}, push: ${pushTime.toISOString()})`);
-                      core.setOutput('is-trusted', true);
-                      return;
-                    }
-                    console.log(`Label 'run-ci' added by ${adder} (no write access)`);
-                  } else {
-                    console.log(`Label 'run-ci' is stale (label: ${labelTime.toISOString()}, push: ${pushTime.toISOString()})`);
+                if (labelTime > pushTime) {
+                  const adder = labelEvent.actor.login;
+                  if (await hasWriteAccess(adder)) {
+                    console.log(`Approved via 'run-ci' label added by ${adder} after push (label: ${labelTime.toISOString()}, push: ${pushTime.toISOString()})`);
+                    core.setOutput('is-trusted', true);
+                    return;
                   }
+                  console.log(`Label 'run-ci' added by ${adder} (no write access)`);
                 } else {
-                  console.log('No workflow runs found for this SHA - cannot validate label timing');
+                  console.log(`Label 'run-ci' is stale (label: ${labelTime.toISOString()}, push: ${pushTime.toISOString()})`);
                 }
               }
             }
@@ -449,6 +440,13 @@ jobs:
           echo "A maintainer must review the code and add the 'run-ci' label to trigger CI checks."
           exit 1
         if: needs.trust-check.outputs.is-trusted != 'true' && needs.trust-check.result == 'success'
+      # The conditional check below reads prepare's outputs, which are empty when prepare fails,
+      # so without this step a failed prepare skips every check and still reports success.
+      - name: Fail if prepare did not succeed
+        run: |
+          echo "::error::Prepare job did not succeed (result: ${{ needs.prepare.result }}), so no checks ran."
+          exit 1
+        if: needs.trust-check.outputs.is-trusted == 'true' && needs.prepare.result != 'success'
       - name: Fail if conditional jobs failed
         run: exit 1
         if: |
