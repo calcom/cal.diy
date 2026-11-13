@@ -136,12 +136,14 @@ const NextcloudTalkVideoApiAdapter = (credential: CredentialPayload): VideoApiAd
       //Allows "/{Type}-with-{Attendees}" slug
       const meetingID = meetingPattern
         .replaceAll("{uuid}", uuidv4())
-        .replaceAll("{Title}", eventData.title)
-        .replaceAll("{Event Type Title}", eventData.type)
-        .replaceAll("{Scheduler}", eventData.attendees.map((a) => a.name).join("-"))
-        .replaceAll("{Organizer}", eventData.organizer.name)
-        .replaceAll("{Location}", eventData.location || "")
-        .replaceAll("{Team}", eventData.team?.name || "")
+        // "$&", "$`", "$'" and "$$" in a replacement string are substitution patterns, and titles
+        // and names can contain them, so values go in through a replacer function, which is literal
+        .replaceAll("{Title}", () => eventData.title)
+        .replaceAll("{Event Type Title}", () => eventData.type)
+        .replaceAll("{Scheduler}", () => eventData.attendees.map((a) => a.name).join("-"))
+        .replaceAll("{Organizer}", () => eventData.organizer.name)
+        .replaceAll("{Location}", () => eventData.location || "")
+        .replaceAll("{Team}", () => eventData.team?.name || "")
         .replaceAll(" ", "-"); //Last Rule! - Replace all blanks (%20) with dashes;
 
       try {
