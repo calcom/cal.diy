@@ -316,6 +316,23 @@ describe("handleNoShowFee", () => {
       ).rejects.toThrow(chargeCardError);
     });
 
+    it("should return the payment when the charge succeeds but the email fails", async () => {
+      mockPaymentService.chargeCard.mockResolvedValue({ success: true, paymentId: "pay_123" });
+
+      vi.mocked(CredentialRepository.findPaymentCredentialByAppIdAndUserIdOrTeamId).mockResolvedValue(
+        mockCredential
+      );
+      vi.mocked(sendNoShowFeeChargedEmail).mockRejectedValueOnce(new Error("SMTP down"));
+
+      const result = await handleNoShowFee({
+        booking: mockBooking,
+        payment: mockPayment,
+      });
+
+      expect(result).toEqual({ success: true, paymentId: "pay_123" });
+      expect(sendNoShowFeeChargedEmail).toHaveBeenCalled();
+    });
+
     it("should handle generic payment errors", async () => {
       mockPaymentService.chargeCard.mockRejectedValue(new Error("Generic payment error"));
 

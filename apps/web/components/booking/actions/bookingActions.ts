@@ -190,7 +190,7 @@ export function getAfterEventActions(context: BookingActionContext): ActionType[
           id: "charge_card",
           label: cardCharged ? t("no_show_fee_charged") : t("collect_no_show_fee"),
           icon: "credit-card",
-          disabled: cardCharged,
+          disabled: isActionDisabled("charge_card", context),
         }
       : null,
     {
@@ -267,7 +267,7 @@ export function isActionDisabled(actionId: string, context: BookingActionContext
     case "meeting_session_details":
       return !(isBookingInPast && booking.status === BookingStatus.ACCEPTED && context.isCalVideoLocation);
     case "charge_card":
-      return context.cardCharged;
+      return context.cardCharged || !(isBookingInPast || context.isOngoing);
     case "reassign":
     case "change_location":
     case "add_members":

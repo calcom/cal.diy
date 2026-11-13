@@ -261,6 +261,30 @@ class StripePaymentService implements IAbstractPaymentService {
         throw new Error(`Booking attendees are empty for setupIntent ${setupIntent.id}`);
       }
 
+      // Earlier attempts for this payment, so a charge that went through on Stripe but wasn't saved
+      // here is reused instead of charging the card again
+      const previousAttempts: Stripe.PaymentIntent[] = [];
+      // Iterating the list goes through every page, not only the first 100 results
+      for await (const paymentIntent of this.stripe.paymentIntents.list(
+        { customer: setupIntent.customer as string, limit: 100 },
+        { stripeAccount: this.credentials.stripe_user_id }
+      )) {
+        if (paymentIntent.metadata?.noShowFeePaymentId === String(payment.id)) {
+          previousAttempts.push(paymentIntent);
+        }
+      }
+      const succeededPaymentIntent = previousAttempts.find(
+        (paymentIntent) => paymentIntent.status === "succeeded"
+      );
+      const failedAttempts = previousAttempts.filter(
+        (paymentIntent) =>
+          paymentIntent.status === "requires_payment_method" || paymentIntent.status === "canceled"
+      );
+
+      if (!succeededPaymentIntent && failedAttempts.length !== previousAttempts.length) {
+        throw new Error(`A no-show fee charge is already in progress for payment ${payment.id}`);
+      }
+
       const params: Stripe.PaymentIntentCreateParams = {
         amount: payment.amount,
         currency: payment.currency,
@@ -268,21 +292,29 @@ class StripePaymentService implements IAbstractPaymentService {
         payment_method: setupIntent.payment_method as string,
         off_session: true,
         confirm: true,
-        metadata: this.generateMetadata({
-          bookingId,
-          userId: booking.user?.id,
-          username: booking.user?.username,
-          bookerName: booking.attendees[0].name,
-          bookerEmail: booking.attendees[0].email,
-          bookerPhoneNumber: booking.attendees[0].phoneNumber ?? null,
-          eventTitle: booking.eventType?.title || null,
-          bookingTitle: booking.title,
-        }),
+        metadata: {
+          ...this.generateMetadata({
+            bookingId,
+            userId: booking.user?.id,
+            username: booking.user?.username,
+            bookerName: booking.attendees[0].name,
+            bookerEmail: booking.attendees[0].email,
+            bookerPhoneNumber: booking.attendees[0].phoneNumber ?? null,
+            eventTitle: booking.eventType?.title || null,
+            bookingTitle: booking.title,
+          }),
+          noShowFeePaymentId: payment.id,
+        },
       };
 
-      const paymentIntent = await this.stripe.paymentIntents.create(params, {
-        stripeAccount: this.credentials.stripe_user_id,
-      });
+      const paymentIntent =
+        succeededPaymentIntent ??
+        (await this.stripe.paymentIntents.create(params, {
+          stripeAccount: this.credentials.stripe_user_id,
+          // Same key while an attempt's outcome is unknown so the card is never charged twice,
+          // and a new one after each declined attempt so the charge can be retried
+          idempotencyKey: `no-show-fee-${payment.id}-${failedAttempts.length}`,
+        }));
 
       const paymentData = await prisma.payment.update({
         where: {
