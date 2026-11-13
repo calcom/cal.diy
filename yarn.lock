@@ -1925,7 +1925,6 @@ __metadata:
   resolution: "@calcom/api-proxy@workspace:apps/api"
   dependencies:
     connect: "npm:3.7.0"
-    http: "npm:0.0.1-security"
     http-proxy-middleware: "npm:2.0.9"
   languageName: unknown
   linkType: soft
@@ -25748,13 +25747,6 @@ __metadata:
     follow-redirects: "npm:^1.0.0"
     requires-port: "npm:^1.0.0"
   checksum: 10/2489e98aba70adbfd8b9d41ed1ff43528be4598c88616c558b109a09eaffe4bb35e551b6c75ac42ed7d948bb7530a22a2be6ef4f0cecacb5927be139f4274594
-  languageName: node
-  linkType: hard
-
-"http@npm:0.0.1-security":
-  version: 0.0.1-security
-  resolution: "http@npm:0.0.1-security"
-  checksum: 10/c45a4e2771b5679b479b24150216e0b423d5bf2f94062c91b4b5e5347ed3f18b8c049e220df6e328c34ac5aab0d020600a05a9ea954bc7a7efc04d8dde7aada0
   languageName: node
   linkType: hard
 
