@@ -239,16 +239,23 @@ class PipedriveCrmService implements CRM {
     }\n\n${event.organizer.language.translate("share_additional_notes")}\n${event.additionalNotes || "-"}`;
   };
 
-  private createPipedriveActivity = async (event: CalendarEvent, contacts: Contact[]) => {
+  private buildActivityPayload(event: CalendarEvent): {
+    subject: string;
+    due_date: string;
+    due_time: string;
+    duration: string;
+    note: string;
+    location: string;
+  } {
     const startDate = new Date(event.startTime);
     const endDate = new Date(event.endTime);
     const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60));
+    const [dueDate, isoTime] = startDate.toISOString().split("T");
 
-    const activityPayload = {
+    return {
       subject: event.title,
-      type: "meeting",
-      due_date: startDate.toISOString().split("T")[0],
-      due_time: startDate.toTimeString().split(" ")[0].substring(0, 5),
+      due_date: dueDate,
+      due_time: isoTime.slice(0, 5),
       duration: `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")}`,
       note: this.getMeetingBody(event),
       location: getLocation({
@@ -257,7 +264,14 @@ class PipedriveCrmService implements CRM {
         location: event.location,
         uid: event.uid,
       }),
-     person_id: parseInt(contacts[0].id),
+    };
+  }
+
+  private createPipedriveActivity = async (event: CalendarEvent, contacts: Contact[]) => {
+    const activityPayload = {
+      ...this.buildActivityPayload(event),
+      type: "meeting",
+      person_id: parseInt(contacts[0].id),
     };
 
     return this.requestPipedrive<{ success: boolean; data: PipedriveActivity }>("activities", {
@@ -270,23 +284,7 @@ class PipedriveCrmService implements CRM {
   };
 
   private updateActivity = async (uid: string, event: CalendarEvent) => {
-    const startDate = new Date(event.startTime);
-    const endDate = new Date(event.endTime);
-    const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60));
-
-    const activityPayload = {
-      subject: event.title,
-      due_date: startDate.toISOString().split("T")[0],
-      due_time: startDate.toTimeString().split(" ")[0].substring(0, 5),
-      duration: `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")}`,
-      note: this.getMeetingBody(event),
-      location: getLocation({
-        videoCallData: event.videoCallData,
-        additionalInformation: event.additionalInformation,
-        location: event.location,
-        uid: event.uid,
-      }),
-    };
+    const activityPayload = this.buildActivityPayload(event);
 
     return this.requestPipedrive<{ success: boolean; data: PipedriveActivity }>(`activities/${uid}`, {
       method: "PUT",
