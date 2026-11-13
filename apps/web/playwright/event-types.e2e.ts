@@ -148,6 +148,18 @@ test.describe("Event Types tests", () => {
       });
     });
 
+    test("update toast shows the newly saved title", async ({ page }) => {
+      await gotoFirstEventType(page);
+
+      const newTitle = `Renamed ${randomString(6)}`;
+      await page.locator("[data-testid=event-title]").fill(newTitle);
+      await saveEventType(page);
+
+      await expect(page.locator("[data-testid=toast-success]")).toContainText(
+        `${newTitle} event type updated successfully`
+      );
+    });
+
     test("can add multiple organizer address", async ({ page }) => {
       const $eventTypes = page.locator("[data-testid=event-types] > li a");
       const firstEventTypeElement = $eventTypes.first();
