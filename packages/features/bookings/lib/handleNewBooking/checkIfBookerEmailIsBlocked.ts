@@ -1,3 +1,4 @@
+import process from "node:process";
 import { verifyCodeUnAuthenticated } from "@calcom/features/auth/lib/verifyCodeUnAuthenticated";
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import { ErrorWithCode } from "@calcom/lib/errors";
@@ -65,7 +66,7 @@ export const checkIfBookerEmailIsBlocked = async ({
       let isValid = false;
 
       try {
-        isValid = await verifyCodeUnAuthenticated(baseEmail, verificationCode);
+        isValid = await verifyCodeUnAuthenticated(bookerEmail, verificationCode);
       } catch {
         throw new ErrorWithCode(
           ErrorCode.UnableToValidateVerificationCode,
