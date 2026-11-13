@@ -5,12 +5,13 @@ import { describe, expect, test, vi } from "vitest";
 import config from "../config.json";
 import VideoApiAdapter from "./VideoApiAdapter";
 
-const appKeys = {
+// vi.mock factories are hoisted above the imports, so the keys they return are hoisted with them
+const appKeys = vi.hoisted(() => ({
   nextcloudTalkHost: "https://cloud.example.com",
   nextcloudTalkPattern: "{Scheduler}-{Title}-with-{Organizer}",
   nextcloudTalkClientId: "FAKE_CLIENT_ID",
   nextcloudTalkClientSecret: "FAKE_CLIENT_SECRET",
-};
+}));
 
 vi.mock("../../_utils/getAppKeysFromSlug", () => ({
   default: vi.fn().mockResolvedValue(appKeys),
