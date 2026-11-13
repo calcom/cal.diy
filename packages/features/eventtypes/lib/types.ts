@@ -267,7 +267,7 @@ export type ChildInput = {
     email: string;
     eventTypeSlugs: string[];
   };
-  hidden: boolean;
+  hidden?: boolean;
 };
 
 export type DestinationCalendarInput = {
