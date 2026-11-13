@@ -36,15 +36,17 @@ export default class ForgotPasswordEmail extends BaseEmail {
   }
 
   protected getTextBody(): string {
+    // Tags are stripped from the translated text only, so angle brackets in the user's name are kept.
+    const text = (key: string, options?: Record<string, string>) =>
+      this.passwordEvent.language(key, options).replace(/(<([^>]+)>)/gi, "");
+
     return `
-${this.passwordEvent.language("reset_password_subject", { appName: APP_NAME })}
+${text("reset_password_subject", { appName: APP_NAME })}
 ${this.passwordEvent.language("hi_user_name", { name: this.passwordEvent.user.name })},
-${this.passwordEvent.language("someone_requested_password_reset")}
-${this.passwordEvent.language("change_password")}: ${this.passwordEvent.resetLink}
-${this.passwordEvent.language("password_reset_instructions")}
-${this.passwordEvent.language("have_any_questions")} ${this.passwordEvent.language(
-      "contact_our_support_team"
-    )}
-`.replace(/(<([^>]+)>)/gi, "");
+${text("someone_requested_password_reset")}
+${text("change_password")}: ${this.passwordEvent.resetLink}
+${text("password_reset_instructions")}
+${text("have_any_questions")} ${text("contact_our_support_team")}
+`;
   }
 }

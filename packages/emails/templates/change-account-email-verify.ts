@@ -37,19 +37,21 @@ export default class ChangeOfEmailVerifyEmail extends BaseEmail {
   }
 
   protected getTextBody(): string {
+    // Tags are stripped from the translated text only, so angle brackets in the user's name are kept.
+    const text = (key: string, options?: Record<string, string>) =>
+      this.changeEvent.language(key, options).replace(/(<([^>]+)>)/gi, "");
+
     return `
-${this.changeEvent.language("verify_email_subject", { appName: APP_NAME })}
-${this.changeEvent.language("verify_email_email_header")}
+${text("verify_email_subject", { appName: APP_NAME })}
+${text("verify_email_email_header")}
 ${this.changeEvent.language("hi_user_name", { name: this.changeEvent.user.name })},
-${this.changeEvent.language("verify_email_change_description", { appName: APP_NAME })}
-${this.changeEvent.language("old_email_address")}
+${text("verify_email_change_description", { appName: APP_NAME })}
+${text("old_email_address")}
 ${this.changeEvent.user.emailFrom},
-${this.changeEvent.language("new_email_address")}
+${text("new_email_address")}
 ${this.changeEvent.user.emailTo},
 ${this.changeEvent.verificationEmailLink}
-${this.changeEvent.language("happy_scheduling")} ${this.changeEvent.language("the_calcom_team", {
-      companyName: COMPANY_NAME,
-    })}
-`.replace(/(<([^>]+)>)/gi, "");
+${text("happy_scheduling")} ${text("the_calcom_team", { companyName: COMPANY_NAME })}
+`;
   }
 }
