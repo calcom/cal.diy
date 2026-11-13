@@ -1217,6 +1217,7 @@
   "configure_availability": "Configure times when you are available for bookings.",
   "copy_times_to": "Copy times to",
   "copy_times_to_tooltip": "Copy times to …",
+  "copy_times_to_from_weekday": "Copy {{weekday}}'s times to…",
   "change_weekly_schedule": "Change your weekly schedule",
   "error": "Error",
   "at_least_characters_one": "Please enter at least one character",
