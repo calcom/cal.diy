@@ -1,5 +1,4 @@
 import { SchedulingType } from "@calcom/prisma/enums";
-
 import { OrganizerScheduledEmail } from "./OrganizerScheduledEmail";
 
 export const OrganizerReassignedEmail = (props: React.ComponentProps<typeof OrganizerScheduledEmail>) => {

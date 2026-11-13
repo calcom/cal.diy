@@ -1,13 +1,12 @@
 import type BaseEmail from "@calcom/emails/templates/_base-email";
-
-import type { PasswordReset } from "./templates/forgot-password-email";
-import ForgotPasswordEmail from "./templates/forgot-password-email";
 import type { EmailVerifyLink } from "./templates/account-verify-email";
 import AccountVerifyEmail from "./templates/account-verify-email";
 import type { EmailVerifyCode } from "./templates/attendee-verify-email";
 import AttendeeVerifyEmail from "./templates/attendee-verify-email";
 import type { ChangeOfEmailVerifyLink } from "./templates/change-account-email-verify";
 import ChangeOfEmailVerifyEmail from "./templates/change-account-email-verify";
+import type { PasswordReset } from "./templates/forgot-password-email";
+import ForgotPasswordEmail from "./templates/forgot-password-email";
 
 const sendEmail = (prepare: () => BaseEmail) => {
   return new Promise((resolve, reject) => {

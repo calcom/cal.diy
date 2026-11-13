@@ -1,5 +1,4 @@
 import { APP_NAME, EMAIL_FROM_NAME } from "@calcom/lib/constants";
-
 import renderEmail from "../src/renderEmail";
 import type { MonthlyDigestEmailData } from "../src/templates/MonthlyDigestEmail";
 import BaseEmail from "./_base-email";

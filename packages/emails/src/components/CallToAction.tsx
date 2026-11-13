@@ -43,7 +43,7 @@ export const CallToAction = (props: {
         textTransform: "none",
         padding: calculatePadding(),
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
+        // @ts-expect-error
         msoPaddingAlt: "0px",
         borderRadius: "6px",
         boxSizing: "border-box",

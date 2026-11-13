@@ -9,7 +9,30 @@ export function getFormattedDate(calEvent: CalendarEvent, attendee: Person): str
   const t = attendee.language.translate;
 
   const getFormattedRecipientTime = (time: string, format: string) => {
-    return dayjs(time).tz(timezone).locale(locale).format(format);
+    const date = new Date(time);
+    if (isNaN(date.getTime())) {
+      return dayjs(time).tz(timezone).locale(locale).format(format);
+    }
+
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: timezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).formatToParts(date);
+
+      const getPart = (type: string) => parts.find((p) => p.type === type)?.value;
+      const localString = `${getPart("year")}-${getPart("month")}-${getPart("day")}T${getPart("hour")}:${getPart("minute")}:${getPart("second")}.000`;
+
+      return dayjs.utc(localString).locale(locale).format(format);
+    } catch (e) {
+      return dayjs(time).tz(timezone).locale(locale).format(format);
+    }
   };
 
   const getInviteeStart = (format: string) => {
