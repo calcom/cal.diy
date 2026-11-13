@@ -22,7 +22,7 @@
     "@trpc/server": "11.0.0-next-beta.222",
     "cookie": "0.7.2",
     "superjson": "1.9.1",
-    "uuid": "8.3.2",
+    "uuid": "11.1.1",
     "zod": "3.25.76"
   },
   "peerDependencies": {
@@ -35,7 +35,6 @@
     "@biomejs/biome": "2.3.10",
     "@tanstack/react-query": "5.17.19",
     "@types/cookie": "0.6.0",
-    "@types/uuid": "8.3.4",
     "typescript": "5.9.3"
   }
 }
