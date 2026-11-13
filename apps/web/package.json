@@ -49,6 +49,7 @@
     "@coss/ui": "workspace:*",
     "@daily-co/daily-js": "0.83.1",
     "@daily-co/daily-react": "0.23.2",
+    "@devx-agency/werko-ui": "file:../../../werko-ui/devx-agency-werko-ui-0.1.0.tgz",
     "@dub/analytics": "0.0.27",
     "@dub/embed-core": "0.0.18",
     "@dub/embed-react": "0.0.18",

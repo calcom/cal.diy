@@ -3,6 +3,8 @@
 @import "../../../packages/config/theme/tokens.css";
 @import "../../../packages/coss-ui/src/styles/globals.css";
 @import "./raqb.css";
+/* Werk|0 design system for the booking portal (collision-safe tokens, see @devx-agency/werko-ui) */
+@import "@devx-agency/werko-ui/theme.css";
 
 ::-moz-selection {
   color: var(--cal-brand-text);

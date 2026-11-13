@@ -3323,6 +3323,7 @@ __metadata:
     "@coss/ui": "workspace:*"
     "@daily-co/daily-js": "npm:0.83.1"
     "@daily-co/daily-react": "npm:0.23.2"
+    "@devx-agency/werko-ui": "file:../../../werko-ui/devx-agency-werko-ui-0.1.0.tgz"
     "@dub/analytics": "npm:0.0.27"
     "@dub/embed-core": "npm:0.0.18"
     "@dub/embed-react": "npm:0.0.18"
@@ -4149,6 +4150,19 @@ __metadata:
   bin:
     depot: bin/depot
   checksum: 10/65d0223f3d91fbed2b18dc31f809b874b05adc36d6e279976398a25b60c0064ab50b2a0535a79d4d00f49cbe43b86efbbd6f2ca74825fb1640fbdd100443c7d4
+  languageName: node
+  linkType: hard
+
+"@devx-agency/werko-ui@file:../../../werko-ui/devx-agency-werko-ui-0.1.0.tgz::locator=%40calcom%2Fweb%40workspace%3Aapps%2Fweb":
+  version: 0.1.0
+  resolution: "@devx-agency/werko-ui@file:../../../werko-ui/devx-agency-werko-ui-0.1.0.tgz#../../../werko-ui/devx-agency-werko-ui-0.1.0.tgz::hash=5cbbb6&locator=%40calcom%2Fweb%40workspace%3Aapps%2Fweb"
+  dependencies:
+    clsx: "npm:2.1.1"
+    tailwind-merge: "npm:3.5.0"
+  peerDependencies:
+    next: ">=15"
+    react: ">=18.2"
+  checksum: 10/a427a32cf26c402132cec0401c3b7bf41d53324707559dc73979146d8ecb0e5aaa236e0430a418912746f1123e213403d6e4e2d258bd132b6dfee85deb742c59
   languageName: node
   linkType: hard
 
@@ -38802,6 +38816,13 @@ __metadata:
   version: 3.4.0
   resolution: "tailwind-merge@npm:3.4.0"
   checksum: 10/d8caeb40ee3ec0eae2996f8a86d77c82a1751fc9c61a31d6153b4252cb734deaf98d351205aff5c204beee7b73497add8492411e75187acb8506b4d981e4ccc2
+  languageName: node
+  linkType: hard
+
+"tailwind-merge@npm:3.5.0":
+  version: 3.5.0
+  resolution: "tailwind-merge@npm:3.5.0"
+  checksum: 10/888861e2fc685dc282e6c0d735a2ca7656c3f13da6947896401f50aea924e481ab6dc7629b6f6a28125505f1b06ee97381ad792849204f34ee1ede375b119e0c
   languageName: node
   linkType: hard
 
