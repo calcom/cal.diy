@@ -1,4 +1,6 @@
 import dayjs from "@calcom/dayjs";
+import { ErrorCode } from "@calcom/lib/errorCodes";
+import { HttpError } from "@calcom/lib/http-error";
 import { isPrismaObjOrUndefined } from "@calcom/lib/isPrismaObj";
 import { withReporting } from "@calcom/lib/sentryWrapper";
 import prisma from "@calcom/prisma";
@@ -87,7 +89,8 @@ const _createBooking = async ({
     bookingAndAssociatedData,
     originalRescheduledBooking,
     eventType.paymentAppData,
-    eventType.organizerUser
+    eventType.organizerUser,
+    eventType.eventTypeData
   );
 };
 
@@ -97,7 +100,8 @@ async function saveBooking(
   bookingAndAssociatedData: ReturnType<typeof buildNewBookingData>,
   originalRescheduledBooking: OriginalRescheduledBooking,
   paymentAppData: PaymentAppData,
-  organizerUser: CreateBookingParams["eventType"]["organizerUser"]
+  organizerUser: CreateBookingParams["eventType"]["organizerUser"],
+  eventTypeData?: NewBookingEventType
 ) {
   const { newBookingData, originalBookingUpdateDataForCancellation } = bookingAndAssociatedData;
   const createBookingObj = {
@@ -137,6 +141,83 @@ async function saveBooking(
   }
 
   return prisma.$transaction(async (tx) => {
+    const hostIds = Array.from(
+      new Set(
+        [
+          organizerUser?.id,
+          ...(eventTypeData?.users?.map((u) => u.id) ?? []),
+        ].filter((id): id is number => typeof id === "number")
+      )
+    ).sort((a, b) => a - b);
+
+    if (hostIds.length > 0) {
+      // 1. Acquire pessimistic row-level lock on all participating hosts in ascending order (deadlock-free)
+      for (const hostId of hostIds) {
+        await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${hostId} FOR UPDATE`;
+      }
+
+      // 2. Perform authoritative in-transaction concurrency check if status is ACCEPTED
+      if (newBookingData.status === BookingStatus.ACCEPTED && !eventTypeData?.seatsPerTimeSlot) {
+        const beforeBufferMinutes = eventTypeData?.beforeEventBuffer ?? 0;
+        const afterBufferMinutes = eventTypeData?.afterEventBuffer ?? 0;
+
+        const effectiveStartTime =
+          beforeBufferMinutes > 0
+            ? dayjs(newBookingData.startTime).subtract(beforeBufferMinutes, "minute").toDate()
+            : newBookingData.startTime;
+
+        const effectiveEndTime =
+          afterBufferMinutes > 0
+            ? dayjs(newBookingData.endTime).add(afterBufferMinutes, "minute").toDate()
+            : newBookingData.endTime;
+
+        // Query potentially overlapping accepted bookings for all participating hosts in the vicinity
+        const candidateBookings = await tx.booking.findMany({
+          where: {
+            status: BookingStatus.ACCEPTED,
+            userId: { in: hostIds },
+            startTime: { lt: dayjs(effectiveEndTime).add(120, "minute").toDate() },
+            endTime: { gt: dayjs(effectiveStartTime).subtract(120, "minute").toDate() },
+            ...(originalRescheduledBooking?.id ? { id: { not: originalRescheduledBooking.id } } : {}),
+          },
+          select: {
+            id: true,
+            startTime: true,
+            endTime: true,
+            eventType: {
+              select: {
+                beforeEventBuffer: true,
+                afterEventBuffer: true,
+              },
+            },
+          },
+        });
+
+        for (const candidate of candidateBookings) {
+          const candidateBefore = candidate.eventType?.beforeEventBuffer ?? 0;
+          const candidateAfter = candidate.eventType?.afterEventBuffer ?? 0;
+
+          const candidateStart =
+            candidateBefore > 0
+              ? dayjs(candidate.startTime).subtract(candidateBefore, "minute").toDate()
+              : candidate.startTime;
+
+          const candidateEnd =
+            candidateAfter > 0
+              ? dayjs(candidate.endTime).add(candidateAfter, "minute").toDate()
+              : candidate.endTime;
+
+          // Standard half-open interval overlap check
+          if (effectiveStartTime < candidateEnd && effectiveEndTime > candidateStart) {
+            throw new HttpError({
+              statusCode: 409,
+              message: ErrorCode.BookingConflict,
+            });
+          }
+        }
+      }
+    }
+
     if (originalBookingUpdateDataForCancellation) {
       await tx.booking.update(originalBookingUpdateDataForCancellation);
     }
