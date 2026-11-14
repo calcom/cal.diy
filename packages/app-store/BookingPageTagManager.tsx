@@ -36,6 +36,10 @@ const getPushEventScript = ({ tag, appId }: { tag: Tag; appId: string }) => {
   };
 };
 
+/**
+ * Resolves enabled analytics apps for an event type while suppressing non-BAA commercial
+ * ad trackers on HIPAA-protected bookings to prevent unauthorized PHI transmission.
+ */
 function getAnalyticsApps(eventType: Parameters<typeof getEventTypeAppData>[0]) {
   const isHipaaProtected =
     Boolean(eventType?.metadata?.apps?.["baa-for-hipaa"]?.enabled) ||
