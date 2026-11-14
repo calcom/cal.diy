@@ -14,6 +14,7 @@ import { bookingMinimalSelect, prisma } from "@calcom/prisma";
 import { credentialForCalendarServiceSelect } from "@calcom/prisma/selects/credential";
 import { EventTypeMetaDataSchema } from "@calcom/prisma/zod-utils";
 import type { CalendarEvent } from "@calcom/types/Calendar";
+import { DisableCancelling } from "@calcom/prisma/client";
 
 const getBookerBaseUrl = async (_orgSlug?: string | number | null): Promise<string> =>
   process.env.NEXT_PUBLIC_WEBAPP_URL || "https://app.cal.com";
@@ -221,7 +222,7 @@ export async function getBooking(bookingId: number) {
           },
         } satisfies EventTypeBrandingData)
       : false,
-    disableCancelling: booking.eventType?.disableCancelling ?? false,
+    disableCancelling: booking.eventType?.disableCancelling ?? DisableCancelling.NOBODY,
     disableRescheduling: booking.eventType?.disableRescheduling ?? false,
   };
 

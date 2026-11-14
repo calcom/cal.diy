@@ -192,6 +192,7 @@ export function BookingActionsDropdown({
     (typeof booking.location === "string" && booking.location.trim() === "");
 
   const isDisabledCancelling = booking.eventType.disableCancelling;
+
   const isDisabledRescheduling = booking.eventType.disableRescheduling;
 
   const getSeatReferenceUid = () => {
