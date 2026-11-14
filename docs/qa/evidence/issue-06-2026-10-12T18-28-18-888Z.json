@@ -1,0 +1,112 @@
+{
+  "gitSHA": "a8bb2613b9bb21ff821ecef56abc7dbff102086b",
+  "dirty": true,
+  "utc": "2026-10-12T18:28:18.888Z",
+  "local": "2026-10-13 01:28:18 GMT+7",
+  "timeZone": "Asia/Saigon",
+  "environment": {
+    "platform": "win32",
+    "node": "v24.21.0",
+    "java": "spawnSync java ENOENT",
+    "docker": "Docker version 29.8.0, build 88096ef\nWARNING: Error loading config file: open [user-directory]\\.docker\\config.json: Access is denied.",
+    "graphWalker": "4.3.3 (required; not yet verified)",
+    "postgres": "17-alpine (required; not yet verified)"
+  },
+  "result": "chưa kiểm chứng",
+  "errors": [
+    "spawnSync java ENOENT",
+    "Java 11 required; do not use Java 25",
+    "Missing tools/graphwalker/graphwalker-cli-4.3.3.jar",
+    "Missing node_modules; install existing locked dependencies before running"
+  ],
+  "steps": [
+    {
+      "element": "v_NoBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "v_BookedA",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "v_BookedB",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "v_Cancelled",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "v_SlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_CreateBookingA",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_RescheduleToB",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_CancelBookingB",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_RescheduleSlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_SelectAnotherSlot",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    },
+    {
+      "element": "e_StartNewBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "spawnSync java ENOENT; Java 11 required; do not use Java 25; Missing tools/graphwalker/graphwalker-cli-4.3.3.jar; Missing node_modules; install existing locked dependencies before running"
+    }
+  ],
+  "coverage": {
+    "edges": {
+      "visited": 0,
+      "total": 6,
+      "percent": 0
+    },
+    "vertices": {
+      "visited": 0,
+      "total": 5,
+      "percent": 0
+    }
+  },
+  "limits": [
+    "Personal non-recurring, no seats/payment/external calendar",
+    "PENDING/REJECTED/AWAITING_HOST and supplementary guards not covered",
+    "No raw browser errors, trace, screenshot, video or booking identifiers in evidence"
+  ],
+  "validation": {
+    "biome": {
+      "error": "Usage Error: Couldn't find the node_modules state file - running an install might help (findPackageLocation)",
+      "result": "chưa kiểm chứng"
+    },
+    "nodeSyntax": "pass: node --check; JS syntax only, no booking validation",
+    "typeCheck": {
+      "error": "Usage Error: Couldn't find the node_modules state file - running an install might help (findPackageLocation)",
+      "command": "yarn type-check:ci --force",
+      "result": "chưa kiểm chứng"
+    }
+  },
+  "delivery": {
+    "issue7": "pending: GitHub CLI/connector unavailable",
+    "boyTay": "pending: GitHub CLI/connector unavailable"
+  }
+}

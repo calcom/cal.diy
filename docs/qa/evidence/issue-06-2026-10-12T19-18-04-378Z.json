@@ -1,0 +1,187 @@
+{
+  "gitSHA": "b6312cbbd8b43c1a16ef604d9ab3e6c3a0bed4db",
+  "dirty": false,
+  "utc": "2026-10-12T19:18:04.378Z",
+  "local": "2026-10-13 02:18:04 GMT+7",
+  "timeZone": "Asia/Saigon",
+  "environment": {
+    "platform": "win32",
+    "node": "v20.20.2",
+    "java": "openjdk version \"21.0.12.1\" 2026-08-18 LTS\r\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\r\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+    "docker": "Docker version 29.8.0, build 88096ef",
+    "dockerEngine": "29.8.0",
+    "graphWalker": "4.3.3 jar; offline generation succeeded",
+    "postgres": "postgres (PostgreSQL) 17.11"
+  },
+  "result": "fail",
+  "errors": [],
+  "steps": [
+    {
+      "element": "v_NoBooking",
+      "result": "pass"
+    },
+    {
+      "element": "e_CreateBookingA",
+      "result": "pass"
+    },
+    {
+      "element": "v_BookedA",
+      "result": "pass"
+    },
+    {
+      "element": "e_RescheduleSlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "Synthetic booking action lookup failed before sending a reschedule request; action list was enumerated without waiting for hydration"
+    },
+    {
+      "element": "v_SlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "e_SelectAnotherSlot",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "v_BookedA",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "e_RescheduleSlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "v_SlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "e_SelectAnotherSlot",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "v_BookedA",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "e_RescheduleSlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "v_SlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "e_SelectAnotherSlot",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "v_BookedA",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "e_RescheduleSlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "v_SlotUnavailable",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "e_SelectAnotherSlot",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "v_BookedA",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "e_RescheduleToB",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "v_BookedB",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "e_CancelBookingB",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "v_Cancelled",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "e_StartNewBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    },
+    {
+      "element": "v_NoBooking",
+      "result": "chưa kiểm chứng",
+      "reason": "Earlier step failed"
+    }
+  ],
+  "coverage": {
+    "edges": {
+      "visited": 1,
+      "total": 6,
+      "percent": 16.666666666666664
+    },
+    "vertices": {
+      "visited": 2,
+      "total": 5,
+      "percent": 40
+    }
+  },
+  "limits": [
+    "Personal non-recurring, no seats/payment/external calendar",
+    "PENDING/REJECTED/AWAITING_HOST and supplementary guards not covered",
+    "No raw browser errors, trace, screenshot, video or booking identifiers in evidence",
+    "Run failed in harness UI lookup; slot-unavailable API/DB behavior was not exercised"
+  ],
+  "path": [
+    "v_NoBooking",
+    "e_CreateBookingA",
+    "v_BookedA",
+    "e_RescheduleSlotUnavailable",
+    "v_SlotUnavailable",
+    "e_SelectAnotherSlot",
+    "v_BookedA",
+    "e_RescheduleSlotUnavailable",
+    "v_SlotUnavailable",
+    "e_SelectAnotherSlot",
+    "v_BookedA",
+    "e_RescheduleSlotUnavailable",
+    "v_SlotUnavailable",
+    "e_SelectAnotherSlot",
+    "v_BookedA",
+    "e_RescheduleSlotUnavailable",
+    "v_SlotUnavailable",
+    "e_SelectAnotherSlot",
+    "v_BookedA",
+    "e_RescheduleToB",
+    "v_BookedB",
+    "e_CancelBookingB",
+    "v_Cancelled",
+    "e_StartNewBooking",
+    "v_NoBooking"
+  ]
+}
