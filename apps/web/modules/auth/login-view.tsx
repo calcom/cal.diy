@@ -155,6 +155,8 @@ export default function Login({
     // telemetry.event(telemetryEventTypes.login, collectPageParameters());
     const res = await signIn<"credentials">("credentials", {
       ...values,
+      // Lets users coming back from an identity provider finish 2FA without a password.
+      ...(totpEmail ? { totpToken: searchParams?.get("totp") ?? "" } : {}),
       callbackUrl,
       redirect: false,
     });
