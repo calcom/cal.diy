@@ -737,7 +737,7 @@ export default abstract class BaseCalendarService implements Calendar {
         applyTravelDuration(event, getTravelDurationInSeconds(vevent, this.log));
 
         if (event.isRecurring()) {
-          let maxIterations = 365;
+          let maxIterations = 10000;
           if (["HOURLY", "SECONDLY", "MINUTELY"].includes(event.getRecurrenceTypes())) {
             logger.warn(`Won't handle [${event.getRecurrenceTypes()}] recurrence`);
             return;
@@ -745,11 +745,8 @@ export default abstract class BaseCalendarService implements Calendar {
 
           const start = dayjs(dateFrom);
           const end = dayjs(dateTo);
-          const startDate = ICAL.Time.fromDateTimeString(startISOString);
-          startDate.hour = event.startDate.hour;
-          startDate.minute = event.startDate.minute;
-          startDate.second = event.startDate.second;
-          const iterator = event.iterator(startDate);
+          const iterator = event.iterator();
+          const zone = vtimezone ? new ICAL.Timezone(vtimezone) : null;
           let current: ICAL.Time;
           let currentEvent: ReturnType<typeof event.getOccurrenceDetails> | undefined;
           let currentStart: ReturnType<typeof dayjs> | null = null;
@@ -777,8 +774,7 @@ export default abstract class BaseCalendarService implements Calendar {
             // do not mix up caldav and icalendar! For the recurring events here, the timezone
             // provided is relevant, not as pointed out in https://datatracker.ietf.org/doc/html/rfc4791#section-9.6.5
             // where recurring events are always in utc (in caldav!). Thus, apply the time zone here.
-            if (vtimezone) {
-              const zone = new ICAL.Timezone(vtimezone);
+            if (zone) {
               currentEvent.startDate = currentEvent.startDate.convertToZone(zone);
               currentEvent.endDate = currentEvent.endDate.convertToZone(zone);
             }
@@ -792,7 +788,7 @@ export default abstract class BaseCalendarService implements Calendar {
             }
           }
           if (maxIterations <= 0) {
-            logger.warn("Could not find any occurrence for recurring event in 365 iterations");
+            logger.warn("Could not find any occurrence for recurring event in 10000 iterations");
           }
           return;
         }
