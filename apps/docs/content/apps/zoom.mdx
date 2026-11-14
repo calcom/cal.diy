@@ -4,37 +4,39 @@
 
 1. **Sign into Zoom Marketplace** - Go to [Zoom Marketplace](https://marketplace.zoom.us/) and sign in with your Zoom account.
 
-2. **Build a New App** - In the upper right, click "Develop" and then "Build App".
+2. **Build a New App** - In the upper right, click "Develop" and then select "Build App".
 
-3. **Create an OAuth App** - Under "OAuth", select "Create".
+3. **Create a General App** - On the app type selection page, find the **General App** card and click "Create" (Zoom consolidated OAuth into General Apps).
 
 4. **Name Your App** - Provide a name for your app.
 
-5. **Choose User-managed App Type** - Select "User-managed app" as the app type.
+5. **Choose User-managed App Type** - Under app type, select **User-managed** so users can authorize their individual Zoom accounts.
 
-6. **Set Marketplace Visibility** - De-select the option to publish the app on the Zoom App Marketplace.
+6. **Set Marketplace Visibility** - Keep the option to publish the app on the Zoom App Marketplace toggled off for internal, self-hosted use.
 
-7. **Create the App** - Click "Create" to proceed.
+7. **Create the App** - Click "Create" to proceed to app configuration.
 
-8. **Save Client ID and Secret** - Copy the Client ID and Client Secret and add them to your `.env` file under the fields:
+8. **Save Client ID and Secret** - Under **App Credentials**, copy the Client ID and Client Secret, then add them to your `.env` file:
 
 ```
-ZOOM_CLIENT_ID
-ZOOM_CLIENT_SECRET
+ZOOM_CLIENT_ID=
+ZOOM_CLIENT_SECRET=
 ```
 
-9. **Set the Redirect URL for OAuth** - Set the Redirect URL for OAuth to:
+9. **Set the Redirect URL for OAuth** - In the **OAuth** section, set the OAuth Redirect URL to:
 
 ```
 <Cal.diy URL>/api/integrations/zoomvideo/callback
 ```
 
-Replace `<Cal.diy URL>` with your application URL.
+Replace `<Cal.diy URL>` with your application URL (e.g. `https://app.cal.diy` or `http://localhost:3000`).
 
-10. **Configure Allow List and Subdomain Check** - Add the redirect URL to the allow list and enable "Subdomain check". Ensure it displays "saved" below the form.
+10. **Configure OAuth Allow List and Strict Mode** - Add the redirect URL to the **OAuth Allow List**. Toggle on **"Use strict mode on redirect URLs"** (or enable Subdomain check if using subdomains). Ensure the status displays "Saved".
 
-11. **Skip Basic Information and Add Scopes** - You don't need to provide basic information about your app. Instead, go to "Scopes", click "+ Add Scopes", then select the category "Meeting" on the left, and check the scope `meeting:write`.
+11. **Add Required Scopes** - Go to the **Scopes** tab and click **"+ Add Scopes"**. Select the **Meeting** category on the left, then check:
+    - `meeting:write`
+    - `meeting:read`
 
-12. **Save the Scope** - Click "Done" to save the scope settings.
+12. **Save the Scope** - Click "Done" to save your scope settings.
 
-13. **Complete Zoom Integration** - Your Zoom integration is now ready and can be easily added in the Cal.diy settings.
+13. **Complete Zoom Integration** - Your Zoom integration is now ready and can be enabled in Cal.diy settings under **Settings → Integrations → Video**.
