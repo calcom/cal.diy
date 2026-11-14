@@ -37,6 +37,8 @@ const getValidRhfFieldName = (fieldName: string) => {
   return fieldName.replace(/[^a-zA-Z0-9-_]/g, "-");
 };
 
+// Duplicated from packages/lib/auth/isPasswordValid.ts — keep in sync
+// Cannot import directly due to circular dependency (lib -> prisma -> lib)
 function isPasswordValid(password: string): boolean;
 function isPasswordValid(
   password: string,
@@ -52,8 +54,8 @@ function isPasswordValid(password: string, breakdown?: boolean, strict?: boolean
   if (password.length >= 7 && (!strict || password.length > 14)) min = true;
   if (strict && password.length > 14) admin_min = true;
   if (password.match(/\d/)) num = true;
-  if (password.match(/[a-z]/)) low = true;
-  if (password.match(/[A-Z]/)) cap = true;
+  if (password.match(/\p{Ll}/u)) low = true;
+  if (password.match(/\p{Lu}/u)) cap = true;
 
   if (!breakdown) return cap && low && num && min && (strict ? admin_min : true);
 
