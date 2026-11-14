@@ -533,6 +533,32 @@ describe("event tests", () => {
       expect(result).toBe("Meeting with Johnson");
     });
 
+    it("should replace host names that start or end with non-ASCII letters", () => {
+      expect(updateHostInEventName("Meeting with Émile Zola", "Émile Zola", "Bob Smith")).toBe(
+        "Meeting with Bob Smith"
+      );
+      expect(updateHostInEventName("Intro call with Ömer", "Ömer Yılmaz", "Jane Smith")).toBe(
+        "Intro call with Jane"
+      );
+      expect(updateHostInEventName("Sync with José", "José García", "Jane Smith")).toBe("Sync with Jane");
+      expect(updateHostInEventName("Meeting with 李雷", "李雷", "Jane")).toBe("Meeting with Jane");
+    });
+
+    it("should match non-ASCII host names case-insensitively", () => {
+      expect(updateHostInEventName("Meeting with ÉMILE ZOLA", "Émile Zola", "Bob Smith")).toBe(
+        "Meeting with Bob Smith"
+      );
+    });
+
+    it("should not replace partial matches of non-ASCII host names", () => {
+      expect(updateHostInEventName("Meeting with Émilerson", "Émile Zola", "Bob Smith")).toBe(
+        "Meeting with Émilerson"
+      );
+      expect(updateHostInEventName("Meeting with Renée", "René Dupont", "Bob Smith")).toBe(
+        "Meeting with Renée"
+      );
+    });
+
     it("should handle empty event name", () => {
       const result = updateHostInEventName("", oldHost, newHost);
       expect(result).toBe("");
