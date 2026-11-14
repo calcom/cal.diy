@@ -87,12 +87,13 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
       eventType.userId === userId ||
       eventType.users.some((eventUser) => eventUser.id === userId));
 
+  // Fail closed: non-hosts only get answers that map to a currently visible field.
   let responses = restBooking.responses;
   if (!isLoggedInUserHost && isRecord(responses)) {
     const visibleResponses = { ...responses };
     for (const key in visibleResponses) {
       const field = bookingFields.find((bookingField) => bookingField.name === key);
-      if (field && !!field.hidden) {
+      if (!field || field.hidden) {
         delete visibleResponses[key];
       }
     }
