@@ -1,7 +1,7 @@
 {
   "apply_to_all": "Auf alle anwenden",
   "identity_provider": "Identitätsanbieter",
-  "trial_days_left": "Sie haben noch $t(Tage, {\"count\": {{days}} }) im Testzeitraum der PRO-Version",
+  "trial_days_left": "Sie haben noch $t(day, {\"count\": {{days}} }) im Testzeitraum der PRO-Version",
   "day_one": "{{count}} Tag",
   "day_other": "{{count}} Tage",
   "second_one": "{{count}} Sekunde",

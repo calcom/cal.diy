@@ -1452,7 +1452,7 @@
   "12_hour_short": "12h",
   "24_hour_short": "24h",
   "redirect_success_booking": "Presmerovanie po rezervácii",
-  "you_are_being_redirected": "Budete presmerovaní na {{ url }} za $t(sekunda, {\"count\": {{seconds}} }).",
+  "you_are_being_redirected": "Budete presmerovaní na {{ url }} za $t(second, {\"count\": {{seconds}} }).",
   "external_redirect_url": "https://example.com/redirect-to-my-success-page",
   "redirect_url_description": "Presmerovať na vlastnú URL po úspešnej rezervácii",
   "redirect_on_no_routing_form": "Presmerovať pri prístupe bez smerovacieho formulára",
