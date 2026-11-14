@@ -7,10 +7,11 @@ import type { EventTypeMetaDataSchema } from "@calcom/prisma/zod-utils";
  * Determines if a booking actually requires confirmation(considering requiresConfirmationThreshold)
  */
 export const doesBookingRequireConfirmation = ({
-  booking: { startTime, eventType },
+  booking: { startTime, createdAt, eventType },
 }: {
   booking: {
     startTime: Date;
+    createdAt?: Date;
     eventType: {
       requiresConfirmation?: boolean;
       metadata: z.infer<typeof EventTypeMetaDataSchema>;
@@ -20,15 +21,12 @@ export const doesBookingRequireConfirmation = ({
   let requiresConfirmation = eventType?.requiresConfirmation;
   const rcThreshold = eventType?.metadata?.requiresConfirmationThreshold;
   if (rcThreshold) {
-    // Convert startTime to UTC and create Day.js instances
-    const startTimeUTC = dayjs(startTime).utc();
-    const currentTime = dayjs();
+    // The threshold means "booked with less than X notice", so measure the notice from when the booking
+    // was made (payment can complete later) and keep the fraction so non-integer thresholds work too.
+    const bookedAt = createdAt ? dayjs(createdAt) : dayjs();
+    const notice = dayjs(startTime).diff(bookedAt, rcThreshold.unit, true);
 
-    // Calculate the time difference in the specified unit
-    const timeDifference = startTimeUTC.diff(currentTime, rcThreshold.unit);
-
-    // Check if the time difference exceeds the threshold
-    if (timeDifference > rcThreshold.time) {
+    if (notice >= rcThreshold.time) {
       requiresConfirmation = false;
     }
   }
