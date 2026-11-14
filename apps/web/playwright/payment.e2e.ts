@@ -52,6 +52,10 @@ test.describe("Payment", () => {
       expect(dataNextJsRouter).toEqual("app");
 
       await page.getByText("Payment", { exact: true }).waitFor();
+
+      // The page must render the real payment and booking data, not placeholders
+      await expect(page.getByText("$1.00").first()).toBeVisible();
+      await expect(page.getByText(/30 min/).first()).toBeVisible();
     });
   });
 });
