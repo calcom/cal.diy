@@ -110,15 +110,7 @@ function buildSlotsWithDateRanges({
     }
   >();
 
-  let interval = Number(process.env.NEXT_PUBLIC_AVAILABILITY_SCHEDULE_INTERVAL) || 1;
-  const intervalsWithDefinedStartTimes = [60, 30, 20, 15, 10, 5];
-
-  for (let i = 0; i < intervalsWithDefinedStartTimes.length; i++) {
-    if (frequency % intervalsWithDefinedStartTimes[i] === 0) {
-      interval = intervalsWithDefinedStartTimes[i];
-      break;
-    }
-  }
+  const interval = frequency;
 
   const startTimeWithMinNotice = dayjs.utc().add(minimumBookingNotice, "minute");
 
@@ -178,7 +170,7 @@ function buildSlotsWithDateRanges({
     while (!slotStartTime.add(eventLength, "minutes").subtract(1, "second").utc().isAfter(range.end)) {
       const slotKey = slotStartTime.toISOString();
       if (slots.has(slotKey)) {
-        slotStartTime = slotStartTime.add(frequency + (offsetStart ?? 0), "minutes");
+        slotStartTime = slotStartTime.add(interval + (offsetStart ?? 0), "minutes");
         continue;
       }
 
@@ -222,7 +214,7 @@ function buildSlotsWithDateRanges({
       }
 
       slots.set(slotKey, slotData);
-      slotStartTime = slotStartTime.add(frequency + (offsetStart ?? 0), "minutes");
+      slotStartTime = slotStartTime.add(interval + (offsetStart ?? 0), "minutes");
     }
   });
 
