@@ -52,6 +52,12 @@ describe("Tests for InputField Component", () => {
     expect(addOnSuffixElement).toBeInTheDocument();
   });
 
+  test("Should keep the label linked to the input when an id is passed", () => {
+    const { getByLabelText } = render(<InputField name="email" label="Email" id="signup-email" />);
+
+    expect(getByLabelText("Email")).toHaveAttribute("id", "signup-email");
+  });
+
   it("Should display error message when error prop is provided", () => {
     const errorMessage = "This field is required";
     const { getByRole } = render(<InputField error={errorMessage} />);
@@ -78,6 +84,16 @@ describe("Tests for PasswordField Component", () => {
 
     fireEvent.click(toggleButton);
     expect(passwordInput.type).toBe("password");
+  });
+
+  test("Should keep the label linked to the input when an id is passed", () => {
+    const { getByLabelText } = render(
+      <TooltipProvider>
+        <PasswordField name="password" label="Password" id="signup-password" />
+      </TooltipProvider>
+    );
+
+    expect(getByLabelText("Password")).toHaveAttribute("id", "signup-password");
   });
 });
 
