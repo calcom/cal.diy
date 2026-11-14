@@ -1,3 +1,4 @@
+import type { Dayjs } from "@calcom/dayjs";
 import dayjs from "@calcom/dayjs";
 import type { CalendarEvent } from "@calcom/features/calendars/weeklyview/types/events";
 import type { BookingStatus } from "@calcom/prisma/enums";
@@ -7,6 +8,7 @@ import { cva } from "class-variance-authority";
 
 type EventProps = {
   event: CalendarEvent;
+  day: Dayjs;
   currentlySelectedEventId?: number;
   eventDuration: number;
   onEventClick?: (event: CalendarEvent) => void;
@@ -59,6 +61,7 @@ const getStatusColorClass = (status?: BookingStatus): string | undefined => {
 
 export function Event({
   event,
+  day,
   currentlySelectedEventId,
   eventDuration,
   disabled,
@@ -77,7 +80,7 @@ export function Event({
   const timeFormat = dayjs(event.start).isSame(event.end, "day") ? "HH:mm" : "MMM D, HH:mm";
   const eventTime = `${dayjs(event.start).format(timeFormat)} - ${dayjs(event.end).format(timeFormat)}`;
 
-  const dayOfWeek = dayjs(event.start).day();
+  const dayOfWeek = day.day();
   const tooltipSide = dayOfWeek >= 1 && dayOfWeek <= 4 ? "right" : "left";
 
   const tooltipContent = (
