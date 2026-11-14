@@ -813,6 +813,103 @@ describe("maximize availability and weights", () => {
     );
   });
 
+  describe("full day calendar events in non-UTC calendars", () => {
+    const getLuckyUserWithFullDayBusyTime = async ({
+      now,
+      busyTime,
+      bookingsDuringBusyTime,
+    }: {
+      now: Date;
+      busyTime: { start: Date; end: Date; timeZone: string };
+      bookingsDuringBusyTime: Date[];
+    }) => {
+      vi.setSystemTime(now);
+
+      const users: GetLuckyUserAvailableUsersType = [
+        buildUser({ id: 1, username: "test1", name: "Test User 1", email: "test1@example.com" }),
+        buildUser({ id: 2, username: "test2", name: "Test User 2", email: "test2@example.com" }),
+      ];
+
+      const allRRHosts = users.map((user) => ({
+        user: { id: user.id, email: user.email, credentials: [], userLevelSelectedCalendars: [] },
+        weight: user.weight,
+        createdAt: new Date(0),
+      }));
+
+      CalendarManagerMock.getBusyCalendarTimes
+        .mockResolvedValueOnce({ success: true, data: [busyTime] })
+        .mockResolvedValue({ success: true, data: [] });
+      prismaMock.outOfOfficeEntry.findMany.mockResolvedValue([]);
+      prismaMock.user.findMany.mockResolvedValue(users);
+      prismaMock.host.findMany.mockResolvedValue([]);
+      prismaMock.booking.findMany.mockResolvedValue([
+        buildBooking({ id: 1, userId: 1, createdAt: new Date("2021-06-05T10:00:00Z") }),
+        ...bookingsDuringBusyTime.map((createdAt, index) =>
+          buildBooking({ id: index + 2, userId: 2, createdAt })
+        ),
+      ]);
+
+      try {
+        return await luckyUserService.getLuckyUser({
+          availableUsers: users,
+          eventType: {
+            id: 1,
+            isRRWeightsEnabled: true,
+            team: { rrResetInterval: RRResetInterval.MONTH, rrTimestampBasis: RRTimestampBasis.CREATED_AT },
+            includeNoShowInRRCalculation: false,
+          },
+          allRRHosts,
+        });
+      } finally {
+        vi.setSystemTime(new Date("2021-06-20T11:59:59Z"));
+      }
+    };
+
+    it("applies calibration for a full day event east of UTC that has already ended", async () => {
+      // June 20 in Asia/Kathmandu (UTC+5:45), ended 1h45m before now
+      const luckyUser = await getLuckyUserWithFullDayBusyTime({
+        now: new Date("2021-06-20T20:00:00Z"),
+        busyTime: {
+          start: new Date("2021-06-19T18:15:00Z"),
+          end: new Date("2021-06-20T18:15:00Z"),
+          timeZone: "Asia/Kathmandu",
+        },
+        bookingsDuringBusyTime: [new Date("2021-06-20T03:00:00Z"), new Date("2021-06-20T08:00:00Z")],
+      });
+
+      expect(luckyUser.id).toBe(2);
+    });
+
+    it("does not apply calibration for a full day event west of UTC that is still in progress", async () => {
+      // June 20 in America/New_York (UTC-4), still running for another 2 hours
+      const luckyUser = await getLuckyUserWithFullDayBusyTime({
+        now: new Date("2021-06-21T02:00:00Z"),
+        busyTime: {
+          start: new Date("2021-06-20T04:00:00Z"),
+          end: new Date("2021-06-21T04:00:00Z"),
+          timeZone: "America/New_York",
+        },
+        bookingsDuringBusyTime: [new Date("2021-06-20T14:00:00Z"), new Date("2021-06-20T18:00:00Z")],
+      });
+
+      expect(luckyUser.id).toBe(1);
+    });
+
+    it("applies calibration for a full day UTC event that has already ended", async () => {
+      const luckyUser = await getLuckyUserWithFullDayBusyTime({
+        now: new Date("2021-06-21T02:00:00Z"),
+        busyTime: {
+          start: new Date("2021-06-20T00:00:00Z"),
+          end: new Date("2021-06-21T00:00:00Z"),
+          timeZone: "UTC",
+        },
+        bookingsDuringBusyTime: [new Date("2021-06-20T03:00:00Z"), new Date("2021-06-20T08:00:00Z")],
+      });
+
+      expect(luckyUser.id).toBe(2);
+    });
+  });
+
   it("skips OOO calibration when there is only one host", async () => {
     const users: GetLuckyUserAvailableUsersType = [
       buildUser({
