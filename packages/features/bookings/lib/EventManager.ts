@@ -652,6 +652,8 @@ export default class EventManager {
             meetingUrl: true,
             externalCalendarId: true,
             credentialId: true,
+            delegationCredentialId: true,
+            thirdPartyRecurringEventId: true,
           },
         },
         destinationCalendar: true,
