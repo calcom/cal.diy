@@ -49,24 +49,31 @@ class BiginCrmService implements CRM {
    * Authenticate calendar service with Zoho Bigin provided credentials.
    */
   private biginAuth(credential: CredentialPayload) {
-    const credentialKey = credential.key as unknown as BiginToken;
+    let credentialKey = credential.key as unknown as BiginToken;
     const credentialId = credential.id;
+    const userId = credential.userId;
 
     const isTokenValid = (token: BiginToken) =>
-      token.access_token && token.expiryDate && token.expiryDate > Date.now();
+      Boolean(token.access_token && token.expiryDate && token.expiryDate > Date.now());
 
     return {
-      getToken: () =>
-        isTokenValid(credentialKey)
-          ? Promise.resolve(credentialKey)
-          : this.refreshAccessToken(credentialId, credentialKey),
+      getToken: async () => {
+        if (isTokenValid(credentialKey)) {
+          return credentialKey;
+        }
+        const refreshedToken = await this.refreshAccessToken(credentialId, userId, credentialKey);
+        if (isTokenValid(refreshedToken)) {
+          credentialKey = refreshedToken;
+        }
+        return refreshedToken;
+      },
     };
   }
 
   /***
    * Fetches a new access token if stored token is expired.
    */
-  private async refreshAccessToken(credentialId: number, credentialKey: BiginToken) {
+  private async refreshAccessToken(credentialId: number, userId: number | null, credentialKey: BiginToken) {
     this.log.debug("Refreshing token as it's invalid");
     const grantType = "refresh_token";
     const accountsUrl = `${credentialKey.accountServer}/oauth/v2/token`;
@@ -90,12 +97,12 @@ class BiginCrmService implements CRM {
           },
         }),
       "zoho-bigin",
-      credentialId
+      userId
     );
 
     if (!tokenInfo.data.error) {
       // set expiry date as offset from current time.
-      tokenInfo.data.expiryDate = Math.round(Date.now() + tokenInfo.data.expires_in);
+      tokenInfo.data.expiryDate = Math.round(Date.now() + tokenInfo.data.expires_in * 1000);
       tokenInfo.data.accountServer = credentialKey.accountServer;
       tokenInfo.data.refresh_token = credentialKey.refresh_token;
 
