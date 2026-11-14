@@ -18,6 +18,6 @@ items:
 <ol>
   <li>Log into your Cal account.</li>
   <li>Click on <a target="_blank" href="/settings"><strong>Settings</strong></a>.</li>
-  <li>There you will find the API keys section which allows you to generate a key for use. More information on this can be found on the <a href="https://developer.cal.com/api/authentication">Cal Authentication</a> page.</li>
+  <li>There you will find the API keys section which allows you to generate a key for use. More information on this can be found on the <a href="https://cal.com/docs/api-reference/v2/introduction">Cal Authentication</a> page.</li>
   <li>Use API key in your Cal trigger node credentials in n8n.</li>
 </ol>
