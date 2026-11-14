@@ -438,6 +438,28 @@ export type BookerStore = {
 /**
  * Creates a new booker store instance
  */
+const getValidInitialDate = (dateParam: string | null): string | null => {
+  if (!dateParam || !/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) return null;
+  const parsed = dayjs(dateParam);
+  return parsed.isValid() && parsed.format("YYYY-MM-DD") === dateParam ? dateParam : null;
+};
+
+const getValidInitialMonth = (monthParam: string | null, dateParam: string | null): string => {
+  const currentMonth = dayjs().format("YYYY-MM");
+  if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
+    const parsed = dayjs(monthParam, "YYYY-MM");
+    if (parsed.isValid() && parsed.format("YYYY-MM") === monthParam) {
+      return parsed.format("YYYY-MM") < currentMonth ? currentMonth : monthParam;
+    }
+  }
+  const validDate = getValidInitialDate(dateParam);
+  if (validDate) {
+    const dateMonth = dayjs(validDate).format("YYYY-MM");
+    return dateMonth < currentMonth ? currentMonth : dateMonth;
+  }
+  return currentMonth;
+};
+
 export const createBookerStore = () =>
   createWithEqualityFn<BookerStore>((set, get) => ({
     state: "loading",
@@ -454,7 +476,7 @@ export const createBookerStore = () =>
       }
       return set({ layout });
     },
-    selectedDate: getQueryParam("date") || null,
+    selectedDate: getValidInitialDate(getQueryParam("date")),
     setSelectedDate: ({ date: selectedDate, omitUpdatingParams = false, preventMonthSwitching = false }) => {
       // unset selected date
       if (!selectedDate) {
@@ -517,12 +539,7 @@ export const createBookerStore = () =>
     setVerificationCode: (code: string | null) => {
       set({ verificationCode: code });
     },
-    month:
-      getQueryParam("month") ||
-      (getQueryParam("date") && dayjs(getQueryParam("date")).isValid()
-        ? dayjs(getQueryParam("date")).format("YYYY-MM")
-        : null) ||
-      dayjs().format("YYYY-MM"),
+    month: getValidInitialMonth(getQueryParam("month"), getQueryParam("date")),
     setMonth: (month: string | null) => {
       if (!month) {
         removeQueryParam("month");
