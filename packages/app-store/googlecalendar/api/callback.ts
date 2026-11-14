@@ -22,6 +22,7 @@ import getInstalledAppPath from "../../_utils/getInstalledAppPath";
 import { decodeOAuthState } from "../../_utils/oauth/decodeOAuthState";
 import { updateProfilePhotoGoogle } from "../../_utils/oauth/updateProfilePhotoGoogle";
 import { getGoogleAppKeys } from "../lib/getGoogleAppKeys";
+import { getGoogleCalendarRetryConfig } from "../lib/retryConfig";
 
 async function getHandler(req: NextApiRequest, res: NextApiResponse) {
   const { code } = req.query;
@@ -88,6 +89,7 @@ async function getHandler(req: NextApiRequest, res: NextApiResponse) {
 
     const calendar = new calendar_v3.Calendar({
       auth: oAuth2Client,
+      retryConfig: getGoogleCalendarRetryConfig(),
     });
 
     const primaryCal = await gCalService.getPrimaryCalendar(calendar);
