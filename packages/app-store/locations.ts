@@ -562,6 +562,7 @@ export const locationsResolver = (t: TFunction) => {
                   message: t("invalid_url_error_message", {
                     label: eventLocationType.label,
                     sampleUrl: sampleUrl ?? "https://cal.com",
+                    interpolation: { escapeValue: false },
                   }),
                 });
               }
