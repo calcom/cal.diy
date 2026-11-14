@@ -78,17 +78,28 @@ class BasecampCalendarService implements Calendar {
   };
 
   private async getBasecampDescription(event: CalendarEvent): Promise<string> {
-    const timeZone = await this.getUserTimezoneFromDB(event.organizer?.id as number);
-    const date = new Date(event.startTime).toDateString();
+    const timeZone =
+      (await this.getUserTimezoneFromDB(event.organizer?.id as number)) ?? event.organizer?.timeZone;
+    // Format in the organizer's timezone, since that is the zone named in the description.
+    // Without it the server's local time is shown next to the organizer's timezone label.
+    const date = new Date(event.startTime).toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone,
+    });
     const startTime = new Date(event.startTime).toLocaleTimeString("en-US", {
       hour: "numeric",
       hour12: true,
       minute: "numeric",
+      timeZone,
     });
     const endTime = new Date(event.endTime).toLocaleTimeString("en-US", {
       hour: "numeric",
       hour12: true,
       minute: "numeric",
+      timeZone,
     });
     const baseString = `<div>Event title: ${event.title}<br/>Date and time: ${date}, ${startTime} - ${endTime} ${timeZone}<br/>View on Cal.diy: <a target="_blank" rel="noreferrer" class="autolinked" data-behavior="truncate" href="https://app.cal.com/booking/${event.uid}">https://app.cal.com/booking/${event.uid}</a> `;
     const guestString = `<br/>Guests: ${event.attendees.reduce((acc, attendee) => {
