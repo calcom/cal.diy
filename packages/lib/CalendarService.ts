@@ -40,6 +40,10 @@ const DEFAULT_CALENDAR_TYPE = "caldav";
 
 const CALENDSO_ENCRYPTION_KEY = process.env.CALENDSO_ENCRYPTION_KEY || "";
 
+// Some feeds expose unbounded RRULEs; cap expansion to prevent pathological loops
+// while still allowing multi-year daily recurrences to reach the requested window.
+const MAX_RECURRENCE_ITERATIONS = 50_000;
+
 type FetchObjectsWithOptionalExpandOptionsType = {
   selectedCalendars: IntegrationCalendar[];
   startISOString: string;
@@ -737,19 +741,19 @@ export default abstract class BaseCalendarService implements Calendar {
         applyTravelDuration(event, getTravelDurationInSeconds(vevent, this.log));
 
         if (event.isRecurring()) {
-          let maxIterations = 365;
-          if (["HOURLY", "SECONDLY", "MINUTELY"].includes(event.getRecurrenceTypes())) {
-            logger.warn(`Won't handle [${event.getRecurrenceTypes()}] recurrence`);
+          const recurrenceType = event.getRecurrenceTypes();
+          if (["HOURLY", "SECONDLY", "MINUTELY"].includes(recurrenceType)) {
+            logger.warn(`Won't handle [${recurrenceType}] recurrence`);
             return;
           }
 
           const start = dayjs(dateFrom);
           const end = dayjs(dateTo);
-          const startDate = ICAL.Time.fromDateTimeString(startISOString);
-          startDate.hour = event.startDate.hour;
-          startDate.minute = event.startDate.minute;
-          startDate.second = event.startDate.second;
-          const iterator = event.iterator(startDate);
+          const eventStart = dayjs(event.startDate.toJSDate());
+          const daysUntilQueryEnd = Math.max(0, end.diff(eventStart, "day"));
+          let maxIterations = Math.min(MAX_RECURRENCE_ITERATIONS, Math.max(365, daysUntilQueryEnd + 365));
+          // Start iterator from actual event start to preserve weekday/monthday alignment
+          const iterator = event.iterator(event.startDate);
           let current: ICAL.Time;
           let currentEvent: ReturnType<typeof event.getOccurrenceDetails> | undefined;
           let currentStart: ReturnType<typeof dayjs> | null = null;
