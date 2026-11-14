@@ -5,6 +5,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getUserEventGroups } from "../getUserEventGroups.handler";
 
 // Mock dependencies
+const mockCheckPermission = vi.fn();
+vi.mock("@calcom/features/permissions/services/PermissionCheckService", () => ({
+  PermissionCheckService: class {
+    checkPermission(...args: unknown[]): unknown {
+      return mockCheckPermission(...args);
+    }
+  },
+}));
+
 vi.mock("@calcom/lib/checkRateLimitAndThrowError", () => ({
   checkRateLimitAndThrowError: vi.fn(),
 }));
@@ -79,6 +88,7 @@ describe("getUserEventGroups", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCheckPermission.mockResolvedValue(true);
   });
 
   describe("Basic functionality", () => {
@@ -171,7 +181,8 @@ describe("getUserEventGroups", () => {
   });
 
   describe("Permissions", () => {
-    it("should grant permissions for team members (stub always returns true)", async () => {
+    it.each([true, false])("sets canCreateEventType to %s from PermissionCheckService", async (allowed) => {
+      mockCheckPermission.mockResolvedValue(allowed);
       const { ProfileRepository } = await import("@calcom/features/profile/repositories/ProfileRepository");
 
       const mockTeamMembership = {
@@ -210,8 +221,11 @@ describe("getUserEventGroups", () => {
       });
 
       expect(result.teamPermissions[100]).toMatchObject({
-        canCreateEventType: true,
+        canCreateEventType: allowed,
       });
+      expect(mockCheckPermission).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 1, teamId: 100, permission: "eventType.create" })
+      );
     });
   });
 

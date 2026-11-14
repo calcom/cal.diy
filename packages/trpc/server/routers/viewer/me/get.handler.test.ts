@@ -48,7 +48,7 @@ vi.mock("@calcom/features/users/repositories/UserRepository", () => ({
   UserRepository: MockUserRepository,
 }));
 
-vi.mock("@calcom/features/pbac/services/permission-check.service", () => ({
+vi.mock("@calcom/features/permissions/services/PermissionCheckService", () => ({
   PermissionCheckService: MockPermissionCheckService,
 }));
 

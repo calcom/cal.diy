@@ -1,11 +1,27 @@
 import getAllUserBookings from "@calcom/features/bookings/lib/getAllUserBookings";
 import type { DB } from "@calcom/kysely";
 import type { PrismaClient } from "@calcom/prisma";
-import type { Kysely } from "kysely";
+import {
+  DummyDriver,
+  Kysely,
+  PostgresAdapter,
+  PostgresIntrospector,
+  PostgresQueryCompiler,
+  type CompiledQuery,
+} from "kysely";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBookings, getHandler } from "./get.handler";
 
 vi.mock("@calcom/features/bookings/lib/getAllUserBookings");
+
+const mockGetTeamIdsWithPermission = vi.fn();
+vi.mock("@calcom/features/permissions/services/PermissionCheckService", () => ({
+  PermissionCheckService: class {
+    getTeamIdsWithPermission(...args: unknown[]): unknown {
+      return mockGetTeamIdsWithPermission(...args);
+    }
+  },
+}));
 vi.mock("@calcom/kysely", () => ({
   default: {
     selectFrom: vi.fn(),
@@ -94,7 +110,7 @@ describe("getHandler", () => {
   });
 });
 
-describe("getBookings - stub PermissionCheckService behavior", () => {
+describe("getBookings - user without team booking permissions", () => {
   const mockUser = {
     id: 1,
     email: "user@example.com",
@@ -153,6 +169,7 @@ describe("getBookings - stub PermissionCheckService behavior", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetTeamIdsWithPermission.mockResolvedValue([]);
     mockKysely = createMockKysely();
   });
 
@@ -272,5 +289,81 @@ describe("getBookings - stub PermissionCheckService behavior", () => {
     });
 
     expect(mockKysely._mockQueryBuilder.distinct).toHaveBeenCalled();
+  });
+});
+
+describe("getBookings - team admin scope only covers accepted members", () => {
+  const TEAM_ID = 7;
+  const user = { id: 1, email: "admin@example.com", orgId: null };
+
+  // Real query builder with a driver that never touches a database, so the generated SQL can be inspected.
+  const createCompilingKysely = () => {
+    const executed: CompiledQuery[] = [];
+    const db = new Kysely<DB>({
+      dialect: {
+        createAdapter: () => new PostgresAdapter(),
+        createDriver: () => new DummyDriver(),
+        createIntrospector: (kyselyDb) => new PostgresIntrospector(kyselyDb),
+        createQueryCompiler: () => new PostgresQueryCompiler(),
+      },
+    });
+    const originalExecuteQuery = db.executeQuery.bind(db);
+    db.executeQuery = (async (query: CompiledQuery) => {
+      executed.push(query);
+      return originalExecuteQuery(query);
+    }) as typeof db.executeQuery;
+    return { db, executed };
+  };
+
+  const prisma = {
+    user: { findMany: vi.fn().mockResolvedValue([{ id: 2, email: "member@example.com" }]) },
+    eventType: { findMany: vi.fn().mockResolvedValue([]) },
+    booking: { findUnique: vi.fn(), groupBy: vi.fn().mockResolvedValue([]) },
+    $queryRaw: vi.fn().mockResolvedValue([]),
+  } as unknown as PrismaClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetTeamIdsWithPermission.mockResolvedValue([TEAM_ID]);
+  });
+
+  it("requires Membership.accepted in every membership subquery of the bookings union", async () => {
+    const { db, executed } = createCompilingKysely();
+
+    await getBookings({
+      user,
+      prisma,
+      kysely: db,
+      bookingListingByStatus: ["upcoming"],
+      filters: {},
+      take: 10,
+      skip: 0,
+    });
+
+    const unionSql = executed[0].sql;
+    const membershipSubqueries = unionSql.match(/"Membership"\."teamId" in/g) ?? [];
+    const acceptedFilters = unionSql.match(/"Membership"\."accepted" = \$\d+/g) ?? [];
+    expect(membershipSubqueries.length).toBeGreaterThan(0);
+    expect(acceptedFilters).toHaveLength(membershipSubqueries.length);
+  });
+
+  it("only treats accepted team members as accessible when filtering by userIds", async () => {
+    const { db } = createCompilingKysely();
+
+    await getBookings({
+      user,
+      prisma,
+      kysely: db,
+      bookingListingByStatus: ["upcoming"],
+      filters: { userIds: [2] },
+      take: 10,
+      skip: 0,
+    });
+
+    expect(prisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { teams: { some: { teamId: { in: [TEAM_ID] }, accepted: true } } },
+      })
+    );
   });
 });

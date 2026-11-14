@@ -8,19 +8,8 @@ import { EventTypeMetaDataSchema, teamMetadataSchema } from "@calcom/prisma/zod-
 import { TRPCError } from "@trpc/server";
 import type { TrpcSessionUser } from "../../../types";
 import type { TGetActiveOnOptionsSchema } from "./getActiveOnOptions.schema";
+import { PermissionCheckService } from "@calcom/features/permissions/services/PermissionCheckService";
 
-class PermissionCheckService {
-  constructor(_prisma?: unknown) {}
-  async checkPermission(..._args: unknown[]) {
-    return true;
-  }
-  async hasPermission(..._args: unknown[]) {
-    return true;
-  }
-  async getTeamIdsWithPermission(..._args: unknown[]): Promise<number[]> {
-    return [];
-  }
-}
 const listOtherTeamHandler = async (
   ..._args: unknown[]
 ): Promise<{ id: number; name: string; slug: string }[]> => [];
