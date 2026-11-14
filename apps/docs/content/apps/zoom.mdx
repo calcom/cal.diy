@@ -6,15 +6,15 @@
 
 2. **Build a New App** - In the upper right, click "Develop" and then select "Build App".
 
-3. **Create a General App** - On the app type selection page, find the **General App** card and click "Create" (Zoom consolidated OAuth into General Apps).
+3. **Create a General App** - On the app type selection page, find the **General App** card and click "Create" (Zoom consolidated OAuth and other app types into General Apps).
 
 4. **Name Your App** - Provide a name for your app.
 
 5. **Choose User-managed App Type** - Under app type, select **User-managed** so users can authorize their individual Zoom accounts.
 
-6. **Set Marketplace Visibility** - Keep the option to publish the app on the Zoom App Marketplace toggled off for internal, self-hosted use.
+6. **Set Marketplace Visibility** - Keep the option to publish the app on the Zoom App Marketplace toggled off for internal, self-hosted use. (Note: unpublished private apps can be used by members of your Zoom account; connecting external Zoom accounts requires publishing or a sharing link under the Distribution tab).
 
-7. **Create the App** - Click "Create" to proceed to app configuration.
+7. **Confirm Basic Information** - On the Basic Information page of your new app, confirm the name and app management type configured in steps 4–5.
 
 8. **Save Client ID and Secret** - Under **App Credentials**, copy the Client ID and Client Secret, then add them to your `.env` file:
 
@@ -33,10 +33,10 @@ Replace `<Cal.diy URL>` with your application URL (e.g. `https://app.cal.diy` or
 
 10. **Configure OAuth Allow List and Strict Mode** - Add the redirect URL to the **OAuth Allow List**. Toggle on **"Use strict mode on redirect URLs"** (or enable Subdomain check if using subdomains). Ensure the status displays "Saved".
 
-11. **Add Required Scopes** - Go to the **Scopes** tab and click **"+ Add Scopes"**. Select the **Meeting** category on the left, then check:
-    - `meeting:write`
-    - `meeting:read`
+11. **Add Required Scopes** - Go to the **Scopes** tab and click **"+ Add Scopes"**. Select the **Meeting** category on the left, then add the granular scopes required for meeting creation and management:
+    - `meeting:read:meeting` (or `meeting:read:meeting:admin`)
+    - `meeting:write:meeting` (or `meeting:write:meeting:admin`)
 
 12. **Save the Scope** - Click "Done" to save your scope settings.
 
-13. **Complete Zoom Integration** - Your Zoom integration is now ready and can be enabled in Cal.diy settings under **Settings → Integrations → Video**.
+13. **Complete Zoom Integration** - Your Zoom integration is now ready and can be enabled in Cal.diy settings under **Settings → My account → Conferencing**.
