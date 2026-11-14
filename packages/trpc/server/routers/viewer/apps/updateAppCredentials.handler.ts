@@ -13,6 +13,52 @@ export type UpdateAppCredentialsOptions = {
   input: TUpdateAppCredentialsInputSchema;
 };
 
+const FORBIDDEN_JSON_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+const sanitizeJsonValue = (value: unknown): Prisma.JsonValue | undefined => {
+  if (value === null || value === undefined) {
+    return value as null | undefined;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeJsonValue(item) ?? null) as Prisma.JsonArray;
+  }
+
+  if (typeof value === "object") {
+    const sanitized: Prisma.JsonObject = {};
+
+    for (const [key, nestedValue] of Object.entries(value)) {
+      if (FORBIDDEN_JSON_KEYS.has(key)) {
+        continue;
+      }
+
+      const sanitizedValue = sanitizeJsonValue(nestedValue);
+      if (sanitizedValue !== undefined) {
+        sanitized[key] = sanitizedValue;
+      }
+    }
+
+    return sanitized;
+  }
+
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return value;
+  }
+
+  return undefined;
+};
+
+export const sanitizeJsonObject = (value: unknown): Prisma.JsonObject => {
+  if (value === null || value === undefined || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  const sanitized = sanitizeJsonValue(value);
+  return sanitized !== null && typeof sanitized === "object" && !Array.isArray(sanitized)
+    ? (sanitized as Prisma.JsonObject)
+    : {};
+};
+
 const validators = {
   paypal: () => import("@calcom/paypal/lib/updateAppCredentials.validator"),
 };
@@ -45,7 +91,13 @@ export const updateAppCredentialsHandler = async ({ ctx, input }: UpdateAppCrede
       id: input.credentialId,
       userId: user.id,
     },
+    select: {
+      id: true,
+      appId: true,
+      key: true,
+    },
   });
+
   // Check if credential exists
   if (!credential) {
     throw new TRPCError({
@@ -56,15 +108,21 @@ export const updateAppCredentialsHandler = async ({ ctx, input }: UpdateAppCrede
 
   const validatedKeys = await handleCustomValidations({ ctx, input, appId: credential.appId || "" });
 
+  const existingKey = sanitizeJsonObject(credential.key);
+  const sanitizedValidatedKeys = sanitizeJsonObject(validatedKeys);
+
   const updated = await prisma.credential.update({
     where: {
       id: credential.id,
     },
     data: {
       key: {
-        ...(credential.key as Prisma.JsonObject),
-        ...(validatedKeys as Prisma.JsonObject),
+        ...existingKey,
+        ...sanitizedValidatedKeys,
       },
+    },
+    select: {
+      id: true,
     },
   });
 
