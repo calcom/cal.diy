@@ -22,6 +22,7 @@ export const paymentDataSelect = {
       responses: true,
       user: {
         select: {
+          id: true,
           name: true,
           timeZone: true,
         },
@@ -49,6 +50,7 @@ export const paymentDataSelect = {
           requiresConfirmation: true,
           userId: true,
           metadata: true,
+          bookingFields: true,
           users: {
             select: {
               id: true,

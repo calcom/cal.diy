@@ -4,7 +4,7 @@ import prisma from "@calcom/prisma";
 import type { Payment } from "@calcom/prisma/client";
 import { BookingStatus } from "@calcom/prisma/enums";
 import { paymentDataSelect } from "@calcom/prisma/selects/payment";
-import { EventTypeMetaDataSchema } from "@calcom/prisma/zod-utils";
+import { EventTypeMetaDataSchema, eventTypeBookingFields } from "@calcom/prisma/zod-utils";
 import type { inferSSRProps } from "@lib/types/inferSSRProps";
 import type { GetServerSidePropsContext } from "next";
 import { z } from "zod";
@@ -61,11 +61,6 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
   if (!_booking) return { notFound: true } as const;
 
   const { startTime, endTime, eventType, ...restBooking } = _booking;
-  const booking = {
-    ...restBooking,
-    startTime: startTime.toISOString(),
-    endTime: endTime.toISOString(),
-  };
 
   if (!eventType) return { notFound: true } as const;
 
@@ -73,16 +68,45 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 
   if (
     ([BookingStatus.CANCELLED, BookingStatus.REJECTED] as BookingStatus[]).includes(
-      booking.status as BookingStatus
+      restBooking.status as BookingStatus
     )
   ) {
     return {
       redirect: {
-        destination: `/booking/${booking.uid}`,
+        destination: `/booking/${restBooking.uid}`,
         permanent: false,
       },
     };
   }
+
+  const bookingFields = eventTypeBookingFields.parse(eventType.bookingFields ?? []);
+  const userId = session?.user?.id;
+  const isLoggedInUserHost =
+    !!userId &&
+    (restBooking.user?.id === userId ||
+      eventType.userId === userId ||
+      eventType.users.some((eventUser) => eventUser.id === userId));
+
+  let responses = restBooking.responses;
+  if (!isLoggedInUserHost && isRecord(responses)) {
+    const visibleResponses = { ...responses };
+    for (const key in visibleResponses) {
+      const field = bookingFields.find((bookingField) => bookingField.name === key);
+      if (field && !!field.hidden) {
+        delete visibleResponses[key];
+      }
+    }
+    responses = visibleResponses;
+  }
+
+  const booking = {
+    ...restBooking,
+    responses,
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+  };
+
+  const { bookingFields: _bookingFields, ...eventTypeWithoutBookingFields } = eventType;
 
   const [user] = eventType.users.length
     ? eventType.users
@@ -103,7 +127,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     props: {
       user,
       eventType: {
-        ...eventType,
+        ...eventTypeWithoutBookingFields,
         metadata: EventTypeMetaDataSchema.parse(eventType.metadata),
       },
       booking,
