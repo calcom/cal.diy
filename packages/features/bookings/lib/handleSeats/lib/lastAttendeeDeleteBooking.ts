@@ -2,12 +2,16 @@ import { getCalendar } from "@calcom/app-store/_utils/getCalendar";
 import { getAllDelegationCredentialsForUserIncludeServiceAccountKey } from "@calcom/app-store/delegationCredential";
 import { getDelegationCredentialOrFindRegularCredential } from "@calcom/app-store/delegationCredential";
 import { deleteMeeting } from "@calcom/features/conferencing/lib/videoClient";
+import logger from "@calcom/lib/logger";
+import { safeStringify } from "@calcom/lib/safeStringify";
 import prisma from "@calcom/prisma";
 import type { Attendee } from "@calcom/prisma/client";
 import { BookingStatus } from "@calcom/prisma/enums";
 import type { CalendarEvent } from "@calcom/types/Calendar";
 
 import type { OriginalRescheduledBooking } from "../../handleNewBooking/originalRescheduledBookingUtils";
+
+const log: typeof logger = logger.getSubLogger({ prefix: ["lastAttendeeDeleteBooking"] });
 
 /* Check if the original booking has no more attendees, if so delete the booking
   and any calendar or video integrations */
@@ -53,15 +57,25 @@ const lastAttendeeDeleteBooking = async (
       }
     }
 
-    await Promise.all(integrationsToDelete).then(async () => {
-      await prisma.booking.update({
-        where: {
-          id: originalRescheduledBooking.id,
-        },
-        data: {
-          status: BookingStatus.CANCELLED,
-        },
-      });
+    // Cleanup of the old booking must not block the attendee's reschedule, so a failed
+    // delete is only logged, the same way EventManager.deleteEventsAndMeetings handles it.
+    const results = await Promise.allSettled(integrationsToDelete);
+    for (const result of results) {
+      if (result.status === "rejected") {
+        log.warn(
+          `Error deleting calendar event or video meeting for booking ${originalRescheduledBooking.id}`,
+          safeStringify({ error: result.reason })
+        );
+      }
+    }
+
+    await prisma.booking.update({
+      where: {
+        id: originalRescheduledBooking.id,
+      },
+      data: {
+        status: BookingStatus.CANCELLED,
+      },
     });
     deletedReferences = true;
   }

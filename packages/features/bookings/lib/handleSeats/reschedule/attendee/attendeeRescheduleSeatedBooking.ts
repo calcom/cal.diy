@@ -26,19 +26,21 @@ const attendeeRescheduleSeatedBooking = async (
   // Set attendeeSeatId so that reschedule/cancel links in emails use seatUid instead of bookingUid
   evt.attendeeSeatId = bookingSeat?.referenceUid;
 
+  let originalBookingDeleted = false;
+
   // Update the original calendar event by removing the attendee that is rescheduling
   if (originalBookingEvt && originalRescheduledBooking) {
     // Event would probably be deleted so we first check than instead of updating references
     const filteredAttendees = originalRescheduledBooking?.attendees.filter((attendee) => {
       return attendee.email !== bookerEmail;
     });
-    const deletedReference = await lastAttendeeDeleteBooking(
+    originalBookingDeleted = await lastAttendeeDeleteBooking(
       originalRescheduledBooking,
       filteredAttendees,
       originalBookingEvt
     );
 
-    if (!deletedReference) {
+    if (!originalBookingDeleted) {
       await eventManager.updateCalendarAttendees(originalBookingEvt, originalRescheduledBooking);
     }
   }
@@ -111,10 +113,14 @@ const attendeeRescheduleSeatedBooking = async (
     seatAttendee as Person,
     eventType.metadata
   );
-  const filteredAttendees = originalRescheduledBooking?.attendees.filter((attendee) => {
-    return attendee.email !== bookerEmail;
-  });
-  await lastAttendeeDeleteBooking(originalRescheduledBooking, filteredAttendees, originalBookingEvt);
+  // Skip if the original booking was already cleaned up above, otherwise its events and
+  // meetings would be deleted a second time.
+  if (!originalBookingDeleted) {
+    const filteredAttendees = originalRescheduledBooking?.attendees.filter((attendee) => {
+      return attendee.email !== bookerEmail;
+    });
+    await lastAttendeeDeleteBooking(originalRescheduledBooking, filteredAttendees, originalBookingEvt);
+  }
 
   const foundBooking = await findBookingQuery(newTimeSlotBooking.id);
 
