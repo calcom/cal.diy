@@ -1,6 +1,7 @@
 import prismaMock from "@calcom/testing/lib/__mocks__/prismaMock";
 
-import { expect, test, vi, describe } from "vitest";
+import type { PartialReference } from "@calcom/types/EventManager";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { OAuthManager } from "../../_utils/oauth/OAuthManager";
 import { internalServerErrorResponse, successResponse } from "../../_utils/testUtils";
@@ -13,9 +14,19 @@ const URLS = {
     method: "POST",
   },
   UPDATE_MEETING: {
-    url: "https://graph.microsoft.com/v1.0/me/onlineMeetings",
-    method: "POST",
+    url: "https://graph.microsoft.com/v1.0/me/onlineMeetings/MEETING_ID",
+    method: "PATCH",
   },
+  DELETE_MEETING: {
+    url: "https://graph.microsoft.com/v1.0/me/onlineMeetings/MEETING_ID",
+    method: "DELETE",
+  },
+};
+
+const existingBookingRef: PartialReference = {
+  type: config.type,
+  uid: "MEETING_ID",
+  meetingId: "MEETING_ID",
 };
 
 vi.mock("../../_utils/getParsedAppKeysFromSlug", () => ({
@@ -38,6 +49,10 @@ vi.mock("../../_utils/oauth/OAuthManager", () => ({
     return { requestRaw: mockRequestRaw };
   }),
 }));
+
+beforeEach(() => {
+  mockRequestRaw.mockReset();
+});
 
 const testCredential = {
   appId: config.slug,
@@ -195,7 +210,99 @@ describe("createMeeting", () => {
 });
 
 describe("updateMeeting", () => {
-  test("Successful `updateMeeting` call", async () => {
+  test("patches the existing Teams meeting instead of creating a new one", async () => {
+    const videoApi = VideoApiAdapter(testCredential);
+
+    mockRequestRaw.mockImplementation(({ url, options }) => {
+      if (url === URLS.UPDATE_MEETING.url && options.method === URLS.UPDATE_MEETING.method) {
+        return Promise.resolve(
+          successResponse({
+            json: {
+              id: "MEETING_ID",
+              joinWebUrl: "https://join_web_url.example.com",
+            },
+          })
+        );
+      }
+      throw new Error("Unexpected URL");
+    });
+
+    const event = {
+      title: "Rescheduled Meeting",
+      description: "Test Description",
+      startTime: new Date(),
+      endTime: new Date(),
+    };
+
+    const updatedMeeting = await videoApi?.updateMeeting(existingBookingRef, event);
+    expect(mockRequestRaw).toHaveBeenCalledWith({
+      url: URLS.UPDATE_MEETING.url,
+      options: {
+        method: "PATCH",
+        body: JSON.stringify({
+          startDateTime: event.startTime,
+          endDateTime: event.endTime,
+          subject: event.title,
+        }),
+      },
+    });
+    expect(mockRequestRaw).not.toHaveBeenCalledWith(
+      expect.objectContaining({ url: URLS.CREATE_MEETING.url })
+    );
+    expect(updatedMeeting).toEqual({
+      id: "MEETING_ID",
+      password: "",
+      type: config.type,
+      url: "https://join_web_url.example.com",
+    });
+  });
+
+  test("creates a new meeting when the existing Teams meeting was deleted", async () => {
+    const videoApi = VideoApiAdapter(testCredential);
+
+    mockRequestRaw.mockImplementation(({ url, options }) => {
+      if (url === URLS.UPDATE_MEETING.url && options.method === "PATCH") {
+        return Promise.resolve(new Response(null, { status: 404, statusText: "Not Found" }));
+      }
+      if (url === URLS.CREATE_MEETING.url && options.method === "POST") {
+        return Promise.resolve(
+          successResponse({
+            json: { id: "NEW_MEETING_ID", joinWebUrl: "https://new_join_web_url.example.com" },
+          })
+        );
+      }
+      throw new Error("Unexpected URL");
+    });
+
+    const event = {
+      title: "Rescheduled Meeting",
+      description: "Test Description",
+      startTime: new Date(),
+      endTime: new Date(),
+    };
+
+    const updatedMeeting = await videoApi?.updateMeeting(existingBookingRef, event);
+    expect(mockRequestRaw).toHaveBeenCalledTimes(2);
+    expect(mockRequestRaw).toHaveBeenLastCalledWith({
+      url: URLS.CREATE_MEETING.url,
+      options: {
+        method: "POST",
+        body: JSON.stringify({
+          startDateTime: event.startTime,
+          endDateTime: event.endTime,
+          subject: event.title,
+        }),
+      },
+    });
+    expect(updatedMeeting).toEqual({
+      id: "NEW_MEETING_ID",
+      password: "",
+      type: config.type,
+      url: "https://new_join_web_url.example.com",
+    });
+  });
+
+  test("creates a new meeting when there is no existing meeting reference", async () => {
     const videoApi = VideoApiAdapter(testCredential);
 
     mockRequestRaw.mockImplementation(({ url }) => {
@@ -279,5 +386,41 @@ describe("updateMeeting", () => {
         }),
       },
     });
+  });
+});
+
+describe("deleteMeeting", () => {
+  test("deletes the Teams meeting on Microsoft's side", async () => {
+    const videoApi = VideoApiAdapter(testCredential);
+    mockRequestRaw.mockResolvedValue(new Response(null, { status: 204, statusText: "No Content" }));
+
+    await expect(videoApi?.deleteMeeting("MEETING_ID")).resolves.toBeUndefined();
+    expect(mockRequestRaw).toHaveBeenCalledWith({
+      url: URLS.DELETE_MEETING.url,
+      options: { method: "DELETE" },
+    });
+  });
+
+  test("treats an already deleted meeting (404) as success", async () => {
+    const videoApi = VideoApiAdapter(testCredential);
+    mockRequestRaw.mockResolvedValue(new Response(null, { status: 404, statusText: "Not Found" }));
+
+    await expect(videoApi?.deleteMeeting("MEETING_ID")).resolves.toBeUndefined();
+  });
+
+  test("throws when Microsoft Graph rejects the delete", async () => {
+    const videoApi = VideoApiAdapter(testCredential);
+    mockRequestRaw.mockResolvedValue(internalServerErrorResponse({ json: { error: { message: "ERROR" } } }));
+
+    await expect(videoApi?.deleteMeeting("MEETING_ID")).rejects.toThrowError(
+      "Error deleting MS Teams meeting"
+    );
+  });
+
+  test("does not call Microsoft Graph without a meeting id", async () => {
+    const videoApi = VideoApiAdapter(testCredential);
+
+    await videoApi?.deleteMeeting("");
+    expect(mockRequestRaw).not.toHaveBeenCalled();
   });
 });
