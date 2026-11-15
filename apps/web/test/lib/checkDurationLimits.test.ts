@@ -1,5 +1,7 @@
 import dayjs from "@calcom/dayjs";
+import type { CheckBookingLimitsService } from "@calcom/features/bookings/lib/checkBookingLimits";
 import { checkDurationLimit, checkDurationLimits } from "@calcom/features/bookings/lib/checkDurationLimits";
+import { CheckBookingAndDurationLimitsService } from "@calcom/features/bookings/lib/handleNewBooking/checkBookingAndDurationLimits";
 import { validateIntervalLimitOrder } from "@calcom/lib/intervalLimits/validateIntervalLimitOrder";
 import { describe, expect, it, vi } from "vitest";
 
@@ -107,6 +109,70 @@ describe("Check Duration Limit Tests", () => {
         eventId: MOCK_DATA.id,
       })
     ).resolves.toBeUndefined();
+  });
+});
+
+describe("Check Duration Limit time zone", () => {
+  // 2022-10-01T03:30 in Asia/Kolkata, but still 2022-09-30 in UTC
+  const eventStartDate = dayjs("2022-09-30T22:00:00Z").toDate();
+
+  it("Should count bookings over the day of the organizer time zone", async () => {
+    mockGetTotalBookingDuration.mockClear();
+    mockGetTotalBookingDuration.mockResolvedValue(0);
+
+    await checkDurationLimit({
+      key: "PER_DAY",
+      limitingNumber: 60,
+      eventStartDate,
+      eventId: MOCK_DATA.id,
+      timeZone: "Asia/Kolkata",
+    });
+
+    expect(mockGetTotalBookingDuration).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startDate: new Date("2022-09-30T18:30:00.000Z"),
+        endDate: new Date("2022-10-01T18:29:59.999Z"),
+      })
+    );
+  });
+
+  it("Should pass the organizer time zone through checkDurationLimits", async () => {
+    mockGetTotalBookingDuration.mockClear();
+    mockGetTotalBookingDuration.mockResolvedValue(0);
+
+    await checkDurationLimits({ PER_DAY: 60 }, eventStartDate, MOCK_DATA.id, undefined, "Asia/Kolkata");
+
+    expect(mockGetTotalBookingDuration).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startDate: new Date("2022-09-30T18:30:00.000Z"),
+        endDate: new Date("2022-10-01T18:29:59.999Z"),
+      })
+    );
+  });
+  it("Should pass the event schedule time zone through the booking check", async () => {
+    mockGetTotalBookingDuration.mockClear();
+    mockGetTotalBookingDuration.mockResolvedValue(0);
+
+    const service = new CheckBookingAndDurationLimitsService({
+      checkBookingLimitsService: { checkBookingLimits: vi.fn() } as unknown as CheckBookingLimitsService,
+    });
+
+    await service._checkBookingAndDurationLimits({
+      eventType: {
+        id: MOCK_DATA.id,
+        bookingLimits: null,
+        durationLimits: { PER_DAY: 60 },
+        schedule: { timeZone: "Asia/Kolkata" },
+      } as Parameters<typeof service._checkBookingAndDurationLimits>[0]["eventType"],
+      reqBodyStart: eventStartDate.toISOString(),
+    });
+
+    expect(mockGetTotalBookingDuration).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startDate: new Date("2022-09-30T18:30:00.000Z"),
+        endDate: new Date("2022-10-01T18:29:59.999Z"),
+      })
+    );
   });
 });
 
