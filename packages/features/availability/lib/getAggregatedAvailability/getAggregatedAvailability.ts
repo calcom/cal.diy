@@ -25,7 +25,7 @@ function uniqueAndSortedDateRanges(ranges: DateRange[]): DateRange[] {
 export const getAggregatedAvailability = (
   userAvailability: {
     dateRanges: DateRange[];
-    oooExcludedDateRanges: DateRange[];
+    oooExcludedDateRanges?: DateRange[];
     user?: { isFixed?: boolean; groupId?: string | null };
   }[],
   schedulingType: SchedulingType | null
@@ -40,7 +40,7 @@ export const getAggregatedAvailability = (
   );
 
   const fixedDateRanges = mergeOverlappingDateRanges(
-    intersect(fixedHosts.map((s) => (!isTeamEvent ? s.dateRanges : s.oooExcludedDateRanges)))
+    intersect(fixedHosts.map((s) => (!isTeamEvent ? s.dateRanges : (s.oooExcludedDateRanges ?? s.dateRanges))))
   );
   // Empty fixed ranges mean the fixed hosts are busy, so no slot is free; checking the ranges would drop the constraint
   const dateRangesToIntersect = fixedHosts.length ? [fixedDateRanges] : [];
@@ -63,7 +63,7 @@ export const getAggregatedAvailability = (
     Object.values(hostsByGroup).forEach((groupHosts) => {
       if (groupHosts.length > 0) {
         const groupDateRanges = groupHosts.flatMap((s) =>
-          !isTeamEvent ? s.dateRanges : s.oooExcludedDateRanges
+          !isTeamEvent ? s.dateRanges : (s.oooExcludedDateRanges ?? s.dateRanges)
         );
         dateRangesToIntersect.push(groupDateRanges ?? []);
       }
