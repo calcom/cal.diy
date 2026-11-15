@@ -24,7 +24,9 @@ export const DEFAULT_SCHEDULE_DATA: ScheduleWithoutTimeZone = {
 
 export type DetectEventTypeScheduleForUserInput = {
   eventType?: {
-    hosts: {
+    id?: number;
+    scheduleId?: number | null;
+    hosts?: {
       user: {
         id: number;
       };
@@ -66,6 +68,11 @@ export function detectEventTypeScheduleForUser({
   )[0];
   const hostSchedule = eventType?.hosts?.find((host) => host.user.id === user.id)?.schedule;
 
+  const targetScheduleId = eventType?.schedule?.id ?? eventType?.scheduleId;
+  const matchingUserSchedule = targetScheduleId
+    ? user.schedules.find((schedule) => schedule.id === targetScheduleId)
+    : null;
+
   // TODO: It uses default timezone of user. Should we use timezone of team ?
   const fallbackTimezoneIfScheduleIsMissing = eventType?.timeZone || user.timeZone;
 
@@ -76,8 +83,16 @@ export function detectEventTypeScheduleForUser({
 
   let potentialSchedule = null;
 
-  if (eventType?.schedule) {
+  if (eventType?.schedule?.availability && eventType.schedule.availability.length > 0) {
     potentialSchedule = eventType.schedule;
+  } else if (matchingUserSchedule?.availability && matchingUserSchedule.availability.length > 0) {
+    potentialSchedule = matchingUserSchedule;
+  } else if (eventType?.schedule) {
+    potentialSchedule = eventType.schedule;
+  } else if (matchingUserSchedule) {
+    potentialSchedule = matchingUserSchedule;
+  } else if (hostSchedule?.availability && hostSchedule.availability.length > 0) {
+    potentialSchedule = hostSchedule;
   } else if (hostSchedule) {
     potentialSchedule = hostSchedule;
   } else if (userSchedule) {
