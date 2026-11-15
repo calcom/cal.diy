@@ -8,6 +8,8 @@ import getWebhooks from "@calcom/features/webhooks/lib/getWebhooks";
 import type { OOOEntryPayloadType } from "@calcom/features/webhooks/lib/sendPayload";
 import sendPayload from "@calcom/features/webhooks/lib/sendPayload";
 import { getTranslation } from "@calcom/i18n/server";
+import logger from "@calcom/lib/logger";
+import { safeStringify } from "@calcom/lib/safeStringify";
 import prisma from "@calcom/prisma";
 import { WebhookTriggerEvents } from "@calcom/prisma/enums";
 import type { TrpcSessionUser } from "@calcom/trpc/server/types";
@@ -377,7 +379,7 @@ export const outOfOfficeCreateOrUpdate = async ({ ctx, input }: TBookingRedirect
   };
 
   await Promise.all(
-    subscribers.map(async (subscriber) => {
+    subscribers.map((subscriber) =>
       sendPayload(
         subscriber.secret,
         WebhookTriggerEvents.OOO_CREATED,
@@ -389,8 +391,13 @@ export const outOfOfficeCreateOrUpdate = async ({ ctx, input }: TBookingRedirect
           version: subscriber.version,
         },
         payload
-      );
-    })
+      ).catch((e) => {
+        logger.error(
+          `Error executing webhook for event: ${WebhookTriggerEvents.OOO_CREATED}, URL: ${subscriber.subscriberUrl}, ooo uuid: ${createdOrUpdatedOutOfOffice.uuid}`,
+          safeStringify(e)
+        );
+      })
+    )
   );
 
   return {};
