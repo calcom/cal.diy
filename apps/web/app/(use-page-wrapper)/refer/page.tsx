@@ -8,9 +8,9 @@ import Shell from "~/shell/Shell";
 import { DubReferralsPage } from "./DubReferralsPage";
 
 export const metadata: Metadata = {
-  title: "Cal.diy referral program - Earn money by sharing your link",
+  title: "horium.dev referral program - Earn money by sharing your link",
   description:
-    "Earn 20% recurring commissions for a full year by referring others to Cal.diy, while giving your referrals 20% off for 12 months. Share your link and start earning today!",
+    "Earn 20% recurring commissions for a full year by referring others to horium.dev, while giving your referrals 20% off for 12 months. Share your link and start earning today!",
 };
 
 // Export the appropriate component based on the feature flag

@@ -17,7 +17,7 @@ export default function Router({
   return (
     <>
       <Head>
-        <title>Cal.diy Forms</title>
+        <title>horium.dev Forms</title>
       </Head>
       <div className="mx-auto my-0 max-w-3xl md:my-24">
         <div className="w-full max-w-4xl ltr:mr-2 rtl:ml-2">
