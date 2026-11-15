@@ -1,25 +1,21 @@
 import CalendarManagerMock from "@calcom/features/calendars/lib/__mocks__/CalendarManager";
 import { constantsScenarios } from "@calcom/lib/__mocks__/constants";
-
 import {
+  createBookingScenario,
+  createCredentials,
+  createOrganization,
   getDate,
   getGoogleCalendarCredential,
-  createBookingScenario,
-  createOrganization,
   getOrganizer,
   getScenarioData,
-  Timezones,
-  TestData,
-  createCredentials,
   mockCrmApp,
+  TestData,
+  Timezones,
 } from "@calcom/testing/lib/bookingScenario/bookingScenario";
-
-import { describe, vi, test } from "vitest";
-
 import dayjs from "@calcom/dayjs";
 import { getAvailableSlotsService } from "@calcom/features/di/containers/AvailableSlots";
-import { SchedulingType, type BookingStatus } from "@calcom/prisma/enums";
-
+import { type BookingStatus, SchedulingType } from "@calcom/prisma/enums";
+import { describe, test, vi } from "vitest";
 import { expect, expectedSlotsForSchedule } from "./getSchedule/expects";
 import { setupAndTeardown } from "./getSchedule/setupAndTeardown";
 import { timeTravelToTheBeginningOfToday } from "./getSchedule/utils";
@@ -1420,6 +1416,68 @@ describe("getSchedule", () => {
           dateString: plus2DateString,
         }
       );
+    });
+
+    test("afterBuffer is respected even when query startTime begins after booking endTime (pre-fetch buffer window)", async () => {
+      const { dateString: plus2DateString } = getDate({ dateIncrement: 2 });
+
+      CalendarManagerMock.getBusyCalendarTimes.mockResolvedValue({
+        success: true,
+        data: [],
+      });
+
+      const scenarioData = {
+        eventTypes: [
+          {
+            id: 1,
+            length: 120,
+            beforeEventBuffer: 120,
+            afterEventBuffer: 120,
+            users: [
+              {
+                id: 101,
+              },
+            ],
+          },
+        ],
+        users: [
+          {
+            ...TestData.users.example,
+            id: 101,
+            schedules: [TestData.schedules.IstWorkHours],
+            credentials: [getGoogleCalendarCredential()],
+            selectedCalendars: [TestData.selectedCalendars.google],
+          },
+        ],
+        bookings: [
+          {
+            userId: 101,
+            eventTypeId: 1,
+            startTime: `${plus2DateString}T04:00:00.000Z`,
+            endTime: `${plus2DateString}T05:59:59.000Z`,
+            status: "ACCEPTED" as BookingStatus,
+          },
+        ],
+        apps: [TestData.apps["google-calendar"]],
+      };
+
+      await createBookingScenario(scenarioData);
+
+      const schedule = await availableSlotsService.getAvailableSlots({
+        input: {
+          eventTypeId: 1,
+          eventTypeSlug: "",
+          startTime: `${plus2DateString}T06:00:00.000Z`,
+          endTime: `${plus2DateString}T18:29:59.999Z`,
+          timeZone: Timezones["+5:30"],
+          isTeamEvent: false,
+          orgSlug: null,
+        },
+      });
+
+      expect(schedule).toHaveTimeSlots([`10:30:00.000Z`], {
+        dateString: plus2DateString,
+      });
     });
 
     test("Start times are offset (offsetStart)", async () => {
@@ -3562,7 +3620,7 @@ describe("getSchedule", () => {
       );
     });
 
-    test("Reschedule: should show timeslots as per routedTeamMemberIds(instead of same host) even if rescheduleWithSameRoundRobinHost is true but it is a rerouting scenario",async () => {
+    test("Reschedule: should show timeslots as per routedTeamMemberIds(instead of same host) even if rescheduleWithSameRoundRobinHost is true but it is a rerouting scenario", async () => {
       vi.setSystemTime("2024-05-21T00:00:13Z");
 
       const plus1DateString = "2024-05-22";
