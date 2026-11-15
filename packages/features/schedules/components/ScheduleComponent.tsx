@@ -121,6 +121,7 @@ export const ScheduleDay = <TFieldValues extends FieldValues>({
               labels={labels}
               control={control}
               name={name}
+              weekday={weekday}
               disabled={disabled}
               copyButton={!disabled ? CopyButton : undefined}
               classNames={{
@@ -139,10 +140,12 @@ export const ScheduleDay = <TFieldValues extends FieldValues>({
 const CopyButton = ({
   getValuesFromDayRange,
   weekStart,
+  weekday,
   labels,
 }: {
   getValuesFromDayRange: string;
   weekStart: number;
+  weekday?: string;
   labels?: ScheduleLabelsType;
 }) => {
   const { t } = useLocale();
@@ -153,6 +156,7 @@ const CopyButton = ({
     <Dropdown open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
+          aria-label={weekday ? t("copy_times_of_day_to", { day: weekday }) : t("copy_times_to_tooltip")}
           className={cn(
             "text-default",
             open && "ring-brand-500 !bg-subtle outline-none ring-2 ring-offset-1"
@@ -219,7 +223,12 @@ export const ScheduleComponent = <
             weekday={weekday}
             control={control}
             CopyButton={
-              <CopyButton weekStart={weekStart} labels={labels} getValuesFromDayRange={dayRangeName} />
+              <CopyButton
+                weekStart={weekStart}
+                weekday={weekday}
+                labels={labels}
+                getValuesFromDayRange={dayRangeName}
+              />
             }
           />
         );
@@ -233,6 +242,7 @@ export const DayRanges = <TFieldValues extends FieldValues>({
   disabled,
   control,
   labels,
+  weekday,
   userTimeFormat,
   classNames,
   copyButton,
@@ -241,6 +251,7 @@ export const DayRanges = <TFieldValues extends FieldValues>({
   control?: Control<TFieldValues>;
   disabled?: boolean;
   labels?: ScheduleLabelsType;
+  weekday?: string;
   userTimeFormat: number | null;
   classNames?: Pick<scheduleClassNames, "dayRanges" | "timeRangeField" | "timePicker">;
   copyButton?: React.ReactNode;
@@ -267,6 +278,8 @@ export const DayRanges = <TFieldValues extends FieldValues>({
                   className={classNames?.timeRangeField}
                   userTimeFormat={userTimeFormat}
                   timePickerClassNames={classNames?.timePicker}
+                  weekday={weekday}
+                  rangeIndex={fields.length > 1 ? index + 1 : undefined}
                   {...field}
                 />
               )}
@@ -275,6 +288,9 @@ export const DayRanges = <TFieldValues extends FieldValues>({
               <Button
                 disabled={disabled}
                 data-testid="add-time-availability"
+                aria-label={
+                  weekday ? t("add_time_slot_of_day", { day: weekday }) : t("add_time_availability")
+                }
                 tooltip={labels?.addTime ?? t("add_time_availability")}
                 className="text-default"
                 type="button"
@@ -300,7 +316,16 @@ export const DayRanges = <TFieldValues extends FieldValues>({
             )}
             {index === 0 && copyButton && <div className="block">{copyButton}</div>}
             {fields.length > 1 && (
-              <RemoveTimeButton index={index} remove={remove} className="text-default border-none" />
+              <RemoveTimeButton
+                index={index}
+                remove={remove}
+                ariaLabel={
+                  weekday
+                    ? t("remove_time_slot_of_day", { day: weekday, index: index + 1 })
+                    : t("remove_time_slot_index", { index: index + 1 })
+                }
+                className="text-default border-none"
+              />
             )}
           </div>
         </Fragment>
@@ -315,12 +340,14 @@ const RemoveTimeButton = ({
   disabled,
   className,
   labels,
+  ariaLabel,
 }: {
   index: number | number[];
   remove: UseFieldArrayRemove;
   className?: string;
   disabled?: boolean;
   labels?: ScheduleLabelsType;
+  ariaLabel?: string;
 }) => {
   const { t } = useLocale();
   return (
@@ -329,6 +356,7 @@ const RemoveTimeButton = ({
       type="button"
       variant="icon"
       color="destructive"
+      aria-label={ariaLabel ?? labels?.deleteTime ?? t("delete")}
       StartIcon="trash"
       onClick={() => remove(index)}
       className={className}
@@ -342,11 +370,15 @@ const TimeRangeField = ({
   value,
   onChange,
   disabled,
+  weekday,
+  rangeIndex,
   userTimeFormat,
   timePickerClassNames,
 }: {
   className?: string;
   disabled?: boolean;
+  weekday?: string;
+  rangeIndex?: number;
   userTimeFormat: number | null;
   timePickerClassNames?: {
     container?: string;
@@ -356,6 +388,20 @@ const TimeRangeField = ({
     dropdown?: string;
   };
 } & ControllerRenderProps) => {
+  const { t } = useLocale();
+  const timePickerLabels = rangeIndex
+    ? {
+        start: weekday
+          ? t("start_time_of_day_index", { day: weekday, index: rangeIndex })
+          : t("start_time_index", { index: rangeIndex }),
+        end: weekday
+          ? t("end_time_of_day_index", { day: weekday, index: rangeIndex })
+          : t("end_time_index", { index: rangeIndex }),
+      }
+    : {
+        start: weekday ? t("start_time_of_day", { day: weekday }) : t("start_time"),
+        end: weekday ? t("end_time_of_day", { day: weekday }) : t("end_time"),
+      };
   const innerClassNames: SelectInnerClassNames = {
     control: timePickerClassNames?.container,
     singleValue: timePickerClassNames?.value,
@@ -370,6 +416,7 @@ const TimeRangeField = ({
       <LazySelect
         userTimeFormat={userTimeFormat}
         className="block w-[90px] sm:w-[100px]"
+        aria-label={timePickerLabels.start}
         isDisabled={disabled}
         value={value.start}
         menuPlacement="bottom"
@@ -389,6 +436,7 @@ const TimeRangeField = ({
       <LazySelect
         userTimeFormat={userTimeFormat}
         className="block w-[90px] rounded-md sm:w-[100px]"
+        aria-label={timePickerLabels.end}
         isDisabled={disabled}
         value={value.end}
         min={value.start}
