@@ -5,9 +5,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   deduplicateCredentialsBasedOnSelectedCalendars,
   deleteEvent,
+  getBusyCalendarTimes,
   getCalendarCredentials,
   processEvent,
 } from "./CalendarManager";
+
+const getCalendarsEventsMock: ReturnType<typeof vi.fn> = vi.hoisted(() => vi.fn());
+
+vi.mock("@calcom/features/calendars/lib/getCalendarsEvents", () => ({
+  default: getCalendarsEventsMock,
+  getCalendarsEventsWithTimezones: vi.fn(),
+}));
 
 vi.mock("@calcom/prisma", () => ({
   prisma,
@@ -97,6 +105,23 @@ function buildCalendarEvent(overrides = {}) {
 }
 
 describe("CalendarManager tests", () => {
+  describe("fn: getBusyCalendarTimes", () => {
+    it("returns the error-placeholder range when calendar availability retrieval fails", async () => {
+      getCalendarsEventsMock.mockRejectedValueOnce(new Error("Calendar request failed"));
+
+      const result = await getBusyCalendarTimes([], "2024-01-10T00:00:00Z", "2024-01-11T00:00:00Z", []);
+
+      expect(result.success).toBe(false);
+      expect(result.data).toEqual([
+        expect.objectContaining({
+          start: expect.any(String),
+          end: expect.any(String),
+          source: "error-placeholder",
+        }),
+      ]);
+    });
+  });
+
   describe("fn: processEvent", () => {
     it("should clear attendees when hideOrganizerEmail is true and no Zoho Calendar destination", () => {
       const calEvent = buildCalendarEvent({
