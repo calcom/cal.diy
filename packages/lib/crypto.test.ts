@@ -1,8 +1,29 @@
 import { describe, expect, it } from "vitest";
 
-import { symmetricDecrypt, symmetricEncrypt } from "./crypto";
+import { symmetricDecrypt, symmetricEncrypt, timingSafeEqualStrings } from "./crypto";
 
 describe("crypto", () => {
+  describe("timingSafeEqualStrings", () => {
+    it("compares equal strings", () => {
+      expect(timingSafeEqualStrings("secret", "secret")).toBe(true);
+    });
+
+    it("rejects different strings and lengths", () => {
+      expect(timingSafeEqualStrings("secret", "secrex")).toBe(false);
+      expect(timingSafeEqualStrings("secret", "secret-longer")).toBe(false);
+    });
+
+    it("rejects missing values without throwing", () => {
+      expect(timingSafeEqualStrings(null, "secret")).toBe(false);
+      expect(timingSafeEqualStrings("secret", undefined)).toBe(false);
+    });
+
+    it("supports empty strings", () => {
+      expect(timingSafeEqualStrings("", "")).toBe(true);
+      expect(timingSafeEqualStrings("", "secret")).toBe(false);
+    });
+  });
+
   const testKey = "12345678901234567890123456789012"; // 32 bytes key
   const testText = "Hello, World!";
 

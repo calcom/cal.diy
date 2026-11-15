@@ -4,6 +4,7 @@ import { v4 as uuid } from "uuid";
 import { CalendarAuth } from "@calcom/app-store/googlecalendar/lib/CalendarAuth";
 import dayjs from "@calcom/dayjs";
 import { CalendarCacheEventService } from "@calcom/features/calendar-subscription/lib/cache/CalendarCacheEventService";
+import { timingSafeEqualStrings } from "@calcom/lib/crypto";
 import logger from "@calcom/lib/logger";
 import type { SelectedCalendar } from "@calcom/prisma/client";
 
@@ -35,7 +36,7 @@ export class GoogleCalendarSubscriptionAdapter implements ICalendarSubscriptionP
       log.warn("GOOGLE_WEBHOOK_TOKEN not configured");
       return false;
     }
-    if (token !== this.GOOGLE_WEBHOOK_TOKEN) {
+    if (!timingSafeEqualStrings(token, this.GOOGLE_WEBHOOK_TOKEN)) {
       log.warn("Invalid webhook token");
       return false;
     }
