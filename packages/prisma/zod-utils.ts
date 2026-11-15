@@ -314,6 +314,7 @@ export const bookingConfirmPatchBodySchema = z.object({
   reason: z.string().optional(),
   emailsEnabled: z.boolean().default(true),
   platformClientParams: PlatformClientParamsSchema.optional(),
+  forceConfirm: z.boolean().optional(),
   actionSource: z.string().optional(),
   actor: z.unknown().optional(),
 });
