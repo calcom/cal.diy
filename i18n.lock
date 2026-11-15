@@ -3658,8 +3658,6 @@ checksums:
     total_credits_remaining: bcc2d21f1843aa761ad394ed67ca8720
     credits_per_tip_org: 379de9ef3094d35104b55fa18bfca012
     credits_per_tip_teams: b54ff6fae0c83fb2040e827e442038eb
-    view_and_manage_credits: 6ed6c8ba6e2f5472ee4489002b5d282f
-    view_and_manage_credits_description: d6cdd13f5eec3810bc0c697d3ca4dd0e
     credit_worth_description: 62c0d21706a8e70c4072d1785d5cbc1d
     buy_additional_credits: 4a3b39af3e55b16d932bb0b4b3e0f8b1
     view_additional_credits_expense_tip: 8fcfc210e71406f039c7f42b86cbd708
@@ -3849,10 +3847,6 @@ checksums:
     user_credits_low_warning: 239f90e2fe4d66e62a97100a59a29e03
     action_required_out_of_credits: 93d1fa52db6acb8c4f445052ce73d622
     action_required_user_out_of_credits: 112c1ee5e5ae06ad289684ecb3934ee4
-    low_credits_warning_message: d3194620077e2dfaa1e198c225e767f3
-    low_credits_warning_message_user: 4c9536a4463fd75fd5c15d8e1e7c9869
-    credit_limit_reached_message: d12b88a279d619ad18ff3c286ebec2b3
-    credit_limit_reached_message_user: d5446b226f841605083f7b2dd7b81065
     cal_ai_low_credits_warning_message: 046a16d3daa051588033cbed95971c67
     cal_ai_low_credits_warning_message_user: 74c1e5e72874c112065b82e72634d7d9
     cal_ai_credit_limit_reached_message: 986ae5e79423f2724f5606f26bb7dd89
