@@ -651,6 +651,12 @@ Currently Vercel Pro Plan is required to be able to Deploy this application with
 
 [![Deploy on Elestio](https://elest.io/images/logos/deploy-to-elestio-btn.png)](https://elest.io/open-source/cal.com)
 
+### ZopDay
+
+[![Deploy on ZopDay](https://zop.dev/deploytozopday-inkhard.svg)](https://zop.dev/zopday/app/deploy?image=calendso/calendso:latest&port=3000)
+
+You can deploy Cal.diy on [ZopDay](https://zop.dev/zopday), either on ZopCloud or into an AWS or GCP account you already own.
+
 <!-- LICENSE -->
 
 ## License
