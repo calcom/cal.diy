@@ -17,6 +17,7 @@ export const bookingDetailsSelect = {
   uid: true,
   rescheduled: true,
   fromReschedule: true,
+  rootBookingUid: true,
   tracking: {
     select: {
       utm_source: true,

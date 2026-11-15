@@ -207,6 +207,7 @@ export async function listBookings(
       },
       select: {
         uid: true,
+        rootBookingUid: true,
         title: true,
         description: true,
         customInputs: true,
@@ -256,6 +257,7 @@ export async function listBookings(
       const parsedMetadata = bookingMetadataSchema.safeParse(booking.metadata || {});
       return {
         ...booking,
+        rootBookingUid: booking.rootBookingUid || booking.uid,
         ...getCalEventResponses({
           bookingFields: booking.eventType?.bookingFields ?? null,
           booking,

@@ -1,4 +1,5 @@
 import dayjs from "@calcom/dayjs";
+import { getRootBookingUid } from "@calcom/features/bookings/lib/getRootBookingUid";
 import { handleWebhookTrigger } from "@calcom/features/bookings/lib/handleWebhookTrigger";
 import type { EventPayloadType } from "@calcom/features/webhooks/lib/sendPayload";
 import { ErrorCode } from "@calcom/lib/errorCodes";
@@ -56,6 +57,7 @@ const handleSeats = async (
     },
     select: {
       uid: true,
+      rootBookingUid: true,
       id: true,
       attendees: { include: { bookingSeat: true } },
       userId: true,
@@ -111,6 +113,7 @@ const handleSeats = async (
       ...evt,
       ...eventTypeInfo,
       uid: resultBooking?.uid || uid,
+      rootBookingUid: getRootBookingUid(seatedBooking),
       bookingId: seatedBooking?.id,
       attendeeSeatId: resultBooking?.seatReferenceUid,
       rescheduleUid,

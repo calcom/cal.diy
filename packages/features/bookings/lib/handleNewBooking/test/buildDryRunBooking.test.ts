@@ -99,6 +99,7 @@ describe("buildDryRunBooking", () => {
       dynamicEventSlugRef: null,
       dynamicGroupSlugRef: null,
       fromReschedule: null,
+      rootBookingUid: "DRY_RUN_UID",
       recurringEventId: null,
       scheduledJobs: [],
       rescheduledBy: null,

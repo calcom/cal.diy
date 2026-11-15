@@ -886,6 +886,8 @@ model Booking {
   dynamicGroupSlugRef    String?
   rescheduled            Boolean?
   fromReschedule         String?
+  // Stable identity across reschedules. Copied from the original booking so automations can update the same record when uid changes.
+  rootBookingUid         String?
   recurringEventId       String?
   smsReminderNumber      String?
   scheduledJobs          String[] // scheduledJobs is deprecated, please use scheduledTriggers instead
@@ -923,6 +925,7 @@ model Booking {
   @@index([status])
   @@index([startTime, endTime, status])
   @@index([fromReschedule])
+  @@index([rootBookingUid])
   @@index([userId, endTime])
   @@index([userId, status, startTime])
   @@index([eventTypeId, status])

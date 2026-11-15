@@ -65,6 +65,7 @@ export type RescheduleSeatedBookingObject = NewSeatedBookingObject & { reschedul
 export type SeatedBooking = Prisma.BookingGetPayload<{
   select: {
     uid: true;
+    rootBookingUid: true;
     id: true;
     attendees: { include: { bookingSeat: true } };
     userId: true;

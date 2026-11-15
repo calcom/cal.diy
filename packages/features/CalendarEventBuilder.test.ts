@@ -445,6 +445,19 @@ describe("CalendarEventBuilder", () => {
     }
   });
 
+  it("should create an event with a persistent root booking uid", () => {
+    const event = createBuilder()
+      .withEventType({
+        id: 123,
+      })
+      .withUid("booking-uid-456")
+      .withRootBookingUid("booking-uid-123")
+      .build();
+
+    expect(event.rootBookingUid).toBe("booking-uid-123");
+    expect(event.uid).toBe("booking-uid-456");
+  });
+
   it("should create an event with one-time password", () => {
     const event = createBuilder()
       .withEventType({
