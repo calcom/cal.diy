@@ -4,6 +4,7 @@
 import process from "node:process";
 import dayjs from "@calcom/dayjs";
 import { symmetricDecrypt } from "@calcom/lib/crypto";
+import { createRecurringEventIterator } from "@calcom/lib/recurringEventIterator";
 import type {
   Calendar,
   CalendarEvent,
@@ -138,7 +139,6 @@ class ICSFeedCalendarService implements Calendar {
 
   async getAvailability(params: GetAvailabilityParams): Promise<EventBusyDate[]> {
     const { dateFrom, dateTo, selectedCalendars } = params;
-    const startISOString = new Date(dateFrom).toISOString();
 
     const calendars = await this.fetchCalendars();
 
@@ -214,7 +214,6 @@ class ICSFeedCalendarService implements Calendar {
         applyTravelDuration(event, getTravelDurationInSeconds(vevent));
 
         if (event.isRecurring()) {
-          let maxIterations = 365;
           if (["HOURLY", "SECONDLY", "MINUTELY"].includes(event.getRecurrenceTypes())) {
             console.error(`Won't handle [${event.getRecurrenceTypes()}] recurrence`);
             return;
@@ -222,24 +221,26 @@ class ICSFeedCalendarService implements Calendar {
 
           const start = dayjs(dateFrom);
           const end = dayjs(dateTo);
-          const startDate = ICAL.Time.fromDateTimeString(startISOString);
-          startDate.hour = event.startDate.hour;
-          startDate.minute = event.startDate.minute;
-          startDate.second = event.startDate.second;
-          const iterator = event.iterator(startDate);
-          let current: ICAL.Time;
-          let currentEvent;
-          let currentStart = null;
-          let currentError;
+          // In ical.js, seeding the iterator with the query window overrides DTSTART,
+          // shifting WEEKLY rules without BYDAY to the queried weekday and breaking COUNT.
+          let maxIterations = 5000;
+          const iterator = createRecurringEventIterator(event, start);
+          let current: ICAL.Time | null = null;
+          let currentEvent: ReturnType<typeof event.getOccurrenceDetails> | undefined;
+          let currentStart: ReturnType<typeof dayjs> | null = null;
+          let currentError: string | undefined;
 
-          while (
-            maxIterations > 0 &&
-            (currentStart === null || currentStart.isAfter(end) === false) &&
-            // this iterator was poorly implemented, normally done is expected to be
-            // returned
-            (current = iterator.next())
-          ) {
+          while (maxIterations > 0 && (currentStart === null || currentStart.isAfter(end) === false)) {
             maxIterations -= 1;
+
+            try {
+              current = iterator.next();
+            } catch (error) {
+              console.warn("Error advancing recurring event iterator:", error);
+              break;
+            }
+
+            if (!current) break;
 
             try {
               // @see https://github.com/mozilla-comm/ical.js/issues/514
@@ -249,7 +250,7 @@ class ICSFeedCalendarService implements Calendar {
                 currentError = error.message;
               }
             }
-            if (!currentEvent) return;
+            if (!currentEvent) break;
             // do not mix up caldav and icalendar! For the recurring events here, the timezone
             // provided is relevant, not as pointed out in https://datatracker.ietf.org/doc/html/rfc4791#section-9.6.5
             // where recurring events are always in utc (in caldav!). Thus, apply the time zone here.
@@ -269,7 +270,7 @@ class ICSFeedCalendarService implements Calendar {
             }
           }
           if (maxIterations <= 0) {
-            console.warn("could not find any occurrence for recurring event in 365 iterations");
+            console.warn("could not find all occurrences for recurring event within 5000 iterations");
           }
           return;
         }

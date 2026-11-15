@@ -1,5 +1,5 @@
 import { createEvent as createIcsEvent } from "ics";
-import { createCalendarObject, updateCalendarObject } from "tsdav";
+import { createCalendarObject, fetchCalendarObjects, updateCalendarObject } from "tsdav";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("ics", () => ({
@@ -745,6 +745,145 @@ describe("CalendarService - SCHEDULE-AGENT injection", () => {
       const event = createMockEvent();
 
       await expect(service.createEvent(event, 1)).rejects.toThrow();
+    });
+  });
+
+  describe("CalendarService - Recurring Events & Recurrence Expansion", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    const selectedCalendars = [
+      {
+        externalId: "https://caldav.example.com/calendar/",
+        integration: "caldav",
+        credentialId: 1,
+      },
+    ];
+
+    it("skips weekly event without BYDAY when queried on another weekday", async () => {
+      const service = new TestCalendarService();
+      // Monday 2025-08-25 event with RRULE:FREQ=WEEKLY (no BYDAY)
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:weekly-no-byday\r\nSUMMARY:Weekly Monday Meeting\r\nDTSTART:20250825T143000Z\r\nDTEND:20250825T160000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/weekly.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      // Query on Thursday 2026-10-29
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-29T00:00:00Z",
+        dateTo: "2026-10-29T23:59:59Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toEqual([]);
+    });
+
+    it("returns busy block for weekly event without BYDAY on its weekday", async () => {
+      const service = new TestCalendarService();
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:weekly-no-byday\r\nSUMMARY:Weekly Monday Meeting\r\nDTSTART:20250825T143000Z\r\nDTEND:20250825T160000Z\r\nRRULE:FREQ=WEEKLY\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/weekly.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      // Query on Monday 2026-10-26 (contains 14:30Z)
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T12:00:00Z",
+        dateTo: "2026-10-26T18:00:00Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toHaveLength(1);
+      expect(availability[0].start).toBe("2026-10-26T14:30:00.000Z");
+      expect(availability[0].end).toBe("2026-10-26T16:00:00.000Z");
+    });
+
+    it("should produce no busy blocks for an expired series with COUNT", async () => {
+      const service = new TestCalendarService();
+      // Monday 2025-08-25 event with COUNT=3 (ends 2025-09-08)
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:weekly-count-3\r\nSUMMARY:Three Weeks Only\r\nDTSTART:20250825T143000Z\r\nDTEND:20250825T160000Z\r\nRRULE:FREQ=WEEKLY;COUNT=3\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/weekly-count.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      // Query on Monday 2026-11-02 (long after series expired)
+      const availability = await service.getAvailability({
+        dateFrom: "2026-11-02T12:00:00Z",
+        dateTo: "2026-11-02T18:00:00Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toEqual([]);
+    });
+
+    it("handles long-running daily recurrence without COUNT via period jump", async () => {
+      const service = new TestCalendarService();
+      // Daily event starting in 2010 (~6000 days before 2026 query window)
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:daily-ancient\r\nSUMMARY:Daily Standup\r\nDTSTART:20100101T090000Z\r\nDTEND:20100101T093000Z\r\nRRULE:FREQ=DAILY\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/daily.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      const availability = await service.getAvailability({
+        dateFrom: "2026-10-26T00:00:00Z",
+        dateTo: "2026-10-26T23:59:59Z",
+        selectedCalendars,
+      });
+
+      expect(availability).toHaveLength(1);
+      expect(availability[0].start).toBe("2026-10-26T09:00:00.000Z");
+      expect(availability[0].end).toBe("2026-10-26T09:30:00.000Z");
+    });
+
+    it("preserves INTERVAL phase when jumping ahead for biweekly recurrence", async () => {
+      const service = new TestCalendarService();
+      // Biweekly Monday series starting 2020-01-06
+      const mockIcs = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\nBEGIN:VEVENT\r\nUID:biweekly-phase\r\nSUMMARY:Biweekly Sync\r\nDTSTART:20200106T100000Z\r\nDTEND:20200106T110000Z\r\nRRULE:FREQ=WEEKLY;INTERVAL=2\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+
+      vi.mocked(fetchCalendarObjects).mockResolvedValue([
+        {
+          url: "https://caldav.example.com/calendar/biweekly.ics",
+          etag: '"123"',
+          data: mockIcs,
+        },
+      ]);
+
+      // 2026-10-19 is 2478 days (177 * 14) after DTSTART -> on-phase
+      const onPhase = await service.getAvailability({
+        dateFrom: "2026-10-19T00:00:00Z",
+        dateTo: "2026-10-19T23:59:59Z",
+        selectedCalendars,
+      });
+      expect(onPhase).toHaveLength(1);
+      expect(onPhase[0].start).toBe("2026-10-19T10:00:00.000Z");
+
+      // 2026-10-26 is 2485 days after DTSTART -> off-phase
+      const offPhase = await service.getAvailability({
+        dateFrom: "2026-10-26T00:00:00Z",
+        dateTo: "2026-10-26T23:59:59Z",
+        selectedCalendars,
+      });
+      expect(offPhase).toEqual([]);
     });
   });
 });
