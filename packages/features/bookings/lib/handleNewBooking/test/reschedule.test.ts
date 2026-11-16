@@ -3391,5 +3391,112 @@ describe("handleNewBooking", () => {
       },
       timeout
     );
+
+    test(
+      "should keep delegationCredentialId and thirdPartyRecurringEventId on the references of the rescheduled booking",
+      async () => {
+        const handleNewBooking = getNewBookingHandler();
+        const booker = getBooker({
+          email: "booker@example.com",
+          name: "Booker",
+        });
+
+        const organizer = getOrganizer({
+          name: "Organizer",
+          email: "organizer@example.com",
+          id: 101,
+          schedules: [TestData.schedules.IstWorkHours],
+          credentials: [getGoogleCalendarCredential()],
+          selectedCalendars: [TestData.selectedCalendars.google],
+        });
+
+        const { dateString: plus1DateString } = getDate({ dateIncrement: 1 });
+        const uidOfBookingToBeRescheduled = "n5Wv3eHgconAED2j4gcVhP";
+
+        await createBookingScenario(
+          getScenarioData({
+            eventTypes: [
+              {
+                id: 1,
+                slotInterval: 15,
+                length: 15,
+                users: [
+                  {
+                    id: 101,
+                  },
+                ],
+              },
+            ],
+            bookings: [
+              {
+                uid: uidOfBookingToBeRescheduled,
+                eventTypeId: 1,
+                status: BookingStatus.ACCEPTED,
+                startTime: `${plus1DateString}T05:00:00.000Z`,
+                endTime: `${plus1DateString}T05:15:00.000Z`,
+                references: [
+                  getMockBookingReference({
+                    type: appStoreMetadata.googlecalendar.type,
+                    uid: "MOCK_ID",
+                    meetingId: "MOCK_ID",
+                    meetingPassword: "MOCK_PASSWORD",
+                    meetingUrl: "https://UNUSED_URL",
+                    externalCalendarId: "MOCK_EXTERNAL_CALENDAR_ID",
+                    credentialId: 1,
+                    delegationCredentialId: "delegation-credential-id",
+                    thirdPartyRecurringEventId: "third-party-recurring-event-id",
+                  }),
+                ],
+              },
+            ],
+            organizer,
+            apps: [TestData.apps["google-calendar"]],
+          })
+        );
+
+        await mockCalendarToHaveNoBusySlots("googlecalendar", {
+          create: { uid: "MOCK_ID" },
+          update: { uid: "UPDATED_MOCK_ID" },
+        });
+
+        const mockBookingData = getMockRequestDataForBooking({
+          data: {
+            eventTypeId: 1,
+            rescheduleUid: uidOfBookingToBeRescheduled,
+            start: `${plus1DateString}T04:00:00.000Z`,
+            end: `${plus1DateString}T04:15:00.000Z`,
+            responses: {
+              email: booker.email,
+              name: booker.name,
+            },
+          },
+        });
+
+        const createdBooking = await handleNewBooking({
+          bookingData: mockBookingData,
+        });
+
+        const newBooking = await prismaMock.booking.findFirst({
+          where: {
+            uid: createdBooking.uid,
+          },
+          include: {
+            references: true,
+          },
+        });
+
+        expect(newBooking?.references).toHaveLength(1);
+        expect(newBooking?.references[0]).toEqual(
+          expect.objectContaining({
+            type: appStoreMetadata.googlecalendar.type,
+            uid: "MOCK_ID",
+            credentialId: 1,
+            delegationCredentialId: "delegation-credential-id",
+            thirdPartyRecurringEventId: "third-party-recurring-event-id",
+          })
+        );
+      },
+      timeout
+    );
   });
 });
