@@ -25,10 +25,6 @@ vi.mock("@calcom/trpc/react/hooks/useMeQuery", () => ({
   default: () => mockUseMeQuery(),
 }));
 
-vi.mock("@calcom/web/modules/api-keys/support/lib/freshchat/FreshChatProvider", () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
 vi.mock("@calcom/ui/components/avatar", () => ({
   Avatar: () => <div data-testid="avatar">Avatar</div>,
 }));
