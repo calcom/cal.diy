@@ -90,7 +90,12 @@ export function mergeOverlappingDateRanges(dateRanges: TimeRange[]) {
       const currentDateRange = dateRanges[i];
       //If the last merged date range overlaps with the current date range, merge them
       if (lastMergedDateRange.end.getTime() >= currentDateRange.start.getTime()) {
-        lastMergedDateRange.end = currentDateRange.end;
+        lastMergedDateRange.end = new Date(
+          Math.max(
+            lastMergedDateRange.end.getTime(),
+            currentDateRange.end.getTime()
+          )
+        );
       } else {
         //Otherwise, add the current date range to the merged date ranges array
         mergedDateRanges.push(currentDateRange);
