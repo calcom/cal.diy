@@ -2,6 +2,7 @@ import { verifyCodeUnAuthenticated } from "@calcom/features/auth/lib/verifyCodeU
 import { ErrorCode } from "@calcom/lib/errorCodes";
 import { ErrorWithCode } from "@calcom/lib/errors";
 import { extractBaseEmail } from "@calcom/lib/extract-base-email";
+import { getBlacklistedGuestEmails } from "@calcom/lib/getBlacklistedGuestEmails";
 import prisma from "@calcom/prisma";
 
 export const checkIfBookerEmailIsBlocked = async ({
@@ -17,13 +18,7 @@ export const checkIfBookerEmailIsBlocked = async ({
 }) => {
   const baseEmail = extractBaseEmail(bookerEmail);
 
-  const blacklistedGuestEmails = process.env.BLACKLISTED_GUEST_EMAILS
-    ? process.env.BLACKLISTED_GUEST_EMAILS.split(",")
-    : [];
-
-  const blacklistedByEnv = blacklistedGuestEmails.find(
-    (guestEmail: string) => guestEmail.toLowerCase() === baseEmail.toLowerCase()
-  );
+  const blacklistedByEnv = getBlacklistedGuestEmails().includes(baseEmail.toLowerCase());
 
   const user = await prisma.user.findFirst({
     where: {
