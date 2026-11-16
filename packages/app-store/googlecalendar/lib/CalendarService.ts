@@ -297,26 +297,55 @@ class GoogleCalendarService implements Calendar {
       }
 
       if (event && event.id && event.hangoutLink) {
-        await calendar.events.patch({
-          // Update the same event but this time we know the hangout link
-          calendarId: selectedCalendar,
-          eventId: event.id || "",
-          requestBody: {
-            description: getRichDescription({
-              ...calEvent,
-              additionalInformation: { hangoutLink: event.hangoutLink },
-            }),
-            location: getLocation({
-              videoCallData: calEvent.videoCallData,
-              additionalInformation: {
-                ...calEvent.additionalInformation,
-                hangoutLink: event.hangoutLink,
+        // Google throttles a write to a freshly created event: a PATCH sent right after `events.insert` can answer
+        // 403 usageLimits/rateLimitExceeded (measured: 3 of 6 immediate patches fail, a retry ~1 s later passes).
+        // The event already exists with its hangoutLink, so this follow-up is cosmetic: retry it with backoff and, if
+        // it still fails, keep the created event so its id is stored and cancel/reschedule still reach Google.
+        const backoffMs = [1000, 2000, 4000];
+        for (let attempt = 0; ; attempt++) {
+          try {
+            await calendar.events.patch({
+              // Update the same event but this time we know the hangout link
+              calendarId: selectedCalendar,
+              eventId: event.id || "",
+              requestBody: {
+                description: getRichDescription({
+                  ...calEvent,
+                  additionalInformation: { hangoutLink: event.hangoutLink },
+                }),
+                location: getLocation({
+                  videoCallData: calEvent.videoCallData,
+                  additionalInformation: {
+                    ...calEvent.additionalInformation,
+                    hangoutLink: event.hangoutLink,
+                  },
+                  location: calEvent.location,
+                  uid: calEvent.uid,
+                }),
               },
-              location: calEvent.location,
-              uid: calEvent.uid,
-            }),
-          },
-        });
+            });
+            break;
+          } catch (patchError) {
+            // gaxios throws a GaxiosError whose .response.data carries Google's error envelope
+            const googleErrors = (patchError as { response?: { data?: { error?: { errors?: { reason?: string }[] } } } })
+              ?.response?.data?.error?.errors;
+            const reason = googleErrors?.[0]?.reason;
+            const retryable = reason === "rateLimitExceeded" || reason === "userRateLimitExceeded";
+            if (retryable && attempt < backoffMs.length) {
+              this.log.warn(
+                `Google Calendar patch after insert throttled (${reason}); retry ${attempt + 1} in ${backoffMs[attempt]} ms`,
+                safeStringify({ eventId: event.id, selectedCalendar, credentialId })
+              );
+              await new Promise((resolve) => setTimeout(resolve, backoffMs[attempt]));
+              continue;
+            }
+            this.log.error(
+              "Google Calendar patch after insert failed; keeping the created event",
+              safeStringify({ error: patchError, eventId: event.id, selectedCalendar, credentialId })
+            );
+            break;
+          }
+        }
       }
 
       return {
