@@ -208,6 +208,66 @@ describe("Booking Validation Specifications", () => {
         })
       ).rejects.toThrow("Cannot use this email to create the booking.");
     });
+
+    test("blocks a blacklisted email listed after whitespace in BLACKLISTED_GUEST_EMAILS", async () => {
+      const handleNewBooking = getNewBookingHandler();
+      const blockedEmail = "blocked@example.com";
+
+      const booker = getBooker({
+        email: blockedEmail,
+        name: "Unverified User",
+      });
+
+      const organizer = getOrganizer({
+        name: "Organizer",
+        email: "organizer@example.com",
+        id: 101,
+        schedules: [TestData.schedules.IstWorkHours],
+        credentials: [getGoogleCalendarCredential()],
+        selectedCalendars: [TestData.selectedCalendars.google],
+        emailVerified: null,
+      });
+
+      process.env.BLACKLISTED_GUEST_EMAILS = "spam@test.com, blocked@example.com";
+
+      await createBookingScenario(
+        getScenarioData({
+          eventTypes: [
+            {
+              id: 1,
+              slotInterval: 30,
+              length: 30,
+              users: [
+                {
+                  id: 101,
+                },
+              ],
+            },
+          ],
+          organizer,
+          apps: [TestData.apps["google-calendar"]],
+        })
+      );
+
+      await mockCalendarToHaveNoBusySlots("googlecalendar", {});
+
+      const mockBookingData = getMockRequestDataForBooking({
+        data: {
+          eventTypeId: 1,
+          responses: {
+            email: booker.email,
+            name: booker.name,
+            location: { optionValue: "", value: "New York" },
+          },
+        },
+      });
+
+      await expect(
+        handleNewBooking({
+          bookingData: mockBookingData,
+        })
+      ).rejects.toThrow("Cannot use this email to create the booking.");
+    });
   });
 
   describe("Active Bookings Limit Validation", () => {

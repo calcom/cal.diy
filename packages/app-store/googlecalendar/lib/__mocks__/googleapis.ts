@@ -4,6 +4,7 @@ const setCredentialsMock = vi.fn();
 const freebusyQueryMock = vi.fn();
 const calendarListMock = vi.fn();
 const calendarsGetMock = vi.fn();
+const eventsListMock = vi.fn();
 const calendarMockImplementation = {
   channels: {
     stop: vi.fn().mockResolvedValue(undefined),
@@ -15,6 +16,7 @@ const calendarMockImplementation = {
     get: calendarsGetMock,
   },
   events: {
+    list: eventsListMock,
     watch: vi.fn().mockResolvedValue({
       data: {
         kind: "api#channel",
@@ -130,6 +132,7 @@ export {
   setCredentialsMock,
   freebusyQueryMock,
   calendarListMock,
+  eventsListMock,
   getLastCreatedJWT,
   getLastCreatedOAuth2Client,
   setLastCreatedJWT,

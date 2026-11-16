@@ -43,6 +43,8 @@ export type { UseSlotsReturnType } from "./hooks/useSlots";
 export type { UseVerifyCodeReturnType } from "./hooks/useVerifyCode";
 export type { UseVerifyEmailReturnType } from "./hooks/useVerifyEmail";
 
+export type OverlaySocialLoginProvider = "google" | "azure-ad";
+
 export type WrappedBookerPropsMain = {
   sessionUsername?: string | null;
   rescheduleUid: string | null;
@@ -52,7 +54,8 @@ export type WrappedBookerPropsMain = {
   fromUserNameRedirected: string;
   hasSession: boolean;
   onOverlayClickNoCalendar: () => void;
-  onClickOverlayContinue: () => void;
+  onClickOverlayContinue: (socialLoginProvider?: OverlaySocialLoginProvider) => void;
+  overlaySocialLoginProviders?: OverlaySocialLoginProvider[];
   onOverlaySwitchStateChange: (state: boolean) => void;
   extraOptions: Record<string, string | string[]>;
   bookings: UseBookingsReturnType;
@@ -66,6 +69,7 @@ export type WrappedBookerPropsMain = {
         integrationTitle?: string;
         externalId: string;
         primary: boolean | null;
+        isSelected?: boolean;
       }[];
       credentialId: number;
       delegationCredentialId?: string | null;

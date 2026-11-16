@@ -12,7 +12,8 @@ type OverlayCalendarProps = Pick<
 > & {
   handleClickNoCalendar: () => void;
   hasSession: boolean;
-  handleClickContinue: () => void;
+  handleClickContinue: WrappedBookerPropsMain["onClickOverlayContinue"];
+  socialLoginProviders?: WrappedBookerPropsMain["overlaySocialLoginProviders"];
   handleSwitchStateChange: (state: boolean) => void;
 };
 
@@ -24,6 +25,7 @@ export const OverlayCalendar = ({
   handleClickNoCalendar,
   handleSwitchStateChange,
   handleClickContinue,
+  socialLoginProviders,
   hasSession,
 }: OverlayCalendarProps): JSX.Element | null => {
   const isPlatform = useIsPlatform();
@@ -60,6 +62,7 @@ export const OverlayCalendar = ({
           open={isOpenOverlayContinueModal && !isOverlayCalendarEnabled}
           onClose={handleCloseContinueModal}
           onContinue={handleClickContinue}
+          socialLoginProviders={socialLoginProviders}
         />
       )}
       <OverlayCalendarSettingsModal

@@ -116,7 +116,7 @@ function postToDailyAPI(endpoint: string, body: Record<string, unknown>) {
 const ShimmerDailyVideoApiAdapter = (): VideoApiAdapter => {
   async function createOrUpdateMeeting(endpoint: string, event: CalendarEvent): Promise<VideoCallData> {
     if (!event.uid) {
-      throw new Error("We need need the booking uid to create the Daily reference in DB");
+      throw new Error("We need the booking uid to create the Daily reference in DB");
     }
     const body = await translateEvent();
     const dailyEvent = await postToDailyAPI(endpoint, body).then(dailyReturnTypeSchema.parse);

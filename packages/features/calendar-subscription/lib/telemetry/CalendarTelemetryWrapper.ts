@@ -181,6 +181,10 @@ export class CalendarTelemetryWrapper implements Calendar {
     return results ?? [];
   }
 
+  getAvailabilityWithTitles(params: GetAvailabilityParams): Promise<EventBusyDate[]> {
+    return this.deps.originalCalendar.getAvailabilityWithTitles?.(params) ?? this.getAvailability(params);
+  }
+
   fetchAvailabilityAndSetCache?(selectedCalendars: IntegrationCalendar[]): Promise<unknown> {
     return this.deps.originalCalendar.fetchAvailabilityAndSetCache?.(selectedCalendars) || Promise.resolve();
   }

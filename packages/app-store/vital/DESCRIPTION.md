@@ -3,7 +3,7 @@ items:
   - 1.jpg
 ---
 
-Vital App is an app that can can help you combine your health peripherals with your calendar.
+Vital App is an app that can help you combine your health peripherals with your calendar.
 
 #### Supported Actions:
 

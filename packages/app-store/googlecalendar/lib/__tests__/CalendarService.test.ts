@@ -8,6 +8,7 @@ import {
   adminMock,
   calendarListMock,
   calendarMock,
+  eventsListMock,
   freebusyQueryMock,
   setCredentialsMock,
   setLastCreatedJWT,
@@ -121,6 +122,106 @@ describe("getAvailability", () => {
     });
 
     expect(availabilityWithAllCalendarsAsFallback).toEqual([...mockedBusyTimes1, ...mockedBusyTimes2]);
+  });
+});
+
+describe("getAvailabilityWithTitles", () => {
+  const selectedCalendar = { integration: "google_calendar", externalId: "calendar1@test.com" };
+
+  test("returns the events that block availability with their titles", async () => {
+    const calendarService = BuildCalendarService(mockCredential);
+    setFullMockOAuthManagerRequest();
+    eventsListMock
+      .mockResolvedValueOnce({
+        data: {
+          timeZone: "Asia/Kolkata",
+          nextPageToken: "page2",
+          items: [
+            {
+              summary: "Standup",
+              start: { dateTime: "2024-01-10T10:00:00+05:30" },
+              end: { dateTime: "2024-01-10T10:30:00+05:30" },
+            },
+            {
+              summary: "Marked as free",
+              transparency: "transparent",
+              start: { dateTime: "2024-01-10T11:00:00+05:30" },
+              end: { dateTime: "2024-01-10T12:00:00+05:30" },
+            },
+            {
+              summary: "Declined by me",
+              attendees: [{ self: true, responseStatus: "declined" }],
+              start: { dateTime: "2024-01-10T13:00:00+05:30" },
+              end: { dateTime: "2024-01-10T14:00:00+05:30" },
+            },
+            {
+              summary: "Declined by someone else",
+              attendees: [{ responseStatus: "declined" }, { self: true, responseStatus: "accepted" }],
+              start: { dateTime: "2024-01-10T15:00:00+05:30" },
+              end: { dateTime: "2024-01-10T16:00:00+05:30" },
+            },
+          ],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          timeZone: "Asia/Kolkata",
+          items: [
+            // All-day events only have a date and start at midnight in the timezone of the calendar
+            { summary: "Conference", start: { date: "2024-01-11" }, end: { date: "2024-01-13" } },
+            // Private event on a shared calendar, Google doesn't return a title for those
+            {
+              start: { dateTime: "2024-01-12T09:00:00+05:30" },
+              end: { dateTime: "2024-01-12T10:00:00+05:30" },
+            },
+          ],
+        },
+      });
+
+    const result = await calendarService.getAvailabilityWithTitles?.({
+      dateFrom: "2024-01-10T00:00:00Z",
+      dateTo: "2024-01-14T00:00:00Z",
+      selectedCalendars: [selectedCalendar],
+      mode: "overlay",
+    });
+
+    expect(result).toEqual([
+      { start: "2024-01-10T10:00:00+05:30", end: "2024-01-10T10:30:00+05:30", title: "Standup" },
+      {
+        start: "2024-01-10T15:00:00+05:30",
+        end: "2024-01-10T16:00:00+05:30",
+        title: "Declined by someone else",
+      },
+      { start: "2024-01-10T18:30:00.000Z", end: "2024-01-12T18:30:00.000Z", title: "Conference" },
+      { start: "2024-01-12T09:00:00+05:30", end: "2024-01-12T10:00:00+05:30" },
+    ]);
+    expect(eventsListMock).toHaveBeenCalledTimes(2);
+    expect(eventsListMock).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        calendarId: "calendar1@test.com",
+        timeMin: "2024-01-10T00:00:00Z",
+        timeMax: "2024-01-14T00:00:00Z",
+        singleEvents: true,
+        pageToken: undefined,
+      })
+    );
+    expect(eventsListMock).toHaveBeenNthCalledWith(2, expect.objectContaining({ pageToken: "page2" }));
+  });
+
+  test("returns nothing when only calendars of other integrations are selected", async () => {
+    const calendarService = BuildCalendarService(mockCredential);
+    setFullMockOAuthManagerRequest();
+
+    const result = await calendarService.getAvailabilityWithTitles?.({
+      dateFrom: "2024-01-10T00:00:00Z",
+      dateTo: "2024-01-14T00:00:00Z",
+      selectedCalendars: [{ integration: "office365_calendar", externalId: "other" }],
+      mode: "overlay",
+    });
+
+    expect(result).toEqual([]);
+    expect(eventsListMock).not.toHaveBeenCalled();
   });
 });
 

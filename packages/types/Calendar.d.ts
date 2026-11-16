@@ -58,6 +58,7 @@ export type EventBusyDate = {
   end: Date | string;
   source?: string | null;
   timeZone?: string;
+  title?: string;
 };
 
 export type EventBusyDetails = EventBusyDate & {
@@ -265,7 +266,8 @@ export interface IntegrationCalendar extends Ensure<Partial<_SelectedCalendar>, 
 /**
  * Mode for calendar fetch operations to control caching behavior:
  * - "slots": For getting actual calendar availability (uses cache when available)
- * - "overlay": For getting overlay calendar availability (does not use cache)
+ * - "overlay": For the calendar owner looking at their own calendars, e.g. overlay calendar and troubleshooter
+ *   (does not use cache, includes event titles from calendars that support getAvailabilityWithTitles)
  * - "booking": For booking confirmation (does not use cache)
  * - "none": For operations that don't use getAvailability (e.g., deleteEvent, listCalendars)
  */
@@ -311,6 +313,9 @@ export interface Calendar {
 
   // for OOO calibration (only google calendar for now)
   getAvailabilityWithTimeZones?(params: GetAvailabilityParams): Promise<EventBusyDate[]>;
+
+  // Event titles are private, the result must only ever be shown to the owner of the calendar
+  getAvailabilityWithTitles?(params: GetAvailabilityParams): Promise<EventBusyDate[]>;
 
   fetchAvailabilityAndSetCache?(selectedCalendars: IntegrationCalendar[]): Promise<unknown>;
 

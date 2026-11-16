@@ -32,7 +32,7 @@ services:
     networks:
       - stack
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
 
   calcom:
     image: calcom.docker.scarf.sh/calcom/cal.diy
@@ -124,7 +124,7 @@ services:
     networks:
       - stack
     ports:
-      - 5555:5555
+      - "127.0.0.1:5555:5555"
     env_file: .env
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}

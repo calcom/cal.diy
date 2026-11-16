@@ -194,7 +194,7 @@ Modal's Iframe Reuse and Reload Conditions. There could be four situations:
 
 - **Connect but don't fetch the slots**:
   - Only embed `config` changes (handled via "connect" flow)
-  - Query query params changes (handled via "connect" flow)
+  - Query params changes (handled via "connect" flow)
   - Crossed slots stale time threshold (EMBED_MODAL_IFRAME_SLOT_STALE_TIME)
 
 - **Connect and fetch the slots**:

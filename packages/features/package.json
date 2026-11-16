@@ -24,7 +24,7 @@
     "@evyweb/ioctopus": "1.2.0",
     "@tanstack/react-table": "8.20.6",
     "@tanstack/react-virtual": "3.10.9",
-    "@trigger.dev/sdk": "4.3.2",
+    "@trigger.dev/sdk": "4.5.4",
     "@vercel/functions": "1.4.0",
     "city-timezones": "1.2.1",
     "class-variance-authority": "0.7.1",
@@ -52,6 +52,6 @@
     "@testing-library/react-hooks": "8.0.1",
     "@types/deasync": "^0",
     "@types/web-push": "3.6.3",
-    "trigger.dev": "4.3.2"
+    "trigger.dev": "4.5.4"
   }
 }

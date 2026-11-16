@@ -463,6 +463,7 @@ export function expectSuccessfulBookingCreationEmails({
   booking,
   destinationEmail,
   calendarType,
+  appsStatus,
 }: {
   emails: Fixtures["emails"];
   organizer: { email: string; name: string; timeZone: string };
@@ -476,6 +477,7 @@ export function expectSuccessfulBookingCreationEmails({
   booking: { uid: string; urlOrigin?: string };
   destinationEmail?: string;
   calendarType?: string;
+  appsStatus?: AppsStatus[];
 }) {
   const bookingUrlOrigin = booking.urlOrigin || WEBAPP_URL;
   expect(emails).toHaveEmail(
@@ -483,6 +485,7 @@ export function expectSuccessfulBookingCreationEmails({
       titleTag: "confirmed_event_type_subject",
       heading: recurrence ? "new_event_scheduled_recurring" : "new_event_scheduled",
       subHeading: "",
+      appsStatus,
       links: recurrence
         ? [
             {

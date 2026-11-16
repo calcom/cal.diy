@@ -51,6 +51,7 @@ interface BodyValue {
   end: { dateTime: string };
   evt: { showAs: string };
   start: { dateTime: string };
+  subject?: string;
 }
 
 class Office365CalendarService implements Calendar {
@@ -366,6 +367,17 @@ class Office365CalendarService implements Calendar {
   }
 
   async getAvailability(params: GetAvailabilityParams): Promise<EventBusyDate[]> {
+    return this.fetchBusyTimes(params, "showAs,start,end");
+  }
+
+  async getAvailabilityWithTitles(params: GetAvailabilityParams): Promise<EventBusyDate[]> {
+    return this.fetchBusyTimes(params, "showAs,start,end,subject");
+  }
+
+  private async fetchBusyTimes(
+    params: GetAvailabilityParams,
+    selectFields: string
+  ): Promise<EventBusyDate[]> {
     const { dateFrom, dateTo, selectedCalendars } = params;
     const dateFromParsed = new Date(dateFrom);
     const dateToParsed = new Date(dateTo);
@@ -376,7 +388,7 @@ class Office365CalendarService implements Calendar {
 
     // Request maximum page size (999) to minimize pagination rounds
     // Microsoft Graph allows up to 999 items per page for calendarView
-    const calendarSelectParams = "$select=showAs,start,end&$top=999";
+    const calendarSelectParams = `$select=${selectFields}&$top=999`;
 
     try {
       const selectedCalendarIds = selectedCalendars.reduce((calendarIds, calendar) => {
@@ -701,6 +713,7 @@ class Office365CalendarService implements Calendar {
             return acc.concat({
               start: `${evt.start.dateTime}Z`,
               end: `${evt.end.dateTime}Z`,
+              ...(evt.subject ? { title: evt.subject } : {}),
             });
           }, [])
         );

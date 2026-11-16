@@ -24,7 +24,7 @@ export const useOverlayCalendar = ({
   handleToggleConnectedCalendar: (externalCalendarId: string, credentialId: number) => void;
   checkIsCalendarToggled: (externalId: string, credentialId: number) => boolean;
 } => {
-  const { set, toggleValue, hasItem } = useLocalSet<ToggledConnectedCalendars>(
+  const { set, addValue, toggleValue, hasItem } = useLocalSet<ToggledConnectedCalendars>(
     "toggledConnectedCalendars",
     []
   );
@@ -60,15 +60,16 @@ export const useOverlayCalendar = ({
   }, [overlayBusyDates]);
 
   useEffect(() => {
-    if (connectedCalendars && set.size === 0 && !initalised) {
-      connectedCalendars.forEach((item) => {
-        item.calendars?.forEach((cal) => {
-          const id = { credentialId: item.credentialId, externalId: cal.externalId };
-          if (cal.primary) {
-            toggleValue(id);
-          }
-        });
-      });
+    // Wait for the connected calendars to load, otherwise we'd initialise with nothing
+    if (connectedCalendars?.length && set.size === 0 && !initalised) {
+      // Start with the calendars the user checks for conflicts, that's what they consider themselves busy with
+      const defaultCalendars = connectedCalendars.flatMap((item) =>
+        (item.calendars ?? [])
+          .filter((cal) => cal.isSelected ?? cal.primary)
+          .map((cal) => ({ credentialId: item.credentialId, externalId: cal.externalId }))
+      );
+      defaultCalendars.forEach(addValue);
+      onToggleCalendar(new Set(defaultCalendars));
       setInitalised(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
