@@ -377,189 +377,63 @@ Note: `docker compose` without the hyphen is now the primary method of using doc
 
 #### Running Cal.diy with Docker Compose
 
-1. Clone the repository
+The Compose setup builds the web app and API images from this checkout. It does not require a published `latest` image.
+A local PostgreSQL database must be started before the application images are built because Next.js reads the database during its production build.
 
-   ```bash
+1. Clone the repository and enter it:
+
+   ```sh
    git clone --recursive https://github.com/calcom/cal.diy.git
-   ```
-
-2. Change into the directory
-
-   ```bash
    cd cal.diy
    ```
 
-3. Prepare your configuration: Rename `.env.example` to `.env` and then update `.env`
+2. (Optional) Copy the environment example if you want to change settings:
 
-   ```bash
+   ```sh
    cp .env.example .env
    ```
 
-   Most configurations can be left as-is, but for configuration options see [Important Run-time variables](#important-run-time-variables) below.
+   Compose has local development defaults and can run without `.env`. The built-in secrets and database password are for local development only. For any non-local deployment, set strong values for `NEXTAUTH_SECRET`, `CALENDSO_ENCRYPTION_KEY`, database credentials, and other required secrets in `.env`.
 
-   **Required Secret Keys**
+3. Start the database and wait for it to become healthy:
 
-   Before starting, you must generate secure values for `NEXTAUTH_SECRET` and `CALENDSO_ENCRYPTION_KEY`. Using the default `secret` placeholder in production is a security risk.
-
-   Generate `NEXTAUTH_SECRET` (cookie encryption key):
-
-   ```bash
-   openssl rand -base64 32
+   ```sh
+   docker compose up -d --wait database
    ```
 
-   Generate `CALENDSO_ENCRYPTION_KEY` (must be 32 bytes for AES256):
+4. Build the app and start the full stack:
 
-   ```bash
-   openssl rand -base64 24
+   ```sh
+   docker compose up -d --build
    ```
 
-   Update your `.env` file with these values:
+   The first build can take several minutes. The build context includes Yarn's package cache. If you change the database host port from `55432`, set `DATABASE_BUILD_URL` in `.env` to a PostgreSQL URL reachable from Docker builds, for example `postgresql://unicorn_user:magical_password@host.docker.internal:5540/calendso`.
 
-   ```env
-   NEXTAUTH_SECRET=<your_generated_secret>
-   CALENDSO_ENCRYPTION_KEY=<your_generated_key>
-   ```
+5. Open the app at [http://localhost:3000](http://localhost:3000). The API v2 is available at `http://localhost:5555`; Prisma Studio is at `http://localhost:5556`.
 
-   **Push Notifications (VAPID Keys)**
-   If you see an error like:
+To inspect startup logs:
 
-   ```
-   Error: No key set vapidDetails.publicKey
-   ```
+```sh
+docker compose logs -f calcom
+```
 
-   This means your environment variables for Web Push are missing.
-   You must generate and set `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`.
+To stop the stack and keep database data:
 
-   Generate them with:
+```sh
+docker compose down
+```
 
-   ```bash
-   npx web-push generate-vapid-keys
-   ```
+To delete the database and all other Compose volumes as well:
 
-   Then update your `.env` file:
+```sh
+docker compose down -v
+```
 
-   ```env
-   NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_public_key_here
-   VAPID_PRIVATE_KEY=your_private_key_here
-   ```
+To rebuild after pulling code changes:
 
-   Do **not** commit real keys to `.env.example` — only placeholders.
-
-   Update the appropriate values in your .env file, then proceed.
-
-4. (optional) Pre-Pull the images by running the following command:
-
-   ```bash
-   docker compose pull
-   ```
-
-5. Start Cal.diy via docker compose
-
-   To run the complete stack, which includes a local Postgres database, Cal.diy web app, and Prisma Studio:
-
-   ```bash
-   docker compose up -d
-   ```
-
-   To run Cal.diy web app and Prisma Studio against a remote database, ensure that DATABASE_URL is configured for an available database and run:
-
-   ```bash
-   docker compose up -d calcom studio
-   ```
-
-   To run only the Cal.diy web app, ensure that DATABASE_URL is configured for an available database and run:
-
-   ```bash
-   docker compose up -d calcom
-   ```
-
-   **Note: to run in attached mode for debugging, remove `-d` from your desired run command.**
-
-6. Open a browser to [http://localhost:3000](http://localhost:3000), or your defined NEXT_PUBLIC_WEBAPP_URL. The first time you run Cal.diy, a setup wizard will initialize. Define your first user, and you're ready to go!
-
-   **Note for first-time setup (Calendar integration)**: During the setup wizard, you may encounter a "Connect your Calendar" step that appears to be required. If you do not wish to connect a calendar at this time, you can skip this step by navigating directly to the dashboard at `<NEXT_PUBLIC_WEBAPP_URL>/event-types`. Calendar integrations can be added later from the Settings > Integrations page.
-
-#### Updating Cal.diy
-
-1. Stop the Cal.diy stack
-
-   ```bash
-   docker compose down
-   ```
-
-2. Pull the latest changes
-
-   ```bash
-   docker compose pull
-   ```
-
-3. Update env vars as necessary.
-4. Re-start the Cal.diy stack
-
-   ```bash
-   docker compose up -d
-   ```
-
-#### Building from source with Docker
-
-1. Clone the repository
-
-   ```bash
-   git clone https://github.com/calcom/cal.diy.git
-   ```
-
-2. Change into the directory
-
-   ```bash
-   cd cal.diy
-   ```
-
-3. Rename `.env.example` to `.env` and then update `.env`
-
-   For configuration options see [Build-time variables](#build-time-variables) below. Update the appropriate values in your .env file, then proceed.
-
-4. Build the Cal.diy docker image:
-
-   Note: Due to application configuration requirements, an available database is currently required during the build process.
-
-   a) If hosting elsewhere, configure the `DATABASE_URL` in the .env file, and skip the next step
-
-   b) If a local or temporary database is required, start a local database via docker compose.
-
-   ```bash
-   docker compose up -d database
-   ```
-
-5. Build Cal.diy via docker compose (DOCKER_BUILDKIT=0 must be provided to allow a network bridge to be used at build time. This requirement will be removed in the future)
-
-   ```bash
-   DOCKER_BUILDKIT=0 docker compose build calcom
-   ```
-
-6. Start Cal.diy via docker compose
-
-   To run the complete stack, which includes a local Postgres database, Cal.diy web app, and Prisma Studio:
-
-   ```bash
-   docker compose up -d
-   ```
-
-   To run Cal.diy web app and Prisma Studio against a remote database, ensure that DATABASE_URL is configured for an available database and run:
-
-   ```bash
-   docker compose up -d calcom studio
-   ```
-
-   To run only the Cal.diy web app, ensure that DATABASE_URL is configured for an available database and run:
-
-   ```bash
-   docker compose up -d calcom
-   ```
-
-   **Note: to run in attached mode for debugging, remove `-d` from your desired run command.**
-
-7. Open a browser to [http://localhost:3000](http://localhost:3000), or your defined NEXT_PUBLIC_WEBAPP_URL. The first time you run Cal.diy, a setup wizard will initialize. Define your first user, and you're ready to go!
-
+```sh
+docker compose up -d --build
+```
 #### Configuration
 
 ##### Important Run-time variables
@@ -568,26 +442,26 @@ These variables must also be provided at runtime
 
 | Variable | Description | Required | Default |
 | --- | --- | --- | --- |
-| DATABASE_URL | database url with credentials - if using a connection pooler, this setting should point there | required | `postgresql://unicorn_user:magical_password@database:5432/calendso` |
+| DATABASE_URL | database URL used by the app container; Compose sets the local database URL automatically | required | `postgresql://unicorn_user:magical_password@database:5432/calendso` |
 | NEXT_PUBLIC_WEBAPP_URL | Base URL of the site. NOTE: if this value differs from the value used at build-time, there will be a slight delay during container start (to update the statically built files). | optional | `http://localhost:3000` |
 | NEXTAUTH_URL | Location of the auth server. By default, this is the Cal.diy docker instance itself. | optional | `{NEXT_PUBLIC_WEBAPP_URL}/api/auth` |
-| NEXTAUTH_SECRET | Cookie encryption key. Must match build variable. Generate with: `openssl rand -base64 32` | required | `secret` |
-| CALENDSO_ENCRYPTION_KEY | Authentication encryption key (32 bytes for AES256). Must match build variable. Generate with: `openssl rand -base64 24` | required | `secret` |
+| NEXTAUTH_SECRET | Cookie encryption key. Set a unique value outside local development; generate with `openssl rand -base64 32` | required | local development value |
+| CALENDSO_ENCRYPTION_KEY | Authentication encryption key (32 bytes for AES256). Set a unique value outside local development; generate with `openssl rand -base64 24` | required | local development value |
 
 ##### Build-time variables
 
-If building the image yourself, these variables must be provided at the time of the docker build, and can be provided by updating the .env file. Currently, if you require changes to these variables, you must follow the instructions to build and publish your own image.
+Compose builds the images from source. The first database must be running before building because Next.js reads it during the production build.
 
 | Variable | Description | Required | Default |
 | --- | --- | --- | --- |
-| DATABASE_URL | database url with credentials - if using a connection pooler, this setting should point there | required | `postgresql://unicorn_user:magical_password@database:5432/calendso` |
-| MAX_OLD_SPACE_SIZE | Needed for Nodejs/NPM build options | required | 4096 |
-| NEXTAUTH_SECRET | Cookie encryption key | required | `secret` |
-| CALENDSO_ENCRYPTION_KEY | Authentication encryption key | required | `secret` |
+| DATABASE_BUILD_URL | PostgreSQL URL reachable from the Docker build. Leave blank for the local Compose database. | optional | `postgresql://unicorn_user:magical_password@host.docker.internal:55432/calendso` |
+| MAX_OLD_SPACE_SIZE | Node.js memory limit for the web build | optional | 6144 |
+| NEXTAUTH_SECRET | Cookie encryption key; use the same value at build and runtime | required | local development value |
+| CALENDSO_ENCRYPTION_KEY | Authentication encryption key; use the same value at build and runtime | required | local development value |
 | NEXT_PUBLIC_WEBAPP_URL | Base URL injected into static files | optional | `http://localhost:3000` |
 | NEXT_PUBLIC_WEBSITE_TERMS_URL | custom URL for terms and conditions website | optional | |
 | NEXT_PUBLIC_WEBSITE_PRIVACY_POLICY_URL | custom URL for privacy policy website | optional | |
-| CALCOM_TELEMETRY_DISABLED | Allow Cal.diy to collect anonymous usage data (set to `1` to disable) | optional | |
+| CALCOM_TELEMETRY_DISABLED | Allow Cal.diy to collect anonymous usage data (set to `1` to disable) | optional | `1` |
 
 #### Troubleshooting
 

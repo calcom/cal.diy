@@ -1,5 +1,6 @@
 import { getWebhookFeature } from "@calcom/features/di/webhooks/containers/webhook";
 import type { WebhookGroup } from "@calcom/features/webhooks/lib/dto/types";
+import { UserPermissionRole } from "@calcom/prisma/enums";
 import type { TrpcSessionUser } from "@calcom/trpc/server/types";
 
 type GetByViewerOptions = {
@@ -24,6 +25,6 @@ export const getByViewerHandler = async ({ ctx }: GetByViewerOptions): Promise<W
   const { repository: webhookRepository } = getWebhookFeature();
   return await webhookRepository.getFilteredWebhooksForUser({
     userId: ctx.user.id,
-    userRole: ctx.user.role,
+    userRole: ctx.user.role === "ADMIN" ? UserPermissionRole.ADMIN : UserPermissionRole.USER,
   });
 };
