@@ -29,7 +29,7 @@
     "delete-app-template": "yarn app-store delete-template",
     "build": "turbo run build --filter=@calcom/web...",
     "build:ai": "turbo run build --filter=\"@calcom/ai\"",
-    "clean": "find . -name node_modules -o -name .next -o -name .turbo -o -name dist -type d -prune | xargs rm -rf",
+    "clean": "node scripts/clean.mjs",
     "db-deploy": "turbo run db-deploy",
     "db-seed": "turbo run db-seed",
     "db-studio": "yarn prisma studio",
