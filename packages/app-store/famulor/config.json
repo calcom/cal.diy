@@ -3,8 +3,8 @@
   "name": "Famulor",
   "slug": "famulor",
   "type": "famulor_automation",
-  "logo": "icon-dark.svg",
-  "url": "https://docs.famulor.io/en/ai-assistants/cal-com-scheduling",
+  "logo": "icon.svg",
+  "url": "https://docs.famulor.io/assistants/calendar-booking",
   "externalLink": {
     "url": "https://www.famulor.io",
     "newTab": true
@@ -12,10 +12,9 @@
   "variant": "automation",
   "categories": ["automation"],
   "publisher": "Famulor",
-  "email": "support@famulor.io",
-  "description": "AI voice agents with seamless Cal.com scheduling integration.",
+  "email": "sales@famulor.io",
+  "description": "AI voice agents that book, cancel and reschedule your bookings.",
   "isTemplate": false,
   "__createdUsingCli": true,
   "__template": "link-as-an-app"
 }
-

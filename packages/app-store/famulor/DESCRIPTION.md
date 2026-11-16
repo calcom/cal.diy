@@ -5,47 +5,26 @@ items:
   - 3.jpg
   - 4.jpg
   - 5.jpg
-  - 6.jpg
 ---
 
 {DESCRIPTION}
 
-Famulor.io is a no-code platform for building, testing, deploying, and monitoring production-ready AI voice agents at scale. Create AI-powered assistants that handle incoming and outgoing calls through natural, human-like conversations without any coding required.
+Famulor lets you build AI voice assistants that answer and place phone calls and reply on messaging channels. Connect your Cal.diy event types and your assistants can check availability, book appointments, and help customers reschedule or cancel during the conversation.
 
-## Robust AI Agent Building Platform
+## What the integration does
 
-Build and test complex workflows in minutes using our visual builder, then deploy them via phone calls, web calls, or anywhere else. Handle millions of calls with scalable concurrent calling and support over 50 parallel conversations to reduce wait times.
+- **Live availability** – the assistant checks the open slots of the selected event type and offers a few options to the caller.
+- **Direct booking** – it books the slot the caller picks. The event type's booking questions and required fields load automatically, so the assistant collects the phone number and custom answers when they are required.
+- **Cancel and reschedule** – callers don't need a booking number. The assistant finds their upcoming booking by the phone number they call from, or by the email address and full name used when booking, and only changes it after an explicit confirmation.
+- **Voice and text** – the same calendar tools work on phone calls and on text channels such as WhatsApp, Telegram, Slack or Microsoft Teams.
+- **Follow-ups** – Famulor automations can start when a call ends, branch on the call outcome and send the next steps by WhatsApp template or SMS.
 
-## 🔗 Cal.diy 1-Click Integration
+## How to connect
 
-Connecting your Cal.diy account is now faster and simpler than ever:
+1. In Cal.diy, create an API key under **Settings → Developer → API Keys**.
+2. In Famulor, open **Booking → Integrations** and choose **Cal.com**.
+3. Paste the API key and set the **API endpoint** to **Custom** with the public URL of your Cal.diy instance.
+4. Select **Load event types**, pick the event type and save.
+5. Assign the integration to an assistant and enable Book, Cancel and Reschedule as needed.
 
-- Use the new one-click connect button to instantly link your calendar
-- Built-in troubleshooting tools help you identify and fix sync issues quickly
-- Perfect for ensuring your scheduling automations and booking workflows stay seamless across assistants and team calendars
-
-## 🧑‍🤝‍🧑 Multi-Calendar Tools
-
-We've added Multi-Calendar Tools, making scheduling smarter and more flexible than ever:
-
-- **Team & Service Calendars** – Assign different calendars to the same assistant, perfect for businesses where customers choose a specific team member or service (e.g. hair vs. nails in a salon)
-- **Medical Appointments Made Easy** – Patients can now book directly with the right doctor's calendar, streamlining scheduling in clinics and practices
-- **Seamless Management** – Assistants handle multiple calendars effortlessly, reducing back-and-forth and ensuring accurate bookings every time
-
-This update makes your AI assistants even more versatile, whether you're running a salon, clinic, or service team.
-
-## Humanlike Voice Experience
-
-Lifelike AI conversations with just 600ms latency, smooth turn-taking, and natural back-channeling. Real-time transcription and sentiment analysis enable immediate speech-to-text conversion and caller mood assessment.
-
-## Multi-lingual Support
-
-Support over 100 languages, including regional accents and cultural adaptations, with real-time translation to expand global customer reach. Support phone numbers from multiple countries worldwide.
-
-## Preset Functions
-
-Easy-to-use functions like booking meetings at [Cal.diy](https://cal.com), call transfer, voicemail detection, and more. Comprehensive call management with audio recordings, searchable transcripts, and detailed reports to monitor performance and campaign results.
-
-## GDPR Compliant
-
-Famulor.io is fully GDPR compliant, ensuring all customer data is processed and stored exclusively in the EU with the highest security and compliance standards.
+Full guide: [Calendar & booking](https://docs.famulor.io/assistants/calendar-booking)
