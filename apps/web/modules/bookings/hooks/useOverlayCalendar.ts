@@ -4,8 +4,6 @@ import { shallow } from "zustand/shallow";
 import dayjs from "@calcom/dayjs";
 import { useOverlayCalendarStore } from "@calcom/features/bookings/Booker/components/OverlayCalendar/store";
 import type { ToggledConnectedCalendars } from "@calcom/features/bookings/Booker/types";
-import { useTimePreferences } from "@calcom/features/bookings/lib";
-
 import type { WrappedBookerPropsMain } from "../types";
 import { useLocalSet } from "@calcom/features/bookings/Booker/hooks/useLocalSet";
 
@@ -38,23 +36,10 @@ export const useOverlayCalendar = ({
     shallow
   );
   const setOverlayBusyDates = useOverlayCalendarStore((state) => state.setOverlayBusyDates);
-  const { timezone } = useTimePreferences();
 
   useEffect(() => {
     if (overlayBusyDates) {
-      const nowDate = dayjs();
-      const usersTimezoneDate = nowDate.tz(timezone);
-
-      const offset = (usersTimezoneDate.utcOffset() - nowDate.utcOffset()) / 60;
-
-      const offsettedArray = overlayBusyDates.map((item) => {
-        return {
-          ...item,
-          start: dayjs(item.start).add(offset, "hours").toDate(),
-          end: dayjs(item.end).add(offset, "hours").toDate(),
-        };
-      });
-      setOverlayBusyDates(offsettedArray);
+      setOverlayBusyDates(overlayBusyDates);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [overlayBusyDates]);
