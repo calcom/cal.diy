@@ -37,37 +37,41 @@ export const parseDate = (
   return processDate(date, language, timeZone, options);
 };
 
-const timeOptions: Intl.DateTimeFormatOptions = {
-  hour12: true,
-  hourCycle: "h12",
-  hour: "numeric",
-  minute: "numeric",
-};
-
-const dateOptions: Intl.DateTimeFormatOptions = {
-  weekday: "long",
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-};
-
 export const parseDateTimeWithTimeZone = (
   date: Date,
   language: string,
   timezone: string,
   options?: ExtraOptions
 ): string => {
-  timeOptions.timeZone = timezone;
-  dateOptions.timeZone = timezone;
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: timezone,
+  };
+
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    minute: "numeric",
+    timeZone: timezone,
+  };
 
   if (options?.withDefaultTimeFormat) {
+    timeOptions.hour12 = true;
     timeOptions.hourCycle = "h12";
   } else if (options?.selectedTimeFormat) {
-    timeOptions.hourCycle = options.selectedTimeFormat === TimeFormat.TWELVE_HOUR ? "h12" : "h24";
-    if (timeOptions.hourCycle === "h24") {
-      delete timeOptions.hour12;
+    if (options.selectedTimeFormat === TimeFormat.TWELVE_HOUR) {
+      timeOptions.hour12 = true;
+      timeOptions.hourCycle = "h12";
+    } else {
+      timeOptions.hourCycle = "h24";
     }
+  } else {
+    timeOptions.hour12 = true;
+    timeOptions.hourCycle = "h12";
   }
+
   const formattedDate = new Date(date).toLocaleDateString(language, dateOptions);
   const formattedTime = new Date(date)
     .toLocaleTimeString(language, timeOptions)
