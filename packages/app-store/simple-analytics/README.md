@@ -13,7 +13,7 @@ This app loads the Simple Analytics script on the booking pages of the event typ
 
 ## What is collected
 
-- **Page views** of the booking page, recorded under the hostname you entered.
+- **Page views** of the booking page, recorded under the hostname you entered. Booking ids and private link tokens are replaced in the recorded path (`/booking/[uid]`, `/reschedule/[uid]`, `/d/[link]/...`), so they never reach your dashboard.
 - **Booking events**, when "Collect booking events" is on (the default):
 
   | Event                 | Sent when                |
