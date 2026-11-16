@@ -37,37 +37,33 @@ export const parseDate = (
   return processDate(date, language, timeZone, options);
 };
 
-const timeOptions: Intl.DateTimeFormatOptions = {
-  hour12: true,
-  hourCycle: "h12",
-  hour: "numeric",
-  minute: "numeric",
-};
-
-const dateOptions: Intl.DateTimeFormatOptions = {
-  weekday: "long",
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-};
-
 export const parseDateTimeWithTimeZone = (
   date: Date,
   language: string,
   timezone: string,
   options?: ExtraOptions
 ): string => {
-  timeOptions.timeZone = timezone;
-  dateOptions.timeZone = timezone;
+  const is24Hour =
+    !options?.withDefaultTimeFormat &&
+    options?.selectedTimeFormat === TimeFormat.TWENTY_FOUR_HOUR;
 
-  if (options?.withDefaultTimeFormat) {
-    timeOptions.hourCycle = "h12";
-  } else if (options?.selectedTimeFormat) {
-    timeOptions.hourCycle = options.selectedTimeFormat === TimeFormat.TWELVE_HOUR ? "h12" : "h24";
-    if (timeOptions.hourCycle === "h24") {
-      delete timeOptions.hour12;
-    }
-  }
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    timeZone: timezone,
+    hour: "numeric",
+    minute: "numeric",
+    ...(is24Hour
+      ? { hourCycle: "h24" }
+      : { hour12: true, hourCycle: "h12" }),
+  };
+
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    timeZone: timezone,
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+
   const formattedDate = new Date(date).toLocaleDateString(language, dateOptions);
   const formattedTime = new Date(date)
     .toLocaleTimeString(language, timeOptions)
