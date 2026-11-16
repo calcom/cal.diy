@@ -31,27 +31,27 @@ export default class AttendeeVerifyEmail extends BaseEmail {
   }
 
   protected getTextBody(): string {
+    // Tags are stripped from the translated text only, so angle brackets in the user's name are kept.
+    const text = (key: string, options?: Record<string, string>) =>
+      this.verifyAccountInput.language(key, options).replace(/(<([^>]+)>)/gi, "");
+
     const subject = this.verifyAccountInput.hideLogo
-      ? this.verifyAccountInput.language("verify_email_subject_no_branding")
-      : this.verifyAccountInput.language(
-          `verify_email_subject${this.verifyAccountInput.isVerifyingEmail ? "_verifying_email" : ""}`,
-          { appName: APP_NAME }
-        );
+      ? text("verify_email_subject_no_branding")
+      : text(`verify_email_subject${this.verifyAccountInput.isVerifyingEmail ? "_verifying_email" : ""}`, {
+          appName: APP_NAME,
+        });
 
     const footer = this.verifyAccountInput.hideLogo
       ? ""
-      : `${this.verifyAccountInput.language("happy_scheduling")} ${this.verifyAccountInput.language(
-          "the_calcom_team",
-          { companyName: COMPANY_NAME }
-        )}`;
+      : `${text("happy_scheduling")} ${text("the_calcom_team", { companyName: COMPANY_NAME })}`;
 
     return `
 ${subject}
-${this.verifyAccountInput.language("verify_email_email_header")}
+${text("verify_email_email_header")}
 ${this.verifyAccountInput.language("hi_user_name", { name: this.verifyAccountInput.user.name })},
-${this.verifyAccountInput.language("verify_email_by_code_email_body")}
+${text("verify_email_by_code_email_body")}
 ${this.verifyAccountInput.verificationEmailCode}
 ${footer}
-`.replace(/(<([^>]+)>)/gi, "");
+`;
   }
 }

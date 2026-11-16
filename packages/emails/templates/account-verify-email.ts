@@ -40,17 +40,18 @@ export default class AccountVerifyEmail extends BaseEmail {
   }
 
   protected getTextBody(): string {
+    // Tags are stripped from the translated text only, so angle brackets in the user's name are kept.
+    const text = (key: string, options?: Record<string, string>) =>
+      this.verifyAccountInput.language(key, options).replace(/(<([^>]+)>)/gi, "");
+
     return `
-${this.verifyAccountInput.language("verify_email_subject", { appName: APP_NAME })}
-${this.verifyAccountInput.language("verify_email_email_header")}
+${text("verify_email_subject", { appName: APP_NAME })}
+${text("verify_email_email_header")}
 ${this.verifyAccountInput.language("hi_user_name", { name: this.verifyAccountInput.user.name })},
-${this.verifyAccountInput.language("verify_email_email_body", { appName: APP_NAME })}
-${this.verifyAccountInput.language("verify_email_email_link_text")}
+${text("verify_email_email_body", { appName: APP_NAME })}
+${text("verify_email_email_link_text")}
 ${this.verifyAccountInput.verificationEmailLink}
-${this.verifyAccountInput.language("happy_scheduling")} ${this.verifyAccountInput.language(
-      "the_calcom_team",
-      { companyName: COMPANY_NAME }
-    )}
-`.replace(/(<([^>]+)>)/gi, "");
+${text("happy_scheduling")} ${text("the_calcom_team", { companyName: COMPANY_NAME })}
+`;
   }
 }

@@ -73,6 +73,9 @@ export const getTranslation = async (locale: string, ns: string) => {
       },
     },
     fallbackLng: "en",
+    // Output is rendered by React (which escapes text) or used as plain text (email subjects, SMS),
+    // so HTML-escaping interpolated values would garble names like O'Brien into O&#39;Brien.
+    interpolation: { escapeValue: false },
   });
 
   // Cache the i18n instance

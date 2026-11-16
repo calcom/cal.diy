@@ -50,6 +50,8 @@ export const useLocale = (): useLocaleReturnType => {
             [ns]: translations,
           },
         },
+        // React already escapes text, so escaping here would garble names like O'Brien into O&#39;Brien.
+        interpolation: { escapeValue: false },
       });
 
       serverI18nInstances.set(instanceKey, {
