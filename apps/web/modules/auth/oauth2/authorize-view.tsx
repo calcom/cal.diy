@@ -38,7 +38,7 @@ export function Authorize() {
     value: string;
     label: string;
   } | null>();
-  const scopes = scope ? scope.toString().split(",") : [];
+  const scopes = parseOAuthScopes(scope);
 
   const {
     data: client,
@@ -328,6 +328,11 @@ function redirectToOAuthError({
   });
 
   window.location.href = redirectUrl;
+}
+
+export function parseOAuthScopes(scope: string | null | undefined): string[] {
+  if (!scope) return [];
+  return scope.toString().split(/[,\s]+/).filter(Boolean);
 }
 
 export default Authorize;
