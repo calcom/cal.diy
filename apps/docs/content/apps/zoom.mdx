@@ -33,10 +33,12 @@ Replace `<Cal.diy URL>` with your application URL (e.g. `https://app.cal.diy` or
 
 10. **Configure OAuth Allow List and Strict Mode** - Add the redirect URL to the **OAuth Allow List**. Toggle on **"Use strict mode on redirect URLs"** (or enable Subdomain check if using subdomains). Ensure the status displays "Saved".
 
-11. **Add Required Scopes** - Go to the **Scopes** tab and click **"+ Add Scopes"**. Add the granular user-level scopes required for meeting availability, creation, and host settings:
+11. **Add Required Scopes** - Go to the **Scopes** tab and click **"+ Add Scopes"**. Add the granular user-level scopes required for meeting availability, creation, update, deletion, and host settings:
     - `meeting:read:meeting`
     - `meeting:read:list_meetings`
     - `meeting:write:meeting`
+    - `meeting:update:meeting`
+    - `meeting:delete:meeting`
     - `user:read:settings`
 
 12. **Save the Scope** - Click "Done" to save your scope settings.
