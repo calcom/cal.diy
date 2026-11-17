@@ -139,7 +139,7 @@ export function Header({
               className="capitalize ltr:ml-2 rtl:mr-2"
               color="secondary"
               onClick={() => {
-                const selectedDate = (isCalendarView ? today.startOf("week") : today).format("YYYY-MM-DD");
+                const selectedDate = (isCalendarView || layout === BookerLayouts.COLUMN_VIEW ? today.startOf("week") : today).format("YYYY-MM-DD");
                 setSelectedDate({ date: selectedDate });
               }}>
               {t("today")}
