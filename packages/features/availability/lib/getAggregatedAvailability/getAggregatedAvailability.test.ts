@@ -1,8 +1,6 @@
-import { describe, it, expect } from "vitest";
-
 import type { Dayjs } from "@calcom/dayjs";
 import dayjs from "@calcom/dayjs";
-
+import { describe, expect, it } from "vitest";
 import { getAggregatedAvailability } from "./getAggregatedAvailability";
 
 // Helper to check if a time range overlaps with availability
@@ -519,5 +517,69 @@ describe("getAggregatedAvailability", () => {
     const result = getAggregatedAvailability(userAvailability, "ROUND_ROBIN");
 
     expect(result).toEqual([]);
+  });
+
+  it("uses dateRanges when a collective host has no OOO-excluded ranges", () => {
+    const dateRanges = [{ start: dayjs("2025-01-23T10:00:00.000Z"), end: dayjs("2025-01-23T11:00:00.000Z") }];
+
+    const result = getAggregatedAvailability(
+      [{ dateRanges, oooExcludedDateRanges: undefined, user: { isFixed: true } }],
+      "COLLECTIVE"
+    );
+
+    expect(result).toEqual(dateRanges);
+  });
+
+  it("uses dateRanges when a round-robin host has no OOO-excluded ranges", () => {
+    const dateRanges = [{ start: dayjs("2025-01-23T10:00:00.000Z"), end: dayjs("2025-01-23T11:00:00.000Z") }];
+
+    const result = getAggregatedAvailability(
+      [{ dateRanges, oooExcludedDateRanges: undefined, user: { isFixed: false } }],
+      "ROUND_ROBIN"
+    );
+
+    expect(result).toEqual(dateRanges);
+  });
+
+  it("keeps defined OOO-excluded ranges authoritative and leaves OOO-blocked time unavailable", () => {
+    const dateRanges = [{ start: dayjs("2025-01-23T10:00:00.000Z"), end: dayjs("2025-01-23T11:00:00.000Z") }];
+    const oooExcludedDateRanges = [
+      { start: dayjs("2025-01-23T10:30:00.000Z"), end: dayjs("2025-01-23T11:00:00.000Z") },
+    ];
+
+    const result = getAggregatedAvailability(
+      [{ dateRanges, oooExcludedDateRanges, user: { isFixed: true } }],
+      "COLLECTIVE"
+    );
+
+    expect(result).toEqual(oooExcludedDateRanges);
+    expect(
+      isAvailable(result, {
+        start: dayjs("2025-01-23T10:00:00.000Z"),
+        end: dayjs("2025-01-23T10:30:00.000Z"),
+      })
+    ).toBe(false);
+  });
+
+  it("does not replace a defined empty OOO-excluded range list", () => {
+    const dateRanges = [{ start: dayjs("2025-01-23T10:00:00.000Z"), end: dayjs("2025-01-23T11:00:00.000Z") }];
+
+    const result = getAggregatedAvailability(
+      [{ dateRanges, oooExcludedDateRanges: [], user: { isFixed: true } }],
+      "COLLECTIVE"
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it("continues using dateRanges for non-team events", () => {
+    const dateRanges = [{ start: dayjs("2025-01-23T10:00:00.000Z"), end: dayjs("2025-01-23T11:00:00.000Z") }];
+    const oooExcludedDateRanges = [
+      { start: dayjs("2025-01-23T10:30:00.000Z"), end: dayjs("2025-01-23T11:00:00.000Z") },
+    ];
+
+    const result = getAggregatedAvailability([{ dateRanges, oooExcludedDateRanges }], null);
+
+    expect(result).toEqual(dateRanges);
   });
 });
