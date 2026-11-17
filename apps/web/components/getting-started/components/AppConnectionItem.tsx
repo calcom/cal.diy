@@ -54,12 +54,14 @@ const AppConnectionItem = (props: IAppConnectionItem) => {
         <InstallAppButtonWithoutPlanCheck
           type={type}
           options={{
-            onSuccess: () => {
+            onSuccess: (data) => {
+              setInstalling(false);
+              utils.viewer.apps.integrations.invalidate();
+              // Don't show success toast if OAuth flow is pending (user will be redirected)
+              if (data?.setupPending) return;
               if (defaultInstall && slug) {
                 setDefaultConferencingApp.mutate({ slug });
               }
-              setInstalling(false);
-              utils.viewer.apps.integrations.invalidate();
               showToast(t("app_successfully_installed"), "success");
             },
             onError: (error) => {
@@ -118,7 +120,9 @@ const AppConnectionItem = (props: IAppConnectionItem) => {
                 });
                 // Save cookie key to return url step
                 document.cookie = `return-to=${window.location.href};path=/;max-age=3600;SameSite=Lax`;
-                buttonProps && buttonProps.onClick && buttonProps?.onClick(event);
+                if (buttonProps?.onClick) {
+                  buttonProps.onClick(event);
+                }
                 setInstalling(true);
               }}>
               {installed ? t("installed") : t("connect")}
