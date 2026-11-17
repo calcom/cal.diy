@@ -3127,6 +3127,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@calcom/toab-jitsi@workspace:packages/app-store/toab_jitsi":
+  version: 0.0.0-use.local
+  resolution: "@calcom/toab-jitsi@workspace:packages/app-store/toab_jitsi"
+  dependencies:
+    "@calcom/lib": "workspace:*"
+    "@calcom/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@calcom/trpc@workspace:*, @calcom/trpc@workspace:packages/trpc":
   version: 0.0.0-use.local
   resolution: "@calcom/trpc@workspace:packages/trpc"

@@ -16,6 +16,7 @@ export const VideoApiAdapterMap =
         shimmervideo: import("./shimmervideo/lib/VideoApiAdapter"),
         sylapsvideo: import("./sylapsvideo/lib/VideoApiAdapter"),
         tandemvideo: import("./tandemvideo/lib/VideoApiAdapter"),
+        toab_jitsi: import("./toab_jitsi/lib/VideoApiAdapter"),
         webex: import("./webex/lib/VideoApiAdapter"),
         zoomvideo: import("./zoomvideo/lib/VideoApiAdapter"),
       };

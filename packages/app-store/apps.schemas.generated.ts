@@ -42,6 +42,7 @@ import { appDataSchema as stripepayment_zod_ts } from "./stripepayment/zod";
 import { appDataSchema as tandemvideo_zod_ts } from "./tandemvideo/zod";
 import { appDataSchema as booking_pages_tag_zod_ts } from "./templates/booking-pages-tag/zod";
 import { appDataSchema as event_type_app_card_zod_ts } from "./templates/event-type-app-card/zod";
+import { appDataSchema as toab_jitsi_zod_ts } from "./toab_jitsi/zod";
 import { appDataSchema as twipla_zod_ts } from "./twipla/zod";
 import { appDataSchema as umami_zod_ts } from "./umami/zod";
 import { appDataSchema as vital_zod_ts } from "./vital/zod";
@@ -93,6 +94,7 @@ export const appDataSchemas = {
   tandemvideo: tandemvideo_zod_ts,
   "booking-pages-tag": booking_pages_tag_zod_ts,
   "event-type-app-card": event_type_app_card_zod_ts,
+  toab_jitsi: toab_jitsi_zod_ts,
   twipla: twipla_zod_ts,
   umami: umami_zod_ts,
   vital: vital_zod_ts,

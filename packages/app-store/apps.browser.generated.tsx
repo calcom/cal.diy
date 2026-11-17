@@ -47,6 +47,7 @@ export const EventTypeAddonMap = {
   "event-type-app-card": dynamic(
     () => import("./templates/event-type-app-card/components/EventTypeAppCardInterface")
   ),
+  toab_jitsi: dynamic(() => import("./toab_jitsi/components/EventTypeAppCardInterface")),
   twipla: dynamic(() => import("./twipla/components/EventTypeAppCardInterface")),
   umami: dynamic(() => import("./umami/components/EventTypeAppCardInterface")),
   "zoho-bigin": dynamic(() => import("./zoho-bigin/components/EventTypeAppCardInterface")),
@@ -67,4 +68,5 @@ export const EventTypeSettingsMap = {
   plausible: dynamic(() => import("./plausible/components/EventTypeAppSettingsInterface")),
   qr_code: dynamic(() => import("./qr_code/components/EventTypeAppSettingsInterface")),
   stripepayment: dynamic(() => import("./stripepayment/components/EventTypeAppSettingsInterface")),
+  toab_jitsi: dynamic(() => import("./toab_jitsi/components/EventTypeAppSettingsInterface")),
 };

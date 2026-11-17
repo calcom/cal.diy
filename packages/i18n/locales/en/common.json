@@ -4748,5 +4748,13 @@
   "user_updated_successfully": "User updated successfully.",
   "error_updating_user": "There was an error updating this user.",
   "please_reschedule": "Please reschedule.",
+  "toab_jitsi_config_load_error": "Could not load TOAB Jitsi configuration",
+  "toab_jitsi_choose_server": "Choose a server...",
+  "toab_jitsi_loading_servers": "Loading servers...",
+  "toab_jitsi_location_alert": "Select “TOAB Jitsi Video” as this event type’s location to use this integration.",
+  "toab_jitsi_select_conference_server": "Select Conference Server",
+  "toab_jitsi_location_check_error": "Could not check the TOAB Jitsi event type location",
+  "toab_jitsi_custom_server": "Custom",
+  "toab_jitsi_default_server": "Default",
   "ADD_NEW_STRINGS_ABOVE_THIS_LINE_TO_PREVENT_MERGE_CONFLICTS": "↑↑↑↑↑↑↑↑↑↑↑↑↑ Add your new strings above here ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑"
 }
