@@ -1,6 +1,5 @@
 import { faker } from "@faker-js/faker";
 import { describe, expect, it, vi } from "vitest";
-
 import {
   getLocation,
   getPublicVideoCallUrl,

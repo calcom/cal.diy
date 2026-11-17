@@ -1,5 +1,3 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-
 import type { ICalendarCacheEventRepository } from "@calcom/features/calendar-subscription/lib/cache/CalendarCacheEventRepository.interface";
 import type {
   Calendar,
@@ -9,7 +7,7 @@ import type {
   IntegrationCalendar,
   NewCalendarEventType,
 } from "@calcom/types/Calendar";
-
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CalendarCacheWrapper } from "../CalendarCacheWrapper";
 
 describe("CalendarCacheWrapper", () => {

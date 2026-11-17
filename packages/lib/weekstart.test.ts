@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-
 import { sortAvailabilityStrings } from "./weekstart";
 
 describe("Weekstart tests", () => {

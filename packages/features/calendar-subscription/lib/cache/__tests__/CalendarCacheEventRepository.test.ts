@@ -1,8 +1,6 @@
-import { describe, test, expect, vi, beforeEach } from "vitest";
-
 import type { PrismaClient } from "@calcom/prisma";
 import type { CalendarCacheEvent } from "@calcom/prisma/client";
-
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { CalendarCacheEventRepository } from "../CalendarCacheEventRepository";
 
 const mockPrismaClient = {

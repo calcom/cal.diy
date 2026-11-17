@@ -1,4 +1,4 @@
-import { CONSOLE_URL, WEBAPP_URL, WEBSITE_URL, EMBED_LIB_URL } from "@calcom/lib/constants";
+import { CONSOLE_URL, EMBED_LIB_URL, WEBAPP_URL, WEBSITE_URL } from "@calcom/lib/constants";
 import { getTldPlus1 } from "@calcom/lib/getTldPlus1";
 
 // It ensures that redirection URL safe where it is accepted through a query params or other means where user can change it.

@@ -12,7 +12,7 @@ const IV_LENGTH = 16; // AES blocksize
  *
  * @returns Encrypted value using key
  */
-export const symmetricEncrypt = function (text: string, key: string) {
+export const symmetricEncrypt = (text: string, key: string) => {
   const _key = Buffer.from(key, "latin1");
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, _key, iv);
@@ -28,7 +28,7 @@ export const symmetricEncrypt = function (text: string, key: string) {
  * @param text Value to decrypt
  * @param key Key used to decrypt value must be 32 bytes for AES256 encryption algorithm
  */
-export const symmetricDecrypt = function (text: string, key: string) {
+export const symmetricDecrypt = (text: string, key: string) => {
   const _key = Buffer.from(key, "latin1");
 
   const components = text.split(":");
@@ -38,4 +38,14 @@ export const symmetricDecrypt = function (text: string, key: string) {
   deciphered += decipher.final(INPUT_ENCODING);
 
   return deciphered;
+};
+
+/**
+ * Compares two strings in constant time.
+ * Helps prevent timing attacks when comparing secrets like HMACs or tokens.
+ */
+export const safeStringEqual = (a?: string | null, b?: string | null) => {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 };

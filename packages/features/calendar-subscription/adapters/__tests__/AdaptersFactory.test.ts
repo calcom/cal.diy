@@ -1,5 +1,4 @@
-import { describe, test, expect, beforeEach } from "vitest";
-
+import { beforeEach, describe, expect, test } from "vitest";
 import { DefaultAdapterFactory } from "../AdaptersFactory";
 import { GoogleCalendarSubscriptionAdapter } from "../GoogleCalendarSubscription.adapter";
 import { Office365CalendarSubscriptionAdapter } from "../Office365CalendarSubscription.adapter";

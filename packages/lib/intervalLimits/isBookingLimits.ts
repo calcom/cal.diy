@@ -1,5 +1,5 @@
-import { intervalLimitsType } from "./intervalLimitSchema";
 import type { IntervalLimit } from "./intervalLimitSchema";
+import { intervalLimitsType } from "./intervalLimitSchema";
 
 export function isBookingLimit(obj: unknown): obj is IntervalLimit {
   return intervalLimitsType.safeParse(obj).success;

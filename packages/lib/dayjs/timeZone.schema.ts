@@ -1,5 +1,4 @@
 import { z } from "zod";
-
 import { isSupportedTimeZone } from "./index";
 
 // Schema for validating IANA timezone strings compatible with Intl.DateTimeFormat

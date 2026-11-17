@@ -1,7 +1,5 @@
-import type { ITimezoneOption } from "react-timezone-select";
-
 import dayjs from "@calcom/dayjs";
-
+import type { ITimezoneOption } from "react-timezone-select";
 import isProblematicTimezone from "./isProblematicTimezone";
 
 export type Timezones = { label: string; timezone: string }[];

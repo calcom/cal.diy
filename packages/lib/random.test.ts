@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-
 import { randomString } from "./random";
 
 describe("Random util tests", () => {

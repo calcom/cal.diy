@@ -1,4 +1,4 @@
-import type { IntervalLimitUnit, IntervalLimitKey } from "./intervalLimitSchema";
+import type { IntervalLimitKey, IntervalLimitUnit } from "./intervalLimitSchema";
 
 export const ascendingLimitKeys: IntervalLimitKey[] = ["PER_DAY", "PER_WEEK", "PER_MONTH", "PER_YEAR"];
 

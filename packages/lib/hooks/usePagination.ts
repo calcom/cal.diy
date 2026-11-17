@@ -1,5 +1,5 @@
 import type { PaginationState } from "@tanstack/react-table";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export function usePagination({
   defaultPageIndex = 1,

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-
 import { isRerouting, shouldIgnoreContactOwner } from "./utils";
 
 describe("isRerouting", () => {

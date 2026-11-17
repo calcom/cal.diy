@@ -1,11 +1,10 @@
-import { createInstance } from "i18next";
-import type { TFunction, i18n } from "i18next";
-import { useContext } from "react";
-import { useTranslation } from "react-i18next";
-
 import { useAtomsContext } from "@calcom/atoms/hooks/useAtomsContext";
 import { AppRouterI18nContext } from "@calcom/web/app/AppRouterI18nProvider";
 import { CustomI18nContext } from "@calcom/web/app/CustomI18nProvider";
+import type { i18n, TFunction } from "i18next";
+import { createInstance } from "i18next";
+import { useContext } from "react";
+import { useTranslation } from "react-i18next";
 
 type useLocaleReturnType = {
   i18n: i18n;

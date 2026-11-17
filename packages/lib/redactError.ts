@@ -1,5 +1,4 @@
 import logger from "@calcom/lib/logger";
-
 import { IS_PRODUCTION } from "./constants";
 
 const log = logger.getSubLogger({ prefix: [`[redactError]`] });

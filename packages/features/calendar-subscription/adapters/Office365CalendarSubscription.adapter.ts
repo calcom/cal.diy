@@ -1,12 +1,12 @@
+import process from "node:process";
 import logger from "@calcom/lib/logger";
 import type { SelectedCalendar } from "@calcom/prisma/client";
-
 import type {
-  CalendarSubscriptionEvent,
-  ICalendarSubscriptionPort,
-  CalendarSubscriptionResult,
   CalendarCredential,
+  CalendarSubscriptionEvent,
   CalendarSubscriptionEventItem,
+  CalendarSubscriptionResult,
+  ICalendarSubscriptionPort,
 } from "../lib/CalendarSubscriptionPort.interface";
 
 const log = logger.getSubLogger({ prefix: ["MicrosoftCalendarSubscriptionAdapter"] });

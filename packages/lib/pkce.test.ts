@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-
 import { isValidCodeChallengeMethod, verifyCodeChallenge } from "./pkce";
 
 describe("PKCE Functions", () => {

@@ -1,5 +1,6 @@
 // Note: avoid Node's crypto to support runtimes where it's unavailable (e.g., edge/browsers)
 
+import process from "node:process";
 export interface PiiHasher {
   hash(input: string): string;
 }

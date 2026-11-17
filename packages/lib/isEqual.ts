@@ -17,7 +17,7 @@ export function isEqual(value: unknown, other: unknown): boolean {
     if (valueKeys.length !== otherKeys.length) return false;
 
     return valueKeys.every((key) => {
-      if (!Object.prototype.hasOwnProperty.call(other, key)) return false;
+      if (!Object.hasOwn(other, key)) return false;
       return isEqual((value as Record<string, unknown>)[key], (other as Record<string, unknown>)[key]);
     });
   }

@@ -1,7 +1,8 @@
 import dns from "node:dns/promises";
-import ipaddr from "ipaddr.js";
+import process from "node:process";
 import { IS_SELF_HOSTED } from "@calcom/lib/constants";
 import logger from "@calcom/lib/logger";
+import ipaddr from "ipaddr.js";
 
 const log: ReturnType<typeof logger.getSubLogger> = logger.getSubLogger({ prefix: ["ssrf-protection"] });
 

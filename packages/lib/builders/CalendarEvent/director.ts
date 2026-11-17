@@ -1,7 +1,6 @@
 import logger from "@calcom/lib/logger";
 import { safeStringify } from "@calcom/lib/safeStringify";
 import type { Booking } from "@calcom/prisma/client";
-
 import type { CalendarEventBuilder } from "./builder";
 
 const log = logger.getSubLogger({ prefix: ["builders", "CalendarEvent", "director"] });

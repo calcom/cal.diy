@@ -1,3 +1,4 @@
+import process from "node:process";
 import logger from "@calcom/lib/logger";
 import prisma from "@calcom/prisma";
 

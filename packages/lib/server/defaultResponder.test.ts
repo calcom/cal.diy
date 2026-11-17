@@ -1,8 +1,6 @@
+import { ErrorCode } from "@calcom/lib/errorCodes";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { describe, expect, it, vi } from "vitest";
-
-import { ErrorCode } from "@calcom/lib/errorCodes";
-
 import { defaultResponder } from "./defaultResponder";
 
 /**

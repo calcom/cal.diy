@@ -1,7 +1,5 @@
-import { v4 as uuidv4 } from "uuid";
-
 import { prisma } from "@calcom/prisma";
-
+import { v4 as uuidv4 } from "uuid";
 import { convertSvgToPng } from "./imageUtils";
 
 export const uploadAvatar = async ({ userId, avatar: data }: { userId: number; avatar: string }) => {
