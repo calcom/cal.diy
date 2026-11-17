@@ -2,7 +2,6 @@ import type { DateRange } from "@calcom/features/schedules/lib/date-ranges";
 import { intersect } from "@calcom/features/schedules/lib/date-ranges";
 import { DEFAULT_GROUP_ID } from "@calcom/lib/constants";
 import { SchedulingType } from "@calcom/prisma/enums";
-
 import { filterRedundantDateRanges } from "./date-range-utils/filterRedundantDateRanges";
 import { mergeOverlappingDateRanges } from "./date-range-utils/mergeOverlappingDateRanges";
 
@@ -22,12 +21,14 @@ function uniqueAndSortedDateRanges(ranges: DateRange[]): DateRange[] {
     });
 }
 
+type UserAvailability = {
+  dateRanges: DateRange[];
+  oooExcludedDateRanges?: DateRange[];
+  user?: { isFixed?: boolean; groupId?: string | null };
+};
+
 export const getAggregatedAvailability = (
-  userAvailability: {
-    dateRanges: DateRange[];
-    oooExcludedDateRanges: DateRange[];
-    user?: { isFixed?: boolean; groupId?: string | null };
-  }[],
+  userAvailability: UserAvailability[],
   schedulingType: SchedulingType | null
 ): DateRange[] => {
   const isTeamEvent =
@@ -39,9 +40,12 @@ export const getAggregatedAvailability = (
     ({ user }) => !schedulingType || schedulingType === SchedulingType.COLLECTIVE || user?.isFixed
   );
 
-  const fixedDateRanges = mergeOverlappingDateRanges(
-    intersect(fixedHosts.map((s) => (!isTeamEvent ? s.dateRanges : s.oooExcludedDateRanges)))
-  );
+  // oooExcludedDateRanges is the host's availability with OOO ranges removed. Without it a host would contribute
+  // undefined ranges to the intersect and silently drop all team availability, so fall back to base availability.
+  const getHostDateRanges = (host: UserAvailability) =>
+    !isTeamEvent ? host.dateRanges : (host.oooExcludedDateRanges ?? host.dateRanges);
+
+  const fixedDateRanges = mergeOverlappingDateRanges(intersect(fixedHosts.map(getHostDateRanges)));
   // Empty fixed ranges mean the fixed hosts are busy, so no slot is free; checking the ranges would drop the constraint
   const dateRangesToIntersect = fixedHosts.length ? [fixedDateRanges] : [];
   const roundRobinHosts = userAvailability.filter(({ user }) => user?.isFixed !== true);
@@ -62,10 +66,7 @@ export const getAggregatedAvailability = (
     // at least one host from each group needs to be available
     Object.values(hostsByGroup).forEach((groupHosts) => {
       if (groupHosts.length > 0) {
-        const groupDateRanges = groupHosts.flatMap((s) =>
-          !isTeamEvent ? s.dateRanges : s.oooExcludedDateRanges
-        );
-        dateRangesToIntersect.push(groupDateRanges ?? []);
+        dateRangesToIntersect.push(groupHosts.flatMap(getHostDateRanges));
       }
     });
   }

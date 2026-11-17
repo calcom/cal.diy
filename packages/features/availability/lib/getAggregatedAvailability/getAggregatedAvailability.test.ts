@@ -1,8 +1,6 @@
-import { describe, it, expect } from "vitest";
-
 import type { Dayjs } from "@calcom/dayjs";
 import dayjs from "@calcom/dayjs";
-
+import { describe, expect, it } from "vitest";
 import { getAggregatedAvailability } from "./getAggregatedAvailability";
 
 // Helper to check if a time range overlaps with availability
@@ -519,5 +517,68 @@ describe("getAggregatedAvailability", () => {
     const result = getAggregatedAvailability(userAvailability, "ROUND_ROBIN");
 
     expect(result).toEqual([]);
+  });
+});
+
+describe("getAggregatedAvailability without computed oooExcludedDateRanges", () => {
+  it("falls back to the base availability of a fixed host whose OOO-excluded ranges are missing", () => {
+    const userAvailability = [
+      {
+        dateRanges: [{ start: dayjs("2025-01-23T09:00:00.000Z"), end: dayjs("2025-01-23T17:00:00.000Z") }],
+        user: { isFixed: true },
+      },
+      {
+        dateRanges: [{ start: dayjs("2025-01-23T09:00:00.000Z"), end: dayjs("2025-01-23T18:00:00.000Z") }],
+        oooExcludedDateRanges: [
+          { start: dayjs("2025-01-23T10:00:00.000Z"), end: dayjs("2025-01-23T18:00:00.000Z") },
+        ],
+        user: { isFixed: true },
+      },
+    ];
+
+    const result = getAggregatedAvailability(userAvailability, "COLLECTIVE");
+
+    expect(result.length).toBe(1);
+    expect(result[0].start.format()).toEqual(dayjs("2025-01-23T10:00:00.000Z").format());
+    expect(result[0].end.format()).toEqual(dayjs("2025-01-23T17:00:00.000Z").format());
+  });
+
+  it("keeps honoring OOO-excluded ranges when they are present", () => {
+    const userAvailability = [
+      {
+        dateRanges: [{ start: dayjs("2025-01-23T09:00:00.000Z"), end: dayjs("2025-01-23T17:00:00.000Z") }],
+        oooExcludedDateRanges: [
+          { start: dayjs("2025-01-23T11:00:00.000Z"), end: dayjs("2025-01-23T15:00:00.000Z") },
+        ],
+        user: { isFixed: true },
+      },
+    ];
+
+    const result = getAggregatedAvailability(userAvailability, "COLLECTIVE");
+
+    expect(result.length).toBe(1);
+    expect(result[0].start.format()).toEqual(dayjs("2025-01-23T11:00:00.000Z").format());
+    expect(result[0].end.format()).toEqual(dayjs("2025-01-23T15:00:00.000Z").format());
+  });
+
+  it("does not drop round-robin hosts whose OOO-excluded ranges are missing", () => {
+    const userAvailability = [
+      {
+        dateRanges: [{ start: dayjs("2025-01-23T11:00:00.000Z"), end: dayjs("2025-01-23T11:30:00.000Z") }],
+        user: { isFixed: false },
+      },
+      {
+        dateRanges: [{ start: dayjs("2025-01-23T12:00:00.000Z"), end: dayjs("2025-01-23T12:30:00.000Z") }],
+        user: { isFixed: false },
+      },
+    ];
+
+    const result = getAggregatedAvailability(userAvailability, "ROUND_ROBIN");
+
+    expect(result.length).toBe(2);
+    expect(result[0].start.format()).toEqual(dayjs("2025-01-23T11:00:00.000Z").format());
+    expect(result[0].end.format()).toEqual(dayjs("2025-01-23T11:30:00.000Z").format());
+    expect(result[1].start.format()).toEqual(dayjs("2025-01-23T12:00:00.000Z").format());
+    expect(result[1].end.format()).toEqual(dayjs("2025-01-23T12:30:00.000Z").format());
   });
 });
