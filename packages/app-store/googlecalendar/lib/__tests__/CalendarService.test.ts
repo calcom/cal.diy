@@ -469,6 +469,51 @@ describe("Date Optimization Benchmarks", () => {
 
     getFreeBusyDataSpy.mockRestore();
   });
+
+  test("fetchAvailabilityData should cover the end of a range that is not a whole number of days", async () => {
+    const calendarService = BuildCalendarService(mockCredential);
+    setFullMockOAuthManagerRequest();
+
+    const getFreeBusyDataSpy = vi.spyOn(calendarService as any, "getFreeBusyData").mockResolvedValue([]);
+
+    // 180 days and 12 hours: the last 12 hours must still be requested.
+    await (calendarService as any).fetchAvailabilityData(
+      ["test@calendar.com"],
+      "2024-01-01T00:00:00Z",
+      "2024-06-29T12:00:00Z"
+    );
+
+    const requestedRanges = getFreeBusyDataSpy.mock.calls.map(([args]: any[]) => args);
+    expect(requestedRanges).toHaveLength(3);
+    expect(requestedRanges[0].timeMin).toBe("2024-01-01T00:00:00.000Z");
+    expect(requestedRanges[requestedRanges.length - 1].timeMax).toBe("2024-06-29T12:00:00.000Z");
+
+    getFreeBusyDataSpy.mockRestore();
+  });
+
+  test("fetchAvailabilityData should chunk a range just over 90 days instead of sending it in one request", async () => {
+    const calendarService = BuildCalendarService(mockCredential);
+    setFullMockOAuthManagerRequest();
+
+    const getFreeBusyDataSpy = vi.spyOn(calendarService as any, "getFreeBusyData").mockResolvedValue([]);
+
+    // 90 days and 12 hours.
+    await (calendarService as any).fetchAvailabilityData(
+      ["test@calendar.com"],
+      "2024-01-01T00:00:00Z",
+      "2024-03-31T12:00:00Z"
+    );
+
+    const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+    const requestedRanges = getFreeBusyDataSpy.mock.calls.map(([args]: any[]) => args);
+    expect(requestedRanges).toHaveLength(2);
+    for (const { timeMin, timeMax } of requestedRanges) {
+      expect(new Date(timeMax).getTime() - new Date(timeMin).getTime()).toBeLessThanOrEqual(ninetyDaysMs);
+    }
+    expect(requestedRanges[1].timeMax).toBe("2024-03-31T12:00:00.000Z");
+
+    getFreeBusyDataSpy.mockRestore();
+  });
 });
 
 describe("createEvent", () => {
