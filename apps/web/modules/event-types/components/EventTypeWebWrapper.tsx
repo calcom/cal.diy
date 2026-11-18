@@ -22,6 +22,10 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { EventType as EventTypeComponent } from "./EventType";
 
+// Keep in sync with the bodyParser sizeLimit in apps/web/pages/api/trpc/eventTypesHeavy/[trpc].ts (4mb),
+// minus some headroom for the tRPC request envelope.
+const EVENT_TYPE_UPDATE_MAX_BYTES = 4 * 1024 * 1024 - 16 * 1024;
+
 type EventPermissions = {
   eventTypes: {
     canRead: boolean;
@@ -150,8 +154,15 @@ const EventTypeWeb = ({
     onError: (err) => {
       let message = "";
       if (err instanceof HttpError) {
-        const message = `${err.statusCode}: ${err.message}`;
-        showToast(message, "error");
+        showToast(`${err.statusCode}: ${err.message}`, "error");
+        return;
+      }
+
+      // No tRPC error shape means the response wasn't from our API (e.g. a 413 from the
+      // body size limit), so err.message is a raw JSON parse error that would confuse users.
+      if (!err.data) {
+        showToast(t("unexpected_error_try_again"), "error");
+        return;
       }
 
       if (err.data?.code === "UNAUTHORIZED") {
@@ -170,7 +181,18 @@ const EventTypeWeb = ({
     },
   });
 
-  const { form, handleSubmit } = useEventTypeForm({ eventType, onSubmit: updateMutation.mutate });
+  const { form, handleSubmit } = useEventTypeForm({
+    eventType,
+    onSubmit: (data) => {
+      // Requests over the route's body size limit are rejected with a 413, so catch them
+      // before sending and tell the user why instead of showing a generic error.
+      if (new Blob([JSON.stringify(data)]).size > EVENT_TYPE_UPDATE_MAX_BYTES) {
+        showToast(t("event_type_too_large_to_save"), "error");
+        return;
+      }
+      updateMutation.mutate(data);
+    },
+  });
   const slug = form.watch("slug") ?? eventType.slug;
 
   const orgBranding = null as { id: number; [key: string]: unknown } | null;

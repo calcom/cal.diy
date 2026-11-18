@@ -505,6 +505,7 @@
   "bookerlayout_error_unknown_layout": "The layout you selected is not a valid layout.",
   "bookerlayout_override_global_settings": "You can manage this for all your event types in Settings -> <0>Appearance</0> or <1>Override</1> for this event only.",
   "unexpected_error_try_again": "An unexpected error occurred. Try again.",
+  "event_type_too_large_to_save": "This event type is too large to save. Try reducing the size of images in the description.",
   "duplicate_event_slug_conflict": "An event type with this URL already exists. Please try a different URL.",
   "sunday_time_error": "Invalid time on Sunday",
   "monday_time_error": "Invalid time on Monday",
