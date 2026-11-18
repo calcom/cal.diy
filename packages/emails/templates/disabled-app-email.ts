@@ -54,6 +54,8 @@ export default class DisabledAppEmail extends BaseEmail {
       ? this.t("disable_payment_app", { appName: this.appName, title: this.title })
       : this.appType.some((type) => type === "video")
         ? this.t("app_disabled_video", { appName: this.appName })
-        : this.t("app_disabled", { appName: this.appName });
+        : this.title && this.eventTypeId
+          ? this.t("app_disabled_with_event_type", { appName: this.appName, title: this.title })
+          : this.t("admin_has_disabled", { appName: this.appName });
   }
 }
