@@ -101,6 +101,18 @@ describe("getTimezone", () => {
     expect(handleOptionLabel(option, timezonesFixture)).toMatchInlineSnapshot(`"San Francisco GMT -7:00"`);
   });
 
+  it.each([
+    { value: "Asia/Kolkata", label: "(GMT+5:30) Kolkata", expected: "Kolkata GMT +5:30" },
+    { value: "Asia/Kathmandu", label: "(GMT+5:45) Kathmandu", expected: "Kathmandu GMT +5:45" },
+    { value: "Pacific/Marquesas", label: "(GMT-9:30) Marquesas", expected: "Marquesas GMT -9:30" },
+    { value: "Asia/Tokyo", label: "(GMT+9:00) Tokyo", expected: "Tokyo GMT +9:00" },
+    { value: "Pacific/Auckland", label: "(GMT+13:00) Auckland", expected: "Auckland GMT +13:00" },
+  ])("should format the $value offset without a leading zero", ({ value, label, expected }) => {
+    expect(handleOptionLabel({ value, label, offset: 0, abbrev: "", altName: "" }, timezonesFixture)).toBe(
+      expected
+    );
+  });
+
   it("should return timezone as option label if cityData is empty", () => {
     expect(handleOptionLabel(option, [])).toMatchInlineSnapshot(`"America/Los Angeles GMT -8:00"`);
     vi.setSystemTime(new Date("2020-06-01"));
