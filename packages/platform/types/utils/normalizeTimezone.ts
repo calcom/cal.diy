@@ -1,5 +1,26 @@
+// IANA names are matched case-insensitively, but some contain lower-case words ("Isle_of_Man",
+// "Dar_es_Salaam") or inner capitals ("McMurdo", "Port-au-Prince") that word-by-word capitalization
+// gets wrong. Use the spelling Intl resolves to, but only when it is the same name: Intl may also
+// swap in a different alias (e.g. "Asia/Kolkata" -> "Asia/Calcutta"), which we must not do.
+function getIanaSpelling(timeZone: string): string | undefined {
+  try {
+    const resolved = new Intl.DateTimeFormat("en-US", { timeZone }).resolvedOptions().timeZone;
+    if (resolved.toLowerCase() !== timeZone.toLowerCase()) {
+      return undefined;
+    }
+    return resolved;
+  } catch {
+    return undefined;
+  }
+}
+
 export function normalizeTimezone(value: unknown): string | unknown {
   if (typeof value === "string") {
+    const ianaSpelling = getIanaSpelling(value);
+    if (ianaSpelling) {
+      return ianaSpelling;
+    }
+
     const parts = value.split("/");
     const normalizedParts = parts.map((part) =>
       part
