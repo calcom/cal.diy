@@ -216,6 +216,18 @@ export default async function main() {
     });
   }
 
+  if (
+    process.env.KYZONSPACE_CLIENT_ID &&
+    process.env.KYZONSPACE_CLIENT_SECRET &&
+    process.env.KYZONSPACE_API_KEY
+  ) {
+    await createApp("kyzonspacevideo", "kyzonspacevideo", ["conferencing"], "kyzonspacevideo_video", {
+      client_id: process.env.KYZONSPACE_CLIENT_ID,
+      client_secret: process.env.KYZONSPACE_CLIENT_SECRET,
+      api_key: process.env.KYZONSPACE_API_KEY,
+    });
+  }
+
   // Payment apps
   if (
     process.env.STRIPE_CLIENT_ID &&

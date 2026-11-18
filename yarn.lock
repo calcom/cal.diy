@@ -2697,6 +2697,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@calcom/kyzonspacevideo@workspace:packages/app-store/kyzonspacevideo":
+  version: 0.0.0-use.local
+  resolution: "@calcom/kyzonspacevideo@workspace:packages/app-store/kyzonspacevideo"
+  dependencies:
+    "@calcom/lib": "*"
+    "@calcom/types": "*"
+  languageName: unknown
+  linkType: soft
+
 "@calcom/larkcalendar@workspace:packages/app-store/larkcalendar":
   version: 0.0.0-use.local
   resolution: "@calcom/larkcalendar@workspace:packages/app-store/larkcalendar"
