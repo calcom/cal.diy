@@ -111,7 +111,7 @@ type AvailabilitySettingsProps = {
   timeFormat: number | null;
   weekStart: string;
   backPath: string | boolean;
-  handleSubmit: (data: AvailabilityFormValues) => Promise<void>;
+  handleSubmit: (data: AvailabilityFormValues) => Promise<"saved" | "skipped">;
   isPlatform?: boolean;
   customClassNames?: CustomClassNames;
   disableEditableHeading?: boolean;
@@ -126,7 +126,6 @@ type AvailabilitySettingsProps = {
     isEventTypesFetching?: boolean;
     handleBulkEditDialogToggle: () => void;
   };
-  callbacksRef?: React.MutableRefObject<{ onSuccess?: () => void; onError?: (error: Error) => void }>;
   isDryRun?: boolean;
 };
 
@@ -206,20 +205,27 @@ const DateOverride = ({
     description?: string;
     button?: string;
   };
-  handleSubmit: (data: AvailabilityFormValues) => Promise<void>;
+  handleSubmit: (data: AvailabilityFormValues) => Promise<"saved" | "skipped">;
   isDryRun?: boolean;
 }) => {
   const { append, replace, fields } = useFieldArray<AvailabilityFormValues, "dateOverrides">({
     name: "dateOverrides",
   });
-  const { getValues } = useFormContext();
+  const { getValues, reset } = useFormContext();
   const excludedDates = useExcludedDates();
   const { t } = useLocale();
 
-  const handleAvailabilityUpdate = () => {
+  const handleAvailabilityUpdate = async () => {
     const updatedValues = getValues() as AvailabilityFormValues;
     if (!isDryRun) {
-      handleSubmit(updatedValues);
+      try {
+        const result = await handleSubmit(updatedValues);
+        if (result === "saved") {
+          reset(updatedValues);
+        }
+      } catch {
+        // error already handled by mutation's onError callback
+      }
     }
   };
 
@@ -314,7 +320,6 @@ export const AvailabilitySettings = forwardRef<AvailabilitySettingsFormRef, Avai
       bulkUpdateModalProps,
       allowSetToDefault = true,
       allowDelete = true,
-      callbacksRef,
       isDryRun,
     } = props;
     const [openSidebar, setOpenSidebar] = useState(false);
@@ -334,19 +339,7 @@ export const AvailabilitySettings = forwardRef<AvailabilitySettingsFormRef, Avai
       control: form.control,
     });
 
-    const initialValuesRef = useRef<AvailabilityFormValues | null>(null);
-    useEffect(() => {
-      initialValuesRef.current = form.getValues() as AvailabilityFormValues;
-    }, [form, schedule]);
-
-    const formHasChanges = useMemo(() => {
-      if (!initialValuesRef.current) return false;
-      try {
-        return (JSON.stringify(form.watch("schedule")) !== JSON.stringify(initialValuesRef.current.availability) || JSON.stringify(watchedValues) !== JSON.stringify(initialValuesRef.current));
-      } catch {
-        return form.formState.isDirty;
-      }
-    }, [watchedValues, form.formState.isDirty]);
+    const { isDirty } = form.formState;
 
     // Trigger callback whenever the form state changes
     useEffect(() => {
@@ -362,27 +355,31 @@ export const AvailabilitySettings = forwardRef<AvailabilitySettingsFormRef, Avai
     }, [isPlatform]);
 
     const saveButtonRef = useRef<HTMLButtonElement>(null);
+    const callbacksRef = useRef<{ onSuccess?: () => void; onError?: (error: Error) => void }>({});
 
     const handleFormSubmit = useCallback(
       (customCallbacks?: { onSuccess?: () => void; onError?: (error: Error) => void }) => {
-        if (callbacksRef && customCallbacks) {
-          callbacksRef.current = customCallbacks;
-        }
+        callbacksRef.current = customCallbacks || {};
 
-        if (saveButtonRef.current) {
+        if (saveButtonRef.current && !saveButtonRef.current.disabled) {
           saveButtonRef.current.click();
         } else {
           form.handleSubmit(async (data) => {
             try {
-              await handleSubmit(data);
-              callbacksRef?.current?.onSuccess?.();
+              const result = await handleSubmit(data);
+              if (result === "saved") {
+                form.reset(data);
+                callbacksRef.current?.onSuccess?.();
+              }
             } catch (error) {
-              callbacksRef?.current?.onError?.(error as Error);
+              callbacksRef.current?.onError?.(error as Error);
+            } finally {
+              callbacksRef.current = {};
             }
           })();
         }
       },
-      [form, handleSubmit, callbacksRef]
+      [form, handleSubmit]
     );
 
     const validateForm = useCallback(async () => {
@@ -643,7 +640,7 @@ export const AvailabilitySettings = forwardRef<AvailabilitySettingsFormRef, Avai
               type="submit"
               form="availability-form"
               loading={isSaving}
-              disabled={isLoading || !formHasChanges}
+              disabled={isLoading || !isDirty}
             >
               {t("save")}
             </Button>
@@ -661,7 +658,17 @@ export const AvailabilitySettings = forwardRef<AvailabilitySettingsFormRef, Avai
             form={form}
             id="availability-form"
             handleSubmit={async (props) => {
-              handleSubmit(props);
+              try {
+                const result = await handleSubmit(props);
+                if (result === "saved") {
+                  form.reset(props);
+                  callbacksRef.current?.onSuccess?.();
+                }
+              } catch (error) {
+                callbacksRef.current?.onError?.(error as Error);
+              } finally {
+                callbacksRef.current = {};
+              }
             }}
             className={cn(customClassNames?.formClassName, "flex flex-col sm:mx-0 xl:flex-row xl:space-x-6")}>
             <div className="flex-1">

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { forwardRef, useRef } from "react";
+import { forwardRef } from "react";
 
 import type { ScheduleLabelsType } from "@calcom/features/schedules/components/ScheduleComponent";
 import type { UpdateScheduleResponse } from "@calcom/features/schedules/services/ScheduleService";
@@ -84,9 +84,7 @@ export const AvailabilitySettingsPlatformWrapper = forwardRef<
     },
   });
 
-  const callbacksRef = useRef<{ onSuccess?: () => void; onError?: (error: Error) => void }>({});
-
-  const { mutate: updateSchedule, isPending: isSavingInProgress } = useAtomUpdateSchedule({
+  const { mutateAsync: updateSchedule, isPending: isSavingInProgress } = useAtomUpdateSchedule({
     onSuccess: (res) => {
       onUpdateSuccess?.(res);
       if (!disableToasts) {
@@ -94,7 +92,6 @@ export const AvailabilitySettingsPlatformWrapper = forwardRef<
           description: "Schedule updated successfully",
         });
       }
-      callbacksRef.current?.onSuccess?.();
     },
     onError: (err) => {
       onUpdateError?.(err);
@@ -103,7 +100,6 @@ export const AvailabilitySettingsPlatformWrapper = forwardRef<
           description: "Could not update schedule",
         });
       }
-      callbacksRef.current?.onError?.(err);
     },
   });
 
@@ -111,22 +107,25 @@ export const AvailabilitySettingsPlatformWrapper = forwardRef<
     await deleteSchedule({ id });
   };
 
-  const handleUpdate = async (id: number, body: AvailabilityFormValues) => {
+  const handleUpdate = async (id: number, body: AvailabilityFormValues): Promise<"saved" | "skipped"> => {
     let canUpdate = true;
 
     if (onBeforeUpdate) {
       canUpdate = await onBeforeUpdate(body);
     }
 
-    if (canUpdate) {
-      updateSchedule({
-        scheduleId: id,
-        body: {
-          ...body,
-          dateOverrides: body.dateOverrides.flatMap((override) => override.ranges),
-        },
-      });
+    if (!canUpdate) {
+      return "skipped";
     }
+
+    await updateSchedule({
+      scheduleId: id,
+      body: {
+        ...body,
+        dateOverrides: body.dateOverrides.flatMap((override) => override.ranges),
+      },
+    });
+    return "saved";
   };
 
   if (isLoading) {
@@ -166,11 +165,13 @@ export const AvailabilitySettingsPlatformWrapper = forwardRef<
             toast({
               description: "Schedule updated successfully",
             });
+            return "saved";
           }
 
           if (!isDryRun && atomSchedule.id) {
-            handleUpdate(atomSchedule.id, data);
+            return await handleUpdate(atomSchedule.id, data);
           }
+          return "skipped";
         }}
         weekStart={me?.data?.weekStart || "Sunday"}
         timeFormat={timeFormat}
@@ -202,7 +203,6 @@ export const AvailabilitySettingsPlatformWrapper = forwardRef<
         allowDelete={allowDelete}
         allowSetToDefault={allowSetToDefault}
         onFormStateChange={onFormStateChange}
-        callbacksRef={callbacksRef}
         isDryRun={isDryRun}
       />
     </AtomsWrapper>
