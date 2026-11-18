@@ -52,4 +52,35 @@ describe("getRequiresConfirmationFlags - requiresConfirmationThreshold", () => {
     expect((await getFlags(2 * HOUR + 15 * 60 * 1000, 2.5)).isConfirmedByDefault).toBe(false);
     expect((await getFlags(2 * HOUR + 45 * 60 * 1000, 2.5)).isConfirmedByDefault).toBe(true);
   });
+
+  it("keeps the milliseconds of the start time", async () => {
+    vi.setSystemTime(new Date(NOW.getTime() + 500));
+    // 2 hours and 400ms of notice is at least the 2-hour threshold.
+    const flags = await getFlags(2 * HOUR + 900);
+    expect(flags.isConfirmedByDefault).toBe(true);
+  });
+
+  it("measures day thresholds as elapsed time when a DST change falls inside the notice", async () => {
+    const originalTimeZone = process.env.TZ;
+    process.env.TZ = "America/New_York";
+    vi.setSystemTime(new Date("2026-03-07T12:00:00.000Z"));
+    try {
+      // 35.5 hours of notice across the US spring-forward change is below a 1.5-day threshold.
+      const flags = await getRequiresConfirmationFlags({
+        eventType: {
+          requiresConfirmation: true,
+          requiresConfirmationForFreeEmail: false,
+          metadata: { requiresConfirmationThreshold: { time: 1.5, unit: "days" } },
+        },
+        bookingStartTime: "2026-03-08T23:30:00.000Z",
+        userId: undefined,
+        paymentAppData: { price: 0 },
+        originalRescheduledBookingOrganizerId: undefined,
+        bookerEmail: "booker@example.com",
+      });
+      expect(flags.isConfirmedByDefault).toBe(false);
+    } finally {
+      process.env.TZ = originalTimeZone;
+    }
+  });
 });
