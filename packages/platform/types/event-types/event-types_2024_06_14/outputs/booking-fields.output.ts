@@ -1,5 +1,9 @@
 import { Logger } from "@nestjs/common";
-import { ApiProperty, ApiProperty as DocsProperty } from "@nestjs/swagger";
+import {
+  ApiProperty,
+  ApiProperty as DocsProperty,
+  ApiPropertyOptional as DocsPropertyOptional,
+} from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
 import { IsBoolean, IsOptional, IsString } from "class-validator";
 import type { ValidationOptions, ValidatorConstraintInterface } from "class-validator";
@@ -566,6 +570,57 @@ export class MultiEmailFieldOutput_2024_06_14 extends MultiEmailFieldInput_2024_
   hidden!: boolean;
 }
 
+export class EmailFieldOutput_2024_06_14 {
+  @IsBoolean()
+  @DocsProperty({
+    description: "This property is always false because it's not default field but custom field",
+    example: false,
+    default: false,
+  })
+  isDefault = false;
+
+  @IsString()
+  @DocsProperty({ example: "email", description: "only allowed value for type is `email`" })
+  type!: "email";
+
+  @IsString()
+  @DocsProperty({
+    description:
+      "Unique identifier for the field in format `some-slug`. It is used to access response to this booking field during the booking",
+    example: "some-slug",
+  })
+  slug!: string;
+
+  @IsString()
+  @DocsProperty({ example: "Please enter your email" })
+  label!: string;
+
+  @IsBoolean()
+  @DocsProperty()
+  required!: boolean;
+
+  @IsString()
+  @IsOptional()
+  @DocsProperty({ example: "e.g., example@example.com" })
+  placeholder?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  @DocsPropertyOptional({
+    type: Boolean,
+    description:
+      "Disable this booking field if the URL contains query parameter with key equal to the slug and prefill it with the provided value.",
+  })
+  disableOnPrefill?: boolean;
+
+  @IsBoolean()
+  @DocsProperty({
+    description:
+      "If true show under event type settings but don't show this booking field in the Booker. If false show in both.",
+  })
+  hidden!: boolean;
+}
+
 export class CheckboxGroupFieldOutput_2024_06_14 extends CheckboxGroupFieldInput_2024_06_14 {
   @IsBoolean()
   @DocsProperty({
@@ -648,6 +703,7 @@ export type CustomFieldOutput_2024_06_14 =
   | SelectFieldOutput_2024_06_14
   | MultiSelectFieldOutput_2024_06_14
   | MultiEmailFieldOutput_2024_06_14
+  | EmailFieldOutput_2024_06_14
   | CheckboxGroupFieldOutput_2024_06_14
   | RadioGroupFieldOutput_2024_06_14
   | BooleanFieldOutput_2024_06_14
@@ -685,6 +741,7 @@ class OutputBookingFieldValidator_2024_06_14 implements ValidatorConstraintInter
     select: SelectFieldOutput_2024_06_14,
     multiselect: MultiSelectFieldOutput_2024_06_14,
     multiemail: MultiEmailFieldOutput_2024_06_14,
+    email: EmailFieldOutput_2024_06_14,
     checkbox: CheckboxGroupFieldOutput_2024_06_14,
     radio: RadioGroupFieldOutput_2024_06_14,
     boolean: BooleanFieldOutput_2024_06_14,

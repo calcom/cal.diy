@@ -16,6 +16,7 @@ import type {
   BooleanFieldOutput_2024_06_14,
   CheckboxGroupFieldOutput_2024_06_14,
   MultiEmailFieldOutput_2024_06_14,
+  EmailFieldOutput_2024_06_14,
   MultiSelectFieldOutput_2024_06_14,
   NumberFieldOutput_2024_06_14,
   PhoneFieldOutput_2024_06_14,
@@ -214,6 +215,17 @@ export function transformBookingFieldsInternalToApi(
             disableOnPrefill: !!field.disableOnPrefill,
             hidden: !!field.hidden,
           } satisfies MultiEmailFieldOutput_2024_06_14;
+        case "email":
+          return {
+            isDefault: false,
+            type: field.type,
+            slug: field.name,
+            label: field.label || "",
+            required: !!field.required,
+            placeholder: field.placeholder,
+            disableOnPrefill: !!field.disableOnPrefill,
+            hidden: !!field.hidden,
+          } satisfies EmailFieldOutput_2024_06_14;
         case "boolean":
           return {
             isDefault: false,
@@ -298,6 +310,7 @@ const CustomFieldTypeEnum = z.enum([
   "text",
   "textarea",
   "phone",
+  "email",
   "multiemail",
   "select",
   "multiselect",
