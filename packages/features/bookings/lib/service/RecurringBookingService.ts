@@ -46,6 +46,7 @@ export const handleNewRecurringBooking = async function (
     platformBookingUrl: input.platformBookingUrl,
     platformBookingLocation: input.platformBookingLocation,
     areCalendarEventsEnabled: input.areCalendarEventsEnabled,
+    skipAvailabilityCheck: input.skipAvailabilityCheck,
   };
 
   if (isRoundRobin) {
