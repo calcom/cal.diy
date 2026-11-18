@@ -1,22 +1,27 @@
+import { EventTypeMetaDataSchema } from "@calcom/prisma/zod-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { doesBookingRequireConfirmation } from "./doesBookingRequireConfirmation";
 
-const NOW = new Date("2026-01-15T10:00:00.000Z");
+const NOW: Date = new Date("2026-01-15T10:00:00.000Z");
 
-const bookingStartingIn = (ms: number, threshold: { time: number; unit: "minutes" | "hours" | "days" }) => ({
+// Thresholds go through the event type metadata schema, which only accepts "hours" and "minutes".
+const bookingStartingIn = (
+  ms: number,
+  threshold: { time: number; unit: "minutes" | "hours" }
+): Parameters<typeof doesBookingRequireConfirmation>[0] => ({
   booking: {
     startTime: new Date(NOW.getTime() + ms),
     eventType: {
       requiresConfirmation: true,
-      metadata: { requiresConfirmationThreshold: threshold },
+      metadata: EventTypeMetaDataSchema.parse({ requiresConfirmationThreshold: threshold }),
     },
   },
 });
 
-const MINUTE = 60 * 1000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
+const MINUTE: number = 60 * 1000;
+const HOUR: number = 60 * MINUTE;
+const DAY: number = 24 * HOUR;
 
 describe("doesBookingRequireConfirmation", () => {
   beforeEach(() => {
@@ -45,7 +50,7 @@ describe("doesBookingRequireConfirmation", () => {
       doesBookingRequireConfirmation(bookingStartingIn(2 * HOUR + 30 * MINUTE, { time: 2, unit: "hours" }))
     ).toBe(false);
     expect(
-      doesBookingRequireConfirmation(bookingStartingIn(DAY + 23 * HOUR, { time: 1, unit: "days" }))
+      doesBookingRequireConfirmation(bookingStartingIn(24 * HOUR + 30 * MINUTE, { time: 24, unit: "hours" }))
     ).toBe(false);
     expect(
       doesBookingRequireConfirmation(
