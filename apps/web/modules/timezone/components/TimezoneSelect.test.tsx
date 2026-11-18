@@ -34,8 +34,7 @@ const runtimeMock = async (isPending: boolean) => {
   mockedLib.trpc = updatedTrcp;
 };
 
-const formatOffset = (offset: string) =>
-  offset.replace(/^([-+])(0)(\d):00$/, (_, sign, _zero, hour) => `${sign}${hour}:00`);
+const formatOffset = (offset: string) => offset.replace(/^([-+])0(\d):(\d{2})$/, "$1$2:$3");
 const formatTimeZoneWithOffset = (timeZone: string) =>
   `${timeZone} GMT ${formatOffset(dayjs.tz(undefined, timeZone).format("Z"))}`;
 
