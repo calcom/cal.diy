@@ -18,29 +18,43 @@ export class CalVideoService {
     private readonly calVideoOutputService: CalVideoOutputService
   ) {}
 
-  private getVideoSessionsRoomName(references?: Array<{ type: string; meetingId?: string | null }>) {
-    return (
-      references?.filter((reference) => reference.type === CAL_VIDEO_TYPE)?.pop()?.meetingId ??
-      undefined
-    );
+  // A booking can have several Cal Video rooms: rescheduling or reassigning a host creates a new
+  // room while older references are kept, and the meeting may have taken place in any of them.
+  private getVideoSessionsRoomNames(
+    references?: Array<{ type: string; meetingId?: string | null }>
+  ): string[] {
+    const roomNames =
+      references
+        ?.filter((reference) => reference.type === CAL_VIDEO_TYPE)
+        .map((reference) => reference.meetingId)
+        .filter((meetingId): meetingId is string => !!meetingId) ?? [];
+    return Array.from(new Set(roomNames));
   }
 
-  async getRecordings(bookingUid: string) {
+  private async getBookingRoomNames(bookingUid: string): Promise<string[]> {
     const booking = await this.bookingsRepository.getByUidWithBookingReference(bookingUid);
     if (!booking) {
       throw new NotFoundException(`Booking with uid=${bookingUid} was not found in the database`);
     }
 
-    const roomName = this.getVideoSessionsRoomName(booking.references);
-    if (!roomName) {
+    const roomNames = this.getVideoSessionsRoomNames(booking.references);
+    if (!roomNames.length) {
       throw new NotFoundException(`No Cal Video reference found with booking uid ${bookingUid}`);
     }
+    return roomNames;
+  }
 
-    const recordings = await getRecordingsOfCalVideoByRoomName(roomName);
+  async getRecordings(bookingUid: string) {
+    const roomNames = await this.getBookingRoomNames(bookingUid);
 
-    if (!recordings || !("data" in recordings)) return [];
+    const recordingsPerRoom = await Promise.all(
+      roomNames.map((roomName) => getRecordingsOfCalVideoByRoomName(roomName))
+    );
+    const recordings = recordingsPerRoom.flatMap((roomRecordings) =>
+      roomRecordings && "data" in roomRecordings ? roomRecordings.data : []
+    );
 
-    const recordingWithDownloadLink = recordings.data.map((recording) => {
+    const recordingWithDownloadLink = recordings.map((recording) => {
       return getDownloadLinkOfCalVideoByRecordingId(recording.id)
         .then((res: { download_link: string } | undefined) => ({
           id: recording.id,
@@ -70,33 +84,24 @@ export class CalVideoService {
   }
 
   async getTranscripts(bookingUid: string) {
-    const booking = await this.bookingsRepository.getByUidWithBookingReference(bookingUid);
-    if (!booking) {
-      throw new NotFoundException(`Booking with uid=${bookingUid} was not found in the database`);
-    }
+    const roomNames = await this.getBookingRoomNames(bookingUid);
 
-    const roomName = this.getVideoSessionsRoomName(booking.references);
-    if (!roomName) {
-      throw new NotFoundException(`No Cal Video reference found with booking uid ${bookingUid}`);
-    }
+    const transcriptsPerRoom = await Promise.all(
+      roomNames.map((roomName) => getAllTranscriptsAccessLinkFromRoomName(roomName))
+    );
 
-    const transcripts = await getAllTranscriptsAccessLinkFromRoomName(roomName);
-
-    return transcripts;
+    return transcriptsPerRoom.flatMap((roomTranscripts) => roomTranscripts ?? []);
   }
 
   async getVideoSessions(bookingUid: string) {
-    const booking = await this.bookingsRepository.getByUidWithBookingReference(bookingUid);
-    if (!booking) {
-      throw new NotFoundException(`Booking with uid=${bookingUid} was not found in the database`);
-    }
+    const roomNames = await this.getBookingRoomNames(bookingUid);
 
-    const roomName = this.getVideoSessionsRoomName(booking.references);
-    if (!roomName) {
-      throw new NotFoundException(`No Cal Video reference found with booking uid ${bookingUid}`);
-    }
+    const sessionsPerRoom = await Promise.all(
+      roomNames.map((roomName) => getCalVideoMeetingSessionsByRoomName(roomName))
+    );
 
-    const sessions = await getCalVideoMeetingSessionsByRoomName(roomName);
-    return this.calVideoOutputService.getOutputVideoSessions(sessions.data);
+    return this.calVideoOutputService.getOutputVideoSessions(
+      sessionsPerRoom.flatMap((roomSessions) => roomSessions.data)
+    );
   }
 }
