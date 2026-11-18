@@ -16,7 +16,7 @@ export const DisabledAppEmail = (
   const { title, appName, eventTypeId, t, appType } = props;
 
   return (
-    <BaseEmailHtml subject={t("app_disabled", { appName: appName })}>
+    <BaseEmailHtml subject={t("app_disabled_subject", { appName: appName })}>
       {appType.some((type) => type === "payment") ? (
         <>
           <p>
@@ -36,7 +36,7 @@ export const DisabledAppEmail = (
       ) : title && eventTypeId ? (
         <>
           <p>
-            <>{(t("app_disabled_with_event_type"), { appName: appName, title: title })}</>
+            <>{t("app_disabled_with_event_type", { appName: appName, title: title })}</>
           </p>
 
           <hr style={{ marginBottom: "24px" }} />
