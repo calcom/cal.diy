@@ -61,8 +61,9 @@ const _determineRequiresConfirmation = async (
 
   if (rcThreshold) {
     // Keep the fraction: a truncated diff would require confirmation for e.g. 2h45m notice on a 2.5h threshold.
-    // Compare UTC instants directly, which keeps milliseconds and avoids a DST shift for day thresholds.
-    const timeDifference = dayjs.utc(bookingStartTime).diff(dayjs.utc(), rcThreshold.unit, true);
+    // Parse the start the same way the booking's stored startTime is parsed, without the format round trip
+    // that used to drop its milliseconds.
+    const timeDifference = dayjs(bookingStartTime).utc().diff(dayjs.utc(), rcThreshold.unit, true);
     if (timeDifference >= rcThreshold.time) {
       requiresConfirmation = false;
     }

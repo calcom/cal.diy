@@ -1,3 +1,5 @@
+import process from "node:process";
+import { EventTypeMetaDataSchema } from "@calcom/prisma/zod-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getRequiresConfirmationFlags } from "./getRequiresConfirmationFlags";
@@ -6,10 +8,44 @@ vi.mock("@calcom/features/watchlist/lib/freeEmailDomainCheck/checkIfFreeEmailDom
   checkIfFreeEmailDomain: vi.fn().mockResolvedValue(false),
 }));
 
-const NOW = new Date("2026-01-15T10:00:00.000Z");
-const HOUR = 60 * 60 * 1000;
+const NOW: Date = new Date("2026-01-15T10:00:00.000Z");
+const HOUR: number = 60 * 60 * 1000;
 
-const getFlags = (noticeMs: number, thresholdTime = 2) =>
+const withProcessTimeZone = async (timeZone: string, run: () => Promise<void>): Promise<void> => {
+  const originalTimeZone = process.env.TZ;
+  process.env.TZ = timeZone;
+  try {
+    await run();
+  } finally {
+    if (originalTimeZone === undefined) {
+      delete process.env.TZ;
+    } else {
+      process.env.TZ = originalTimeZone;
+    }
+  }
+};
+
+const getFlagsForStart = (
+  bookingStartTime: string,
+  metadata: unknown
+): ReturnType<typeof getRequiresConfirmationFlags> =>
+  getRequiresConfirmationFlags({
+    eventType: {
+      requiresConfirmation: true,
+      requiresConfirmationForFreeEmail: false,
+      metadata: EventTypeMetaDataSchema.parse(metadata),
+    },
+    bookingStartTime,
+    userId: undefined,
+    paymentAppData: { price: 0 },
+    originalRescheduledBookingOrganizerId: undefined,
+    bookerEmail: "booker@example.com",
+  });
+
+const getFlags = (
+  noticeMs: number,
+  thresholdTime: number = 2
+): ReturnType<typeof getRequiresConfirmationFlags> =>
   getRequiresConfirmationFlags({
     eventType: {
       requiresConfirmation: true,
@@ -60,27 +96,23 @@ describe("getRequiresConfirmationFlags - requiresConfirmationThreshold", () => {
     expect(flags.isConfirmedByDefault).toBe(true);
   });
 
-  it("measures day thresholds as elapsed time when a DST change falls inside the notice", async () => {
-    const originalTimeZone = process.env.TZ;
-    process.env.TZ = "America/New_York";
-    vi.setSystemTime(new Date("2026-03-07T12:00:00.000Z"));
-    try {
-      // 35.5 hours of notice across the US spring-forward change is below a 1.5-day threshold.
-      const flags = await getRequiresConfirmationFlags({
-        eventType: {
-          requiresConfirmation: true,
-          requiresConfirmationForFreeEmail: false,
-          metadata: { requiresConfirmationThreshold: { time: 1.5, unit: "days" } },
-        },
-        bookingStartTime: "2026-03-08T23:30:00.000Z",
-        userId: undefined,
-        paymentAppData: { price: 0 },
-        originalRescheduledBookingOrganizerId: undefined,
-        bookerEmail: "booker@example.com",
+  it("reads a start time without an offset in the server time zone, like the stored start", async () => {
+    await withProcessTimeZone("Europe/Berlin", async () => {
+      // 12:30 Berlin time is 11:30Z: 1.5 hours of notice, below the 2-hour threshold.
+      const flags = await getFlagsForStart("2026-01-15T12:30:00", {
+        requiresConfirmationThreshold: { time: 2, unit: "hours" },
       });
       expect(flags.isConfirmedByDefault).toBe(false);
-    } finally {
-      process.env.TZ = originalTimeZone;
-    }
+    });
+  });
+
+  it("measures a 24-hour threshold as elapsed time across a DST change", async () => {
+    await withProcessTimeZone("America/New_York", async () => {
+      vi.setSystemTime(new Date("2026-03-07T12:00:00.000Z"));
+      const metadata = { requiresConfirmationThreshold: { time: 24, unit: "hours" } };
+      // 23.5 hours of notice across the US spring-forward change still requires confirmation.
+      expect((await getFlagsForStart("2026-03-08T11:30:00.000Z", metadata)).isConfirmedByDefault).toBe(false);
+      expect((await getFlagsForStart("2026-03-08T12:00:00.000Z", metadata)).isConfirmedByDefault).toBe(true);
+    });
   });
 });

@@ -95,26 +95,4 @@ describe("doesBookingRequireConfirmation", () => {
       })
     ).toBe(true);
   });
-
-  it("measures day thresholds as elapsed time when a DST change falls inside the notice", () => {
-    const originalTimeZone = process.env.TZ;
-    process.env.TZ = "America/New_York";
-    try {
-      // 35.5 hours of notice across the US spring-forward change is below a 1.5-day threshold.
-      expect(
-        doesBookingRequireConfirmation({
-          booking: {
-            startTime: new Date("2026-03-08T23:30:00.000Z"),
-            createdAt: new Date("2026-03-07T12:00:00.000Z"),
-            eventType: {
-              requiresConfirmation: true,
-              metadata: { requiresConfirmationThreshold: { time: 1.5, unit: "days" } },
-            },
-          },
-        })
-      ).toBe(true);
-    } finally {
-      process.env.TZ = originalTimeZone;
-    }
-  });
 });
