@@ -13,6 +13,7 @@ import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { useEffect, useState } from "react";
 import { getThemeProviderProps } from "./getThemeProviderProps";
 
 // Workaround for https://github.com/vercel/next.js/issues/8592
@@ -56,6 +57,7 @@ const CalcomThemeProvider = (props: CalcomThemeProps) => {
   const searchParams = useSearchParams();
   const embedNamespace = searchParams ? getEmbedNamespace(searchParams) : null;
   const isEmbedMode = typeof embedNamespace === "string";
+  const [shouldApplyColorScheme, setShouldApplyColorScheme] = useState(false);
   const pathname = usePathname();
   const { key, ...themeProviderProps } = getThemeProviderProps({
     props,
@@ -65,11 +67,15 @@ const CalcomThemeProvider = (props: CalcomThemeProps) => {
     searchParams,
   });
 
+  useEffect(() => {
+    setShouldApplyColorScheme(!isEmbedMode);
+  }, [isEmbedMode]);
+
   return (
     <ThemeProvider key={key} {...themeProviderProps}>
       {/* Embed Mode can be detected reliably only on client side here as there can be static generated pages as well which can't determine if it's embed mode at backend */}
       {/* color-scheme makes background:transparent not work in iframe which is required by embed. */}
-      {typeof window !== "undefined" && !isEmbedMode && (
+      {shouldApplyColorScheme && (
         //eslint-disable-next-line react/no-unknown-property
         <style jsx global>
           {`

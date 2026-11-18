@@ -2,6 +2,12 @@
 node_modules
 **/node_modules
 
+# Local configuration and secrets
+.env
+.env.*
+**/.env
+**/.env.*
+
 # Build outputs
 .next
 **/.next

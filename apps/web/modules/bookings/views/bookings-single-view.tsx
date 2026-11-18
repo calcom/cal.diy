@@ -64,7 +64,6 @@ import {
 import { showToast } from "@calcom/ui/components/toast";
 import { useCalcomTheme } from "@calcom/ui/styles";
 import CancelBooking from "@calcom/web/components/booking/CancelBooking";
-import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
@@ -462,19 +461,6 @@ export default function Success(props: PageProps) {
 
   return (
     <div className={isEmbed ? "" : "h-screen"} data-testid="success-page">
-      {!isEmbed && !isFeedbackMode && (
-        <EventReservationSchema
-          reservationId={bookingInfo.uid}
-          eventName={eventName}
-          startTime={bookingInfo.startTime}
-          endTime={bookingInfo.endTime}
-          organizer={bookingInfo.user}
-          attendees={bookingInfo.attendees}
-          location={locationToDisplay}
-          description={bookingInfo.description}
-          status={status}
-        />
-      )}
       {isLoggedIn && !isEmbed && !isFeedbackMode && (
         <div className="-mb-4 ml-4 mt-2">
           <Link
@@ -560,6 +546,13 @@ export default function Success(props: PageProps) {
                       <div className="mt-3">
                         <p className="text-default">{getTitle()}</p>
                       </div>
+                      {isSuccessBookingPage && !isCancellationMode && !isFeedbackMode && (
+                        <div className="mt-6">
+                          <Button href="/" data-testid="return-home">
+                            {t("go_back_home")}
+                          </Button>
+                        </div>
+                      )}
                       {props.paymentStatus &&
                         (bookingInfo.status === BookingStatus.CANCELLED ||
                           bookingInfo.status === BookingStatus.REJECTED) && <h4>{paymentStatusMessage}</h4>}

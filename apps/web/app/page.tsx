@@ -1,7 +1,7 @@
 import { getServerSession } from "@calcom/features/auth/lib/getServerSession";
 import { checkOnboardingRedirect } from "@calcom/features/auth/lib/onboardingUtils";
 import { UserPermissionRole } from "@calcom/prisma/enums";
-import { Button } from "@calcom/ui/components/button";
+import HomePageAuthActions from "@calcom/web/modules/auth/HomePageAuthActions";
 import { buildLegacyRequest } from "@lib/buildLegacyCtx";
 import { getPublicEventCatalog } from "app/_lib/getPublicEventCatalog";
 import { getTranslate } from "app/_utils";
@@ -64,9 +64,14 @@ const HomePage = async (): Promise<JSX.Element> => {
     <main className="mx-auto max-w-3xl px-4 py-10">
       <header className="mb-6 flex items-center justify-between gap-4">
         <h1 className="font-semibold text-3xl text-emphasis">{t("public_event_catalog_title")}</h1>
-        <Button href={session?.user?.id ? "/bookings/upcoming" : "/auth/login"} color="secondary">
-          {session?.user?.id ? t("bookings") : t("sign_in")}
-        </Button>
+        <div className="flex items-center gap-3">
+          {session?.user?.id && <span className="text-sm text-subtle">{session.user.name}</span>}
+          <HomePageAuthActions
+            isAuthenticated={Boolean(session?.user?.id)}
+            signInLabel={t("sign_in")}
+            signOutLabel={t("sign_out")}
+          />
+        </div>
       </header>
       {getCatalogContent()}
     </main>

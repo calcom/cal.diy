@@ -406,6 +406,7 @@ export const CalComCredentialsProvider = CredentialsProvider({
     password: { label: "Password", type: "password", placeholder: "Your super secure password" },
     totpCode: { label: "Two-factor Code", type: "input", placeholder: "Code from authenticator app" },
     backupCode: { label: "Backup Code", type: "input", placeholder: "Two-factor backup code" },
+    totpToken: { label: "Two-factor Challenge Token", type: "text" },
   },
   authorize: authorizeCredentials,
 });
