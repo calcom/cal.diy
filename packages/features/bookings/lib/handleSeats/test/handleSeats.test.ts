@@ -13,6 +13,8 @@ import {
   getDate,
   getMockBookingAttendee,
   mockCalendarToHaveNoBusySlots,
+  getStripeAppCredential,
+  mockPaymentApp,
 } from "@calcom/testing/lib/bookingScenario/bookingScenario";
 import { createMockNextJsRequest } from "@calcom/testing/lib/bookingScenario/createMockNextJsRequest";
 import { getMockRequestDataForBooking } from "@calcom/testing/lib/bookingScenario/getMockRequestDataForBooking";
@@ -387,6 +389,123 @@ describe("handleSeats", () => {
 
   describe("As an attendee", () => {
     describe("Creating a new booking", () => {
+      test("stores the subsequent seat's paymentUid on its BookingSeat (so the success page shows the right per-seat price)", async () => {
+        const handleNewBooking = getNewBookingHandler();
+
+        const booker = getBooker({ email: "seat2@example.com", name: "Seat 2" });
+
+        const organizer = getOrganizer({
+          name: "Organizer",
+          email: "organizer@example.com",
+          id: 101,
+          schedules: [TestData.schedules.IstWorkHours],
+          credentials: [getGoogleCalendarCredential(), getStripeAppCredential()],
+        });
+
+        const bookingId = 1;
+        const bookingUid = "paid-seated-link";
+        const { dateString: plus1DateString } = getDate({ dateIncrement: 1 });
+
+        await createBookingScenario(
+          getScenarioData({
+            eventTypes: [
+              {
+                id: 1,
+                slug: "paid-seated-event",
+                slotInterval: 30,
+                length: 30,
+                users: [{ id: 101 }],
+                seatsPerTimeSlot: 3,
+                seatsShowAttendees: false,
+                metadata: { apps: { stripe: { price: 100, enabled: true, currency: "usd" } } },
+              },
+            ],
+            bookings: [
+              {
+                id: bookingId,
+                uid: bookingUid,
+                eventTypeId: 1,
+                status: BookingStatus.ACCEPTED,
+                startTime: `${plus1DateString}T04:00:00Z`,
+                endTime: `${plus1DateString}T04:30:00Z`,
+                metadata: { videoCallUrl: "https://existing-daily-video-call-url.example.com" },
+                references: [
+                  {
+                    type: appStoreMetadata.dailyvideo.type,
+                    uid: "MOCK_ID",
+                    meetingId: "MOCK_ID",
+                    meetingPassword: "MOCK_PASS",
+                    meetingUrl: "http://mock-dailyvideo.example.com",
+                    credentialId: null,
+                  },
+                ],
+                attendees: [
+                  getMockBookingAttendee({
+                    id: 1,
+                    name: "Seat 1",
+                    email: "seat1@test.com",
+                    locale: "en",
+                    timeZone: "America/Toronto",
+                    bookingSeat: { referenceUid: "booking-seat-1", data: {} },
+                  }),
+                ],
+              },
+            ],
+            organizer,
+            apps: [TestData.apps["stripe-payment"]],
+            // Seat 1 already has its own payment, so the booking has more than one payment and a
+            // bookingId-only lookup would be ambiguous — the new seat must link to its own payment.
+            payment: [
+              {
+                uid: "SEAT_1_PAYMENT_UID",
+                bookingId,
+                amount: 100,
+                fee: 0,
+                currency: "usd",
+                success: true,
+                refunded: false,
+                data: {},
+                externalId: "seat_1_external_id",
+                appId: "stripe",
+              },
+            ],
+          })
+        );
+
+        mockSuccessfulVideoMeetingCreation({
+          metadataLookupKey: "dailyvideo",
+          videoMeetingData: { id: "MOCK_ID", password: "MOCK_PASS", url: "http://mock-dailyvideo.example.com/meeting-1" },
+        });
+        mockPaymentApp({ metadataLookupKey: "stripe", appStoreLookupKey: "stripepayment" });
+
+        await handleNewBooking({
+          bookingData: getMockRequestDataForBooking({
+            data: {
+              eventTypeId: 1,
+              responses: {
+                email: booker.email,
+                name: booker.name,
+                location: { optionValue: "", value: BookingLocations.CalVideo },
+              },
+              bookingUid,
+              user: "seatedAttendee",
+            },
+          }),
+        });
+
+        // The new seat's payment should be linked on its BookingSeat so the success page can resolve
+        // this seat's own amount instead of the first seat's.
+        const newSeat = await prismaMock.bookingSeat.findFirst({
+          where: { attendee: { email: booker.email } },
+          select: { metadata: true },
+        });
+        const newSeatPaymentUid = (newSeat?.metadata as { paymentUid?: string } | null)?.paymentUid;
+
+        // Must point to this seat's own payment, not seat 1's pre-seeded payment.
+        expect(newSeatPaymentUid).toBe("MOCK_PAYMENT_UID");
+        expect(newSeatPaymentUid).not.toBe("SEAT_1_PAYMENT_UID");
+      });
+
       test("Attendee should be added to existing seated event", async () => {
         const handleNewBooking = getNewBookingHandler();
 
