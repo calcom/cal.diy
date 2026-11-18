@@ -248,7 +248,7 @@ class PipedriveCrmService implements CRM {
       subject: event.title,
       type: "meeting",
       due_date: startDate.toISOString().split("T")[0],
-      due_time: startDate.toTimeString().split(" ")[0].substring(0, 5),
+      due_time: startDate.toISOString().split("T")[1].substring(0, 5),
       duration: `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")}`,
       note: this.getMeetingBody(event),
       location: getLocation({
@@ -277,7 +277,7 @@ class PipedriveCrmService implements CRM {
     const activityPayload = {
       subject: event.title,
       due_date: startDate.toISOString().split("T")[0],
-      due_time: startDate.toTimeString().split(" ")[0].substring(0, 5),
+      due_time: startDate.toISOString().split("T")[1].substring(0, 5),
       duration: `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")}`,
       note: this.getMeetingBody(event),
       location: getLocation({
