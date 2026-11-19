@@ -1,5 +1,14 @@
 export function normalizeTimezone(value: unknown): string | unknown {
   if (typeof value === "string") {
+    try {
+      const resolved = Intl.DateTimeFormat(undefined, { timeZone: value }).resolvedOptions().timeZone;
+      if (resolved.toLowerCase() === value.toLowerCase()) {
+        return resolved;
+      }
+    } catch {
+      // Fallback for custom or non-standard timezone strings that Intl cannot resolve
+    }
+
     const parts = value.split("/");
     const normalizedParts = parts.map((part) =>
       part
