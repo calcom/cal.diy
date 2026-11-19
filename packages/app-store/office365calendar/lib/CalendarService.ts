@@ -431,6 +431,12 @@ class Office365CalendarService implements Calendar {
       // Recursively fetch nextLink responses
       alreadySuccessResponse = await this.fetchResponsesWithNextLink(responseBatchApi.responses);
 
+      // A failed subrequest means that calendar's busy times are unknown; resolving would
+      // report it as free, so fail closed and let the caller block the range instead.
+      if (alreadySuccessResponse.some((response) => response.status !== 200)) {
+        return Promise.reject([]);
+      }
+
       return alreadySuccessResponse ? this.processBusyTimes(alreadySuccessResponse) : [];
     } catch {
       return Promise.reject([]);
@@ -634,20 +640,24 @@ class Office365CalendarService implements Calendar {
     if (retryCount >= maxRetries) {
       return { responses: settledPromises };
     }
-    const alreadySuccessRequest = [] as ISettledResponse[];
+    const nonRetriedResponses = [] as ISettledResponse[];
     const failedRequest = [] as IRequest[];
     settledPromises.forEach((item) => {
       if (item.status === 200) {
-        alreadySuccessRequest.push(item);
+        nonRetriedResponses.push(item);
       } else if (item.status === 429) {
         const newTimeout = Number(item.headers["Retry-After"]) * 1000 || 0;
         retryAfterTimeout = newTimeout > retryAfterTimeout ? newTimeout : retryAfterTimeout;
         failedRequest.push(originalRequests[Number(item.id)]);
+      } else {
+        // Keep non-retryable failures so the caller can detect them instead of
+        // silently treating the calendar as having no events.
+        nonRetriedResponses.push(item);
       }
     });
 
     if (failedRequest.length === 0) {
-      return { responses: alreadySuccessRequest };
+      return { responses: nonRetriedResponses };
     }
 
     // Await certain time from retry-after header
@@ -668,7 +678,7 @@ class Office365CalendarService implements Calendar {
         retryCount + 1
       );
     }
-    return { responses: [...alreadySuccessRequest, ...(newResponseBody?.responses || [])] };
+    return { responses: [...nonRetriedResponses, ...(newResponseBody?.responses || [])] };
   };
 
   private apiGraphBatchCall = async (requests: IRequest[]): Promise<Response> => {

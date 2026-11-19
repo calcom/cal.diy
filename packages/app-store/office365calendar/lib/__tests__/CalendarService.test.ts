@@ -103,4 +103,49 @@ describe("Office365CalendarService", () => {
 
     expect(getRequestedUrl()).toContain("$select=showAs,start,end&");
   });
+
+  test("getAvailability rejects when a calendar's batch subrequest fails", async () => {
+    requestRawMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          responses: [
+            {
+              id: "0",
+              status: 200,
+              body: {
+                value: [
+                  {
+                    showAs: "busy",
+                    start: { dateTime: "2024-01-10T10:00:00.0000000" },
+                    end: { dateTime: "2024-01-10T10:30:00.0000000" },
+                  },
+                ],
+              },
+            },
+            {
+              id: "1",
+              status: 503,
+              body: {
+                error: {
+                  code: "ServiceNotAvailable",
+                  message: "The service is temporarily unavailable.",
+                },
+              },
+            },
+          ],
+        }),
+        { headers: { "content-encoding": "gzip" } }
+      )
+    );
+
+    const result = BuildCalendarService(credential).getAvailability({
+      ...availabilityParams,
+      selectedCalendars: [
+        { integration: "office365_calendar", externalId: "calendar-a" },
+        { integration: "office365_calendar", externalId: "calendar-b" },
+      ],
+    });
+
+    await expect(result).rejects.toBeDefined();
+  });
 });
