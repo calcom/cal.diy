@@ -29,10 +29,33 @@ describe("CapitalizeTimeZone", () => {
     expect(output.timeZone).toBe("America/New_York");
   });
 
-  it("should capitalize complex time zone correctly", () => {
+  it("should capitalize complex time zone correctly without corrupting canonical IANA casing", () => {
     const input = { timeZone: "europe/isle_of_man" };
     const output = plainToClass(TestDto, input);
-    expect(output.timeZone).toBe("Europe/Isle_Of_Man");
+    expect(output.timeZone).toBe("Europe/Isle_of_Man");
+  });
+
+  it("should preserve canonical IANA casing for zones with particles and inner capitals", () => {
+    const canonicalZones = [
+      { input: "Africa/Dar_es_Salaam", expected: "Africa/Dar_es_Salaam" },
+      { input: "africa/dar_es_salaam", expected: "Africa/Dar_es_Salaam" },
+      { input: "America/Port_of_Spain", expected: "America/Port_of_Spain" },
+      { input: "america/port_of_spain", expected: "America/Port_of_Spain" },
+      { input: "America/Port-au-Prince", expected: "America/Port-au-Prince" },
+      { input: "america/port-au-prince", expected: "America/Port-au-Prince" },
+      { input: "Antarctica/McMurdo", expected: "Antarctica/McMurdo" },
+      { input: "antarctica/mcmurdo", expected: "Antarctica/McMurdo" },
+      { input: "Asia/Ust-Nera", expected: "Asia/Ust-Nera" },
+      { input: "asia/ust-nera", expected: "Asia/Ust-Nera" },
+      { input: "Africa/Porto-Novo", expected: "Africa/Porto-Novo" },
+      { input: "America/Blanc-Sablon", expected: "America/Blanc-Sablon" },
+      { input: "Antarctica/DumontDUrville", expected: "Antarctica/DumontDUrville" },
+    ];
+
+    for (const { input, expected } of canonicalZones) {
+      const output = plainToClass(TestDto, { timeZone: input });
+      expect(output.timeZone).toBe(expected);
+    }
   });
 
   it("should handle already capitalized time zones correctly", () => {
