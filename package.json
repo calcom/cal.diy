@@ -29,7 +29,7 @@
     "delete-app-template": "yarn app-store delete-template",
     "build": "turbo run build --filter=@calcom/web...",
     "build:ai": "turbo run build --filter=\"@calcom/ai\"",
-    "clean": "find . -name node_modules -o -name .next -o -name .turbo -o -name dist -type d -prune | xargs rm -rf",
+    "clean": "rimraf node_modules .next .turbo dist",
     "db-deploy": "turbo run db-deploy",
     "db-seed": "turbo run db-seed",
     "db-studio": "yarn prisma studio",
@@ -86,6 +86,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.10",
+    "rimraf": "^6.0.1",
     "@changesets/changelog-github": "0.5.1",
     "@changesets/cli": "2.29.4",
     "@faker-js/faker": "9.2.0",
