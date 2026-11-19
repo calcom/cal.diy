@@ -87,7 +87,10 @@ describe("HomePage", () => {
 
     render(await HomePage());
 
-    expect(screen.getByRole("link", { name: "Bookings" })).toHaveAttribute("href", "/bookings/upcoming");
+    expect(screen.getByRole("link", { name: "Sign out" })).toHaveAttribute(
+      "href",
+      "/api/authentik-logout?callbackUrl=%2F"
+    );
     expect(getPublicEventCatalog).toHaveBeenCalled();
   });
 

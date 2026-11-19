@@ -12,20 +12,27 @@ networks:
 services:
   database:
     container_name: database
-    image: postgres
+    image: postgres:16-alpine
     restart: always
     volumes:
-      - database-data:/var/lib/postgresql
+      - database-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-55432}:5432"
     environment:
-      - POSTGRES_USER=unicorn_user
-      - POSTGRES_PASSWORD=magical_password
-      - POSTGRES_DB=calendso
+      POSTGRES_USER: ${POSTGRES_USER:-unicorn_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-magical_password}
+      POSTGRES_DB: ${POSTGRES_DB:-calendso}
     networks:
       - stack
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   redis:
     container_name: redis
-    image: redis:latest
+    image: redis:7-alpine
     restart: always
     volumes:
       - redis-data:/data
@@ -33,104 +40,132 @@ services:
       - stack
     ports:
       - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   calcom:
-    image: calcom.docker.scarf.sh/calcom/cal.diy
+    image: calcom-local:latest
+    pull_policy: build
     build:
       context: .
       dockerfile: Dockerfile
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
       args:
-        NEXT_PUBLIC_WEBAPP_URL: ${NEXT_PUBLIC_WEBAPP_URL}
-        NEXT_PUBLIC_API_V2_URL: ${NEXT_PUBLIC_API_V2_URL}
-        NEXT_PUBLIC_LICENSE_CONSENT: ${NEXT_PUBLIC_LICENSE_CONSENT}
-        NEXT_PUBLIC_WEBSITE_TERMS_URL: ${NEXT_PUBLIC_WEBSITE_TERMS_URL}
-        NEXT_PUBLIC_WEBSITE_PRIVACY_POLICY_URL: ${NEXT_PUBLIC_WEBSITE_PRIVACY_POLICY_URL}
-        NEXT_PUBLIC_SINGLE_ORG_SLUG: ${NEXT_PUBLIC_SINGLE_ORG_SLUG}
-        ORGANIZATIONS_ENABLED: ${ORGANIZATIONS_ENABLED}
-        CALCOM_TELEMETRY_DISABLED: ${CALCOM_TELEMETRY_DISABLED}
-        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-        CALENDSO_ENCRYPTION_KEY: ${CALENDSO_ENCRYPTION_KEY}
-        DATABASE_URL: ${DATABASE_URL}
-        DATABASE_DIRECT_URL: ${DATABASE_URL}
-        CSP_POLICY: ${CSP_POLICY}
+        NEXT_PUBLIC_WEBAPP_URL: ${NEXT_PUBLIC_WEBAPP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_API_V2_URL: ${NEXT_PUBLIC_API_V2_URL:-http://localhost:5555/api/v2}
+        NEXT_PUBLIC_LICENSE_CONSENT: ${NEXT_PUBLIC_LICENSE_CONSENT:-}
+        NEXT_PUBLIC_WEBSITE_TERMS_URL: ${NEXT_PUBLIC_WEBSITE_TERMS_URL:-}
+        NEXT_PUBLIC_WEBSITE_PRIVACY_POLICY_URL: ${NEXT_PUBLIC_WEBSITE_PRIVACY_POLICY_URL:-}
+        NEXT_PUBLIC_SINGLE_ORG_SLUG: ${NEXT_PUBLIC_SINGLE_ORG_SLUG:-}
+        ORGANIZATIONS_ENABLED: ${ORGANIZATIONS_ENABLED:-false}
+        CALCOM_TELEMETRY_DISABLED: ${CALCOM_TELEMETRY_DISABLED:-1}
+        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-caldiy-local-only-change-for-production}
+        CALENDSO_ENCRYPTION_KEY: ${CALENDSO_ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+        DATABASE_URL: ${DATABASE_BUILD_URL:-postgresql://unicorn_user:magical_password@host.docker.internal:${POSTGRES_HOST_PORT:-55432}/calendso}
+        DATABASE_DIRECT_URL: ${DATABASE_BUILD_URL:-postgresql://unicorn_user:magical_password@host.docker.internal:${POSTGRES_HOST_PORT:-55432}/calendso}
+        CSP_POLICY: ${CSP_POLICY:-}
     restart: always
     networks:
       - stack
     ports:
       - 3000:3000
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
-      - DATABASE_DIRECT_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-unicorn_user}:${POSTGRES_PASSWORD:-magical_password}@database:5432/${POSTGRES_DB:-calendso}
+      - DATABASE_DIRECT_URL=postgresql://${POSTGRES_USER:-unicorn_user}:${POSTGRES_PASSWORD:-magical_password}@database:5432/${POSTGRES_DB:-calendso}
+      - DATABASE_HOST=database
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-caldiy-local-only-change-for-production}
+      - CALENDSO_ENCRYPTION_KEY=${CALENDSO_ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+      - NEXT_PUBLIC_WEBAPP_URL=${NEXT_PUBLIC_WEBAPP_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_API_V2_URL=${NEXT_PUBLIC_API_V2_URL:-http://localhost:5555/api/v2}
     depends_on:
-      - database
+      database:
+        condition: service_healthy
 
   calcom-api:
     container_name: calcom-api
+    image: calcom-api-local:latest
+    pull_policy: build
     build:
       context: .
       dockerfile: apps/api/v2/Dockerfile
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
       args:
-        DATABASE_URL: ${DATABASE_URL}
-        DATABASE_DIRECT_URL: ${DATABASE_URL}
+        DATABASE_URL: ${DATABASE_BUILD_URL:-postgresql://unicorn_user:magical_password@host.docker.internal:${POSTGRES_HOST_PORT:-55432}/calendso}
+        DATABASE_DIRECT_URL: ${DATABASE_BUILD_URL:-postgresql://unicorn_user:magical_password@host.docker.internal:${POSTGRES_HOST_PORT:-55432}/calendso}
     restart: always
     networks:
       - stack
     ports:
-      - "${API_PORT:-80}:${API_PORT:-80}"
-    env_file: .env
+      - "${API_HOST_PORT:-5555}:80"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - NODE_ENV=${NODE_ENV}
-      - API_PORT=${API_PORT:-80}
-      - API_URL=${API_URL}
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
-      - DATABASE_READ_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
-      - DATABASE_WRITE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
-      - DATABASE_DIRECT_URL=${DATABASE_URL}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - JWT_SECRET=${JWT_SECRET}
-      - REDIS_URL=${REDIS_URL}
-      - LOG_LEVEL=${LOG_LEVEL}
-      - API_KEY_PREFIX=${API_KEY_PREFIX}
-      - WEB_APP_URL=${WEB_APP_URL}
+      - NODE_ENV=${NODE_ENV:-production}
+      - API_PORT=80
+      - API_URL=${API_URL:-http://calcom-api:80}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-unicorn_user}:${POSTGRES_PASSWORD:-magical_password}@database:5432/${POSTGRES_DB:-calendso}
+      - DATABASE_READ_URL=postgresql://${POSTGRES_USER:-unicorn_user}:${POSTGRES_PASSWORD:-magical_password}@database:5432/${POSTGRES_DB:-calendso}
+      - DATABASE_WRITE_URL=postgresql://${POSTGRES_USER:-unicorn_user}:${POSTGRES_PASSWORD:-magical_password}@database:5432/${POSTGRES_DB:-calendso}
+      - DATABASE_DIRECT_URL=postgresql://${POSTGRES_USER:-unicorn_user}:${POSTGRES_PASSWORD:-magical_password}@database:5432/${POSTGRES_DB:-calendso}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-caldiy-local-only-change-for-production}
+      - JWT_SECRET=${JWT_SECRET:-caldiy-local-only-jwt-secret-change-for-production}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - LOG_LEVEL=${LOG_LEVEL:-}
+      - API_KEY_PREFIX=${API_KEY_PREFIX:-}
+      - WEB_APP_URL=${WEB_APP_URL:-http://calcom:3000}
       - IS_E2E=${IS_E2E:-false}
       - REWRITE_API_V2_PREFIX=${REWRITE_API_V2_PREFIX:-true}
-      - CALCOM_LICENSE_KEY=${CALCOM_LICENSE_KEY}
-      - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
-      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
-      - STRIPE_API_KEY=${STRIPE_API_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-      - STRIPE_PRICE_ID_STARTER=${STRIPE_PRICE_ID_STARTER}
-      - STRIPE_PRICE_ID_STARTER_OVERAGE=${STRIPE_PRICE_ID_STARTER_OVERAGE}
-      - STRIPE_PRICE_ID_ESSENTIALS=${STRIPE_PRICE_ID_ESSENTIALS}
-      - STRIPE_PRICE_ID_ESSENTIALS_OVERAGE=${STRIPE_PRICE_ID_ESSENTIALS_OVERAGE}
-      - STRIPE_PRICE_ID_ENTERPRISE=${STRIPE_PRICE_ID_ENTERPRISE}
-      - STRIPE_PRICE_ID_ENTERPRISE_OVERAGE=${STRIPE_PRICE_ID_ENTERPRISE_OVERAGE}
-      - STRIPE_TEAM_MONTHLY_PRICE_ID=${STRIPE_TEAM_MONTHLY_PRICE_ID}
+      - CALCOM_LICENSE_KEY=${CALCOM_LICENSE_KEY:-}
+      - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+      - STRIPE_API_KEY=${STRIPE_API_KEY:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - STRIPE_PRICE_ID_STARTER=${STRIPE_PRICE_ID_STARTER:-}
+      - STRIPE_PRICE_ID_STARTER_OVERAGE=${STRIPE_PRICE_ID_STARTER_OVERAGE:-}
+      - STRIPE_PRICE_ID_ESSENTIALS=${STRIPE_PRICE_ID_ESSENTIALS:-}
+      - STRIPE_PRICE_ID_ESSENTIALS_OVERAGE=${STRIPE_PRICE_ID_ESSENTIALS_OVERAGE:-}
+      - STRIPE_PRICE_ID_ENTERPRISE=${STRIPE_PRICE_ID_ENTERPRISE:-}
+      - STRIPE_PRICE_ID_ENTERPRISE_OVERAGE=${STRIPE_PRICE_ID_ENTERPRISE_OVERAGE:-}
+      - STRIPE_TEAM_MONTHLY_PRICE_ID=${STRIPE_TEAM_MONTHLY_PRICE_ID:-}
       - IS_TEAM_BILLING_ENABLED=${IS_TEAM_BILLING_ENABLED:-false}
-      - AXIOM_DATASET=${AXIOM_DATASET}
-      - AXIOM_TOKEN=${AXIOM_TOKEN}
-      - LOGGER_BRIDGE_LOG_LEVEL=${LOGGER_BRIDGE_LOG_LEVEL}
-      - DOCS_URL=${DOCS_URL}
-      - GET_LICENSE_KEY_URL=${GET_LICENSE_KEY_URL}
+      - AXIOM_DATASET=${AXIOM_DATASET:-}
+      - AXIOM_TOKEN=${AXIOM_TOKEN:-}
+      - LOGGER_BRIDGE_LOG_LEVEL=${LOGGER_BRIDGE_LOG_LEVEL:-}
+      - DOCS_URL=${DOCS_URL:-}
+      - GET_LICENSE_KEY_URL=${GET_LICENSE_KEY_URL:-}
     depends_on:
-      - database
-      - redis
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   # Optional use of Prisma Studio. In production, comment out or remove the section below to prevent unwanted access to your database.
   studio:
-    image: calcom.docker.scarf.sh/calcom/cal.diy
+    image: calcom-local:latest
+    pull_policy: build
     restart: always
     networks:
       - stack
     ports:
-      - 5555:5555
-    env_file: .env
+      - "${STUDIO_HOST_PORT:-5556}:5555"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DATABASE_HOST}/${POSTGRES_DB}
-      - DATABASE_DIRECT_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-unicorn_user}:${POSTGRES_PASSWORD:-magical_password}@database:5432/${POSTGRES_DB:-calendso}
+      - DATABASE_DIRECT_URL=postgresql://${POSTGRES_USER:-unicorn_user}:${POSTGRES_PASSWORD:-magical_password}@database:5432/${POSTGRES_DB:-calendso}
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     command:
       - npx
       - prisma

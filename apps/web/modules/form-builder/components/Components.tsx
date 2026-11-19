@@ -209,7 +209,7 @@ export const Components: Record<FieldType, Component> = {
   },
   email: {
     propsType: propsTypes.email,
-    factory: (props) => {
+    factory: ({ setValue, ...props }) => {
       if (!props) {
         return <div />;
       }
@@ -221,19 +221,19 @@ export const Components: Record<FieldType, Component> = {
           noLabel={true}
           autoComplete="email"
           {...props}
-          onChange={(e) => props.setValue(e.target.value)}
+          onChange={(e) => setValue(e.target.value)}
         />
       );
     },
   },
   address: {
     propsType: propsTypes.address,
-    factory: (props) => {
+    factory: ({ setValue, ...props }) => {
       return (
         <AddressInput
           id={props.name}
           onChange={(val) => {
-            props.setValue(val);
+            setValue(val);
           }}
           {...props}
           disabled={props.readOnly}

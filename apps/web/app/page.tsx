@@ -40,10 +40,11 @@ const HomePage = async (): Promise<JSX.Element> => {
       <PortalHeaderView user={session?.user} />
       <EventCatalog
         title={t("public_event_catalog_title")}
-        action={{
-          href: signedIn ? "/bookings/upcoming" : "/auth/login",
-          label: signedIn ? t("bookings") : t("sign_in"),
-        }}
+        action={
+          signedIn
+            ? { href: `/api/authentik-logout?callbackUrl=${encodeURIComponent("/")}`, label: t("sign_out") }
+            : { href: "/auth/login", label: t("sign_in") }
+        }
         emptyText={t("public_event_catalog_empty")}
         bookLabel={t("book_now")}
         items={eventTypes.map((eventType) => ({

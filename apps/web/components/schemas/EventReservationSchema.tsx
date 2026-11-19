@@ -1,9 +1,7 @@
+import type { Attendee, Booking, User } from "@calcom/prisma/client";
 import type { FC } from "react";
-import { useMemo } from "react";
 import { JsonLd } from "react-schemaorg";
 import type { EventReservation, Person, ReservationStatusType } from "schema-dts";
-
-import type { Attendee, Booking, User } from "@calcom/prisma/client";
 
 type EventSchemaUser = Pick<User, "name" | "email">;
 type EventSchemaAttendee = Pick<Attendee, "name" | "email">;
@@ -31,7 +29,7 @@ const EventReservationSchema: FC<EventReservationSchemaInterface> = ({
   description,
   status,
 }) => {
-  const reservationStatus = useMemo<ReservationStatusType>(() => {
+  const reservationStatus: ReservationStatusType = (() => {
     switch (status) {
       case "ACCEPTED":
         return "ReservationConfirmed";
@@ -43,7 +41,7 @@ const EventReservationSchema: FC<EventReservationSchemaInterface> = ({
       default:
         return "ReservationHold";
     }
-  }, [status]);
+  })();
 
   return (
     <JsonLd<EventReservation>
