@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Toaster } from "sonner";
 
@@ -20,6 +20,14 @@ export default function ICSFeedSetup() {
   const [urls, setUrls] = useState<string[]>([""]);
   const [errorMessage, setErrorMessage] = useState("");
   const [errorActionUrl, setErrorActionUrl] = useState("");
+    const [savedUrls, setSavedUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/integrations/ics-feedcalendar/feeds")
+      .then((res) => (res.ok ? res.json() : { urls: [] }))
+      .then((json) => setSavedUrls(Array.isArray(json?.urls) ? json.urls : []))
+      .catch(() => setSavedUrls([]));
+  }, []);
 
   return (
     <div className="bg-emphasis flex h-screen">
@@ -36,6 +44,16 @@ export default function ICSFeedSetup() {
           <div className="flex w-10/12 flex-col">
             <h1 className="text-default">{t("connect_ics_feed")}</h1>
             <div className="mt-1 text-sm">{t("credentials_stored_encrypted")}</div>
+                        {savedUrls.length > 0 && (
+              <div className="mt-3 text-sm">
+                <div className="text-emphasis font-medium">{t("saved_ics_feed_urls")}</div>
+                <ul className="text-subtle mt-1 list-disc pl-5 break-all">
+                  {savedUrls.map((savedUrl) => (
+                    <li key={savedUrl}>{savedUrl}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="my-2 mt-3">
               <Form
                 form={form}
