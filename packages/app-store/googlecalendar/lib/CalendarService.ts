@@ -650,15 +650,13 @@ class GoogleCalendarService implements Calendar {
     dateFrom: string,
     dateTo: string
   ): Promise<EventBusyDate[]> {
-    // More efficient date difference calculation using native Date objects
-    // Use Math.floor to match dayjs diff behavior (truncates, doesn't round up)
     const fromDate = new Date(dateFrom);
     const toDate = new Date(dateTo);
-    const oneDayMs = 1000 * 60 * 60 * 24;
-    const diff = Math.floor((toDate.getTime() - fromDate.getTime()) / oneDayMs);
+    const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+    const totalDurationMs = toDate.getTime() - fromDate.getTime();
 
     // Google API only allows a date range of 90 days for /freebusy
-    if (diff <= 90) {
+    if (totalDurationMs <= ninetyDaysMs) {
       const freeBusyData = await this.getFreeBusyData({
         timeMin: dateFrom,
         timeMax: dateTo,
@@ -671,13 +669,11 @@ class GoogleCalendarService implements Calendar {
 
     // Handle longer periods by chunking into 90-day periods
     const busyData: EventBusyDate[] = [];
-    const loopsNumber = Math.ceil(diff / 90);
     let currentStartTime = fromDate.getTime();
     const originalEndTime = toDate.getTime();
-    const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
     const oneMinuteMs = 60 * 1000;
 
-    for (let i = 0; i < loopsNumber; i++) {
+    while (currentStartTime < originalEndTime) {
       let currentEndTime = currentStartTime + ninetyDaysMs;
 
       // Don't go beyond the original end date
