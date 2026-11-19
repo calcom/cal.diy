@@ -1,5 +1,16 @@
 export function normalizeTimezone(value: unknown): string | unknown {
   if (typeof value === "string") {
+    // If the input is a valid IANA timezone name matching case-insensitively,
+    // preserve the exact canonical IANA capitalization (e.g. Europe/Isle_of_Man, Africa/Dar_es_Salaam).
+    try {
+      const resolved = Intl.DateTimeFormat(undefined, { timeZone: value }).resolvedOptions().timeZone;
+      if (resolved && resolved.toLowerCase() === value.toLowerCase()) {
+        return resolved;
+      }
+    } catch {
+      // Ignore Intl failure and fallback to heuristic capitalization below
+    }
+
     const parts = value.split("/");
     const normalizedParts = parts.map((part) =>
       part

@@ -32,7 +32,13 @@ describe("CapitalizeTimeZone", () => {
   it("should capitalize complex time zone correctly", () => {
     const input = { timeZone: "europe/isle_of_man" };
     const output = plainToClass(TestDto, input);
-    expect(output.timeZone).toBe("Europe/Isle_Of_Man");
+    expect(output.timeZone).toBe("Europe/Isle_of_Man");
+  });
+
+  it("should preserve canonical IANA casing for compound time zones like Africa/Dar_es_Salaam", () => {
+    const input = { timeZone: "africa/dar_es_salaam" };
+    const output = plainToClass(TestDto, input);
+    expect(output.timeZone).toBe("Africa/Dar_es_Salaam");
   });
 
   it("should handle already capitalized time zones correctly", () => {
