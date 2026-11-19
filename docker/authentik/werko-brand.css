@@ -1,0 +1,138 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap");
+
+:root,
+:host {
+  --pf-global--FontFamily--sans-serif: "Archivo", system-ui, sans-serif;
+  --pf-global--FontFamily--heading--sans-serif: "Archivo", system-ui, sans-serif;
+  --pf-global--FontFamily--redhatfont--sans-serif: "Archivo", system-ui, sans-serif;
+  --pf-global--FontFamily--redhatfont--heading--sans-serif: "Archivo", system-ui, sans-serif;
+  --pf-global--BorderRadius--sm: 0;
+  --pf-global--BorderRadius--lg: 0;
+  --pf-global--primary-color--100: #d3ffc4;
+  --pf-global--primary-color--200: #b1fd98;
+  --pf-global--link--Color: #d3ffc4;
+  --pf-global--link--Color--hover: #b1fd98;
+  --pf-global--Color--100: #ffffff;
+  --pf-global--Color--200: rgb(255 255 255 / 0.7);
+  --pf-global--BackgroundColor--100: #2c5562;
+  --pf-global--BackgroundColor--200: #1a4356;
+  --pf-global--danger-color--100: #f63e7a;
+  --ak-accent: #d3ffc4;
+  --ak-dark-background: #1a4356;
+  --ak-dark-background-light: #2c5562;
+}
+
+.pf-c-background-image,
+.pf-c-background-image::before {
+  background: #1a4356 !important;
+}
+
+.pf-c-login__main {
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 0;
+  background-color: #2c5562;
+  box-shadow: none;
+  color: #ffffff;
+}
+
+.pf-c-title,
+.pf-c-login__main-header .pf-c-title {
+  font-family: "Archivo", system-ui, sans-serif;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.pf-c-form__label,
+.pf-c-form__label-text,
+.pf-c-login__main-header-desc,
+.pf-c-content,
+p {
+  color: #ffffff;
+}
+
+.pf-c-form-control {
+  min-height: 3rem;
+  border: 3px solid transparent !important;
+  border-radius: 0;
+  background-color: #f0f0ea !important;
+  color: #1a4356;
+  font-family: "Archivo", system-ui, sans-serif;
+  font-style: normal;
+}
+
+.pf-c-form-control::placeholder {
+  color: #5d5d5d;
+  font-style: normal;
+}
+
+.pf-c-form-control:focus,
+.pf-c-form-control:focus-within {
+  border-color: #b1fd98 !important;
+  outline: none;
+  filter: drop-shadow(0 0 12.5px rgb(177 253 152 / 0.4));
+}
+
+.pf-c-form-control[aria-invalid="true"] {
+  border-color: #f63e7a !important;
+}
+
+.pf-c-button.pf-m-primary {
+  min-height: 3rem;
+  border: 0;
+  border-radius: 0;
+  background-color: #d3ffc4;
+  color: #1a4356;
+  font-family: "Archivo", system-ui, sans-serif;
+  font-weight: 600;
+  clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+  transition: background-color 150ms, clip-path 150ms;
+}
+
+.pf-c-button.pf-m-primary:hover,
+.pf-c-button.pf-m-primary:focus {
+  background-color: #b1fd98;
+  color: #1a4356;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+
+.pf-c-button.pf-m-primary::after {
+  border: 0;
+}
+
+.pf-c-button.pf-m-secondary,
+.pf-c-button.pf-m-link,
+a {
+  color: #d3ffc4;
+}
+
+.pf-c-button.pf-m-secondary::after {
+  border-color: #d3ffc4;
+  border-radius: 0;
+}
+
+.pf-c-brand {
+  max-height: 4rem;
+}
+
+.pf-c-login__footer,
+.pf-c-login__footer a,
+.pf-c-list {
+  color: rgb(255 255 255 / 0.7);
+}
+
+.pf-c-alert.pf-m-danger,
+.pf-c-helper-text__item.pf-m-error,
+.pf-c-form__helper-text.pf-m-error {
+  color: #f63e7a;
+}
+
+@supports (corner-shape: bevel) {
+  .pf-c-form-control {
+    border-top-left-radius: 16px;
+    corner-shape: bevel;
+  }
+}
+
+:host(ak-stage-identification) form.pf-c-form > p {
+  display: none;
+}

@@ -1,18 +1,15 @@
 import { getServerSession } from "@calcom/features/auth/lib/getServerSession";
 import { checkOnboardingRedirect } from "@calcom/features/auth/lib/onboardingUtils";
 import { UserPermissionRole } from "@calcom/prisma/enums";
-import { Button } from "@calcom/ui/components/button";
 import { buildLegacyRequest } from "@lib/buildLegacyCtx";
 import { getPublicEventCatalog } from "app/_lib/getPublicEventCatalog";
 import { getTranslate } from "app/_utils";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-
-const EventDescription = ({ description }: { description: string | null }): JSX.Element | null => {
-  if (!description) return null;
-
-  return <p className="mt-2">{description}</p>;
-};
+import EventCatalog from "./(werko)/_components/EventCatalog";
+import PortalFooter from "./(werko)/_components/PortalFooter";
+import PortalHeaderView from "./(werko)/_components/PortalHeaderView";
+import { archivo, archivoNarrow } from "./(werko)/_lib/fonts";
 
 const HomePage = async (): Promise<JSX.Element> => {
   const session = await getServerSession({
@@ -35,41 +32,30 @@ const HomePage = async (): Promise<JSX.Element> => {
   }
 
   const [eventTypes, t] = await Promise.all([getPublicEventCatalog(), getTranslate()]);
-  const getCatalogContent = (): JSX.Element => {
-    if (eventTypes.length === 0) {
-      return <p>{t("public_event_catalog_empty")}</p>;
-    }
-
-    return (
-      <ul className="space-y-4">
-        {eventTypes.map((eventType) => (
-          <li key={eventType.href} className="rounded-lg border border-subtle p-4">
-            <a className="font-medium text-emphasis text-lg underline" href={eventType.href}>
-              {eventType.title}
-            </a>
-            <EventDescription description={eventType.description} />
-            <p className="mt-2 text-sm text-subtle">
-              {t("public_event_catalog_host", { host: eventType.host })}
-            </p>
-            <p className="mt-2 text-sm text-subtle">
-              {t("public_event_catalog_duration", { duration: eventType.length })}
-            </p>
-          </li>
-        ))}
-      </ul>
-    );
-  };
+  const signedIn = Boolean(session?.user?.id);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <header className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="font-semibold text-3xl text-emphasis">{t("public_event_catalog_title")}</h1>
-        <Button href={session?.user?.id ? "/bookings/upcoming" : "/auth/login"} color="secondary">
-          {session?.user?.id ? t("bookings") : t("sign_in")}
-        </Button>
-      </header>
-      {getCatalogContent()}
-    </main>
+    <div
+      className={`${archivo.variable} ${archivoNarrow.variable} flex min-h-screen flex-col bg-deep-blue font-werko text-s text-white antialiased`}>
+      <PortalHeaderView user={session?.user} />
+      <EventCatalog
+        title={t("public_event_catalog_title")}
+        action={{
+          href: signedIn ? "/bookings/upcoming" : "/auth/login",
+          label: signedIn ? t("bookings") : t("sign_in"),
+        }}
+        emptyText={t("public_event_catalog_empty")}
+        bookLabel={t("book_now")}
+        items={eventTypes.map((eventType) => ({
+          href: eventType.href,
+          title: eventType.title,
+          description: eventType.description,
+          hostLabel: t("public_event_catalog_host", { host: eventType.host }),
+          durationLabel: t("public_event_catalog_duration", { duration: eventType.length }),
+        }))}
+      />
+      <PortalFooter />
+    </div>
   );
 };
 

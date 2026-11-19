@@ -1,0 +1,237 @@
+:root:has([data-werko-booking]) {
+  color-scheme: dark;
+
+  --cal-bg: #2c5562;
+  --cal-bg-muted: #1a4356;
+  --cal-bg-subtle: #1a4356;
+  --cal-bg-emphasis: rgb(255 255 255 / 0.16);
+  --cal-bg-inverted: #d3ffc4;
+
+  /* biome-ignore lint/complexity/noImportantStyles: has to beat the inline brand colors Cal sets on <html> */
+  --cal-brand: #d3ffc4 !important;
+  /* biome-ignore lint/complexity/noImportantStyles: has to beat the inline brand colors Cal sets on <html> */
+  --cal-brand-emphasis: #b1fd98 !important;
+  /* biome-ignore lint/complexity/noImportantStyles: has to beat the inline brand colors Cal sets on <html> */
+  --cal-brand-subtle: rgb(211 255 196 / 0.15) !important;
+  /* biome-ignore lint/complexity/noImportantStyles: has to beat the inline brand colors Cal sets on <html> */
+  --cal-brand-text: #1a4356 !important;
+  /* biome-ignore lint/complexity/noImportantStyles: has to beat the inline brand colors Cal sets on <html> */
+  --cal-brand-accent: #1a4356 !important;
+  --cal-brand-muted: rgb(211 255 196 / 0.15);
+  --cal-bg-brand: #d3ffc4;
+  --cal-bg-brand-emphasis: #b1fd98;
+  --cal-bg-brand-muted: rgb(211 255 196 / 0.15);
+  --cal-bg-primary: #d3ffc4;
+  --cal-bg-primary-emphasis: #b1fd98;
+  --cal-bg-primary-muted: rgb(211 255 196 / 0.15);
+
+  --cal-text-emphasis: #ffffff;
+  --cal-text: rgb(255 255 255 / 0.9);
+  --cal-text-subtle: rgb(255 255 255 / 0.7);
+  --cal-text-muted: rgb(255 255 255 / 0.45);
+  --cal-text-inverted: #1a4356;
+
+  --cal-border-emphasis: rgb(255 255 255 / 0.4);
+  --cal-border: rgb(255 255 255 / 0.2);
+  --cal-border-subtle: rgb(255 255 255 / 0.12);
+  --cal-border-muted: rgb(255 255 255 / 0.08);
+  --cal-border-booker: rgb(255 255 255 / 0.12);
+
+  --cal-text-error: #f63e7a;
+  --cal-text-semantic-error: #f63e7a;
+  --cal-bg-error: rgb(246 62 122 / 0.15);
+  --cal-bg-semantic-error-subtle: rgb(246 62 122 / 0.15);
+  --cal-border-error: #f63e7a;
+  --cal-border-semantic-error: #f63e7a;
+
+  --background: #1a4356;
+  --foreground: #ffffff;
+  --card: #2c5562;
+  --card-foreground: #ffffff;
+  --popover: #2c5562;
+  --popover-foreground: #ffffff;
+  --primary: #d3ffc4;
+  --primary-foreground: #1a4356;
+  --secondary: rgb(255 255 255 / 0.08);
+  --secondary-foreground: #ffffff;
+  --muted: rgb(255 255 255 / 0.08);
+  --muted-foreground: rgb(255 255 255 / 0.7);
+  --accent: rgb(255 255 255 / 0.12);
+  --accent-foreground: #ffffff;
+  --border: rgb(255 255 255 / 0.15);
+  --input: rgb(255 255 255 / 0.2);
+  --ring: #d3ffc4;
+
+  --radius: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-cal-sm: 0px;
+  --radius-cal: 0px;
+  --radius-cal-md: 0px;
+  --radius-cal-lg: 0px;
+  --radius-cal-xl: 0px;
+  --radius-cal-2xl: 0px;
+  --radius-cal-3xl: 0px;
+}
+
+:root:has([data-werko-booking])
+  :is(button, input, textarea, select, [class*="rounded"]):not([class*="rounded-full"]) {
+  border-radius: 0;
+}
+
+:root:has([data-werko-booking])
+  :is(
+    input:is([type="text"], [type="email"], [type="tel"], [type="url"], :not([type])):not(.border-0),
+    textarea
+  ),
+:root:has([data-werko-booking]) :has(> input.border-0) {
+  height: auto;
+  min-height: 3rem;
+  padding: 0.5rem 1rem;
+  border: 3px solid transparent;
+  background-color: #f0f0ea;
+  color: #1a4356;
+  box-shadow: none;
+  transition:
+    border-color 150ms,
+    filter 150ms;
+}
+
+:root:has([data-werko-booking]) :has(> input.border-0) {
+  padding-block: 0;
+}
+
+:root:has([data-werko-booking]) :has(> input.border-0) :is(input, button) {
+  color: inherit;
+}
+
+:root:has([data-werko-booking]) :is(input, textarea)::placeholder {
+  color: #5d5d5d;
+}
+
+:root:has([data-werko-booking]) :is(input:not(.border-0), textarea):focus,
+:root:has([data-werko-booking]) :has(> input.border-0):focus-within {
+  border-color: #b1fd98;
+  box-shadow: none;
+  filter: drop-shadow(0 0 12.5px rgb(177 253 152 / 0.4));
+}
+
+:root:has([data-werko-booking]) :is(input, textarea)[aria-invalid="true"] {
+  border-color: #f63e7a;
+}
+
+:root:has([data-werko-booking]) button[data-testid="confirm-book-button"] {
+  min-height: 3rem;
+  padding-inline: 1.25rem;
+  border-color: transparent;
+  background-color: #d3ffc4;
+  color: #1a4356;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: none;
+  transition:
+    background-color 150ms,
+    filter 150ms,
+    border-radius 150ms;
+}
+
+:root:has([data-werko-booking]) button[data-testid="confirm-book-button"]:not(:disabled):hover {
+  background-color: #b1fd98;
+  filter: drop-shadow(0 0 12.5px rgb(177 253 152 / 0.4));
+}
+
+:root:has([data-werko-booking]) button[data-testid="back"] {
+  border-color: transparent;
+  background-color: transparent;
+  color: #d3ffc4;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+:root:has([data-werko-booking]) button[data-testid="back"]:not(:disabled):hover {
+  border-color: transparent;
+  background-color: transparent;
+  color: #b1fd98;
+}
+
+/* biome-ignore lint/correctness/noUnknownProperty: corner-shape is new (Chrome 139+), guarded by @supports */
+@supports (corner-shape: bevel) {
+  :root:root:has([data-werko-booking])
+    :is(
+      input:is([type="text"], [type="email"], [type="tel"], [type="url"], :not([type])):not(.border-0),
+      textarea
+    ),
+  :root:root:has([data-werko-booking]) :has(> input.border-0) {
+    border-top-left-radius: 16px;
+    /* biome-ignore lint/correctness/noUnknownProperty: see @supports above */
+    corner-shape: bevel;
+  }
+
+  :root:root:has([data-werko-booking]) button[data-testid="confirm-book-button"] {
+    border-radius: 16px 0;
+    /* biome-ignore lint/correctness/noUnknownProperty: see @supports above */
+    corner-shape: bevel;
+  }
+
+  :root:root:has([data-werko-booking]) button[data-testid="confirm-book-button"]:not(:disabled):hover {
+    border-radius: 0 16px;
+  }
+}
+
+:root:has([data-werko-booking]) main[class*="min-h-[calc(100dvh)]"] {
+  min-height: auto;
+}
+
+:root:has([data-werko-booking]) .main.my-20 {
+  min-height: auto;
+  margin-block: 3rem 0;
+}
+
+:root:has([data-werko-booking]) :has(> [class*="[grid-area:header]"].fixed) {
+  position: relative;
+}
+
+:root:has([data-werko-booking]) [class*="[grid-area:header]"].fixed {
+  position: absolute;
+  top: auto;
+  right: 0;
+  bottom: 100%;
+  margin-bottom: 0.75rem;
+}
+
+:root:has([data-werko-booking]) :has(> input.border-0) button svg {
+  color: #1a4356;
+}
+
+:root:has([data-werko-booking]) [class*="[grid-area:header]"] button.bg-brand-default {
+  font-weight: 600;
+}
+
+/* biome-ignore lint/correctness/noUnknownProperty: corner-shape is new (Chrome 139+), guarded by @supports */
+@supports (corner-shape: bevel) {
+  :root:root:has([data-werko-booking]) [class*="[grid-area:header]"] button.bg-brand-default {
+    border-radius: 10px 0;
+    /* biome-ignore lint/correctness/noUnknownProperty: see @supports above */
+    corner-shape: bevel;
+  }
+}
+
+:root:has([data-werko-booking]) [data-werko-content] > .h-screen {
+  height: auto;
+  padding-block: 2rem 0;
+}
+
+:root:has([data-werko-booking]) [data-werko-content] > .h-screen > .ml-4 {
+  width: min(100% - 3rem, 95rem);
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  :root:has([data-werko-booking]) [data-werko-content] > .h-screen > .ml-4 {
+    width: min(100% - 7rem, 95rem);
+  }
+}

@@ -427,7 +427,7 @@ model User {
   schedules           Schedule[]
   defaultScheduleId   Int?
   selectedCalendars   SelectedCalendar[]
-  completedOnboarding Boolean              @default(false)
+  completedOnboarding Boolean              @default(true)
   locale              String?
   timeFormat          Int?                 @default(12)
   twoFactorSecret     String?

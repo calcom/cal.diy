@@ -1,45 +1,40 @@
+import { getServerSession } from "@calcom/features/auth/lib/getServerSession";
 import prisma from "@calcom/prisma";
-import { createLocalPath, requireAuthenticatedPage } from "app/_lib/pageAuthorization";
+import { UserPermissionRole } from "@calcom/prisma/enums";
+import { buildLegacyRequest } from "@lib/buildLegacyCtx";
+import { createLocalPath } from "app/_lib/pageAuthorization";
 import type { PageProps } from "app/_types";
 import type { Metadata } from "next";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { copy } from "../_lib/copy";
-import { BOOKING_EVENT_SLUG, SPACES, type SpaceSlug } from "../_lib/werko";
-import BookingWizard, { type WizardSpace } from "./_components/BookingWizard";
-
-const isSpaceSlug = (value: unknown): value is SpaceSlug =>
-  typeof value === "string" && SPACES.some(({ slug }) => slug === value);
+import { roomPath } from "../_lib/werko";
+import RoomPicker from "./_components/RoomPicker";
 
 const Page = async ({ searchParams }: PageProps) => {
   const resolvedSearchParams = await searchParams;
-  const session = await requireAuthenticatedPage(createLocalPath("/rezervace", resolvedSearchParams));
+  const session = await getServerSession({ req: buildLegacyRequest(await headers(), await cookies()) });
+  if (!session?.user?.id)
+    redirect(
+      `/prihlaseni?callbackUrl=${encodeURIComponent(createLocalPath("/rezervace", resolvedSearchParams))}`
+    );
 
-  // Each space is a Cal.diy user named after the space slug, with one hourly "rezervace" event type
   const rooms = await prisma.user.findMany({
-    where: { username: { in: SPACES.map(({ slug }) => slug) } },
-    select: {
-      username: true,
-      name: true,
-      bio: true,
-      eventTypes: { where: { slug: BOOKING_EVENT_SLUG }, select: { id: true } },
-    },
+    where: { role: UserPermissionRole.ADMIN, username: { not: null }, locked: false },
+    select: { username: true, name: true, bio: true, avatarUrl: true },
+    orderBy: { id: "asc" },
   });
 
-  const spaces: WizardSpace[] = SPACES.flatMap((space) => {
-    const room = rooms.find(({ username }) => username === space.slug);
-    const eventTypeId = room?.eventTypes[0]?.id;
-    if (!room || !eventTypeId) return [];
-    return [{ ...space, name: room.name ?? space.slug, description: room.bio ?? "", eventTypeId }];
-  });
+  const preselected = rooms.find(({ username }) => username === resolvedSearchParams.prostor);
+  if (preselected?.username) redirect(roomPath(preselected.username));
 
-  const preselected = resolvedSearchParams.prostor;
-
-  return (
-    <BookingWizard
-      spaces={spaces}
-      initialSpace={isSpaceSlug(preselected) ? preselected : undefined}
-      user={{ name: session.user.name ?? "", email: session.user.email ?? "" }}
-    />
+  const spaces = rooms.flatMap(({ username, name, bio, avatarUrl }) =>
+    username
+      ? [{ username, name: name ?? username, description: bio ?? "", image: avatarUrl ?? undefined }]
+      : []
   );
+
+  return <RoomPicker spaces={spaces} />;
 };
 
 export const metadata: Metadata = copy.metadata;

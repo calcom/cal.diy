@@ -4155,14 +4155,14 @@ __metadata:
 
 "@devx-agency/werko-ui@file:../../../werko-ui/devx-agency-werko-ui-0.1.0.tgz::locator=%40calcom%2Fweb%40workspace%3Aapps%2Fweb":
   version: 0.1.0
-  resolution: "@devx-agency/werko-ui@file:../../../werko-ui/devx-agency-werko-ui-0.1.0.tgz#../../../werko-ui/devx-agency-werko-ui-0.1.0.tgz::hash=5cbbb6&locator=%40calcom%2Fweb%40workspace%3Aapps%2Fweb"
+  resolution: "@devx-agency/werko-ui@file:../../../werko-ui/devx-agency-werko-ui-0.1.0.tgz#../../../werko-ui/devx-agency-werko-ui-0.1.0.tgz::hash=2264d0&locator=%40calcom%2Fweb%40workspace%3Aapps%2Fweb"
   dependencies:
     clsx: "npm:2.1.1"
     tailwind-merge: "npm:3.5.0"
   peerDependencies:
     next: ">=15"
     react: ">=18.2"
-  checksum: 10/a427a32cf26c402132cec0401c3b7bf41d53324707559dc73979146d8ecb0e5aaa236e0430a418912746f1123e213403d6e4e2d258bd132b6dfee85deb742c59
+  checksum: 10/f7c307d9fb21fe2ac5075c3fd84f2dd1811b6148032cc5580493603ea4455999bcfe53b13bde417220730e2985cf928630aa951ef95b84ce71f7c4411e596212
   languageName: node
   linkType: hard
 

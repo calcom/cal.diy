@@ -35,6 +35,11 @@ vi.mock("app/_lib/getPublicEventCatalog", () => ({
   getPublicEventCatalog: vi.fn(),
 }));
 
+vi.mock("next/font/google", () => {
+  const font = () => ({ className: "", variable: "", style: { fontFamily: "" } });
+  return { Archivo: font, Archivo_Narrow: font };
+});
+
 vi.mock("app/_utils", () => ({
   getTranslate: vi.fn(),
 }));
