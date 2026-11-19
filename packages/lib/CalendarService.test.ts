@@ -1,5 +1,6 @@
 import { createEvent as createIcsEvent } from "ics";
-import { createCalendarObject, updateCalendarObject } from "tsdav";
+import type { DAVObject } from "tsdav";
+import { createCalendarObject, fetchCalendarObjects, updateCalendarObject } from "tsdav";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("ics", () => ({
@@ -746,5 +747,127 @@ describe("CalendarService - SCHEDULE-AGENT injection", () => {
 
       await expect(service.createEvent(event, 1)).rejects.toThrow();
     });
+  });
+});
+
+describe("CalendarService - getAvailability", () => {
+  const WORK_CALENDAR_URL = "https://caldav.example.com/calendars/work/";
+  const PERSONAL_CALENDAR_URL = "https://caldav.example.com/calendars/personal/";
+
+  const BLOCKING_EVENT_ICS = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Test//EN",
+    "BEGIN:VEVENT",
+    "UID:blocking-event",
+    "DTSTART:20230101T100000Z",
+    "DTEND:20230101T110000Z",
+    "SUMMARY:Blocked",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+
+  const blockingEvent = (calendarUrl: string): DAVObject => ({
+    url: `${calendarUrl}blocking-event.ics`,
+    etag: '"1"',
+    data: BLOCKING_EVENT_ICS,
+  });
+
+  // What tsdav returns instead of throwing when the server rejects the request, e.g. with a 401
+  const failedRequest = (calendarUrl: string): DAVObject => ({
+    url: calendarUrl,
+    etag: "undefined",
+    data: undefined,
+  });
+
+  const mockCalendarObjects = (
+    responses: Record<string, (options: { expand?: boolean }) => Promise<DAVObject[]>>
+  ) => {
+    vi.mocked(fetchCalendarObjects).mockImplementation(async ({ calendar, expand }) =>
+      responses[calendar.url]({ expand })
+    );
+  };
+
+  const getAvailability = () =>
+    new TestCalendarService().getAvailability({
+      dateFrom: "2023-01-01T00:00:00Z",
+      dateTo: "2023-01-02T00:00:00Z",
+      selectedCalendars: [
+        { externalId: WORK_CALENDAR_URL, integration: "caldav_calendar" },
+        { externalId: PERSONAL_CALENDAR_URL, integration: "caldav_calendar" },
+      ],
+      mode: "booking",
+    });
+
+  beforeEach(() => {
+    vi.mocked(fetchCalendarObjects).mockReset();
+  });
+
+  it("should return busy times from the selected calendars", async () => {
+    mockCalendarObjects({
+      [WORK_CALENDAR_URL]: async () => [blockingEvent(WORK_CALENDAR_URL)],
+      [PERSONAL_CALENDAR_URL]: async () => [],
+    });
+
+    await expect(getAvailability()).resolves.toEqual([
+      { start: "2023-01-01T10:00:00.000Z", end: "2023-01-01T11:00:00.000Z" },
+    ]);
+  });
+
+  it("should return no busy times when the selected calendars are empty", async () => {
+    mockCalendarObjects({
+      [WORK_CALENDAR_URL]: async () => [],
+      [PERSONAL_CALENDAR_URL]: async () => [],
+    });
+
+    await expect(getAvailability()).resolves.toEqual([]);
+  });
+
+  it("should throw instead of dropping a calendar whose request fails", async () => {
+    mockCalendarObjects({
+      [WORK_CALENDAR_URL]: async () => {
+        throw new Error("getaddrinfo ENOTFOUND caldav.example.com");
+      },
+      [PERSONAL_CALENDAR_URL]: async () => [blockingEvent(PERSONAL_CALENDAR_URL)],
+    });
+
+    await expect(getAvailability()).rejects.toThrow(
+      "Unable to check caldav availability: 1 of 2 selected calendars could not be fetched for credential 1"
+    );
+  });
+
+  it("should throw when the CalDAV server rejects the request instead of treating the calendar as empty", async () => {
+    mockCalendarObjects({
+      [WORK_CALENDAR_URL]: async () => [failedRequest(WORK_CALENDAR_URL)],
+      [PERSONAL_CALENDAR_URL]: async () => [],
+    });
+
+    await expect(getAvailability()).rejects.toThrow(
+      "Unable to check caldav availability: 1 of 2 selected calendars could not be fetched for credential 1"
+    );
+  });
+
+  it("should use the non-expanded response when the server leaves calendar data out of the expanded one", async () => {
+    mockCalendarObjects({
+      [WORK_CALENDAR_URL]: async ({ expand }) =>
+        expand
+          ? [{ ...blockingEvent(WORK_CALENDAR_URL), data: undefined }]
+          : [blockingEvent(WORK_CALENDAR_URL)],
+      [PERSONAL_CALENDAR_URL]: async () => [],
+    });
+
+    await expect(getAvailability()).resolves.toEqual([
+      { start: "2023-01-01T10:00:00.000Z", end: "2023-01-01T11:00:00.000Z" },
+    ]);
+  });
+
+  it("should not fail when an object is deleted between the expanded and non-expanded requests", async () => {
+    mockCalendarObjects({
+      [WORK_CALENDAR_URL]: async ({ expand }) =>
+        expand ? [{ ...blockingEvent(WORK_CALENDAR_URL), data: undefined }] : [],
+      [PERSONAL_CALENDAR_URL]: async () => [],
+    });
+
+    await expect(getAvailability()).resolves.toEqual([]);
   });
 });
