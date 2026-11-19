@@ -46,40 +46,78 @@ export function getErrorFromUnknown(cause: unknown): Error & { statusCode?: numb
     return cause;
   }
   if (typeof cause === "string") {
-    // @ts-ignore https://github.com/tc39/proposal-error-cause - must use @ts-ignore because different packages have different TS lib targets
+    // @ts-expect-error https://github.com/tc39/proposal-error-cause - must use @ts-expect-error because different packages have different TS lib targets
     return new Error(cause, { cause });
   }
 
   return new Error(`Unhandled error of type '${typeof cause}''`);
 }
 
-export async function handleErrorsJson<Type>(response: Response): Promise<Type> {
-  // FIXME: I don't know why we are handling gzipped case separately. This should be handled by fetch itself.
-  if (response.headers.get("content-encoding") === "gzip") {
-    const responseText = await response.text();
-    return new Promise((resolve) => resolve(JSON.parse(responseText)));
+async function getResponseBody(response: Response): Promise<string> {
+  try {
+    const body = await response.text();
+    if (body.length > 0) {
+      try {
+        const parsed = JSON.parse(body);
+        if (
+          typeof parsed === "object" &&
+          parsed !== null &&
+          typeof parsed.message === "string" &&
+          parsed.message.length > 0
+        ) {
+          return parsed.message;
+        }
+        return body;
+      } catch {
+        return body;
+      }
+    }
+    return response.statusText;
+  } catch {
+    return response.statusText;
   }
-
-  if (response.status === 204) {
-    return new Promise((resolve) => resolve({} as Type));
-  }
-
-  if (!response.ok && (response.status < 200 || response.status >= 300)) {
-    response.json().then(console.log);
-    throw Error(response.statusText);
-  }
-
-  return response.json();
 }
 
-export function handleErrorsRaw(response: Response) {
+function statusCodeToErrorCode(status: number): ErrorCode {
+  if (status === 400) return ErrorCode.BadRequest;
+  if (status === 401) return ErrorCode.Unauthorized;
+  if (status === 403) return ErrorCode.Forbidden;
+  if (status === 404) return ErrorCode.NotFound;
+  return ErrorCode.InternalServerError;
+}
+
+export async function handleErrorsJson<Type>(response: Response): Promise<Type> {
+  if (!response.ok) {
+    const body = await getResponseBody(response);
+    throw new ErrorWithCode(statusCodeToErrorCode(response.status), `HTTP error ${response.status}: ${body}`);
+  }
+
+  if (response.headers.get("content-encoding") === "gzip") {
+    const responseText = await response.text();
+    return JSON.parse(responseText) as Type;
+  }
+
   if (response.status === 204) {
-    console.error({ response });
+    return {} as Type;
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    throw new ErrorWithCode(
+      ErrorCode.InternalServerError,
+      `Failed to parse response as JSON: ${response.status} ${response.statusText}`
+    );
+  }
+}
+
+export async function handleErrorsRaw(response: Response) {
+  if (response.status === 204) {
     return "{}";
   }
-  if (!response.ok || response.status < 200 || response.status >= 300) {
-    response.text().then(console.log);
-    throw Error(response.statusText);
+  if (!response.ok) {
+    const body = await getResponseBody(response);
+    throw new ErrorWithCode(statusCodeToErrorCode(response.status), `HTTP error ${response.status}: ${body}`);
   }
   return response.text();
 }
