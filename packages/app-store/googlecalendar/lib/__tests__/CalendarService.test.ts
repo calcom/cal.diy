@@ -346,8 +346,8 @@ describe("Date Optimization Benchmarks", () => {
       if (diff <= 90) continue;
 
       // OLD WAY (dayjs-based chunking)
-      const originalStartDate = dayjs(testCase.dateFrom);
-      const originalEndDate = dayjs(testCase.dateTo);
+      const originalStartDate = dayjs.utc(testCase.dateFrom);
+      const originalEndDate = dayjs.utc(testCase.dateTo);
       const loopsNumber = Math.ceil(diff / 90);
       let startDate = originalStartDate;
       let endDate = originalStartDate.add(90, "days");
@@ -466,6 +466,53 @@ describe("Date Optimization Benchmarks", () => {
     // Should return concatenated results from multiple chunks
     expect(longRangeResult.length).toBeGreaterThan(0);
     expect(getFreeBusyDataSpy).toHaveBeenCalledTimes(3); // 182 days / 90 = ~2.02 -> 3 chunks
+
+    getFreeBusyDataSpy.mockRestore();
+  });
+
+  test("fetchAvailabilityData should chunk ranges with partial days and fetch the tail up to dateTo", async () => {
+    const calendarService = BuildCalendarService(mockCredential);
+    setFullMockOAuthManagerRequest();
+
+    const mockBusyData = [
+      { start: "2024-01-01T10:00:00Z", end: "2024-01-01T11:00:00Z" },
+    ];
+
+    const getFreeBusyDataSpy = vi
+      .spyOn(calendarService as any, "getFreeBusyData")
+      .mockResolvedValue(mockBusyData.map((item) => ({ ...item, id: "test@calendar.com" })));
+
+    // 90 days and 12 hours (should chunk into 2 calls because total duration > 90 days)
+    await (calendarService as any).fetchAvailabilityData(
+      ["test@calendar.com"],
+      "2024-01-01T00:00:00.000Z",
+      "2024-03-31T12:00:00.000Z",
+      false
+    );
+
+    expect(getFreeBusyDataSpy).toHaveBeenCalledTimes(2);
+    expect(getFreeBusyDataSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        timeMax: "2024-03-31T12:00:00.000Z",
+      })
+    );
+
+    getFreeBusyDataSpy.mockClear();
+
+    // 180 days and 12 hours (should chunk into 3 calls, preserving the tail)
+    await (calendarService as any).fetchAvailabilityData(
+      ["test@calendar.com"],
+      "2024-01-01T00:00:00.000Z",
+      "2024-06-29T12:00:00.000Z",
+      false
+    );
+
+    expect(getFreeBusyDataSpy).toHaveBeenCalledTimes(3);
+    expect(getFreeBusyDataSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        timeMax: "2024-06-29T12:00:00.000Z",
+      })
+    );
 
     getFreeBusyDataSpy.mockRestore();
   });
