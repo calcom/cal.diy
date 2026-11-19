@@ -628,7 +628,7 @@ export class LuckyUserService implements ILuckyUserService {
           const earliestStartTime = new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1));
           if (start < earliestStartTime) start = earliestStartTime;
 
-          return end.getTime() < Date.now() && isFullDayEvent(start, end);
+          return new Date(busyTime.end).getTime() < Date.now() && isFullDayEvent(start, end);
         })
         .map((busyTime) => ({ start: new Date(busyTime.start), end: new Date(busyTime.end) }));
 

@@ -813,6 +813,114 @@ describe("maximize availability and weights", () => {
     );
   });
 
+  it("counts a past full-day calendar event in a non-UTC timezone toward calibration", async () => {
+    // Asia/Kathmandu is UTC+05:45. The all-day event for June 20 runs from
+    // 2021-06-19T18:15Z to 2021-06-20T18:15Z, so at 20:00Z it ended 1h45m ago.
+    // Shifting the end by the UTC offset for the whole-day check moves it to
+    // 2021-06-21T00:00Z, which is still in the future — the ended check must
+    // use the unshifted end or the event is wrongly skipped.
+    vi.setSystemTime(new Date("2021-06-20T20:00:00Z"));
+    try {
+      const users: GetLuckyUserAvailableUsersType = [
+        buildUser({
+          id: 1,
+          username: "test1",
+          name: "Test User 1",
+          email: "test1@example.com",
+          bookings: [],
+        }),
+        buildUser({
+          id: 2,
+          username: "test2",
+          name: "Test User 2",
+          email: "test2@example.com",
+          bookings: [],
+        }),
+      ];
+
+      const allRRHosts = [
+        {
+          user: {
+            id: users[0].id,
+            email: users[0].email,
+            credentials: [],
+            userLevelSelectedCalendars: [],
+          },
+          weight: users[0].weight,
+          createdAt: new Date(0),
+        },
+        {
+          user: {
+            id: users[1].id,
+            email: users[1].email,
+            credentials: [],
+            userLevelSelectedCalendars: [],
+          },
+          weight: users[1].weight,
+          createdAt: new Date(0),
+        },
+      ];
+
+      CalendarManagerMock.getBusyCalendarTimes
+        .mockResolvedValueOnce({
+          success: true,
+          data: [
+            {
+              start: new Date("2021-06-19T18:15:00.000Z"),
+              end: new Date("2021-06-20T18:15:00.000Z"),
+              timeZone: "Asia/Kathmandu",
+            },
+          ],
+        })
+        .mockResolvedValue({ success: true, data: [] });
+
+      prismaMock.outOfOfficeEntry.findMany.mockResolvedValue([]);
+
+      prismaMock.user.findMany.mockResolvedValue(users);
+      prismaMock.host.findMany.mockResolvedValue([
+        {
+          userId: allRRHosts[0].user.id,
+          weight: allRRHosts[0].weight,
+          createdAt: allRRHosts[0].createdAt,
+        },
+      ]);
+
+      prismaMock.booking.findMany.mockResolvedValue([
+        buildBooking({
+          id: 1,
+          userId: 1,
+          createdAt: new Date("2021-06-05T10:00:00.000Z"),
+        }),
+        // both happened during user 1's full-day busy event
+        buildBooking({
+          id: 2,
+          userId: 2,
+          createdAt: new Date("2021-06-20T10:00:00.000Z"),
+        }),
+        buildBooking({
+          id: 3,
+          userId: 2,
+          createdAt: new Date("2021-06-20T12:00:00.000Z"),
+        }),
+      ]);
+
+      await expect(
+        luckyUserService.getLuckyUser({
+          availableUsers: users,
+          eventType: {
+            id: 1,
+            isRRWeightsEnabled: true,
+            team: { rrResetInterval: RRResetInterval.MONTH, rrTimestampBasis: RRTimestampBasis.CREATED_AT },
+            includeNoShowInRRCalculation: false,
+          },
+          allRRHosts,
+                })
+      ).resolves.toStrictEqual(users[1]);
+    } finally {
+      vi.setSystemTime(new Date("2021-06-20T11:59:59Z"));
+    }
+  });
+
   it("skips OOO calibration when there is only one host", async () => {
     const users: GetLuckyUserAvailableUsersType = [
       buildUser({
