@@ -585,6 +585,11 @@ export const createBookerStore = () =>
       defaultPhoneCountry,
     }: StoreInitializeType) => {
       const selectedDateInStore = get().selectedDate;
+      const queryLayout = getQueryParam("layout") as BookerLayout;
+      const effectiveLayout =
+        queryLayout && validBookerLayouts.includes(queryLayout)
+          ? queryLayout
+          : layout || BookerLayouts.MONTH_VIEW;
 
       if (
         get().username === username &&
@@ -612,21 +617,14 @@ export const createBookerStore = () =>
         rescheduledBy,
         bookingUid,
         bookingData,
-        layout: (getQueryParam("layout") as BookerLayout) &&
-          validBookerLayouts.includes(getQueryParam("layout") as BookerLayout)
-            ? (getQueryParam("layout") as BookerLayout)
-            : layout || BookerLayouts.MONTH_VIEW,
+        layout: effectiveLayout,
         isTeamEvent: isTeamEvent || false,
         durationConfig,
         timezone,
         // Preselect today's date in week / column view, since they use this to show the week title.
         selectedDate:
           selectedDateInStore ||
-          (["week_view", "column_view"].includes(
-            (getQueryParam("layout") as BookerLayout) || layout
-          )
-            ? dayjs().format("YYYY-MM-DD")
-            : null),
+          (["week_view", "column_view"].includes(effectiveLayout) ? dayjs().format("YYYY-MM-DD") : null),
         teamMemberEmail,
         crmOwnerRecordType,
         crmAppSlug,
