@@ -21,6 +21,20 @@ function guardAgainstBookingInThePast(date: Date) {
 }
 
 /**
+ * A day's boundaries can have a different UTC offset than "now" when a DST change falls in between,
+ * so they are built from the wall-clock date in the timezone rather than from a fixed offset.
+ */
+function startOfDayInTimeZone(date: string, timeZone: string) {
+  return dayjs.tz(`${date} 00:00`, timeZone);
+}
+
+function endOfDayInTimeZone(date: string, timeZone: string) {
+  // endOf("day") would keep the offset of the day's start, which is wrong on the day of a DST change
+  const nextDate = dayjs.utc(date).add(1, "day").format("YYYY-MM-DD");
+  return startOfDayInTimeZone(nextDate, timeZone).subtract(1, "millisecond");
+}
+
+/**
  * Dates passed to this function are timezone neutral.
  */
 export function calculatePeriodLimits({
@@ -35,6 +49,8 @@ export function calculatePeriodLimits({
   allDatesWithBookabilityStatusInBookerTz,
   eventUtcOffset,
   bookerUtcOffset,
+  eventTimeZone,
+  bookerTimeZone,
   /**
    * This is temporary till we find a way to provide allDatesWithBookabilityStatus in handleNewBooking without re-computing availability.
    * It is okay for handleNewBooking to pass it as true as the frontend won't allow selecting a timeslot that is out of bounds of ROLLING_WINDOW
@@ -48,6 +64,12 @@ export function calculatePeriodLimits({
   allDatesWithBookabilityStatusInBookerTz: Record<string, { isBookable: boolean }> | null;
   eventUtcOffset: number;
   bookerUtcOffset: number;
+  /**
+   * When provided, period boundaries use the UTC offset of the boundary's own date instead of
+   * eventUtcOffset/bookerUtcOffset, which are only correct for "now".
+   */
+  eventTimeZone?: string | null;
+  bookerTimeZone?: string | null;
   _skipRollingWindowCheck?: boolean;
 }): PeriodLimits {
   const currentTime = dayjs();
@@ -75,7 +97,9 @@ export function calculatePeriodLimits({
         : currentTimeInBookerTz.businessDaysAdd(periodDays);
       // The future limit talks in terms of days so we take the end of the day here to consider the entire day
       return {
-        endOfRollingPeriodEndDayInBookerTz: rollingEndDay.endOf("day"),
+        endOfRollingPeriodEndDayInBookerTz: bookerTimeZone
+          ? endOfDayInTimeZone(rollingEndDay.format("YYYY-MM-DD"), bookerTimeZone)
+          : rollingEndDay.endOf("day"),
         startOfRangeStartDayInEventTz: null,
         endOfRangeEndDayInEventTz: null,
       };
@@ -99,6 +123,7 @@ export function calculatePeriodLimits({
         daysNeeded: periodDays,
         allDatesWithBookabilityStatusInBookerTz,
         countNonBusinessDays: periodCountCalendarDays,
+        timeZone: bookerTimeZone,
       });
 
       return {
@@ -121,10 +146,24 @@ export function calculatePeriodLimits({
       const isNewFormat = (date: dayjs.Dayjs) =>
         date.hour() === 0 && date.minute() === 0 && date.second() === 0 && date.millisecond() === 0;
 
+      const isRangeInNewFormat = isNewFormat(startUtc) && isNewFormat(endUtc);
+
+      if (eventTimeZone) {
+        // New format stores the date itself; old format stores midnight of that date in the event timezone
+        const toDateInEventTz = (date: dayjs.Dayjs) =>
+          isRangeInNewFormat ? date.format("YYYY-MM-DD") : date.tz(eventTimeZone).format("YYYY-MM-DD");
+
+        return {
+          endOfRollingPeriodEndDayInBookerTz: null,
+          startOfRangeStartDayInEventTz: startOfDayInTimeZone(toDateInEventTz(startUtc), eventTimeZone),
+          endOfRangeEndDayInEventTz: endOfDayInTimeZone(toDateInEventTz(endUtc), eventTimeZone),
+        };
+      }
+
       let startOfRangeStartDayInEventTz: dayjs.Dayjs;
       let endOfRangeEndDayInEventTz: dayjs.Dayjs;
 
-      if (isNewFormat(startUtc) && isNewFormat(endUtc)) {
+      if (isRangeInNewFormat) {
         // New format: dates are stored as UTC midnight (e.g., 2024-01-20T00:00:00Z for Jan 20)
         // Extract the date and create midnight in the event timezone
         // Formula: midnight in event timezone = midnight UTC - offset
@@ -170,6 +209,7 @@ export function getRollingWindowEndDate({
   daysNeeded,
   allDatesWithBookabilityStatusInBookerTz,
   countNonBusinessDays,
+  timeZone,
 }: {
   /**
    * It should be provided in the same utcOffset as the dates in `allDatesWithBookabilityStatus`
@@ -179,6 +219,10 @@ export function getRollingWindowEndDate({
   daysNeeded: number;
   allDatesWithBookabilityStatusInBookerTz: Record<string, { isBookable: boolean }>;
   countNonBusinessDays: boolean | null;
+  /**
+   * Booker's timezone. When provided, the window ends at midnight in the last day's own UTC offset.
+   */
+  timeZone?: string | null;
 }) {
   const log = logger.getSubLogger({ prefix: ["getRollingWindowEndDate"] });
   log.debug("called:", safeStringify({ startDay: startDateInBookerTz.format(), daysNeeded }));
@@ -229,7 +273,10 @@ export function getRollingWindowEndDate({
    * We can't just return null(if rollingEndDay couldn't be obtained) and allow days farther than ROLLING_WINDOW_PERIOD_MAX_DAYS_TO_CHECK to be booked as that would mean there is no future limit
    * The future limit talks in terms of days so we take the end of the day here to consider the entire day
    */
-  const endOfLastDayOfWindowInBookerTz = (rollingEndDay ?? startOfIterationDay).endOf("day");
+  const lastDayOfWindowInBookerTz = rollingEndDay ?? startOfIterationDay;
+  const endOfLastDayOfWindowInBookerTz = timeZone
+    ? endOfDayInTimeZone(lastDayOfWindowInBookerTz.format("YYYY-MM-DD"), timeZone)
+    : lastDayOfWindowInBookerTz.endOf("day");
   log.debug("Returning rollingEndDay", endOfLastDayOfWindowInBookerTz.format());
 
   return endOfLastDayOfWindowInBookerTz;
@@ -353,12 +400,16 @@ export default function isOutOfBounds(
     periodEndDate,
     eventUtcOffset,
     bookerUtcOffset,
+    eventTimeZone,
+    bookerTimeZone,
   }: Pick<
     EventType,
     "periodType" | "periodDays" | "periodCountCalendarDays" | "periodStartDate" | "periodEndDate"
   > & {
     eventUtcOffset: number;
     bookerUtcOffset: number;
+    eventTimeZone?: string | null;
+    bookerTimeZone?: string | null;
   },
   minimumBookingNotice?: number
 ) {
@@ -374,6 +425,8 @@ export default function isOutOfBounds(
     _skipRollingWindowCheck: true,
     eventUtcOffset,
     bookerUtcOffset,
+    eventTimeZone,
+    bookerTimeZone,
   });
 
   const isOutOfBoundsByPeriod = isTimeViolatingFutureLimit({

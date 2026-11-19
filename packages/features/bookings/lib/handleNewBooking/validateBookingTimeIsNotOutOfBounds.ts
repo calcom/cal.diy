@@ -40,6 +40,8 @@ const _validateBookingTimeIsNotOutOfBounds = async <T extends ValidateBookingTim
         periodCountCalendarDays: eventType.periodCountCalendarDays,
         bookerUtcOffset: getUTCOffsetByTimezone(reqBodyTimeZone) ?? 0,
         eventUtcOffset: eventTimeZone ? (getUTCOffsetByTimezone(eventTimeZone) ?? 0) : 0,
+        bookerTimeZone: reqBodyTimeZone,
+        eventTimeZone,
       },
       eventType.minimumBookingNotice
     );

@@ -1,9 +1,14 @@
 process.env.TZ = "Asia/Dubai";
 
 import dayjs from "@calcom/dayjs";
+import { getUTCOffsetByTimezone } from "@calcom/lib/dayjs";
 import { PeriodType } from "@calcom/prisma/enums";
-import { describe, expect, it } from "vitest";
-import { calculatePeriodLimits, getRollingWindowEndDate } from "./isOutOfBounds";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import isOutOfBounds, {
+  calculatePeriodLimits,
+  getRollingWindowEndDate,
+  isTimeViolatingFutureLimit,
+} from "./isOutOfBounds";
 
 const getDayJsTimeWithUtcOffset = ({
   dateStringWithOffset,
@@ -655,5 +660,215 @@ describe("calculatePeriodLimits - PeriodType.RANGE", () => {
       expect(result.startOfRangeStartDayInEventTz!.date()).toBe(19);
       expect(result.endOfRangeEndDayInEventTz!.date()).toBe(19);
     });
+  });
+});
+
+describe("calculatePeriodLimits - boundaries across a DST change", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // Callers compute offsets for "now", so a boundary on the other side of a DST change
+  // must be placed using the timezone name, not the offset.
+  const limitsWithTimeZones = ({
+    now,
+    eventTimeZone,
+    bookerTimeZone,
+    ...rest
+  }: Pick<
+    Parameters<typeof calculatePeriodLimits>[0],
+    | "periodType"
+    | "periodDays"
+    | "periodCountCalendarDays"
+    | "periodStartDate"
+    | "periodEndDate"
+    | "allDatesWithBookabilityStatusInBookerTz"
+  > & { now: string; eventTimeZone: string; bookerTimeZone: string }) => {
+    vi.useFakeTimers({ now: new Date(now) });
+    return calculatePeriodLimits({
+      ...rest,
+      eventUtcOffset: getUTCOffsetByTimezone(eventTimeZone) ?? 0,
+      bookerUtcOffset: getUTCOffsetByTimezone(bookerTimeZone) ?? 0,
+      eventTimeZone,
+      bookerTimeZone,
+    });
+  };
+
+  const isViolating = (time: string, periodLimits: ReturnType<typeof calculatePeriodLimits>) =>
+    isTimeViolatingFutureLimit({ time, periodLimits });
+
+  describe("ROLLING", () => {
+    const rolling = { periodType: PeriodType.ROLLING, periodStartDate: null, periodEndDate: null };
+
+    it("ends the window at midnight in the last day's offset when DST ends inside the window", () => {
+      const periodLimits = limitsWithTimeZones({
+        ...rolling,
+        now: "2026-10-30T16:00:00Z", // Oct 30 12:00 EDT; DST ends Nov 1
+        periodDays: 5, // last day is Nov 4 (EST)
+        periodCountCalendarDays: true,
+        allDatesWithBookabilityStatusInBookerTz: null,
+        eventTimeZone: "America/New_York",
+        bookerTimeZone: "America/New_York",
+      });
+
+      expect(periodLimits.endOfRollingPeriodEndDayInBookerTz?.toISOString()).toBe("2026-11-05T04:59:59.999Z");
+      expect(isViolating("2026-11-05T04:00:00Z", periodLimits)).toBe(false); // Nov 4 23:00 EST
+      expect(isViolating("2026-11-05T05:00:00Z", periodLimits)).toBe(true); // Nov 5 00:00 EST
+    });
+
+    it("ends the window at midnight in the last day's offset when DST starts inside the window", () => {
+      const periodLimits = limitsWithTimeZones({
+        ...rolling,
+        now: "2026-03-05T17:00:00Z", // Mar 5 12:00 EST; DST starts Mar 8
+        periodDays: 5, // last day is Mar 10 (EDT)
+        periodCountCalendarDays: true,
+        allDatesWithBookabilityStatusInBookerTz: null,
+        eventTimeZone: "America/New_York",
+        bookerTimeZone: "America/New_York",
+      });
+
+      expect(periodLimits.endOfRollingPeriodEndDayInBookerTz?.toISOString()).toBe("2026-03-11T03:59:59.999Z");
+      expect(isViolating("2026-03-11T03:00:00Z", periodLimits)).toBe(false); // Mar 10 23:00 EDT
+      expect(isViolating("2026-03-11T04:00:00Z", periodLimits)).toBe(true); // Mar 11 00:00 EDT
+    });
+
+    it("uses the booker's timezone, not the event's, for the window end", () => {
+      const periodLimits = limitsWithTimeZones({
+        ...rolling,
+        now: "2026-10-20T12:00:00Z", // London BST; DST ends Oct 25
+        periodDays: 7, // last day is Oct 27 (GMT)
+        periodCountCalendarDays: true,
+        allDatesWithBookabilityStatusInBookerTz: null,
+        eventTimeZone: "America/New_York",
+        bookerTimeZone: "Europe/London",
+      });
+
+      expect(periodLimits.endOfRollingPeriodEndDayInBookerTz?.toISOString()).toBe("2026-10-27T23:59:59.999Z");
+      expect(isViolating("2026-10-27T23:00:00Z", periodLimits)).toBe(false); // Oct 27 23:00 GMT
+    });
+
+    it("is unchanged when no DST change falls inside the window", () => {
+      const periodLimits = limitsWithTimeZones({
+        ...rolling,
+        now: "2026-12-01T17:00:00Z",
+        periodDays: 5,
+        periodCountCalendarDays: true,
+        allDatesWithBookabilityStatusInBookerTz: null,
+        eventTimeZone: "America/New_York",
+        bookerTimeZone: "America/New_York",
+      });
+
+      expect(periodLimits.endOfRollingPeriodEndDayInBookerTz?.toISOString()).toBe("2026-12-07T04:59:59.999Z");
+    });
+  });
+
+  describe("ROLLING_WINDOW", () => {
+    it("ends the window at midnight in the last bookable day's offset when DST ends inside the window", () => {
+      const allDatesWithBookabilityStatusInBookerTz: Record<string, { isBookable: boolean }> = {};
+      for (let day = dayjs.utc("2026-10-30"); day.isBefore("2026-11-10"); day = day.add(1, "day")) {
+        allDatesWithBookabilityStatusInBookerTz[day.format("YYYY-MM-DD")] = { isBookable: true };
+      }
+
+      const periodLimits = limitsWithTimeZones({
+        periodType: PeriodType.ROLLING_WINDOW,
+        periodStartDate: null,
+        periodEndDate: null,
+        now: "2026-10-30T16:00:00Z", // Oct 30 12:00 EDT
+        periodDays: 5, // Oct 30, 31, Nov 1, 2, 3 → last day is Nov 3 (EST)
+        periodCountCalendarDays: true,
+        allDatesWithBookabilityStatusInBookerTz,
+        eventTimeZone: "America/New_York",
+        bookerTimeZone: "America/New_York",
+      });
+
+      expect(periodLimits.endOfRollingPeriodEndDayInBookerTz?.toISOString()).toBe("2026-11-04T04:59:59.999Z");
+      expect(isViolating("2026-11-04T04:00:00Z", periodLimits)).toBe(false); // Nov 3 23:00 EST
+    });
+  });
+
+  describe("RANGE", () => {
+    const range = {
+      periodType: PeriodType.RANGE,
+      periodDays: null,
+      periodCountCalendarDays: null,
+      allDatesWithBookabilityStatusInBookerTz: null,
+    };
+
+    it("places both range edges in their own offset when the range is configured in another DST period", () => {
+      const periodLimits = limitsWithTimeZones({
+        ...range,
+        now: "2026-07-15T16:00:00Z", // summer, EDT
+        periodStartDate: new Date("2026-12-01T00:00:00Z"),
+        periodEndDate: new Date("2026-12-10T00:00:00Z"),
+        eventTimeZone: "America/New_York",
+        bookerTimeZone: "America/New_York",
+      });
+
+      expect(periodLimits.startOfRangeStartDayInEventTz?.toISOString()).toBe("2026-12-01T05:00:00.000Z");
+      expect(periodLimits.endOfRangeEndDayInEventTz?.toISOString()).toBe("2026-12-11T04:59:59.999Z");
+      expect(isViolating("2026-12-01T04:00:00Z", periodLimits)).toBe(true); // Nov 30 23:00 EST
+      expect(isViolating("2026-12-11T04:00:00Z", periodLimits)).toBe(false); // Dec 10 23:00 EST
+    });
+
+    it("reads old-format range dates in the event timezone on the date they were stored", () => {
+      const periodLimits = limitsWithTimeZones({
+        ...range,
+        now: "2026-01-15T17:00:00Z", // winter, EST
+        // Old format: midnight EDT, i.e. Jul 1 and Jul 10 in the event timezone
+        periodStartDate: new Date("2026-07-01T04:00:00Z"),
+        periodEndDate: new Date("2026-07-10T04:00:00Z"),
+        eventTimeZone: "America/New_York",
+        bookerTimeZone: "America/New_York",
+      });
+
+      expect(periodLimits.startOfRangeStartDayInEventTz?.toISOString()).toBe("2026-07-01T04:00:00.000Z");
+      expect(periodLimits.endOfRangeEndDayInEventTz?.toISOString()).toBe("2026-07-11T03:59:59.999Z");
+    });
+
+    it("handles the southern hemisphere, where DST starts in October", () => {
+      const periodLimits = limitsWithTimeZones({
+        ...range,
+        now: "2026-07-15T02:00:00Z", // Sydney winter, +10:00; DST starts Oct 4
+        periodStartDate: new Date("2026-10-10T00:00:00Z"),
+        periodEndDate: new Date("2026-10-20T00:00:00Z"),
+        eventTimeZone: "Australia/Sydney",
+        bookerTimeZone: "Australia/Sydney",
+      });
+
+      expect(periodLimits.startOfRangeStartDayInEventTz?.toISOString()).toBe("2026-10-09T13:00:00.000Z");
+      expect(isViolating("2026-10-09T13:30:00Z", periodLimits)).toBe(false); // Oct 10 00:30 AEDT
+    });
+
+    it("starts the range at the first valid instant when DST skips local midnight", () => {
+      const periodLimits = limitsWithTimeZones({
+        ...range,
+        now: "2026-07-15T16:00:00Z", // Santiago -04:00; on Sep 6, 00:00 jumps to 01:00 (-03:00)
+        periodStartDate: new Date("2026-09-06T00:00:00Z"),
+        periodEndDate: new Date("2026-09-10T00:00:00Z"),
+        eventTimeZone: "America/Santiago",
+        bookerTimeZone: "America/Santiago",
+      });
+
+      expect(isViolating("2026-09-06T03:30:00Z", periodLimits)).toBe(true); // Sep 5 23:30 -04:00
+      expect(isViolating("2026-09-06T04:00:00Z", periodLimits)).toBe(false); // Sep 6 01:00 -03:00
+    });
+  });
+
+  it("isOutOfBounds accepts timezone names for the booking-time check", () => {
+    vi.useFakeTimers({ now: new Date("2026-07-15T16:00:00Z") });
+    const options = {
+      periodType: PeriodType.RANGE,
+      periodDays: null,
+      periodCountCalendarDays: null,
+      periodStartDate: new Date("2026-12-01T00:00:00Z"),
+      periodEndDate: new Date("2026-12-10T00:00:00Z"),
+      eventUtcOffset: getUTCOffsetByTimezone("America/New_York") ?? 0,
+      bookerUtcOffset: getUTCOffsetByTimezone("America/New_York") ?? 0,
+      eventTimeZone: "America/New_York",
+      bookerTimeZone: "America/New_York",
+    };
+
+    expect(isOutOfBounds("2026-12-01T04:00:00Z", options)).toBe(true); // Nov 30 23:00 EST
+    expect(isOutOfBounds("2026-12-11T04:00:00Z", options)).toBe(false); // Dec 10 23:00 EST
   });
 });

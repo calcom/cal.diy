@@ -1317,6 +1317,8 @@ export class AvailableSlotsService {
       allDatesWithBookabilityStatusInBookerTz: allDatesWithBookabilityStatus,
       eventUtcOffset,
       bookerUtcOffset,
+      eventTimeZone,
+      bookerTimeZone: input.timeZone,
     });
 
     const _mapWithinBoundsSlotsToDate = () => {
