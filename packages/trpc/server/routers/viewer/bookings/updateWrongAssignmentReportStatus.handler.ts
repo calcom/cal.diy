@@ -5,7 +5,6 @@ import type { TrpcSessionUser } from "@calcom/trpc/server/types";
 import { TRPCError } from "@trpc/server";
 import type { TUpdateWrongAssignmentReportStatusInputSchema } from "./updateWrongAssignmentReportStatus.schema";
 
-
 type UpdateWrongAssignmentReportStatusOptions = {
   ctx: {
     user: NonNullable<TrpcSessionUser>;
@@ -31,6 +30,26 @@ export const updateWrongAssignmentReportStatusHandler = async ({
     });
   }
 
+  if (!report.teamId) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You do not have permission to update this report",
+    });
+  }
+  const membership = await prisma.membership.findFirst({
+    where: {
+      userId: user.id,
+      teamId: report.teamId,
+      accepted: true,
+    },
+  });
+
+  if (!membership) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You must be a member of the team to update this report",
+    });
+  }
 
   const updatedReport = await repo.updateStatus({
     id: reportId,
