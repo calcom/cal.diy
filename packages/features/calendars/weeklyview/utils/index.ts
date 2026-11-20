@@ -71,39 +71,43 @@ export function getHoursToDisplay(startHour: number, endHour: number, timezone?:
   return dates;
 }
 
-export function mergeOverlappingDateRanges(dateRanges: TimeRange[]) {
-  //Sort the date ranges by start date
-  dateRanges.sort((a, b) => {
-    return a.start.getTime() - b.start.getTime();
+export function mergeOverlappingDateRanges(dateRanges: TimeRange[]): TimeRange[] {
+  if (dateRanges.length === 0) {
+    return [];
+  }
+
+  // Sort by start ascending; if start is identical, sort by end descending
+  const sorted = [...dateRanges].sort((a, b) => {
+    const diff = a.start.getTime() - b.start.getTime();
+    if (diff !== 0) return diff;
+    return b.end.getTime() - a.end.getTime();
   });
-  //Create a new array to hold the merged date ranges
-  const mergedDateRanges = [];
-  //Loop through the date ranges
-  for (let i = 0; i < dateRanges.length; i++) {
-    //If the merged date ranges array is empty, add the first date range
-    if (mergedDateRanges.length === 0) {
-      mergedDateRanges.push(dateRanges[i]);
+
+  const mergedDateRanges: TimeRange[] = [{ start: new Date(sorted[0].start), end: new Date(sorted[0].end) }];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const lastMergedDateRange = mergedDateRanges[mergedDateRanges.length - 1];
+    const currentDateRange = sorted[i];
+
+    if (lastMergedDateRange.end.getTime() >= currentDateRange.start.getTime()) {
+      lastMergedDateRange.end = new Date(
+        Math.max(lastMergedDateRange.end.getTime(), currentDateRange.end.getTime()),
+      );
     } else {
-      //Get the last date range in the merged date ranges array
-      const lastMergedDateRange = mergedDateRanges[mergedDateRanges.length - 1];
-      //Get the current date range
-      const currentDateRange = dateRanges[i];
-      //If the last merged date range overlaps with the current date range, merge them
-      if (lastMergedDateRange.end.getTime() >= currentDateRange.start.getTime()) {
-        lastMergedDateRange.end = currentDateRange.end;
-      } else {
-        //Otherwise, add the current date range to the merged date ranges array
-        mergedDateRanges.push(currentDateRange);
-      }
+      mergedDateRanges.push({
+        start: new Date(currentDateRange.start),
+        end: new Date(currentDateRange.end),
+      });
     }
   }
+
   return mergedDateRanges;
 }
 
 export function calculateHourSizeInPx(
   gridElementRef: HTMLOListElement | null,
   startHour: number,
-  endHour: number
+  endHour: number,
 ) {
   // Gap added at bottom to give calendar some breathing room.
   // I guess we could come up with a better way to do this in the future.
@@ -129,5 +133,8 @@ export function getEventSegmentForDay(event: { start: Date | string; end: Date |
   const endsAfterDayStarts = eventEnd.isAfter(dayStart) || !eventStart.isBefore(dayStart);
   if (!startsBeforeDayEnds || !endsAfterDayStarts) return null;
 
-  return { start: dayjs.max(eventStart, dayStart), end: dayjs.min(eventEnd, dayEnd) };
+  return {
+    start: dayjs.max(eventStart, dayStart),
+    end: dayjs.min(eventEnd, dayEnd),
+  };
 }
