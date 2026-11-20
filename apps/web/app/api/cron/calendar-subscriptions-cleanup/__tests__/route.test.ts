@@ -101,6 +101,18 @@ describe("/api/cron/calendar-subscriptions-cleanup", () => {
       expect(body.message).toBe("Forbidden");
     });
 
+    test("should reject Bearer undefined when CRON_SECRET is unset", async () => {
+      vi.stubEnv("CRON_SECRET", undefined);
+
+      const request = new NextRequest("http://localhost/api/cron/calendar-subscriptions-cleanup");
+      request.headers.set("authorization", "Bearer undefined");
+
+      const { GET } = await import("../route");
+      const response = await GET(request, { params: Promise.resolve({}) });
+
+      expect(response.status).toBe(403);
+    });
+
     test("should accept CRON_API_KEY in authorization header", async () => {
       const request = new NextRequest("http://localhost/api/cron/calendar-subscriptions-cleanup");
       request.headers.set("authorization", "test-cron-key");
