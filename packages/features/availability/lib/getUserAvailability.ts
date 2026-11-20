@@ -373,7 +373,7 @@ export class UserAvailabilityService {
       duration,
       returnDateOverrides,
       bypassBusyCalendarTimes = false,
-      silentlyHandleCalendarFailures = false,
+      silentlyHandleCalendarFailures = true,
       mode = "none",
       withSource = false,
     } = params;
@@ -605,16 +605,7 @@ export class UserAvailabilityService {
       });
     } catch (error) {
       log.error(`Error fetching busy times for user ${username}:`, error);
-      return {
-        busy: [],
-        timeZone: finalTimezone,
-        dateRanges: [],
-        oooExcludedDateRanges: [],
-        workingHours: [],
-        dateOverrides: [],
-        currentSeats: [],
-        datesOutOfOffice: undefined,
-      };
+      busyTimes = [];
     }
 
     const detailedBusyTimesWithSource: EventBusyDetails[] = [
