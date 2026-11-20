@@ -15,6 +15,9 @@ export function markdownToSafeHTMLClient(markdown: string | null) {
   const safeHTML = DOMPurify.sanitize(html);
 
   let safeHTMLWithListFormatting = safeHTML
+    .replace(/<h1>/g, "<h1 style='font-size: 1.5em; font-weight: 700; margin-bottom: 8px'>")
+    .replace(/<h2>/g, "<h2 style='font-size: 1.25em; font-weight: 700; margin-bottom: 6px'>")
+    .replace(/<h3>/g, "<h3 style='font-size: 1.1em; font-weight: 600; margin-bottom: 4px'>")
     .replace(
       /<ul>/g,
       "<ul style='list-style-type: disc; list-style-position: inside; margin-left: 12px; margin-bottom: 4px'>"
