@@ -236,6 +236,25 @@ export function getRollingWindowEndDate({
 }
 
 /**
+ * Furthest date a ROLLING_WINDOW can ever reach. getRollingWindowEndDate stops after
+ * ROLLING_WINDOW_PERIOD_MAX_DAYS_TO_CHECK steps, so the real window end can't be later than this
+ * regardless of which days are bookable. Used where day-by-day availability isn't computed.
+ */
+export function getMaxRollingWindowEndDateInBookerTz({
+  periodCountCalendarDays,
+  bookerUtcOffset,
+}: {
+  periodCountCalendarDays: boolean | null;
+  bookerUtcOffset: number;
+}) {
+  const currentTimeInBookerTz = dayjs().utcOffset(bookerUtcOffset);
+  const maxEndDay = periodCountCalendarDays
+    ? currentTimeInBookerTz.add(ROLLING_WINDOW_PERIOD_MAX_DAYS_TO_CHECK, "days")
+    : currentTimeInBookerTz.businessDaysAdd(ROLLING_WINDOW_PERIOD_MAX_DAYS_TO_CHECK);
+  return maxEndDay.endOf("day");
+}
+
+/**
  * To be used when we work on Timeslots(and not Dates) to check boundaries
  * It ensures that the time isn't in the past and also checks if the time is within the minimum booking notice.
  * Note: It throws error that needs to be caught by caller.
@@ -375,6 +394,16 @@ export default function isOutOfBounds(
     eventUtcOffset,
     bookerUtcOffset,
   });
+
+  // calculatePeriodLimits skips ROLLING_WINDOW here because this path has no day-by-day availability
+  // to compute the exact window end, which let direct API bookings bypass the limit entirely (#29729).
+  // The window can never reach past its maximum, so enforce that as an upper bound.
+  if (periodType === PeriodType.ROLLING_WINDOW) {
+    periodLimits.endOfRollingPeriodEndDayInBookerTz = getMaxRollingWindowEndDateInBookerTz({
+      periodCountCalendarDays,
+      bookerUtcOffset,
+    });
+  }
 
   const isOutOfBoundsByPeriod = isTimeViolatingFutureLimit({
     time: dayjs.isDayjs(time) ? time.toDate() : time,
