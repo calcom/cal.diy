@@ -568,6 +568,24 @@ describe("event tests", () => {
       expect(result).toBe("Meeting with Jane Smith");
     });
 
+    it("should replace names containing non-ASCII letters", () => {
+      const eventName = "Meeting with Émile Zola";
+      const result = updateHostInEventName(eventName, "Émile Zola", "Bob Smith");
+      expect(result).toBe("Meeting with Bob Smith");
+    });
+
+    it("should replace names in non-Latin scripts", () => {
+      const eventName = "Meeting with 李雷";
+      const result = updateHostInEventName(eventName, "李雷", "Bob Smith");
+      expect(result).toBe("Meeting with Bob");
+    });
+
+    it("should not replace a name inside a longer non-ASCII name", () => {
+      const eventName = "Meeting with Renée";
+      const result = updateHostInEventName(eventName, "René", "Jane");
+      expect(result).toBe("Meeting with Renée");
+    });
+
     it("should prioritize full name over first name", () => {
       const eventName = "John.Doe and John are coming";
       const result = updateHostInEventName(eventName, "John Doe", "Jane Smith");
