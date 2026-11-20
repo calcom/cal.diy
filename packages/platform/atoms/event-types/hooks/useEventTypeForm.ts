@@ -96,8 +96,12 @@ export const useEventTypeForm = ({
       disabledCancelling: eventType.disableCancelling ?? false,
       disabledRescheduling: eventType.disableRescheduling ?? false,
       allowReschedulingPastBookings: eventType.allowReschedulingPastBookings,
+      allowReschedulingCancelledBookings: eventType.allowReschedulingCancelledBookings ?? false,
       hideOrganizerEmail: eventType.hideOrganizerEmail,
-      metadata: eventType.metadata,
+      metadata: {
+        ...(eventType.metadata ?? {}),
+        bookerLayouts: eventType.metadata?.bookerLayouts ?? null,
+      },
       hosts: eventType.hosts.sort((a, b) => sortHosts(a, b, eventType.isRRWeightsEnabled)),
       hostGroups: eventType.hostGroups || [],
       successRedirectUrl: eventType.successRedirectUrl || "",
@@ -135,6 +139,7 @@ export const useEventTypeForm = ({
       showOptimizedSlots: eventType.showOptimizedSlots ?? false,
       enablePerHostLocations: eventType.enablePerHostLocations ?? false,
       requiresCancellationReason: eventType.requiresCancellationReason || null,
+      interfaceLanguage: eventType.interfaceLanguage ?? null,
     };
   }, [eventType, periodDates]);
 
