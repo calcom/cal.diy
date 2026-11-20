@@ -36,7 +36,8 @@ export function transformDateOverridesForAtom(
       const currentUtcOffset = dayjs().tz(timeZone).utcOffset();
       const currentTimeInTz = dayjs().utc().add(currentUtcOffset, "minute");
 
-      if (!override.date || dayjs(override.date).isBefore(currentTimeInTz, "day")) {
+      // override.date is stored as UTC midnight, so compare in UTC regardless of the server's local timezone
+      if (!override.date || dayjs.utc(override.date).isBefore(currentTimeInTz, "day")) {
         return acc;
       }
       const newValue = {
@@ -53,7 +54,8 @@ export function transformDateOverridesForAtom(
       };
       const dayRangeIndex = acc.findIndex(
         // early return prevents override.date from ever being empty.
-        (item) => override.date && yyyymmdd(item.ranges[0].start) === yyyymmdd(override.date)
+        (item) =>
+          override.date && yyyymmdd(dayjs.utc(item.ranges[0].start)) === yyyymmdd(dayjs.utc(override.date))
       );
       if (dayRangeIndex === -1) {
         acc.push({ ranges: [newValue] });
