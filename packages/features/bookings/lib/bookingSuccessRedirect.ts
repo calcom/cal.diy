@@ -69,7 +69,7 @@ type ResultType = {
   hostStartTime?: string | null;
   attendeeStartTime?: string | null;
   guestEmails?: string[] | null;
-  phone?: string | null;
+  attendeePhoneNumber?: string | null;
   attendeeFirstName?: string | null;
   attendeeLastName?: string | null;
 };
@@ -89,12 +89,12 @@ export const getBookingRedirectExtraParams = (booking: SuccessRedirectBookingTyp
   // Helper function to extract response details (e.g., phone, attendee's first and last name)
   function extractResponseDetails(booking: SuccessRedirectBookingType, obj: ResultType): ResultType {
     const result: ResultType = { ...obj };
-    const phone = getSafe<string>(booking.responses, ["phone"]);
+    const attendeePhoneNumber = getSafe<string>(booking.responses, ["attendeePhoneNumber"]);
     const firstName = getSafe<string>(booking.responses, ["name", "firstName"]);
     const lastName = getSafe<string>(booking.responses, ["name", "lastName"]);
     const name = getSafe<string>(booking.responses, ["name"]);
 
-    if (phone) result.phone = phone;
+    if (attendeePhoneNumber) result.attendeePhoneNumber = attendeePhoneNumber;
     if (firstName) result.attendeeFirstName = firstName;
     if (lastName) result.attendeeLastName = lastName;
     else if (name && typeof name === "string") result.attendeeName = name; // Fallback if `name` is a string instead of an object
