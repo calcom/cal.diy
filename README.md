@@ -80,6 +80,9 @@ Here’s what you need to run Cal.diy.
 
 ### Setup
 
+> 💡 **Looking for OS-specific instructions?**  
+> Check out the [OS-Specific Setup Guide](docs/setup-os.md) for tailored step-by-step setup guides and troubleshooting on **Windows**, **macOS**, and **Linux**.
+
 1. Clone the repo (or fork https://github.com/calcom/cal.diy/fork)
 
    ```sh
