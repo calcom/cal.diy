@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import dayjs from "@calcom/dayjs";
 import { isBookingDryRun } from "@calcom/features/bookings/Booker/utils/isBookingDryRun";
+import { getLocationValue } from "@calcom/lib/bookings/getLocationValue";
 import { getRoutedTeamMemberIdsFromSearchParams } from "@calcom/lib/bookings/getRoutedTeamMemberIdsFromSearchParams";
 import { parseRecurringDates } from "@calcom/lib/parse-dates";
 import type { BookerEvent, BookingCreateBody, RecurringBookingCreateBody } from "../../../types";
@@ -60,6 +61,11 @@ export const mapBookingToMutationInput = ({
   const skipContactOwner = searchParams.get("cal.skipContactOwner") === "true";
   const _isDryRun = isDryRunProp !== undefined ? isDryRunProp : isBookingDryRun(searchParams);
   const dub_id = searchParams?.get("dub_id");
+  const location = values?.location as unknown as string | undefined;
+  const responseLocation = (values?.responses as Record<string, unknown> | undefined)?.location as
+    | string
+    | { value: unknown }
+    | undefined;
 
   return {
     ...values,
@@ -91,6 +97,7 @@ export const mapBookingToMutationInput = ({
     _isDryRun,
     dub_id,
     verificationCode,
+    location: getLocationValue(location, responseLocation),
   };
 };
 
