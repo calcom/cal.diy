@@ -38,6 +38,26 @@ const applyTravelDuration = (event: ICAL.Event, seconds: number) => {
   return event;
 };
 
+const pad = (value: number) => String(value).padStart(2, "0");
+
+// Feeds such as Proton's name a TZID without defining it in a VTIMEZONE. The offset is read at the event's own
+// wall-clock time, so one zone is never reused for another TZID or for the other side of a DST change.
+const buildFallbackVtimezone = (tzid: string, wallTime: ICAL.Time) => {
+  const wallClock = `${wallTime.year}-${pad(wallTime.month)}-${pad(wallTime.day)}T${pad(wallTime.hour)}:${pad(
+    wallTime.minute
+  )}:${pad(wallTime.second)}`;
+  const offset = dayjs.tz(wallClock, tzid).format("Z");
+
+  const timezoneComp = new ICAL.Component("vtimezone");
+  timezoneComp.addPropertyWithValue("tzid", tzid);
+  const standard = new ICAL.Component("standard");
+  standard.addPropertyWithValue("tzoffsetfrom", offset);
+  standard.addPropertyWithValue("tzoffsetto", offset);
+  standard.addPropertyWithValue("dtstart", "1601-01-01T00:00:00");
+  timezoneComp.addSubcomponent(standard);
+  return timezoneComp;
+};
+
 const CALENDSO_ENCRYPTION_KEY = process.env.CALENDSO_ENCRYPTION_KEY || "";
 
 class ICSFeedCalendarService implements Calendar {
@@ -171,44 +191,28 @@ class ICSFeedCalendarService implements Calendar {
         // Fix precedence: prioritize TZID from DTSTART property, then standalone TZID, then UTC, then fallback
         const tzid: string | undefined =
           tzidFromDtstart || vevent?.getFirstPropertyValue("tzid") || (isUTC ? "UTC" : timezone);
-        // In case of icalendar, when only tzid is available without vtimezone, we need to add vtimezone explicitly to take care of timezone diff
-        if (!vcalendar.getFirstSubcomponent("vtimezone")) {
-          const timezoneToUse = tzid || userTimeZone;
-          if (timezoneToUse) {
+        const definedVtimezone = tzid
+          ? vcalendar
+              .getAllSubcomponents("vtimezone")
+              .find((vtimezoneComp) => vtimezoneComp.getFirstPropertyValue("tzid") === tzid)
+          : undefined;
+        const feedHasVtimezone = !!vcalendar.getFirstSubcomponent("vtimezone");
+        const fallbackTzid = definedVtimezone
+          ? undefined
+          : tzid || (feedHasVtimezone ? undefined : userTimeZone);
+
+        const getVtimezone = (wallTime: ICAL.Time) => {
+          if (definedVtimezone) return definedVtimezone;
+          if (fallbackTzid) {
             try {
-              const timezoneComp = new ICAL.Component("vtimezone");
-              timezoneComp.addPropertyWithValue("tzid", timezoneToUse);
-              const standard = new ICAL.Component("standard");
-
-              // get timezone offset
-              const tzoffsetfrom = dayjs(event.startDate.toJSDate()).tz(timezoneToUse).format("Z");
-              const tzoffsetto = dayjs(event.endDate.toJSDate()).tz(timezoneToUse).format("Z");
-
-              // set timezone offset
-              standard.addPropertyWithValue("tzoffsetfrom", tzoffsetfrom);
-              standard.addPropertyWithValue("tzoffsetto", tzoffsetto);
-              // provide a standard dtstart
-              standard.addPropertyWithValue("dtstart", "1601-01-01T00:00:00");
-              timezoneComp.addSubcomponent(standard);
-              vcalendar.addSubcomponent(timezoneComp);
+              return buildFallbackVtimezone(fallbackTzid, wallTime);
             } catch (e) {
               // Adds try-catch to ensure the code proceeds when Apple Calendar provides non-standard TZIDs
               console.log("error in adding vtimezone", e);
             }
-          } else {
-            console.error("No timezone found");
           }
-        }
-
-        let vtimezone = null;
-        if (tzid) {
-          const allVtimezones = vcalendar.getAllSubcomponents("vtimezone");
-          vtimezone = allVtimezones.find((vtz) => vtz.getFirstPropertyValue("tzid") === tzid);
-        }
-
-        if (!vtimezone) {
-          vtimezone = vcalendar.getFirstSubcomponent("vtimezone");
-        }
+          return vcalendar.getFirstSubcomponent("vtimezone");
+        };
 
         // mutate event to consider travel time
         applyTravelDuration(event, getTravelDurationInSeconds(vevent));
@@ -253,8 +257,9 @@ class ICSFeedCalendarService implements Calendar {
             // do not mix up caldav and icalendar! For the recurring events here, the timezone
             // provided is relevant, not as pointed out in https://datatracker.ietf.org/doc/html/rfc4791#section-9.6.5
             // where recurring events are always in utc (in caldav!). Thus, apply the time zone here.
-            if (vtimezone) {
-              const zone = new ICAL.Timezone(vtimezone);
+            const occurrenceVtimezone = getVtimezone(currentEvent.startDate);
+            if (occurrenceVtimezone) {
+              const zone = new ICAL.Timezone(occurrenceVtimezone);
               currentEvent.startDate = currentEvent.startDate.convertToZone(zone);
               currentEvent.endDate = currentEvent.endDate.convertToZone(zone);
             }
@@ -274,6 +279,7 @@ class ICSFeedCalendarService implements Calendar {
           return;
         }
 
+        const vtimezone = getVtimezone(event.startDate);
         if (vtimezone) {
           const zone = new ICAL.Timezone(vtimezone);
           event.startDate = event.startDate.convertToZone(zone);
