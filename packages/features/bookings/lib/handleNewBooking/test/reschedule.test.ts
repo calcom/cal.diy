@@ -2289,6 +2289,78 @@ describe("handleNewBooking", () => {
         },
         timeout
       );
+
+      test(  
+  `should show original scheduled time with strikethrough in rescheduled emails`,  
+  async ({ emails }) => {  
+    const handleNewBooking = getNewBookingHandler();  
+    const booker = getBooker({  
+      email: "booker@example.com",  
+      name: "Booker",  
+    });  
+  
+    const organizer = getOrganizer({  
+      name: "Organizer",  
+      email: "organizer@example.com",  
+      id: 101,  
+      schedules: [TestData.schedules.IstWorkHours],  
+      credentials: [getGoogleCalendarCredential()],  
+      selectedCalendars: [TestData.selectedCalendars.google],  
+    });  
+  
+    const { dateString: plus1DateString } = getDate({ dateIncrement: 1 });  
+    const uidOfBookingToBeRescheduled = "n5Wv3eHgconAED2j4gcVhP";  
+    const iCalUID = `${uidOfBookingToBeRescheduled}@Cal.diy`;  
+      
+    // Original booking time: 05:00-05:15  
+    await createBookingScenario(  
+      getScenarioData({  
+        eventTypes: [{ id: 1, slotInterval: 15, length: 15, users: [{ id: 101 }] }],  
+        bookings: [{  
+          uid: uidOfBookingToBeRescheduled,  
+          eventTypeId: 1,  
+          status: BookingStatus.ACCEPTED,  
+          startTime: `${plus1DateString}T05:00:00.000Z`,  
+          endTime: `${plus1DateString}T05:15:00.000Z`,  
+          iCalUID,  
+        }],  
+        organizer,  
+        apps: [TestData.apps["google-calendar"]],  
+      })  
+    );  
+  
+    await mockCalendarToHaveNoBusySlots("googlecalendar", {  
+      create: { uid: "MOCK_ID" },  
+      update: { uid: "UPDATED_MOCK_ID", iCalUID },  
+    });  
+  
+    // Reschedule to 04:00-04:15  
+    const mockBookingData = getMockRequestDataForBooking({  
+      data: {  
+        eventTypeId: 1,  
+        rescheduleUid: uidOfBookingToBeRescheduled,  
+        start: `${plus1DateString}T04:00:00.000Z`,  
+        end: `${plus1DateString}T04:15:00.000Z`,  
+        responses: { email: booker.email, name: booker.name },  
+        rescheduledBy: organizer.email,  
+      },  
+    });  
+  
+    const createdBooking = await handleNewBooking({ bookingData: mockBookingData });  
+    const newICalUID = `${createdBooking.uid}`;
+  
+    expectSuccessfulBookingRescheduledEmails({  
+      booker,  
+      organizer,  
+      emails,  
+      iCalUID: newICalUID,  
+      expectPreviousTime: {  
+        startTime: `${plus1DateString}T05:00:00.000Z`,  
+        endTime: `${plus1DateString}T05:15:00.000Z`,  
+      },  
+    });  
+  },  
+);
     });
     describe("Team event-type", () => {
       test(
