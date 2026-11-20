@@ -150,12 +150,12 @@ describe("getCalendarLinks", () => {
 
     const googleLink = result.find((link) => link.id === CalendarLinkType.GOOGLE_CALENDAR);
     expect(googleLink?.link).toContain(`details=${encodeURIComponent(eventType.description)}`);
-    expect(googleLink?.link).toContain(`text=${customTitle}`);
+    expect(googleLink?.link).toContain(`text=${encodeURIComponent(customTitle)}`);
 
     // Check Office 365 link
     const microsoftOfficeLink = result.find((link) => link.id === CalendarLinkType.MICROSOFT_OFFICE);
     expect(microsoftOfficeLink?.link).toContain("body=Test%20Description");
-    expect(microsoftOfficeLink?.link).toContain(`subject=${customTitle}`);
+    expect(microsoftOfficeLink?.link).toContain(`subject=${encodeURIComponent(customTitle)}`);
 
     // Check Outlook link
     const microsoftOutlookLink = result.find((link) => link.id === CalendarLinkType.MICROSOFT_OUTLOOK);
