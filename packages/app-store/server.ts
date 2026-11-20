@@ -85,6 +85,10 @@ export async function getLocationGroupedOptions(
 
   const integrations = await getEnabledAppsFromCredentials(credentials, { filterOnCredentials: true });
 
+  // Tracks option values already added per category so duplicates can be detected in O(1)
+  // instead of re-scanning apps[groupByCategory] with .find() on every credential.
+  const seenOptionValuesByCategory: Record<string, Set<string>> = {};
+
   integrations.forEach((app) => {
     // All apps that are labeled as a locationOption are video apps.
     if (app.locationOption) {
@@ -109,12 +113,14 @@ export async function getLocationGroupedOptions(
             : {}),
         };
         if (apps[groupByCategory]) {
-          const existingOption = apps[groupByCategory].find((o) => o.value === option.value);
-          if (!existingOption) {
-            apps[groupByCategory] = [...apps[groupByCategory], option];
+          const seenOptionValues = seenOptionValuesByCategory[groupByCategory];
+          if (!seenOptionValues.has(option.value)) {
+            seenOptionValues.add(option.value);
+            apps[groupByCategory].push(option);
           }
         } else {
           apps[groupByCategory] = [option];
+          seenOptionValuesByCategory[groupByCategory] = new Set([option.value]);
         }
       }
     }
