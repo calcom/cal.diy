@@ -55,6 +55,7 @@ export const apiHandlers = {
   "pipedrive-crm": import("./pipedrive-crm/api"),
   plausible: import("./plausible/api"),
   posthog: import("./posthog/api"),
+  "privatus-analytics": import("./privatus-analytics/api"),
   qr_code: import("./qr_code/api"),
   riverside: import("./riverside/api"),
   roam: import("./roam/api"),
