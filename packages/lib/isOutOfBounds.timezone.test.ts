@@ -852,6 +852,31 @@ describe("calculatePeriodLimits - boundaries across a DST change", () => {
       expect(isViolating("2026-09-06T03:30:00Z", periodLimits)).toBe(true); // Sep 5 23:30 -04:00
       expect(isViolating("2026-09-06T04:00:00Z", periodLimits)).toBe(false); // Sep 6 01:00 -03:00
     });
+
+    it("uses the first midnight when DST makes local midnight repeat", () => {
+      const havana = {
+        ...range,
+        now: "2026-01-15T17:00:00Z", // Havana -05:00; on Nov 1, 01:00 (-04:00) falls back to 00:00 (-05:00)
+        eventTimeZone: "America/Havana",
+        bookerTimeZone: "America/Havana",
+      };
+
+      const startingNov1 = limitsWithTimeZones({
+        ...havana,
+        periodStartDate: new Date("2026-11-01T00:00:00Z"),
+        periodEndDate: new Date("2026-11-05T00:00:00Z"),
+      });
+      expect(startingNov1.startOfRangeStartDayInEventTz?.toISOString()).toBe("2026-11-01T04:00:00.000Z");
+      expect(isViolating("2026-11-01T04:30:00Z", startingNov1)).toBe(false); // Nov 1 00:30 -04:00
+
+      const endingOct31 = limitsWithTimeZones({
+        ...havana,
+        periodStartDate: new Date("2026-10-25T00:00:00Z"),
+        periodEndDate: new Date("2026-10-31T00:00:00Z"),
+      });
+      expect(endingOct31.endOfRangeEndDayInEventTz?.toISOString()).toBe("2026-11-01T03:59:59.999Z");
+      expect(isViolating("2026-11-01T04:30:00Z", endingOct31)).toBe(true); // Nov 1 00:30 -04:00
+    });
   });
 
   it("isOutOfBounds accepts timezone names for the booking-time check", () => {

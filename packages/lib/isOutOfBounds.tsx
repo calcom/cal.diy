@@ -25,7 +25,19 @@ function guardAgainstBookingInThePast(date: Date) {
  * so they are built from the wall-clock date in the timezone rather than from a fixed offset.
  */
 function startOfDayInTimeZone(date: string, timeZone: string) {
-  return dayjs.tz(`${date} 00:00`, timeZone);
+  const midnightUtc = dayjs.utc(date);
+  // The day starts at midnight in one of the offsets in effect around it. Trying both and keeping the
+  // earliest instant on `date` picks the first midnight when DST repeats it (America/Havana) and the
+  // first valid instant when DST skips it (America/Santiago); dayjs.tz would guess using today's offset.
+  const offsetsAroundMidnight = [midnightUtc.subtract(1, "day"), midnightUtc.add(1, "day")].map((instant) =>
+    instant.tz(timeZone).utcOffset()
+  );
+  const [startOfDay] = offsetsAroundMidnight
+    .map((offset) => midnightUtc.subtract(offset, "minute").tz(timeZone))
+    .filter((candidate) => candidate.format("YYYY-MM-DD") === date)
+    .sort((a, b) => a.valueOf() - b.valueOf());
+
+  return startOfDay ?? dayjs.tz(`${date} 00:00`, timeZone);
 }
 
 function endOfDayInTimeZone(date: string, timeZone: string) {
