@@ -605,7 +605,12 @@ export class UserAvailabilityService {
       });
     } catch (error) {
       log.error(`Error fetching busy times for user ${username}:`, error);
-      busyTimes = [];
+      busyTimes = (initialData?.currentBookings || []).map((booking) => ({
+        start: booking.startTime,
+        end: booking.endTime,
+        title: booking.title,
+        source: undefined,
+      }));
     }
 
     const detailedBusyTimesWithSource: EventBusyDetails[] = [
