@@ -12,6 +12,7 @@ import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPl
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
+import { useId } from "react";
 
 import classNames from "@calcom/ui/classNames";
 
@@ -59,12 +60,14 @@ const editorConfig = {
 export const Editor = (props: TextEditorProps) => {
   const editable = props.editable ?? true;
   const plainText = props.plainText ?? false;
+  const editorId = props.id ?? useId();
   return (
     <div className="editor rounded-md">
       {props.label && (
         <label
+          htmlFor={editorId}
           onClick={() => {
-            const el = document.getElementById("custom-editor");
+            const el = document.getElementById(editorId);
             el?.focus();
           }}
           className="mb-1 block text-sm font-medium leading-6">
@@ -90,7 +93,7 @@ export const Editor = (props: TextEditorProps) => {
             <RichTextPlugin
               contentEditable={
                 <ContentEditable
-                  id="custom-editor"
+                  id={editorId}
                   readOnly={!editable}
                   style={{ height: props.height }}
                   className="editor-input focus:outline-none"
