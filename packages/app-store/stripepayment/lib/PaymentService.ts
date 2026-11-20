@@ -86,6 +86,12 @@ class StripePaymentService implements IAbstractPaymentService {
         bookerPhoneNumber
       );
 
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        select: { startTime: true },
+      });
+      const bookingDate = booking?.startTime ? booking.startTime.toISOString() : "";
+
       const params: Stripe.PaymentIntentCreateParams = {
         amount: payment.amount,
         currency: payment.currency,
@@ -102,6 +108,7 @@ class StripePaymentService implements IAbstractPaymentService {
           bookerPhoneNumber: bookerPhoneNumber ?? null,
           eventTitle: eventTitle || "",
           bookingTitle: bookingTitle || "",
+          bookingDate,
         }),
       };
 
@@ -277,6 +284,7 @@ class StripePaymentService implements IAbstractPaymentService {
           bookerPhoneNumber: booking.attendees[0].phoneNumber ?? null,
           eventTitle: booking.eventType?.title || null,
           bookingTitle: booking.title,
+          bookingDate: booking.startTime.toISOString(),
         }),
       };
 
@@ -458,6 +466,7 @@ class StripePaymentService implements IAbstractPaymentService {
     bookerPhoneNumber,
     eventTitle,
     bookingTitle,
+    bookingDate,
   }: {
     bookingId: number;
     userId: number | null | undefined;
@@ -467,6 +476,7 @@ class StripePaymentService implements IAbstractPaymentService {
     bookerPhoneNumber: string | null;
     eventTitle: string | null;
     bookingTitle: string;
+    bookingDate: string;
   }) {
     return {
       identifier: "cal.com",
@@ -478,6 +488,7 @@ class StripePaymentService implements IAbstractPaymentService {
       bookerPhoneNumber: bookerPhoneNumber ?? null,
       eventTitle: eventTitle || "",
       bookingTitle: bookingTitle || "",
+      bookingDate,
     };
   }
 }
