@@ -16,7 +16,7 @@
       "type": "integrations:whatsapp_video",
       "label": "WhatsApp",
       "linkType": "static",
-      "organizerInputPlaceholder": "https://wa.me/send?phone=1234567890",
+      "organizerInputPlaceholder": "https://wa.me/1234567890",
       "urlRegExp": "^http(s)?:\\/\\/(www\\.)?wa.me\\/[a-zA-Z0-9]*"
     }
   },
