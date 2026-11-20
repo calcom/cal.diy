@@ -698,6 +698,10 @@ export class LuckyUserService implements ILuckyUserService {
       weight?: number | null;
     },
   >(getLuckyUserParams: GetLuckyUserParams<T>) {
+    // Note: PAUSED team members are already filtered out from both `availableUsers` and `allRRHosts` 
+    // upstream in `loadAndValidateUsers` and `getEventTypesFromDB.ts`. This ensures they are completely 
+    // excluded from the Round Robin assignment algorithm before calculating booking shortfalls.
+
     // Early return if only one available user to avoid unnecessary data fetching
     if (getLuckyUserParams.availableUsers.length === 1) {
       return getLuckyUserParams.availableUsers[0];

@@ -5,7 +5,7 @@ import { safeStringify } from "@calcom/lib/safeStringify";
 import { eventTypeSelect } from "@calcom/lib/server/eventTypeSelect";
 import { availabilityUserSelect, type PrismaTransaction, prisma } from "@calcom/prisma";
 import type { Membership, Prisma, PrismaClient } from "@calcom/prisma/client";
-import { MembershipRole } from "@calcom/prisma/enums";
+import { MembershipRole, MembershipStatus } from "@calcom/prisma/enums";
 import { credentialForCalendarServiceSelect } from "@calcom/prisma/selects/credential";
 
 const log = logger.getSubLogger({ prefix: ["features/membership/repositories/MembershipRepository"] });
@@ -14,6 +14,7 @@ type IMembership = {
   userId: number;
   accepted: boolean;
   role: MembershipRole;
+  status: MembershipStatus;
   createdAt?: Date;
 };
 
@@ -23,6 +24,7 @@ const membershipSelect = {
   userId: true,
   accepted: true,
   role: true,
+  status: true,
 } satisfies Prisma.MembershipSelect;
 
 type MembershipSelectableKeys = keyof typeof membershipSelect;
@@ -737,5 +739,22 @@ export class MembershipRepository {
       },
     });
     return !!membership;
+  }
+
+  static async updateMembershipStatus(membershipId: number, status: MembershipStatus) {
+    return prisma.membership.update({
+      where: { id: membershipId },
+      data: { status }
+    });
+  }
+
+  async findActiveMembershipsByTeamId(teamId: number) {
+    return this.prismaClient.membership.findMany({
+      where: {
+        teamId,
+        status: "ACTIVE"
+      },
+      select: membershipSelect
+    });
   }
 }

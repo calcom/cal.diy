@@ -741,12 +741,18 @@ enum MembershipRole {
   OWNER
 }
 
+enum MembershipStatus {
+  ACTIVE
+  PAUSED
+}
+
 model Membership {
   id              Int               @id @default(autoincrement())
   teamId          Int
   userId          Int
   accepted        Boolean           @default(false)
   role            MembershipRole
+  status          MembershipStatus  @default(ACTIVE)
   customRoleId    String?
   customRole      Role?             @relation(fields: [customRoleId], references: [id])
   team            Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -761,6 +767,7 @@ model Membership {
   @@index([userId])
   @@index([accepted])
   @@index([role])
+  @@index([status])
   @@index([customRoleId])
 }
 
