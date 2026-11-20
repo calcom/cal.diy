@@ -6,15 +6,17 @@ export const truncate = (text: string, maxLength: number, ellipsis = true) => {
 
 export const truncateOnWord = (text: string, maxLength: number, ellipsis = true) => {
   if (text.length <= maxLength) return text;
+  if (maxLength <= 0) return "";
 
-  // First split on maxLength chars
-  let truncatedText = text.substring(0, 148);
+  const suffix = ellipsis && maxLength >= 3 ? "..." : "";
+  const budget = maxLength - suffix.length;
 
-  // Then split on the last space, this way we split on the last word,
-  // which looks just a bit nicer.
-  truncatedText = truncatedText.substring(0, Math.min(truncatedText.length, truncatedText.lastIndexOf(" ")));
+  const slice = text.substring(0, budget);
+  const lastSpaceIndex = slice.lastIndexOf(" ");
 
-  if (ellipsis) truncatedText += "...";
+  // Prefer breaking on a word boundary; fall back to a hard cut when text lacks spaces (e.g. CJK or URLs)
+  const wordBoundary = lastSpaceIndex !== -1 ? lastSpaceIndex : budget;
+  const truncatedText = slice.substring(0, wordBoundary);
 
-  return truncatedText;
+  return `${truncatedText}${suffix}`;
 };
