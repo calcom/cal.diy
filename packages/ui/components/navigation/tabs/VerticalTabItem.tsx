@@ -89,8 +89,7 @@ const VerticalTabItem = ({
                 {props.isExternalLink ? <Icon name="external-link" data-testid="external-link" /> : null}
               </span>
               {info && (
-                // TODO: I don't think having apps-info as a data-test-id is right here as this is meant to be dumb component.
-                <p data-testid="apps-info" className="mt-1 text-xs font-normal">
+                <p data-testid="tab-info" className="mt-1 text-xs font-normal">
                   {info}
                 </p>
               )}
