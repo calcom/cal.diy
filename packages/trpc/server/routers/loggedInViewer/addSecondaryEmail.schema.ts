@@ -7,7 +7,7 @@ export type TAddSecondaryEmailInputSchema = {
 };
 
 export const ZAddSecondaryEmailInputSchema: z.ZodType<TAddSecondaryEmailInputSchema> = z.object({
-  email: z.string(),
+  email: z.string().toLowerCase(),
   makePrimary: z.boolean().optional(),
   redirectTo: z.string().optional(),
 });
