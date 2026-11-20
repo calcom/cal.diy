@@ -4612,5 +4612,14 @@
   "paypal_step_7": "Vous devriez être prêt après cela.",
   "dashboard": "tableau de bord",
   "paypal_webhook_reminder": "Notre intégration crée un webhook spécifique sur votre compte PayPal que nous utilisons pour transmettre les transactions à notre système. Si vous supprimez ce webhook, nous ne pourrons plus transmettre les informations et vous devrez désinstaller puis réinstaller l'application pour que cela fonctionne correctement. La désinstallation de l'application ne supprimera pas la configuration actuelle du prix/devise de votre type d'événement, mais vous ne pourrez plus recevoir de réservations.",
+  "date_format": "Format de date",
+  "min_date": "Date minimale",
+  "max_date": "Date maximale",
+  "date_range_hint": "today, today+7d, today-30d ou une date (AAAA-MM-JJ)",
+  "date_validation_error": "Date invalide",
+  "date_before_min": "Cette date est antérieure à la date minimale autorisée",
+  "date_after_max": "Cette date est postérieure à la date maximale autorisée",
+  "month": "Mois",
+  "year": "Année",
   "ADD_NEW_STRINGS_ABOVE_THIS_LINE_TO_PREVENT_MERGE_CONFLICTS": "↑↑↑↑↑↑↑↑↑↑↑↑↑ Ajoutez vos nouvelles chaînes ci-dessus ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑"
 }

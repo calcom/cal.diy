@@ -795,6 +795,8 @@ function FieldEditDialog({
                       />
                     )}
 
+                    {fieldType?.supportsDateConfig && <DateFieldConfig fieldForm={fieldForm} />}
+
                     <div className="mt-6">
                       <Controller
                         name="required"
@@ -900,6 +902,49 @@ function FieldWithLengthCheckSupport({
         min={fieldForm.getValues("minLength") || 0}
         max={maxAllowedMaxLength}
       />
+    </div>
+  );
+}
+
+const DATE_FORMAT_OPTIONS = [
+  { value: "yyyy-MM-dd", label: "YYYY-MM-DD (ISO)" },
+  { value: "dd/MM/yyyy", label: "DD/MM/YYYY" },
+  { value: "MM/dd/yyyy", label: "MM/DD/YYYY" },
+  { value: "dd.MM.yyyy", label: "DD.MM.YYYY" },
+];
+
+function DateFieldConfig({ fieldForm }: { fieldForm: UseFormReturn<RhfFormField> }) {
+  const { t } = useLocale();
+
+  return (
+    <div className="mt-6 space-y-4">
+      <SelectField
+        label={t("date_format")}
+        options={DATE_FORMAT_OPTIONS}
+        value={
+          DATE_FORMAT_OPTIONS.find((option) => option.value === fieldForm.watch("dateFormat")) ??
+          DATE_FORMAT_OPTIONS[0]
+        }
+        onChange={(option) => {
+          if (option) {
+            fieldForm.setValue("dateFormat", option.value, { shouldDirty: true });
+          }
+        }}
+      />
+      <div className="grid grid-cols-2 gap-4">
+        <InputField
+          {...fieldForm.register("minDateRange")}
+          label={t("min_date")}
+          placeholder="today, today-30d, 2024-01-01"
+          hint={t("date_range_hint")}
+        />
+        <InputField
+          {...fieldForm.register("maxDateRange")}
+          label={t("max_date")}
+          placeholder="today+365d, 2025-12-31"
+          hint={t("date_range_hint")}
+        />
+      </div>
     </div>
   );
 }

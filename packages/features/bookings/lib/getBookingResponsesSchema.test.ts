@@ -1761,6 +1761,117 @@ describe("getBookingResponsesSchema", () => {
       );
     });
   });
+
+  describe("Field Type: date", () => {
+    const dateSchema = (field: { required: boolean; minDateRange?: string; maxDateRange?: string }) =>
+      getBookingResponsesSchema({
+        bookingFields: [
+          { name: "name", type: "name", required: true },
+          { name: "email", type: "email", required: true },
+          { name: "birthdate", type: "date", ...field },
+        ] as z.infer<typeof eventTypeBookingFields> & z.BRAND<"HAS_SYSTEM_FIELDS">,
+        view: "ALL_VIEWS",
+      });
+
+    test("accepts a date within the bounds", async ({}) => {
+      const parsedResponses = await dateSchema({
+        required: true,
+        minDateRange: "1900-01-01",
+        maxDateRange: "today",
+      }).safeParseAsync({ email: "test@test.com", name: "test", birthdate: "1980-05-17" });
+      expectResponsesToBe(parsedResponses, { email: "test@test.com", name: "test", birthdate: "1980-05-17" });
+    });
+
+    test("fails when a required date is missing", async ({}) => {
+      const parsedResponses = await dateSchema({ required: true }).safeParseAsync({
+        email: "test@test.com",
+        name: "test",
+      });
+      expectParsingToFail(
+        parsedResponses,
+        expect.objectContaining({ code: "custom", message: "{birthdate}error_required_field" })
+      );
+    });
+
+    test("accepts an empty optional date", async ({}) => {
+      const parsedResponses = await dateSchema({ required: false }).safeParseAsync({
+        email: "test@test.com",
+        name: "test",
+      });
+      expect(parsedResponses.success).toBe(true);
+    });
+
+    test("fails for an invalid date", async ({}) => {
+      const parsedResponses = await dateSchema({ required: true }).safeParseAsync({
+        email: "test@test.com",
+        name: "test",
+        birthdate: "2026-02-31",
+      });
+      expectParsingToFail(
+        parsedResponses,
+        expect.objectContaining({ code: "custom", message: "{birthdate}date_validation_error" })
+      );
+    });
+
+    describe("on reschedule", () => {
+      const schemaForView = (view: "booking" | "reschedule") =>
+        getBookingResponsesSchema({
+          bookingFields: [
+            { name: "name", type: "name", required: true },
+            { name: "email", type: "email", required: true },
+            { name: "birthdate", type: "date", required: true },
+          ] as z.infer<typeof eventTypeBookingFields> & z.BRAND<"HAS_SYSTEM_FIELDS">,
+          view,
+        });
+
+      test("keeps a legacy non-ISO date copied from the original booking", async ({}) => {
+        for (const birthdate of ["150380", "15/03/1980"]) {
+          const parsedResponses = await schemaForView("reschedule").safeParseAsync({
+            email: "test@test.com",
+            name: "test",
+            birthdate,
+          });
+          expectResponsesToBe(parsedResponses, { email: "test@test.com", name: "test", birthdate });
+        }
+      });
+
+      test("still rejects a legacy date on a new booking", async ({}) => {
+        const parsedResponses = await schemaForView("booking").safeParseAsync({
+          email: "test@test.com",
+          name: "test",
+          birthdate: "150380",
+        });
+        expectParsingToFail(
+          parsedResponses,
+          expect.objectContaining({ code: "custom", message: "{birthdate}date_validation_error" })
+        );
+      });
+
+      test("still requires the date", async ({}) => {
+        const parsedResponses = await schemaForView("reschedule").safeParseAsync({
+          email: "test@test.com",
+          name: "test",
+          birthdate: "",
+        });
+        expectParsingToFail(
+          parsedResponses,
+          expect.objectContaining({ code: "custom", message: "{birthdate}error_required_field" })
+        );
+      });
+    });
+
+    test("fails before the minimum and after the maximum date", async ({}) => {
+      const schema = dateSchema({ required: true, minDateRange: "2026-01-01", maxDateRange: "2026-12-31" });
+      expectParsingToFail(
+        await schema.safeParseAsync({ email: "test@test.com", name: "test", birthdate: "2025-12-31" }),
+        expect.objectContaining({ code: "custom", message: "{birthdate}date_before_min" })
+      );
+      expectParsingToFail(
+        await schema.safeParseAsync({ email: "test@test.com", name: "test", birthdate: "2027-01-01" }),
+        expect.objectContaining({ code: "custom", message: "{birthdate}date_after_max" })
+      );
+    });
+  });
 });
 
 describe("getBookingResponsesPartialSchema - Prefill validation", () => {

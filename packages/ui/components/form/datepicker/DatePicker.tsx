@@ -1,8 +1,8 @@
+import dayjs from "@calcom/dayjs";
+import { useLocale } from "@calcom/lib/hooks/useLocale";
+import classNames from "@calcom/ui/classNames";
 import * as Popover from "@radix-ui/react-popover";
 import { format } from "date-fns";
-
-import classNames from "@calcom/ui/classNames";
-
 import { Button } from "../../button/Button";
 import { Calendar } from "../date-range-picker/Calendar";
 
@@ -12,19 +12,51 @@ type Props = {
   className?: string;
   disabled?: boolean;
   minDate?: Date | null;
+  maxDate?: Date | null;
   label?: string;
+  /**
+   * Adds month and year selects to the caption, for dates far from today such as a date of birth.
+   * react-day-picker only renders them when both minDate and maxDate are set.
+   */
+  withMonthYearSelect?: boolean;
 };
 
-const DatePicker = ({ minDate, disabled, date, onDatesChange, className, label }: Props) => {
+// The selects replace the caption label; the label left inside each select is only the
+// react-day-picker overlay of its unstyled mode, hence hidden.
+const MONTH_YEAR_SELECT_CLASS_NAMES = {
+  caption_dropdowns: "flex items-center gap-2 px-2",
+  dropdown: "bg-default text-emphasis border-default rounded-md border px-2 py-1 text-sm font-medium",
+  caption_label: "hidden",
+  vhidden: "sr-only",
+};
+
+const DatePicker = ({
+  minDate,
+  maxDate,
+  disabled,
+  date,
+  onDatesChange,
+  className,
+  label,
+  withMonthYearSelect,
+}: Props) => {
+  const { t } = useLocale();
   function handleDayClick(newDate: Date) {
     onDatesChange?.(newDate ?? new Date());
   }
   const fromDate = minDate ?? new Date();
+  const monthYearSelect = withMonthYearSelect && !!minDate && !!maxDate;
   const calendar = (
     <Calendar
       initialFocus
       fromDate={minDate === null ? undefined : fromDate}
-      // toDate={maxDate}
+      toDate={maxDate ?? undefined}
+      {...(monthYearSelect && {
+        captionLayout: "dropdown-buttons" as const,
+        classNames: MONTH_YEAR_SELECT_CLASS_NAMES,
+        formatters: { formatMonthCaption: (month: Date) => dayjs(month).format("MMMM") },
+        labels: { labelMonthDropdown: () => t("month"), labelYearDropdown: () => t("year") },
+      })}
       mode="single"
       defaultMonth={date}
       selected={date}
@@ -48,13 +80,12 @@ const DatePicker = ({ minDate, disabled, date, onDatesChange, className, label }
           </Button>
         </Popover.Trigger>
         <Popover.Portal>
-        <Popover.Content
-          className="bg-default text-emphasis z-50 w-auto rounded-md border p-0 outline-none"
-          align="start"
-          sideOffset={4}
-          >
-          {calendar}
-        </Popover.Content>
+          <Popover.Content
+            className="bg-default text-emphasis z-50 w-auto rounded-md border p-0 outline-none"
+            align="start"
+            sideOffset={4}>
+            {calendar}
+          </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
     </div>

@@ -4559,5 +4559,14 @@
   "last_6_months": "Laatste 6 maanden",
   "last_12_months": "Laatste 12 maanden",
   "calendar_events_disabled_video_limitation": "Wanneer agenda-evenementen zijn uitgeschakeld, kunnen er geen meeting-links worden gegenereerd voor apps waarvan het genereren van links gekoppeld is aan het aanmaken van agenda-evenementen, bijvoorbeeld Google Meet en Microsoft Teams. Andere video-apps zoals Cal Video blijven gewoon werken.",
+  "date_format": "Datumnotatie",
+  "min_date": "Minimale datum",
+  "max_date": "Maximale datum",
+  "date_range_hint": "today, today+7d, today-30d of een datum (JJJJ-MM-DD)",
+  "date_validation_error": "Ongeldige datum",
+  "date_before_min": "Deze datum ligt vóór de vroegst toegestane datum",
+  "date_after_max": "Deze datum ligt na de laatst toegestane datum",
+  "month": "Maand",
+  "year": "Jaar",
   "ADD_NEW_STRINGS_ABOVE_THIS_LINE_TO_PREVENT_MERGE_CONFLICTS": "↑↑↑↑↑↑↑↑↑↑↑↑↑ Voeg uw nieuwe strings hierboven toe ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑"
 }

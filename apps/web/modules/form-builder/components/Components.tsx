@@ -1,25 +1,39 @@
-import { useEffect } from "react";
-import type { z } from "zod";
-
+import { propsTypes } from "@calcom/features/form-builder/propsTypes";
+import { preprocessNameFieldDataWithVariant } from "@calcom/features/form-builder/utils";
+import {
+  formatDateFieldValue,
+  parseDateFieldBound,
+  parseDateFieldValue,
+} from "@calcom/features/form-builder/utils/dateField";
 import type {
   SelectLikeComponentProps,
   TextLikeComponentProps,
 } from "@calcom/features/form-builder/widget-types";
 import Widgets from "@calcom/features/form-builder/widgets";
-import PhoneInput from "@calcom/web/components/phone-input";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
-import type { fieldSchema, variantsConfigSchema, FieldType } from "@calcom/prisma/zod-utils";
+import type { FieldType, fieldSchema, variantsConfigSchema } from "@calcom/prisma/zod-utils";
 import { AddressInput } from "@calcom/ui/components/address";
 import { InfoBadge } from "@calcom/ui/components/badge";
 import { Button } from "@calcom/ui/components/button";
-import { Label, CheckboxField, EmailField, InputField, Checkbox } from "@calcom/ui/components/form";
-import { RadioGroup, RadioField } from "@calcom/ui/components/radio";
+import {
+  Checkbox,
+  CheckboxField,
+  DatePicker,
+  EmailField,
+  InputField,
+  Label,
+} from "@calcom/ui/components/form";
+import { RadioField, RadioGroup } from "@calcom/ui/components/radio";
 import { Tooltip } from "@calcom/ui/components/tooltip";
+import PhoneInput from "@calcom/web/components/phone-input";
 import { XIcon } from "@coss/ui/icons";
-
+import { format } from "date-fns";
+import { useEffect } from "react";
+import type { z } from "zod";
 import { ComponentForField } from "./FormBuilderField";
-import { propsTypes } from "@calcom/features/form-builder/propsTypes";
-import { preprocessNameFieldDataWithVariant } from "@calcom/features/form-builder/utils";
+
+const DATE_FIELD_YEARS_BEFORE = 120;
+const DATE_FIELD_YEARS_AFTER = 10;
 
 export const isValidValueProp: Record<Component["propsType"], (val: unknown) => boolean> = {
   boolean: (val) => typeof val === "boolean",
@@ -29,6 +43,7 @@ export const isValidValueProp: Record<Component["propsType"], (val: unknown) => 
   text: (val) => typeof val === "string",
   textList: (val) => val instanceof Array && val.every((v) => typeof v === "string"),
   variants: (val) => (typeof val === "object" && val !== null) || typeof val === "string",
+  date: (val) => typeof val === "string" || val === undefined || val === null,
 };
 
 type Component =
@@ -79,6 +94,23 @@ type Component =
           variants: z.infer<typeof variantsConfigSchema>["variants"];
           value: Record<string, string> | string | undefined;
           setValue: (value: string | Record<string, string>) => void;
+        },
+      >(
+        props: TProps
+      ) => JSX.Element;
+    }
+  | {
+      propsType: "date";
+      factory: <
+        TProps extends {
+          name: string;
+          placeholder?: string;
+          readOnly?: boolean;
+          value: string | undefined;
+          setValue: (value: string | undefined) => void;
+          dateFormat?: string;
+          minDateRange?: string;
+          maxDateRange?: string;
         },
       >(
         props: TProps
@@ -553,6 +585,48 @@ export const Components: Record<FieldType, Component> = {
     propsType: propsTypes.url,
     factory: (props) => {
       return <Widgets.TextWidget type="url" autoComplete="url" noLabel={true} {...props} />;
+    },
+  },
+  date: {
+    propsType: propsTypes.date,
+    factory: function DateField({
+      value,
+      setValue,
+      readOnly,
+      placeholder,
+      dateFormat,
+      minDateRange,
+      maxDateRange,
+    }) {
+      const { t } = useLocale();
+      const date = parseDateFieldValue(value);
+      let label = placeholder || t("select_date");
+      if (date) {
+        try {
+          label = format(date, dateFormat || "yyyy-MM-dd");
+        } catch {
+          // An invalid custom format must not break the booking form
+          label = formatDateFieldValue(date);
+        }
+      }
+      const today = new Date();
+      // Month and year selects need both bounds: an unbounded side gets a wide default range, so a
+      // date of birth or a far-off date stays a few clicks away instead of one click per month.
+      const minDate =
+        parseDateFieldBound(minDateRange) ?? new Date(today.getFullYear() - DATE_FIELD_YEARS_BEFORE, 0, 1);
+      const maxDate =
+        parseDateFieldBound(maxDateRange) ?? new Date(today.getFullYear() + DATE_FIELD_YEARS_AFTER, 11, 31);
+      return (
+        <DatePicker
+          date={date ?? new Date()}
+          onDatesChange={(newDate) => setValue(formatDateFieldValue(newDate))}
+          disabled={readOnly}
+          minDate={minDate}
+          maxDate={maxDate}
+          withMonthYearSelect
+          label={label}
+        />
+      );
     },
   },
 } as const;

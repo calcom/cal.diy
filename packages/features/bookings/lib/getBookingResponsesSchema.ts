@@ -468,6 +468,17 @@ function preprocess<T extends z.ZodType>({
           continue;
         }
 
+        // A reschedule copies the original booking's responses, and bookings made before the field became a
+        // `date` keep their legacy text (e.g. DDMMYY): re-validating it would block every such reschedule
+        if (
+          currentView === "reschedule" &&
+          bookingField.type === "date" &&
+          typeof value === "string" &&
+          value.trim() !== ""
+        ) {
+          continue;
+        }
+
         // For partial schemas, use a proxy ctx to capture issues
         const { fieldZodCtx, state } = buildFieldZodCtx({
           zodCtx: ctx,
