@@ -29,6 +29,16 @@ function extractAndValidateProviderFromParams(params: Params): CalendarSubscript
   return null;
 }
 
+function getOffice365ValidationToken(
+  provider: CalendarSubscriptionProvider,
+  request: NextRequest
+): string | null {
+  if (provider !== "office365_calendar") {
+    return null;
+  }
+  return request.nextUrl.searchParams.get("validationToken");
+}
+
 /**
  * Handles incoming POST requests for calendar webhooks.
  * It processes the webhook based on the calendar provider specified in the URL.
@@ -44,6 +54,17 @@ async function postHandler(request: NextRequest, ctx: { params: Promise<Params> 
   const providerFromParams = extractAndValidateProviderFromParams(await ctx.params);
   if (!providerFromParams) {
     return NextResponse.json({ message: "Unsupported provider" }, { status: 400 });
+  }
+
+  const office365ValidationToken = getOffice365ValidationToken(providerFromParams, request);
+  if (office365ValidationToken !== null) {
+    log.debug("Responding to Office365 validation token request");
+    return new Response(office365ValidationToken, {
+      status: 200,
+      headers: {
+        "content-type": "text/plain",
+      },
+    });
   }
 
   try {

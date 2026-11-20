@@ -1,7 +1,6 @@
-import { NextRequest } from "next/server";
-import { describe, test, expect, vi, beforeEach } from "vitest";
-
 import { CalendarSubscriptionService } from "@calcom/features/calendar-subscription/lib/CalendarSubscriptionService";
+import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("next/server", () => ({
   NextRequest: class MockNextRequest {
@@ -34,8 +33,12 @@ vi.mock("next/server", () => ({
 }));
 
 vi.mock("@calcom/features/calendar-subscription/lib/CalendarSubscriptionService");
-vi.mock("@calcom/features/calendar-subscription/lib/cache/CalendarCacheEventService");
-vi.mock("@calcom/features/calendar-subscription/lib/sync/CalendarSyncService");
+vi.mock("@calcom/features/calendar-subscription/lib/cache/CalendarCacheEventService", () => ({
+  CalendarCacheEventService: vi.fn(function CalendarCacheEventService() {}),
+}));
+vi.mock("@calcom/features/calendar-subscription/lib/sync/CalendarSyncService", () => ({
+  CalendarSyncService: vi.fn(function CalendarSyncService() {}),
+}));
 vi.mock("@calcom/prisma", () => ({
   prisma: {},
 }));
@@ -94,6 +97,29 @@ describe("/api/webhooks/calendar-subscription/[provider]", () => {
 
       expect(response.status).toBe(200);
       expect(mockProcessWebhook).toHaveBeenCalledWith("office365_calendar", request);
+    });
+
+    test("should respond to office365 validationToken requests as plain text", async () => {
+      const request = new NextRequest(
+        "http://localhost/api/webhooks/calendar-subscription/office365_calendar?validationToken=Validation%3A%20Testing",
+        {
+          method: "POST",
+        }
+      );
+      const mockProcessWebhook = vi.fn();
+
+      mockCalendarSubscriptionService.prototype.processWebhook = mockProcessWebhook;
+
+      const { POST } = await import("../route");
+      const response = await POST(request, {
+        params: Promise.resolve({ provider: "office365_calendar" }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe("text/plain");
+      await expect(response.text()).resolves.toBe("Validation: Testing");
+      expect(mockCalendarSubscriptionService).not.toHaveBeenCalled();
+      expect(mockProcessWebhook).not.toHaveBeenCalled();
     });
 
     test("should reject unsupported provider", async () => {
