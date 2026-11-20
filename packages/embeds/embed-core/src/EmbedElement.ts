@@ -8,13 +8,13 @@ import {
   addDarkColorSchemeChangeListener,
   getMaxHeightForModal,
 } from "./ui-utils";
-import type { ExternalThemeClass } from "./ui/themeClass";
+import { type ExternalThemeClass, getInternalThemeClass } from "./ui/themeClass";
 type ShadowRootWithStyle = ShadowRoot & {
   host: HTMLElement & { style: CSSStyleDeclaration };
 };
 
 export class EmbedElement extends HTMLElement {
-  // Theme is set once by the user
+  // Keep the configured preference separate from the resolved system theme.
   public theme!: EmbedThemeConfig | null;
   public isModal!: boolean;
   public skeletonContainerHeightTimer: number | null = null;
@@ -196,6 +196,11 @@ export class EmbedElement extends HTMLElement {
   }
 
   public setTheme(theme: EmbedThemeConfig | null) {
+    this.theme = theme;
+    this.applyThemeClass(theme);
+  }
+
+  private applyThemeClass(theme: EmbedThemeConfig | null) {
     const allPossibleThemeClasses = [EMBED_DARK_THEME_CLASS, EMBED_LIGHT_THEME_CLASS];
 
     const newThemeClass = getThemeClassForEmbed({ theme });
@@ -206,6 +211,10 @@ export class EmbedElement extends HTMLElement {
     this.themeClass = newThemeClass;
     this.classList.remove(...allPossibleThemeClasses);
     this.classList.add(this.themeClass);
+    // Shadow DOM selectors cannot inherit the host's theme class.
+    const skeletonContainer = this.shadowRoot?.querySelector("#skeleton-container");
+    skeletonContainer?.classList.remove("dark", "light");
+    skeletonContainer?.classList.add(getInternalThemeClass(this.themeClass));
   }
 
   public prefersDarkThemeChangedHandler(e: MediaQueryListEvent) {
@@ -214,7 +223,7 @@ export class EmbedElement extends HTMLElement {
       // User has provided a theme preference, so we stick to that and don't react to system theme change
       return;
     }
-    this.setTheme(isDarkPreferred ? "dark" : "light");
+    this.applyThemeClass(isDarkPreferred ? "dark" : "light");
   }
   connectedCallback() {
     // Make sure to show the loader initially.

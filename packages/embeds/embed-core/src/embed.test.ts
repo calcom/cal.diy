@@ -1,12 +1,16 @@
-import "../test/__mocks__/windowMatchMedia";
+import { fakeDeviceMatchesMediaQuery } from "../test/__mocks__/windowMatchMedia";
 
 import { describe, it, expect, beforeEach, vi, beforeAll } from "vitest";
 
 import {
+  EMBED_DARK_THEME_CLASS,
+  EMBED_LIGHT_THEME_CLASS,
   EMBED_MODAL_IFRAME_SLOT_STALE_TIME,
   EMBED_MODAL_IFRAME_FORCE_RELOAD_THRESHOLD_MS,
   EMBED_MODAL_PRERENDER_PREVENT_THRESHOLD_MS,
 } from "./constants";
+import type { EmbedThemeConfig } from "./types";
+import { getColorSchemeDarkQuery } from "./ui-utils";
 
 vi.mock("./tailwindCss", () => ({
   default: "mockedTailwindCss",
@@ -162,6 +166,100 @@ describe("Cal", () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe("modal theme updates", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    async function openReusableModal(theme: EmbedThemeConfig) {
+      const { Cal } = await import("./embed");
+      const cal = new Cal("modal-theme", []);
+      const args = { calLink: "john-doe/meeting", config: { theme } };
+      await cal.api.modal({ ...args, __prerender: true });
+      await cal.api.modal(args);
+      const modal = document.querySelector("cal-modal-box");
+      const iframe = cal.iframe;
+      if (!modal || !iframe?.contentWindow) {
+        throw new Error("Expected a modal with an iframe");
+      }
+      modal.setAttribute("state", "loaded");
+      cal.iframeReady = true;
+      return { cal, modal, iframe, args };
+    }
+
+    it.each([
+      { initial: "light", next: "dark" },
+      { initial: "dark", next: "light" },
+    ] as const)("applies $initial → $next UI changes while closed without reloading", async ({ initial, next }) => {
+      const { cal, modal, iframe, args } = await openReusableModal(initial);
+      const initialClass = initial === "dark" ? EMBED_DARK_THEME_CLASS : EMBED_LIGHT_THEME_CLASS;
+      const nextClass = next === "dark" ? EMBED_DARK_THEME_CLASS : EMBED_LIGHT_THEME_CLASS;
+      expect(modal.classList.contains(initialClass)).toBe(true);
+      expect(modal.shadowRoot?.querySelector("#skeleton-container")?.classList.contains(initial)).toBe(true);
+      const originalSrc = iframe.src;
+      const iframeWindow = iframe.contentWindow;
+      if (!iframeWindow) throw new Error("Expected an iframe window");
+      const postMessage = vi.spyOn(iframeWindow, "postMessage");
+      const addListener = vi.spyOn(getColorSchemeDarkQuery(), "addEventListener");
+
+      for (let cycle = 0; cycle < 3; cycle++) {
+        cal.api.closeModal();
+        cal.api.ui({ theme: next });
+        await cal.api.modal(args);
+        expect(modal.classList.contains(nextClass)).toBe(true);
+        expect(modal.classList.contains(initialClass)).toBe(false);
+        expect(modal.shadowRoot?.querySelector("#skeleton-container")?.classList.contains(next)).toBe(true);
+        expect(modal.shadowRoot?.querySelector("#skeleton-container")?.classList.contains(initial)).toBe(false);
+        expect(cal.iframe).toBe(iframe);
+        expect(iframe.src).toBe(originalSrc);
+      }
+      expect(postMessage.mock.calls.filter(([message]) => message.method === "ui")).toHaveLength(3);
+      expect(addListener).not.toHaveBeenCalled();
+    });
+
+    it("updates the host modal when its reopen config changes", async () => {
+      const { cal, modal, iframe, args } = await openReusableModal("light");
+      cal.api.closeModal();
+      await cal.api.modal({ ...args, config: { theme: "dark" } });
+      expect(modal.classList.contains(EMBED_DARK_THEME_CLASS)).toBe(true);
+      expect(modal.shadowRoot?.querySelector("#skeleton-container")?.classList.contains("dark")).toBe(true);
+      expect(cal.iframe).toBe(iframe);
+    });
+
+    it("updates the reopened skeleton when the system theme changes while closed", async () => {
+      const { cal, modal, args } = await openReusableModal("auto");
+      cal.api.closeModal();
+      fakeDeviceMatchesMediaQuery("(prefers-color-scheme: dark)");
+      const change = new Event("change");
+      Object.defineProperty(change, "matches", { value: true });
+      getColorSchemeDarkQuery().dispatchEvent(change);
+      await cal.api.modal(args);
+      expect(modal.classList.contains(EMBED_DARK_THEME_CLASS)).toBe(true);
+      expect(modal.shadowRoot?.querySelector("#skeleton-container")?.classList.contains("dark")).toBe(true);
+    });
+
+    it("preserves an explicit theme and resumes system updates after switching to auto", async () => {
+      const { cal, modal } = await openReusableModal("light");
+      const mediaQuery = getColorSchemeDarkQuery();
+      const change = new Event("change");
+      Object.defineProperty(change, "matches", { value: false });
+      cal.api.closeModal();
+      cal.api.ui({ theme: "dark" });
+      mediaQuery.dispatchEvent(change);
+      expect(modal.classList.contains(EMBED_DARK_THEME_CLASS)).toBe(true);
+
+      cal.api.ui({ theme: "auto" });
+      expect(modal.classList.contains(EMBED_LIGHT_THEME_CLASS)).toBe(true);
+      fakeDeviceMatchesMediaQuery("(prefers-color-scheme: dark)");
+      const darkChange = new Event("change");
+      Object.defineProperty(darkChange, "matches", { value: true });
+      mediaQuery.dispatchEvent(darkChange);
+      expect(modal.classList.contains(EMBED_DARK_THEME_CLASS)).toBe(true);
+      mediaQuery.dispatchEvent(change);
+      expect(modal.classList.contains(EMBED_LIGHT_THEME_CLASS)).toBe(true);
+    });
   });
 
   describe("calInstance.createIframe", () => {
