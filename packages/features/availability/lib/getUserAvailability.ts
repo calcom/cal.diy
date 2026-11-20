@@ -373,7 +373,7 @@ export class UserAvailabilityService {
       duration,
       returnDateOverrides,
       bypassBusyCalendarTimes = false,
-      silentlyHandleCalendarFailures = false,
+      silentlyHandleCalendarFailures = true,
       mode = "none",
       withSource = false,
     } = params;
@@ -605,16 +605,16 @@ export class UserAvailabilityService {
       });
     } catch (error) {
       log.error(`Error fetching busy times for user ${username}:`, error);
-      return {
-        busy: [],
-        timeZone: finalTimezone,
-        dateRanges: [],
-        oooExcludedDateRanges: [],
-        workingHours: [],
-        dateOverrides: [],
-        currentSeats: [],
-        datesOutOfOffice: undefined,
-      };
+      busyTimes = (initialData?.currentBookings || []).map((booking) => ({
+        start: dayjs(booking.startTime)
+          .subtract((booking.eventType?.beforeEventBuffer || 0) + (afterEventBuffer || 0), "minute")
+          .toDate(),
+        end: dayjs(booking.endTime)
+          .add((booking.eventType?.afterEventBuffer || 0) + (beforeEventBuffer || 0), "minute")
+          .toDate(),
+        title: booking.title,
+        source: "booking",
+      }));
     }
 
     const detailedBusyTimesWithSource: EventBusyDetails[] = [
