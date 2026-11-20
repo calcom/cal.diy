@@ -241,8 +241,7 @@ export class ApiAuthStrategy extends PassportStrategy(BaseStrategy, "api-auth") 
       throw new UnauthorizedException("ApiAuthStrategy - api key - Your api key is not valid");
     }
 
-    const isKeyExpired =
-      keyData.expiresAt && new Date().setHours(0, 0, 0, 0) > keyData.expiresAt.setHours(0, 0, 0, 0);
+    const isKeyExpired = keyData.expiresAt && new Date() > keyData.expiresAt;
     if (isKeyExpired) {
       throw new UnauthorizedException("ApiAuthStrategy - api key - Your api key is expired");
     }

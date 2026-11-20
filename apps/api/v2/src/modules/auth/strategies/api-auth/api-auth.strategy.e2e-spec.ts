@@ -1,6 +1,6 @@
 import { X_CAL_CLIENT_ID, X_CAL_SECRET_KEY } from "@calcom/platform-constants";
 import type { PlatformOAuthClient, Team, User } from "@calcom/prisma/client";
-import { ExecutionContext, HttpException } from "@nestjs/common";
+import { ExecutionContext, HttpException, UnauthorizedException } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtService as NestJwtService } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -200,6 +200,21 @@ describe("ApiAuthStrategy", () => {
       expect(user).toBeDefined();
       expect(user?.id).toEqual(validApiKeyUser.id);
       expect(mockRequest.organizationId).toEqual(organizationTwo.id);
+    });
+
+    it("should throw UnauthorizedException for an api key that expired seconds ago", async () => {
+      const expiredAt = new Date(Date.now() - 1000);
+      const { keyString } = await apiKeysRepositoryFixture.createApiKey(
+        validApiKeyUser.id,
+        expiredAt,
+        organization.id
+      );
+
+      const mockRequest = createRequest() as ApiAuthGuardRequest;
+      mockRequest.authMethod = AuthMethods.API_KEY;
+      mockRequest.organizationId = null;
+
+      await expect(strategy.apiKeyStrategy(keyString, mockRequest)).rejects.toThrow(UnauthorizedException);
     });
 
     it("should return user associated with valid OAuth client", async () => {
