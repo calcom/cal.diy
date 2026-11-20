@@ -25,6 +25,7 @@ export async function generateSwaggerForApp(app: NestExpressApplication<Server>)
   const config = new DocumentBuilder().setTitle("Cal.diy API v2").build();
   const document = SwaggerModule.createDocument(app, config);
   document.paths = groupAndSortPathsByFirstTag(document.paths);
+  dedupeOperationIds(document.paths);
 
   const docsOutputFile = "../../../docs/api-reference/v2/openapi.json";
   const stringifiedContents = JSON.stringify(document, null, 2);
@@ -73,6 +74,27 @@ function groupAndSortPathsByFirstTag(paths: PathsObject): PathsObject {
   });
 
   return sortedPaths;
+}
+
+// A handler registered on several paths, e.g. @Get(["/events/:id", "/event/:id"]), gets the same
+// operationId for every path, and operationIdFactory isn't given the path to tell them apart.
+export function dedupeOperationIds(paths: PathsObject): void {
+  const seenCounts: Record<string, number> = {};
+
+  Object.values(paths).forEach((pathItem) => {
+    HttpMethods.forEach((method) => {
+      const operation = pathItem[method];
+
+      if (!isOperationObject(operation) || !operation.operationId) return;
+
+      const count = (seenCounts[operation.operationId] ?? 0) + 1;
+      seenCounts[operation.operationId] = count;
+
+      if (count > 1) {
+        operation.operationId = `${operation.operationId}_${count}`;
+      }
+    });
+  });
 }
 
 function customTagSort(a: string, b: string): number {
