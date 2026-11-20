@@ -4755,5 +4755,7 @@
   "date_validation_error": "Invalid date",
   "date_before_min": "This date is before the earliest allowed date",
   "date_after_max": "This date is after the latest allowed date",
+  "month": "Month",
+  "year": "Year",
   "ADD_NEW_STRINGS_ABOVE_THIS_LINE_TO_PREVENT_MERGE_CONFLICTS": "↑↑↑↑↑↑↑↑↑↑↑↑↑ Add your new strings above here ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑"
 }

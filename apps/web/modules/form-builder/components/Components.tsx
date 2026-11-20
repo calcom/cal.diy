@@ -1,15 +1,17 @@
-import { format } from "date-fns";
-import { useEffect } from "react";
-import type { z } from "zod";
-
+import { propsTypes } from "@calcom/features/form-builder/propsTypes";
+import { preprocessNameFieldDataWithVariant } from "@calcom/features/form-builder/utils";
+import {
+  formatDateFieldValue,
+  parseDateFieldBound,
+  parseDateFieldValue,
+} from "@calcom/features/form-builder/utils/dateField";
 import type {
   SelectLikeComponentProps,
   TextLikeComponentProps,
 } from "@calcom/features/form-builder/widget-types";
 import Widgets from "@calcom/features/form-builder/widgets";
-import PhoneInput from "@calcom/web/components/phone-input";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
-import type { fieldSchema, variantsConfigSchema, FieldType } from "@calcom/prisma/zod-utils";
+import type { FieldType, fieldSchema, variantsConfigSchema } from "@calcom/prisma/zod-utils";
 import { AddressInput } from "@calcom/ui/components/address";
 import { InfoBadge } from "@calcom/ui/components/badge";
 import { Button } from "@calcom/ui/components/button";
@@ -21,18 +23,17 @@ import {
   InputField,
   Label,
 } from "@calcom/ui/components/form";
-import { RadioGroup, RadioField } from "@calcom/ui/components/radio";
+import { RadioField, RadioGroup } from "@calcom/ui/components/radio";
 import { Tooltip } from "@calcom/ui/components/tooltip";
+import PhoneInput from "@calcom/web/components/phone-input";
 import { XIcon } from "@coss/ui/icons";
-
+import { format } from "date-fns";
+import { useEffect } from "react";
+import type { z } from "zod";
 import { ComponentForField } from "./FormBuilderField";
-import { propsTypes } from "@calcom/features/form-builder/propsTypes";
-import { preprocessNameFieldDataWithVariant } from "@calcom/features/form-builder/utils";
-import {
-  formatDateFieldValue,
-  parseDateFieldBound,
-  parseDateFieldValue,
-} from "@calcom/features/form-builder/utils/dateField";
+
+const DATE_FIELD_YEARS_BEFORE = 120;
+const DATE_FIELD_YEARS_AFTER = 10;
 
 export const isValidValueProp: Record<Component["propsType"], (val: unknown) => boolean> = {
   boolean: (val) => typeof val === "boolean",
@@ -588,7 +589,15 @@ export const Components: Record<FieldType, Component> = {
   },
   date: {
     propsType: propsTypes.date,
-    factory: function DateField({ value, setValue, readOnly, placeholder, dateFormat, minDateRange }) {
+    factory: function DateField({
+      value,
+      setValue,
+      readOnly,
+      placeholder,
+      dateFormat,
+      minDateRange,
+      maxDateRange,
+    }) {
       const { t } = useLocale();
       const date = parseDateFieldValue(value);
       let label = placeholder || t("select_date");
@@ -600,13 +609,21 @@ export const Components: Record<FieldType, Component> = {
           label = formatDateFieldValue(date);
         }
       }
-      // The picker cannot bound the maximum: the schema rejects dates after maxDateRange
+      const today = new Date();
+      // Month and year selects need both bounds: an unbounded side gets a wide default range, so a
+      // date of birth or a far-off date stays a few clicks away instead of one click per month.
+      const minDate =
+        parseDateFieldBound(minDateRange) ?? new Date(today.getFullYear() - DATE_FIELD_YEARS_BEFORE, 0, 1);
+      const maxDate =
+        parseDateFieldBound(maxDateRange) ?? new Date(today.getFullYear() + DATE_FIELD_YEARS_AFTER, 11, 31);
       return (
         <DatePicker
           date={date ?? new Date()}
           onDatesChange={(newDate) => setValue(formatDateFieldValue(newDate))}
           disabled={readOnly}
-          minDate={parseDateFieldBound(minDateRange)}
+          minDate={minDate}
+          maxDate={maxDate}
+          withMonthYearSelect
           label={label}
         />
       );

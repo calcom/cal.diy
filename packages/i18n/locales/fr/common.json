@@ -4619,5 +4619,7 @@
   "date_validation_error": "Date invalide",
   "date_before_min": "Cette date est antérieure à la date minimale autorisée",
   "date_after_max": "Cette date est postérieure à la date maximale autorisée",
+  "month": "Mois",
+  "year": "Année",
   "ADD_NEW_STRINGS_ABOVE_THIS_LINE_TO_PREVENT_MERGE_CONFLICTS": "↑↑↑↑↑↑↑↑↑↑↑↑↑ Ajoutez vos nouvelles chaînes ci-dessus ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑"
 }
