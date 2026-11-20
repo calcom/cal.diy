@@ -40,6 +40,9 @@ describe("parseIpFromHeaders", () => {
   it("trims tabs and other whitespace, not just spaces", () => {
     expect(parseIpFromHeaders("\t1.2.3.4\t, 5.6.7.8")).toBe("1.2.3.4");
   });
+  it("returns the first IP when array element contains comma-separated IPs (banlist bypass regression)", () => {
+    expect(parseIpFromHeaders(["1.2.3.4, 5.6.7.8"])).toBe("1.2.3.4");
+  });
 });
 
 describe("getIP", () => {
