@@ -1611,6 +1611,8 @@
   "visit_our_app_store": "Sorry, this app isn't installed on your account. Please visit our app store to explore and discover this and other great apps.",
   "connect_apple_server": "Connect to Apple Server",
   "calendar_url": "Calendar URL",
+  "saved_ics_feed_urls": "Saved ICS feed URLs",
+  "ics_feed_unreadable": "{{count}} saved feed(s) could not be read. Remove and add them again.",
   "apple_server_generate_password": "Generate an app specific password to use with {{appName}} at",
   "unable_to_add_apple_calendar": "Unable to add this Apple Calendar account. Please ensure you're using an app-specific password rather than your account password.",
   "credentials_stored_encrypted": "Your credentials will be stored and encrypted.",
