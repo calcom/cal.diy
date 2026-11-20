@@ -606,10 +606,14 @@ export class UserAvailabilityService {
     } catch (error) {
       log.error(`Error fetching busy times for user ${username}:`, error);
       busyTimes = (initialData?.currentBookings || []).map((booking) => ({
-        start: booking.startTime,
-        end: booking.endTime,
+        start: dayjs(booking.startTime)
+          .subtract((booking.eventType?.beforeEventBuffer || 0) + (afterEventBuffer || 0), "minute")
+          .toDate(),
+        end: dayjs(booking.endTime)
+          .add((booking.eventType?.afterEventBuffer || 0) + (beforeEventBuffer || 0), "minute")
+          .toDate(),
         title: booking.title,
-        source: undefined,
+        source: "booking",
       }));
     }
 
