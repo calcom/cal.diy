@@ -14,6 +14,7 @@ import type { Prisma, Webhook, Booking, ApiKey } from "@calcom/prisma/client";
 import { BookingStatus, WebhookTriggerEvents } from "@calcom/prisma/enums";
 import { bookingMetadataSchema } from "@calcom/prisma/zod-utils";
 import { DEFAULT_WEBHOOK_VERSION, type WebhookVersion } from "./interface/IWebhookRepository";
+import { getNoShowTaskReferenceFilter, getNoShowTaskReferenceUid } from "./noShowTaskReference";
 
 const SCHEDULING_TRIGGER: WebhookTriggerEvents[] = [
   WebhookTriggerEvents.MEETING_ENDED,
@@ -526,6 +527,7 @@ export async function updateTriggerForExistingBookings(
           cancelNoShowTasksForBooking({
             bookingUid: booking.uid,
             triggerEvent,
+            webhook,
           })
         ),
       ];
@@ -606,17 +608,21 @@ export async function cancelNoShowTasksForBooking({
   if (bookingUid) {
     if (triggerEvent && !NO_SHOW_TRIGGERS.includes(triggerEvent)) return;
 
+    let type: Prisma.TaskWhereInput["type"] = {
+      in: ["triggerHostNoShowWebhook", "triggerGuestNoShowWebhook"],
+    };
     if (triggerEvent === WebhookTriggerEvents.AFTER_HOSTS_CAL_VIDEO_NO_SHOW) {
-      await tasker.cancelWithReference(bookingUid, "triggerHostNoShowWebhook");
+      type = "triggerHostNoShowWebhook";
     } else if (triggerEvent === WebhookTriggerEvents.AFTER_GUESTS_CAL_VIDEO_NO_SHOW) {
-      await tasker.cancelWithReference(bookingUid, "triggerGuestNoShowWebhook");
-    } else {
-      await prisma.task.deleteMany({
-        where: {
-          referenceUid: bookingUid,
-        },
-      });
+      type = "triggerGuestNoShowWebhook";
     }
+
+    await prisma.task.deleteMany({
+      where: {
+        ...getNoShowTaskReferenceFilter(bookingUid, webhook?.id),
+        type,
+      },
+    });
   } else if (webhook) {
     const bookings = await fetchBookingsFromWebhook(webhook);
 
@@ -625,7 +631,8 @@ export async function cancelNoShowTasksForBooking({
     const promises = bookings.map(async (booking) => {
       return await prisma.task.deleteMany({
         where: {
-          referenceUid: booking.uid,
+          ...getNoShowTaskReferenceFilter(booking.uid, webhook.id),
+          type: { in: ["triggerHostNoShowWebhook", "triggerGuestNoShowWebhook"] },
         },
       });
     });
@@ -673,7 +680,7 @@ export async function scheduleNoShowTaskForBooking(
     },
     {
       scheduledAt,
-      referenceUid: booking.uid,
+      referenceUid: getNoShowTaskReferenceUid(booking.uid, webhook.id),
     }
   );
 }
