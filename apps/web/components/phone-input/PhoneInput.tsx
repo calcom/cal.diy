@@ -158,6 +158,87 @@ function BasePhoneInputWeb({
   );
 }
 
+// Maps IANA timezone to ISO 3166-1 alpha-2 country code (lowercase).
+// navigator.language region is unreliable — browser language ≠ user location.
+// Timezone is a much better proxy for physical location.
+const TIMEZONE_COUNTRY_MAP: Record<string, CountryCode> = {
+  "Asia/Kolkata": "in",
+  "Asia/Calcutta": "in",
+  "America/New_York": "us",
+  "America/Chicago": "us",
+  "America/Denver": "us",
+  "America/Los_Angeles": "us",
+  "America/Anchorage": "us",
+  "Pacific/Honolulu": "us",
+  "Europe/London": "gb",
+  "Europe/Paris": "fr",
+  "Europe/Berlin": "de",
+  "Europe/Madrid": "es",
+  "Europe/Rome": "it",
+  "Europe/Amsterdam": "nl",
+  "Europe/Brussels": "be",
+  "Europe/Zurich": "ch",
+  "Europe/Vienna": "at",
+  "Europe/Stockholm": "se",
+  "Europe/Oslo": "no",
+  "Europe/Copenhagen": "dk",
+  "Europe/Helsinki": "fi",
+  "Europe/Warsaw": "pl",
+  "Europe/Prague": "cz",
+  "Europe/Bucharest": "ro",
+  "Europe/Athens": "gr",
+  "Europe/Istanbul": "tr",
+  "Europe/Moscow": "ru",
+  "Europe/Lisbon": "pt",
+  "Europe/Dublin": "ie",
+  "Asia/Tokyo": "jp",
+  "Asia/Shanghai": "cn",
+  "Asia/Hong_Kong": "hk",
+  "Asia/Singapore": "sg",
+  "Asia/Seoul": "kr",
+  "Asia/Taipei": "tw",
+  "Asia/Bangkok": "th",
+  "Asia/Jakarta": "id",
+  "Asia/Manila": "ph",
+  "Asia/Kuala_Lumpur": "my",
+  "Asia/Dubai": "ae",
+  "Asia/Riyadh": "sa",
+  "Asia/Karachi": "pk",
+  "Asia/Dhaka": "bd",
+  "Asia/Colombo": "lk",
+  "Asia/Kathmandu": "np",
+  "Asia/Ho_Chi_Minh": "vn",
+  "Australia/Sydney": "au",
+  "Australia/Melbourne": "au",
+  "Australia/Perth": "au",
+  "Pacific/Auckland": "nz",
+  "America/Toronto": "ca",
+  "America/Vancouver": "ca",
+  "America/Mexico_City": "mx",
+  "America/Sao_Paulo": "br",
+  "America/Argentina/Buenos_Aires": "ar",
+  "America/Santiago": "cl",
+  "America/Bogota": "co",
+  "America/Lima": "pe",
+  "Africa/Cairo": "eg",
+  "Africa/Lagos": "ng",
+  "Africa/Johannesburg": "za",
+  "Africa/Nairobi": "ke",
+  "Africa/Casablanca": "ma",
+  "Asia/Jerusalem": "il",
+  "Asia/Beirut": "lb",
+  "Asia/Baghdad": "iq",
+  "Asia/Tehran": "ir",
+};
+
+function getResolvedTimezone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return undefined;
+  }
+}
+
 const useDefaultCountry = () => {
   const defaultPhoneCountryFromStore = useBookerStore((state) => state.defaultPhoneCountry);
   const [defaultCountry, setDefaultCountry] = useState<CountryCode>(defaultPhoneCountryFromStore || "us");
@@ -174,23 +255,32 @@ const useDefaultCountry = () => {
         return;
       }
 
-      const data = query.data;
-      if (!data?.countryCode) {
+      // Wait until the query has settled. Empty countryCode (no CF/Vercel
+      // headers) is a valid resolved state and must fall through to the
+      // timezone fallback rather than returning early.
+      if (!query.isSuccess && !query.isError) {
         return;
       }
 
-      if (isSupportedCountry(data?.countryCode)) {
-        setDefaultCountry(data.countryCode.toLowerCase() as CountryCode);
-      } else {
-        const navCountry = navigator.language.split("-")[1]?.toUpperCase();
-        if (navCountry && isSupportedCountry(navCountry)) {
-          setDefaultCountry(navCountry.toLowerCase() as CountryCode);
-        } else {
-          setDefaultCountry("us");
-        }
+      const cc = (query.data?.countryCode ?? "").trim().toUpperCase();
+      if (cc && isSupportedCountry(cc)) {
+        setDefaultCountry(cc.toLowerCase() as CountryCode);
+        return;
       }
+
+      const tz = getResolvedTimezone();
+      const tzCountry = tz ? TIMEZONE_COUNTRY_MAP[tz] : undefined;
+      if (tzCountry && isSupportedCountry(tzCountry.toUpperCase())) {
+        setDefaultCountry(tzCountry);
+      }
+
+      // For unmapped timezones, keep the initial default ("us" or whatever
+      // came from the store). The previous explicit fallback used
+      // `tz.startsWith("America/")` to force "us", but `America/*` covers
+      // many non-US zones (Latin America, Caribbean) and would mis-detect
+      // those users as US.
     },
-    [query.data, defaultPhoneCountryFromStore]
+    [query.data, query.isSuccess, query.isError, defaultPhoneCountryFromStore]
   );
 
   return defaultCountry;
