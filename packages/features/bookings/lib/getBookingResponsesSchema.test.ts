@@ -1813,6 +1813,53 @@ describe("getBookingResponsesSchema", () => {
       );
     });
 
+    describe("on reschedule", () => {
+      const schemaForView = (view: "booking" | "reschedule") =>
+        getBookingResponsesSchema({
+          bookingFields: [
+            { name: "name", type: "name", required: true },
+            { name: "email", type: "email", required: true },
+            { name: "birthdate", type: "date", required: true },
+          ] as z.infer<typeof eventTypeBookingFields> & z.BRAND<"HAS_SYSTEM_FIELDS">,
+          view,
+        });
+
+      test("keeps a legacy non-ISO date copied from the original booking", async ({}) => {
+        for (const birthdate of ["150380", "15/03/1980"]) {
+          const parsedResponses = await schemaForView("reschedule").safeParseAsync({
+            email: "test@test.com",
+            name: "test",
+            birthdate,
+          });
+          expectResponsesToBe(parsedResponses, { email: "test@test.com", name: "test", birthdate });
+        }
+      });
+
+      test("still rejects a legacy date on a new booking", async ({}) => {
+        const parsedResponses = await schemaForView("booking").safeParseAsync({
+          email: "test@test.com",
+          name: "test",
+          birthdate: "150380",
+        });
+        expectParsingToFail(
+          parsedResponses,
+          expect.objectContaining({ code: "custom", message: "{birthdate}date_validation_error" })
+        );
+      });
+
+      test("still requires the date", async ({}) => {
+        const parsedResponses = await schemaForView("reschedule").safeParseAsync({
+          email: "test@test.com",
+          name: "test",
+          birthdate: "",
+        });
+        expectParsingToFail(
+          parsedResponses,
+          expect.objectContaining({ code: "custom", message: "{birthdate}error_required_field" })
+        );
+      });
+    });
+
     test("fails before the minimum and after the maximum date", async ({}) => {
       const schema = dateSchema({ required: true, minDateRange: "2026-01-01", maxDateRange: "2026-12-31" });
       expectParsingToFail(

@@ -10,20 +10,18 @@ function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-/** Parses a stored `yyyy-MM-dd` value (or any date string) to a local day, or null. */
+/**
+ * Parses a stored `yyyy-MM-dd` value to a local day, or null. Strict: any other format is rejected,
+ * since `new Date()` would misread values such as `150380` (year 150380) or `03/04/1980` (US order).
+ */
 export function parseDateFieldValue(value: string | null | undefined): Date | null {
-  const trimmed = value?.trim();
-  if (!trimmed) return null;
-  const iso = ISO_DATE.exec(trimmed);
-  if (iso) {
-    const [year, month, day] = [Number(iso[1]), Number(iso[2]), Number(iso[3])];
-    const date = new Date(year, month - 1, day);
-    // Rejects overflowing dates such as 2026-02-31
-    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
-    return date;
-  }
-  const parsed = new Date(trimmed);
-  return Number.isNaN(parsed.getTime()) ? null : startOfDay(parsed);
+  const iso = ISO_DATE.exec(value?.trim() ?? "");
+  if (!iso) return null;
+  const [year, month, day] = [Number(iso[1]), Number(iso[2]), Number(iso[3])];
+  const date = new Date(year, month - 1, day);
+  // Rejects overflowing dates such as 2026-02-31
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  return date;
 }
 
 /** Parses a bound (`today`, `today+7d`, `today-30d` or an ISO date) to a local day, or null. */

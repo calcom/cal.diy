@@ -14,6 +14,18 @@ describe("parseDateFieldValue", () => {
     expect(parseDateFieldValue("not a date")).toBeNull();
     expect(parseDateFieldValue("2026-02-31")).toBeNull();
   });
+
+  it("rejects every non-ISO format, even those Date() would accept", () => {
+    expect(parseDateFieldValue("150380")).toBeNull();
+    expect(parseDateFieldValue("15031980")).toBeNull();
+    expect(parseDateFieldValue("15/03/1980")).toBeNull();
+    expect(parseDateFieldValue("03/15/1980")).toBeNull();
+    expect(parseDateFieldValue("1980-03-15T00:00:00Z")).toBeNull();
+  });
+
+  it("accepts an ISO date surrounded by spaces", () => {
+    expect(parseDateFieldValue(" 1980-03-15 ")).toEqual(day(1980, 3, 15));
+  });
 });
 
 describe("parseDateFieldBound", () => {
