@@ -64,6 +64,7 @@ declare namespace NodeJS {
     readonly NEXT_PUBLIC_APP_NAME: string | "Cal";
     readonly NEXT_PUBLIC_SUPPORT_MAIL_ADDRESS: string | "help@cal.com";
     readonly NEXT_PUBLIC_COMPANY_NAME: string | "Cal.com, Inc.";
+    readonly NEXT_PUBLIC_DEFAULT_PHONE_COUNTRY: string | undefined;
     readonly NEXT_PUBLIC_WEBSITE_PRIVACY_POLICY_URL: string | undefined;
     readonly NEXT_PUBLIC_WEBSITE_TERMS_URL: string | undefined;
     /**

@@ -10,6 +10,7 @@ import { useIsPlatform } from "@calcom/atoms/hooks/useIsPlatform";
 import { type CountryCode, useBookerStore } from "@calcom/features/bookings/Booker/store";
 import { trpc } from "@calcom/trpc/react";
 import classNames from "@calcom/ui/classNames";
+import { detectBrowserCountry, FALLBACK_COUNTRY } from "./default-country";
 import { CUSTOM_PHONE_MASKS } from "./phone-masks";
 
 export type PhoneInputProps = {
@@ -31,7 +32,7 @@ function BasePhoneInput({
   className = "",
   onChange,
   value,
-  defaultCountry = "us",
+  defaultCountry = FALLBACK_COUNTRY,
   ...rest
 }: PhoneInputProps) {
   const isPlatform = useIsPlatform();
@@ -117,8 +118,8 @@ function BasePhoneInputWeb({
     <PhoneInput
       {...rest}
       value={value ? value.trim().replace(/^\+?/, "+") : undefined}
-      // react-phone-input-2 treats `country` as a fallback. Keeping it stable 
-      // preserves calling-code-only values like `+371` during async updates, 
+      // react-phone-input-2 treats `country` as a fallback. Keeping it stable
+      // preserves calling-code-only values like `+371` during async updates,
       // while full international numbers still resolve their country from `value`.
       country={defaultCountry}
       enableSearch
@@ -160,7 +161,9 @@ function BasePhoneInputWeb({
 
 const useDefaultCountry = () => {
   const defaultPhoneCountryFromStore = useBookerStore((state) => state.defaultPhoneCountry);
-  const [defaultCountry, setDefaultCountry] = useState<CountryCode>(defaultPhoneCountryFromStore || "us");
+  const [defaultCountry, setDefaultCountry] = useState<CountryCode>(
+    defaultPhoneCountryFromStore || FALLBACK_COUNTRY
+  );
   const query = trpc.viewer.public.countryCode.useQuery(undefined, {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -174,23 +177,19 @@ const useDefaultCountry = () => {
         return;
       }
 
-      const data = query.data;
-      if (!data?.countryCode) {
+      const ipCountry = query.data?.countryCode?.toUpperCase();
+      if (ipCountry && isSupportedCountry(ipCountry)) {
+        setDefaultCountry(ipCountry.toLowerCase() as CountryCode);
         return;
       }
 
-      if (isSupportedCountry(data?.countryCode)) {
-        setDefaultCountry(data.countryCode.toLowerCase() as CountryCode);
-      } else {
-        const navCountry = navigator.language.split("-")[1]?.toUpperCase();
-        if (navCountry && isSupportedCountry(navCountry)) {
-          setDefaultCountry(navCountry.toLowerCase() as CountryCode);
-        } else {
-          setDefaultCountry("us");
-        }
-      }
+      // Waiting for the IP answer avoids flipping the flag twice when it does resolve.
+      if (query.isPending) return;
+
+      // In an effect, not the initial state: the server render has no browser to read and must match.
+      setDefaultCountry(detectBrowserCountry() ?? FALLBACK_COUNTRY);
     },
-    [query.data, defaultPhoneCountryFromStore]
+    [query.data, query.isPending, defaultPhoneCountryFromStore]
   );
 
   return defaultCountry;
