@@ -12,7 +12,7 @@ export type UserAdminRouterOutputs = inferRouterOutputs<UserAdminRouter>;
 
 const userIdSchema = z.object({ userId: z.coerce.number() });
 
-const userBodySchema = UserSchema.pick({
+export const userBodySchema = UserSchema.pick({
   name: true,
   email: true,
   username: true,
@@ -60,10 +60,9 @@ export const userAdminRouter = router({
     const users = await prisma.user.findMany();
     return users;
   }),
-  add: authedAdminProcedure.input(userBodySchema).mutation(async ({ ctx, input }) => {
-    const { prisma } = ctx;
-    const user = await prisma.user.create({ data: { ...input, creationSource: CreationSource.WEBAPP } });
-    return { user, message: `User with id: ${user.id} added successfully` };
+  add: authedAdminProcedure.input(userBodySchema).mutation(async (opts) => {
+    const { default: handler } = await import("./adduser.handler");
+    return handler(opts);
   }),
   update: authedAdminProcedureWithRequestedUser
     .input(userBodySchema.partial())
