@@ -1,0 +1,23 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "Bold AI",
+  "slug": "bold-ai",
+  "type": "bold-ai_automation",
+  "logo": "icon.jpg",
+  "url": "https://boldai.io",
+  "variant": "automation",
+  "categories": [
+    "automation",
+    "messaging"
+  ],
+  "publisher": "Bold AI",
+  "email": "hello@boldai.io",
+  "description": "AI customer-communication agent with native Cal.com booking",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "link-as-an-app",
+  "externalLink": {
+    "url": "https://boldai.io",
+    "newTab": true
+  }
+}
