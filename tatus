@@ -1,0 +1,137 @@
+[35mapps/api/v2/README.md[m[36m:[m[32m12[m[36m:[m3. Make sure that mailhog is running - it is used by v2 to [1;31msend email[ms locally. You can start it by:
+[35mapps/api/v2/src/modules/atoms/controllers/atoms.verification.controller.ts[m[36m:[m[32m6[m[36m:[mimport { [1;31mSendVerificationEmailInput } from "@/modules/atoms/inputs/send-verification-email[m.input";
+[35mapps/api/v2/src/modules/atoms/controllers/atoms.verification.controller.ts[m[36m:[m[32m9[m[36m:[mimport { [1;31mSendVerificationEmailOutput } from "@/modules/atoms/outputs/send-verification-email[m.output";
+[35mapps/api/v2/src/modules/atoms/controllers/atoms.verification.controller.ts[m[36m:[m[32m45[m[36m:[m  async [1;31msendEmail[mVerificationCode(
+[35mapps/api/v2/src/modules/atoms/controllers/atoms.verification.controller.ts[m[36m:[m[32m46[m[36m:[m    @Body() body: [1;31mSendVerificationEmail[mInput
+[35mapps/api/v2/src/modules/atoms/controllers/atoms.verification.controller.ts[m[36m:[m[32m47[m[36m:[m  ): Promise<[1;31mSendVerificationEmail[mOutput> {
+[35mapps/api/v2/src/modules/atoms/controllers/atoms.verification.controller.ts[m[36m:[m[32m48[m[36m:[m    const result = await this.verificationService.[1;31msendEmail[mVerificationCode({
+[35mapps/api/v2/src/modules/atoms/inputs/send-verification-email.input.ts[m[36m:[m[32m4[m[36m:[mexport class [1;31mSendVerificationEmail[mInput {
+[35mapps/api/v2/src/modules/atoms/outputs/send-verification-email.output.ts[m[36m:[m[32m7[m[36m:[mexport class [1;31mSendVerificationEmail[mData {
+[35mapps/api/v2/src/modules/atoms/outputs/send-verification-email.output.ts[m[36m:[m[32m14[m[36m:[mexport class [1;31mSendVerificationEmail[mOutput {
+[35mapps/api/v2/src/modules/atoms/outputs/send-verification-email.output.ts[m[36m:[m[32m21[m[36m:[m  @Type(() => [1;31mSendVerificationEmail[mData)
+[35mapps/api/v2/src/modules/atoms/outputs/send-verification-email.output.ts[m[36m:[m[32m23[m[36m:[m  @ApiProperty({ type: [1;31mSendVerificationEmail[mData })
+[35mapps/api/v2/src/modules/atoms/outputs/send-verification-email.output.ts[m[36m:[m[32m24[m[36m:[m  readonly data!: [1;31mSendVerificationEmail[mData;
+[35mapps/api/v2/src/modules/atoms/services/verification-atom.service.ts[m[36m:[m[32m4[m[36m:[mimport { [1;31mSendVerificationEmailInput } from "@/modules/atoms/inputs/send-verification-email[m.input";
+[35mapps/api/v2/src/modules/atoms/services/verification-atom.service.ts[m[36m:[m[32m13[m[36m:[m  [1;31msendEmail[mVerificationByCode,
+[35mapps/api/v2/src/modules/atoms/services/verification-atom.service.ts[m[36m:[m[32m64[m[36m:[m  async [1;31msendEmailVerificationCode(input: SendVerificationEmail[mInput) {
+[35mapps/api/v2/src/modules/atoms/services/verification-atom.service.ts[m[36m:[m[32m65[m[36m:[m    return await [1;31msendEmail[mVerificationByCode({
+[35mapps/api/v2/src/modules/email/email.service.ts[m[36m:[m[32m4[m[36m:[mimport { [1;31msendSignupToOrganizationEmail } from "@calcom/platform-libraries/email[ms";
+[35mapps/api/v2/src/modules/email/email.service.ts[m[36m:[m[32m8[m[36m:[m  public async [1;31msendSignupToOrganizationEmail[m({
+[35mapps/api/v2/src/modules/email/email.service.ts[m[36m:[m[32m23[m[36m:[m    await [1;31msendSignupToOrganizationEmail[m({
+[35mapps/api/v2/src/modules/teams/event-types/services/output-team-event-types.service.ts[m[36m:[m[32m93[m[36m:[m  | "can[1;31mSendCalVideoTranscriptionEmail[ms"
+[35mapps/api/v2/src/modules/verified-resources/controllers/users-verified-resources.controller.ts[m[36m:[m[32m38[m[36m:[m    description: `[1;31mSends a verification code to the email[m`,
+[35mapps/api/v2/src/modules/verified-resources/services/verified-resources.service.ts[m[36m:[m[32m5[m[36m:[mimport { [1;31msendEmailVerificationByCode, verifyEmailCodeHandler } from "@calcom/platform-libraries/email[ms";
+[35mapps/api/v2/src/modules/verified-resources/services/verified-resources.service.ts[m[36m:[m[32m18[m[36m:[m    const res = await [1;31msendEmail[mVerificationByCode({
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/add-guests.e2e-spec.ts[m[36m:[m[32m430[m[36m:[m    it("should NOT [1;31msend emails when adding guests (email[ms disabled)", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/confirm-emails.e2e-spec.ts[m[36m:[m[32m239[m[36m:[m    it("should not [1;31msend an email[m when creating a booking that requires confirmation", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/confirm-emails.e2e-spec.ts[m[36m:[m[32m281[m[36m:[m    it("should not [1;31msend an email[m when confirming a booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/confirm-emails.e2e-spec.ts[m[36m:[m[32m296[m[36m:[m    it("should not [1;31msend an email[m when creating a booking that requires confirmation", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/confirm-emails.e2e-spec.ts[m[36m:[m[32m336[m[36m:[m    it("should not [1;31msend an email[m when declining a booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/confirm-emails.e2e-spec.ts[m[36m:[m[32m357[m[36m:[m      it("should [1;31msend an email[m when creating a booking that requires confirmation", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/confirm-emails.e2e-spec.ts[m[36m:[m[32m397[m[36m:[m      it("should [1;31msend an email[m when confirming a booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/confirm-emails.e2e-spec.ts[m[36m:[m[32m413[m[36m:[m        it("should [1;31msend confirmation email[ms when organizer reschedules a booking that requires confirmation", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/confirm-emails.e2e-spec.ts[m[36m:[m[32m443[m[36m:[m        it("should [1;31msend requested rescheduling email[ms when attendee rescheduling a booking that requires confirmation", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/confirm-emails.e2e-spec.ts[m[36m:[m[32m475[m[36m:[m      it("should [1;31msend an email[m when creating a booking that requires confirmation", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/confirm-emails.e2e-spec.ts[m[36m:[m[32m515[m[36m:[m      it("should [1;31msend an email[m when declining a booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/user-emails.e2e-spec.ts[m[36m:[m[32m229[m[36m:[m    it("should not [1;31msend an email[m when creating a booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/user-emails.e2e-spec.ts[m[36m:[m[32m268[m[36m:[m    it("should not [1;31msend an email[m when creating a recurring booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/user-emails.e2e-spec.ts[m[36m:[m[32m304[m[36m:[m    it("should not [1;31msend an email[m when rescheduling a booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/user-emails.e2e-spec.ts[m[36m:[m[32m327[m[36m:[m    it("should not [1;31msend an email[m when cancelling a booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/user-emails.e2e-spec.ts[m[36m:[m[32m348[m[36m:[m    it("should [1;31msend an email[m when creating a booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/user-emails.e2e-spec.ts[m[36m:[m[32m388[m[36m:[m    it("should [1;31msend an email[m when creating a recurring booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/user-emails.e2e-spec.ts[m[36m:[m[32m424[m[36m:[m    it("should [1;31msend an email[m when rescheduling a booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/emails/user-emails.e2e-spec.ts[m[36m:[m[32m449[m[36m:[m    it("should [1;31msend an email[m when cancelling a booking", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/remove-attendee.e2e-spec.ts[m[36m:[m[32m473[m[36m:[m    it("should NOT [1;31msend emails when removing attendee (email[ms disabled)", async () => {
+[35mapps/api/v2/src/platform/bookings/2024-08-13/controllers/e2e/update-booking-location.e2e-spec.ts[m[36m:[m[32m65[m[36m:[m    [1;31msendLocationChangeEmail[msAndSMS: jest.fn().mockResolvedValue(undefined),
+[35mapps/api/v2/src/platform/bookings/2024-08-13/services/booking-location-calendar-sync.service.ts[m[36m:[m[32m2[m[36m:[mimport { buildCalEventFromBooking, [1;31msendLocationChangeEmail[msAndSMS, updateEvent } from "@calcom/platform-libraries";
+[35mapps/api/v2/src/platform/bookings/2024-08-13/services/booking-location-calendar-sync.service.ts[m[36m:[m[32m73[m[36m:[m      await [1;31msendLocationChangeEmail[msAndSMS({ ...evt, location: newLocation }, eventTypeMetadata);
+[35mapps/api/v2/src/platform/bookings/2024-08-13/services/booking-location-calendar-sync.service.ts[m[36m:[m[32m76[m[36m:[m        `Failed to [1;31msend location change email[ms for booking uid=${bookingUid}`,
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/controllers/event-types.controller.e2e-spec.ts[m[36m:[m[32m559[m[36m:[m        calVideoSettings: { [1;31msendTranscriptionEmail[ms: true },
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/controllers/event-types.controller.e2e-spec.ts[m[36m:[m[32m641[m[36m:[m          expect(createdEventType.calVideoSettings?.[1;31msendTranscriptionEmail[ms).toEqual(true);
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/controllers/event-types.controller.e2e-spec.ts[m[36m:[m[32m738[m[36m:[m      expect(fetchedEventType?.calVideoSettings?.[1;31msendTranscriptionEmail[ms).toEqual(
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/controllers/event-types.controller.e2e-spec.ts[m[36m:[m[32m739[m[36m:[m        eventType.calVideoSettings?.[1;31msendTranscriptionEmail[ms
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/controllers/event-types.controller.e2e-spec.ts[m[36m:[m[32m880[m[36m:[m      expect(fetchedEventType?.calVideoSettings?.[1;31msendTranscriptionEmail[ms).toEqual(
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/controllers/event-types.controller.e2e-spec.ts[m[36m:[m[32m881[m[36m:[m        eventType.calVideoSettings?.[1;31msendTranscriptionEmail[ms
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/controllers/event-types.controller.e2e-spec.ts[m[36m:[m[32m1278[m[36m:[m          [1;31msendTranscriptionEmail[ms: false,
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/controllers/event-types.controller.e2e-spec.ts[m[36m:[m[32m1452[m[36m:[m          expect(updatedEventType.calVideoSettings?.[1;31msendTranscriptionEmail[ms).toEqual(false);
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/services/input-event-types.service.ts[m[36m:[m[32m679[m[36m:[m    // Extract [1;31msendTranscriptionEmails from calVideoSettings and map to canSendCalVideoTranscriptionEmail[ms
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/services/input-event-types.service.ts[m[36m:[m[32m680[m[36m:[m    const { [1;31msendTranscriptionEmail[ms, ...restCalVideoSettings } = calVideoSettings;
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/services/input-event-types.service.ts[m[36m:[m[32m686[m[36m:[m      ...([1;31msendTranscriptionEmail[ms !== undefined
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/services/input-event-types.service.ts[m[36m:[m[32m687[m[36m:[m        ? { can[1;31mSendCalVideoTranscriptionEmails: sendTranscriptionEmail[ms }
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/services/output-event-types.service.ts[m[36m:[m[32m125[m[36m:[m  | "can[1;31mSendCalVideoTranscriptionEmail[ms"
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/services/output-event-types.service.ts[m[36m:[m[32m178[m[36m:[m      can[1;31mSendCalVideoTranscriptionEmail[ms,
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/services/output-event-types.service.ts[m[36m:[m[32m225[m[36m:[m      can[1;31mSendCalVideoTranscriptionEmail[ms
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/services/output-event-types.service.ts[m[36m:[m[32m516[m[36m:[m    can[1;31mSendCalVideoTranscriptionEmail[ms: boolean | null | undefined
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/services/output-event-types.service.ts[m[36m:[m[32m518[m[36m:[m    if (!calVideoSettings && can[1;31mSendCalVideoTranscriptionEmail[ms === undefined) {
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/services/output-event-types.service.ts[m[36m:[m[32m524[m[36m:[m      [1;31msendTranscriptionEmails: canSendCalVideoTranscriptionEmail[ms ?? true,
+[35mapps/api/v2/src/platform/event-types/event-types_2024_06_14/transformed/event-type.tranformed.ts[m[36m:[m[32m52[m[36m:[m  can[1;31mSendCalVideoTranscriptionEmail[ms?: boolean;
+[35mapps/api/v2/src/platform/me/services/me.service.ts[m[36m:[m[32m7[m[36m:[mimport { [1;31msendChangeOfEmailVerification } from "@calcom/platform-libraries/email[ms";
+[35mapps/api/v2/src/platform/me/services/me.service.ts[m[36m:[m[32m45[m[36m:[m    let [1;31msendEmail[mVerification = false;
+[35mapps/api/v2/src/platform/me/services/me.service.ts[m[36m:[m[32m71[m[36m:[m        [1;31msendEmail[mVerification = true;
+[35mapps/api/v2/src/platform/me/services/me.service.ts[m[36m:[m[32m80[m[36m:[m    if ([1;31msendEmailVerification && newEmail[m) {
+[35mapps/api/v2/src/platform/me/services/me.service.ts[m[36m:[m[32m81[m[36m:[m      await [1;31msendChangeOfEmail[mVerification({
+[35mapps/docs/content/apps/sendgrid.mdx[m[36m:[m[32m13[m[36m:[m4. **Verify a [1;31msender email[m** - Go to **Settings** -> **Sender Authentication** and verify a single sender.
+[35mapps/docs/content/apps/sendgrid.mdx[m[36m:[m[32m18[m[36m:[m[1;31mSENDGRID_EMAIL[m
+[35mapps/web/app/api/auth/signup/handlers/calcomSignupHandler.test.ts[m[36m:[m[32m61[m[36m:[mvi.mock("@calcom/features/auth/lib/verifyEmail", () => ({ [1;31msendEmail[mVerification: vi.fn() }));
+[35mapps/web/app/api/auth/signup/handlers/calcomSignupHandler.ts[m[36m:[m[32m4[m[36m:[mimport { [1;31msendEmailVerification } from "@calcom/features/auth/lib/verifyEmail[m";
+[35mapps/web/app/api/auth/signup/handlers/calcomSignupHandler.ts[m[36m:[m[32m309[m[36m:[m    [1;31msendEmail[mVerification({
+[35mapps/web/app/api/auth/signup/handlers/selfHostedHandler.test.ts[m[36m:[m[32m44[m[36m:[mvi.mock("@calcom/features/auth/lib/verifyEmail", () => ({ [1;31msendEmail[mVerification: vi.fn() }));
+[35mapps/web/app/api/auth/signup/handlers/selfHostedHandler.ts[m[36m:[m[32m2[m[36m:[mimport { [1;31msendEmailVerification } from "@calcom/features/auth/lib/verifyEmail[m";
+[35mapps/web/app/api/auth/signup/handlers/selfHostedHandler.ts[m[36m:[m[32m187[m[36m:[m    await [1;31msendEmail[mVerification({
+[35mapps/web/app/api/cron/bookingReminder/route.ts[m[36m:[m[32m6[m[36m:[mimport { [1;31msendOrganizerRequestReminderEmail } from "@calcom/emails/email[m-manager";
+[35mapps/web/app/api/cron/bookingReminder/route.ts[m[36m:[m[32m144[m[36m:[m      await [1;31msendOrganizerRequestReminderEmail[m(evt, booking?.eventType?.metadata as EventTypeMetadata);
+[35mapps/web/app/api/recorded-daily-video/route.ts[m[36m:[m[32m10[m[36m:[m  [1;31msendDailyVideoRecordingEmail[ms,
+[35mapps/web/app/api/recorded-daily-video/route.ts[m[36m:[m[32m11[m[36m:[m  [1;31msendDailyVideoTranscriptEmail[ms,
+[35mapps/web/app/api/recorded-daily-video/route.ts[m[36m:[m[32m138[m[36m:[m          fn: [1;31msendDailyVideoRecordingEmail[ms(evt, downloadLink),
+[35mapps/web/app/api/recorded-daily-video/route.ts[m[36m:[m[32m139[m[36m:[m          errorMsg: "[1;31msend recording email[ms",
+[35mapps/web/app/api/recorded-daily-video/route.ts[m[36m:[m[32m163[m[36m:[m      if (!booking.eventType?.can[1;31mSendCalVideoTranscriptionEmail[ms) {
+[35mapps/web/app/api/recorded-daily-video/route.ts[m[36m:[m[32m177[m[36m:[m      await [1;31msendDailyVideoTranscriptEmail[ms(evt, transcripts);
+[35mapps/web/calendso.yaml[m[36m:[m[32m96[m[36m:[m      description: [1;31mSend a password reset email[m.
+[35mapps/web/calendso.yaml[m[36m:[m[32m97[m[36m:[m      summary: [1;31mSend a password reset email[m
+[35mapps/web/components/settings/CustomEmailTextField.tsx[m[36m:[m[32m101[m[36m:[m                    data-testid="re[1;31msend-verify-email[m-button">
+[35mapps/web/components/settings/CustomEmailTextField.tsx[m[36m:[m[32m102[m[36m:[m                    {t("re[1;31msend_email[m")}
+[35mapps/web/lib/apps/installation/[[...step]]/getServerSideProps.ts[m[36m:[m[32m35[m[36m:[m  can[1;31mSendCalVideoTranscriptionEmail[ms: true,
+[35mapps/web/lib/booking.ts[m[36m:[m[32m34[m[36m:[m      can[1;31mSendCalVideoTranscriptionEmail[ms: true,
+[35mapps/web/lib/daily-webhook/tests/recorded-daily-video.test.ts[m[36m:[m[32m61[m[36m:[m  vi.stubEnv("[1;31mSENDGRID_EMAIL", "FAKE_SENDGRID_EMAIL[m");
+[35mapps/web/modules/auth/verify-email-view.tsx[m[36m:[m[32m45[m[36m:[m  const mutation = trpc.viewer.auth.re[1;31msendVerifyEmail[m.useMutation();
+[35mapps/web/modules/auth/verify-email-view.tsx[m[36m:[m[32m92[m[36m:[m                      showToast(t("[1;31msend_email[m"), "success");
+[35mapps/web/modules/auth/verify-email-view.tsx[m[36m:[m[32m95[m[36m:[m                    {t("re[1;31msend_email[m")}
+[35mapps/web/modules/auth/verify-view.tsx[m[36m:[m[32m17[m[36m:[masync function [1;31msendVerificationLogin(email[m: string, username: string, t: (key: string) => string) {
+[35mapps/web/modules/auth/verify-view.tsx[m[36m:[m[32m46[m[36m:[m      await [1;31msendVerificationLogin(email[m, username, t);
+[35mapps/web/modules/auth/verify-view.tsx[m[36m:[m[32m127[m[36m:[m  // Only [1;31msend verification login if we DON'T have the email[m yet (for resend button)
+[35mapps/web/modules/auth/verify-view.tsx[m[36m:[m[32m134[m[36m:[m  // to avoid refresh to skip waiting 30 seconds to re-[1;31msend email[m
+[35mapps/web/modules/auth/verify-view.tsx[m[36m:[m[32m218[m[36m:[m              return await [1;31msendVerificationLogin(email[m, username, t);
+[35mapps/web/modules/bookings/components/BookEventForm/BookingFields.tsx[m[36m:[m[32m129[m[36m:[m        // Allowing a system field to be edited might require [1;31msending email[ms to attendees, so we need to be careful
+[35mapps/web/modules/bookings/hooks/useVerifyEmail.ts[m[36m:[m[32m33[m[36m:[m  const [1;31msendEmailVerificationByCodeMutation = trpc.viewer.auth.sendVerifyEmail[mCode.useMutation({
+[35mapps/web/modules/bookings/hooks/useVerifyEmail.ts[m[36m:[m[32m57[m[36m:[m    [1;31msendEmail[mVerificationByCodeMutation.mutate({
+[35mapps/web/modules/bookings/hooks/useVerifyEmail.ts[m[36m:[m[32m65[m[36m:[m  const isVerificationCode[1;31mSending = sendEmail[mVerificationByCodeMutation.isPending;
+[35mapps/web/modules/event-types/components/tabs/advanced/EventAdvancedTab.tsx[m[36m:[m[32m83[m[36m:[m  can[1;31mSendCalVideoTranscriptionEmail[ms?: SettingsToggleClassNames;
+[35mapps/web/modules/event-types/components/tabs/advanced/EventAdvancedTab.tsx[m[36m:[m[32m513[m[36m:[m  const [1;31msendCalVideoTranscriptionEmailsProps = shouldLockDisableProps("canSendCalVideoTranscriptionEmail[ms");
+[35mapps/web/modules/event-types/components/tabs/advanced/EventAdvancedTab.tsx[m[36m:[m[32m754[m[36m:[m        name="can[1;31mSendCalVideoTranscriptionEmail[ms"
+[35mapps/web/modules/event-types/components/tabs/advanced/EventAdvancedTab.tsx[m[36m:[m[32m759[m[36m:[m              customClassNames?.can[1;31mSendCalVideoTranscriptionEmail[ms?.label
+[35mapps/web/modules/event-types/components/tabs/advanced/EventAdvancedTab.tsx[m[36m:[m[32m764[m[36m:[m              customClassNames?.can[1;31mSendCalVideoTranscriptionEmail[ms?.container
+[35mapps/web/modules/event-types/components/tabs/advanced/EventAdvancedTab.tsx[m[36m:[m[32m766[m[36m:[m            title={t("[1;31msend_cal_video_transcription_email[ms")}
+[35mapps/web/modules/event-types/components/tabs/advanced/EventAdvancedTab.tsx[m[36m:[m[32m767[m[36m:[m            data-testid="[1;31msend-cal-video-transcription-email[ms"
+[35mapps/web/modules/event-types/components/tabs/advanced/EventAdvancedTab.tsx[m[36m:[m[32m768[m[36m:[m            {...[1;31msendCalVideoTranscriptionEmail[msProps}
+[35mapps/web/modules/event-types/components/tabs/advanced/EventAdvancedTab.tsx[m[36m:[m[32m769[m[36m:[m            description={t("description_[1;31msend_cal_video_transcription_email[ms")}
+[35mapps/web/modules/event-types/components/tabs/advanced/EventAdvancedTab.tsx[m[36m:[m[32m770[m[36m:[m            descriptionClassName={customClassNames?.can[1;31mSendCalVideoTranscriptionEmail[ms?.description}
+[35mapps/web/modules/settings/my-account/profile-view.tsx[m[36m:[m[32m80[m[36m:[m      if (res.hasEmailBeenChanged && res.[1;31msendEmail[mVerification) {
+[35mapps/web/modules/settings/my-account/profile-view.tsx[m[36m:[m[32m124[m[36m:[m  const re[1;31msendVerifyEmailMutation = trpc.viewer.auth.resendVerifyEmail[m.useMutation();
+[35mapps/web/modules/settings/my-account/profile-view.tsx[m[36m:[m[32m280[m[36m:[m        handleRe[1;31msendVerifyEmail={(email[m) => {
+[35mapps/web/modules/settings/my-account/profile-view.tsx[m[36m:[m[32m281[m[36m:[m          re[1;31msendVerifyEmailMutation.mutate({ email[m });
+[35mapps/web/modules/settings/my-account/profile-view.tsx[m[36m:[m[32m490[m[36m:[m  handleRe[1;31msendVerifyEmail[m,
+[35mapps/web/modules/settings/my-account/profile-view.tsx[m[36m:[m[32m502[m[36m:[m  handleRe[1;31msendVerifyEmail: (email[m: string) => void;
+[35mapps/web/modules/settings/my-account/profile-view.tsx[m[36m:[m[32m568[m[36m:[m    // We will only [1;31msend the email[ms which have already changed
+[35mapps/web/modules/settings/my-account/profile-view.tsx[m[36m:[m[32m681[m[36m:[m                  handleVerifyEmail={() => handleRe[1;31msendVerifyEmail(field.email[m)}
+[35mapps/web/modules/users/components/UsersTable.tsx[m[36m:[m[32m72[m[36m:[m  const [1;31msendPasswordResetEmail[m = trpc.viewer.admin.sendPasswordReset.useMutation({
+[35mapps/web/modules/users/components/UsersTable.tsx[m[36m:[m[32m181[m[36m:[m                          onClick: () => [1;31msendPasswordResetEmail[m.mutate({ userId: user.id }),
+[35mapps/web/modules/users/components/VerifyEmailBanner.tsx[m[36m:[m[32m15[m[36m:[m  const mutation = trpc.viewer.auth.re[1;31msendVerifyEmail[m.useMutation();
+[35mapps/web/modules/users/components/VerifyEmailBanner.tsx[m[36m:[m[32m32[m[36m:[m            {t("re[1;31msend_email[m")}
+[35mapps/web/pages/api/book/recurring-event.test.ts[m[36m:[m[32m48[m[36m:[m          2. Should [1;31msend email[ms for the first booking only to the booker as well as organizer
+[35mapps/web/pages/api/book/recurring-event.test.ts[m[36m:[m[32m384[m[36m:[m          2. Should [1;31msend email[ms for the first booking only to the booker as well as organizer
+[35mapps/web/pages/api/book/recurring-event.test.ts[m[36m:[m[32m600[m[36m:[m          2. Should [1;31msend email[ms for the first booking only to the booker as well as organizer
+[35mapps/web/playwright/profile.e2e.ts[m[36m:[m[32m387[m[36m:[m  test.skip("Can re[1;31msend verification link if the secondary email[m is unverified", async ({
+[35mapps/web/playwright/profile.e2e.ts[m[36m:[m[32m407[m[36m:[m    await expect(page.locator("button[data-testid=re[1;31msend-verify-email[m-button]")).toBeEnabled();
+[35mapps/web/playwright/profile.e2e.ts[m[36m:[m[32m408[m[36m:[m    await page.getByTestId("re[1;31msend-verify-email[m-button").click();
+[35mapps/web/playwright/profile.e2e.ts[m[36m:[m[32m420[m[36m:[m    await expect(page.locator("button[data-testid=re[1;31msend-verify-email[m-button]")).toBeHidden();
+[35mapps/web/server/lib/[user]/getServerSideProps.ts[m[36m:[m[32m67[m[36m:[m    | "can[1;31mSendCalVideoTranscriptionEmail[ms"
