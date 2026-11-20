@@ -1,5 +1,6 @@
+import ICAL from "ical.js";
 import { createEvent as createIcsEvent } from "ics";
-import { createCalendarObject, updateCalendarObject } from "tsdav";
+import { createCalendarObject, fetchCalendarObjects, updateCalendarObject } from "tsdav";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("ics", () => ({
@@ -100,6 +101,80 @@ class TestCalendarService extends BaseCalendarService {
     return this.updateEvent(uid, event);
   }
 }
+
+describe("CalendarService - actual timezone payload round trips", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const realIcs = await vi.importActual<typeof import("ics")>("ics");
+    vi.mocked(createIcsEvent).mockImplementation(realIcs.createEvent);
+  });
+
+  function expectRoundTrip(payload: string, timezone: string, start: string, end: string) {
+    const calendar = new ICAL.Component(ICAL.parse(payload));
+    const zoneComponent = calendar.getFirstSubcomponent("vtimezone");
+    const eventComponent = calendar.getFirstSubcomponent("vevent");
+    if (!zoneComponent || !eventComponent) throw new Error("Expected a timezone and event");
+    expect(zoneComponent.getFirstPropertyValue("tzid")).toBe(timezone);
+    expect(payload).toContain(`DTSTART;TZID=${timezone}:`);
+    const zone = new ICAL.Timezone(zoneComponent);
+    const parsed = new ICAL.Event(eventComponent);
+    // Bind the timezone carried by the payload instead of relying on a global registry.
+    parsed.startDate.zone = zone;
+    parsed.endDate.zone = zone;
+    expect(parsed.startDate.toJSDate().toISOString()).toBe(new Date(start).toISOString());
+    expect(parsed.endDate.toJSDate().toISOString()).toBe(new Date(end).toISOString());
+  }
+
+  it.each([
+    { timezone: "Europe/Paris", start: "2026-01-15T12:30:00Z", local: "20260115T133000" },
+    { timezone: "Europe/Paris", start: "2026-07-15T11:30:00Z", local: "20260715T133000" },
+    { timezone: "Europe/Paris", start: "2026-03-29T00:00:00Z", local: "20260329T010000" },
+    { timezone: "Europe/Paris", start: "2026-03-29T02:00:00Z", local: "20260329T040000" },
+    { timezone: "Australia/Sydney", start: "2026-01-15T02:30:00Z", local: "20260115T133000" },
+    { timezone: "Australia/Sydney", start: "2026-07-15T03:30:00Z", local: "20260715T133000" },
+    { timezone: "UTC", start: "2026-01-15T13:30:00Z", local: "20260115T133000" },
+    { timezone: "Asia/Kathmandu", start: "2026-01-15T07:45:00Z", local: "20260115T133000" },
+  ])("round-trips $timezone at $start", async ({ timezone, start, local }) => {
+    const end = new Date(new Date(start).getTime() + 30 * 60_000).toISOString();
+    const service = new TestCalendarService();
+    const event = createMockEvent({
+      uid: "timezone-round-trip",
+      startTime: start,
+      endTime: end,
+      organizer: { ...createMockEvent().organizer, timeZone: timezone },
+    });
+    await service.createEvent(event, 1);
+    const payload = vi.mocked(createCalendarObject).mock.calls[0][0].iCalString;
+    expect(payload).toContain("BEGIN:VTIMEZONE");
+    expect(payload).toContain(`DTSTART;TZID=${timezone}:${local}`);
+    expectRoundTrip(payload, timezone, start, end);
+  });
+
+  it("round-trips a reschedule into Paris winter through the CalDAV update client", async () => {
+    const service = new TestCalendarService();
+    const event = createMockEvent({
+      uid: "winter-reschedule",
+      startTime: "2026-01-15T12:30:00Z",
+      endTime: "2026-01-15T13:00:00Z",
+      organizer: { ...createMockEvent().organizer, timeZone: "Europe/Paris" },
+    });
+    await service.createEvent(
+      { ...event, startTime: "2026-07-15T11:30:00Z", endTime: "2026-07-15T12:00:00Z" },
+      1
+    );
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: "https://caldav.example.com/calendar/winter-reschedule.ics",
+        etag: '"existing-etag"',
+        data: vi.mocked(createCalendarObject).mock.calls[0][0].iCalString,
+      },
+    ]);
+    await service.updateEvent("winter-reschedule", event);
+    const payload = vi.mocked(updateCalendarObject).mock.calls[0][0].calendarObject.data;
+    if (typeof payload !== "string") throw new Error("Expected an iCalendar update payload");
+    expectRoundTrip(payload, "Europe/Paris", event.startTime, event.endTime);
+  });
+});
 
 describe("CalendarService - UID Consistency", () => {
   beforeEach(() => {
