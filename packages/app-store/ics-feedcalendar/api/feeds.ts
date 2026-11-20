@@ -22,6 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: { userId, appId: appConfig.slug },
       select: { id: true, key: true },
     });
+     let unreadable = 0;
 
     const feeds = credentials.flatMap((credential) => {
       try {
@@ -30,7 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         );
         return Array.isArray(urls) ? (urls as string[]) : [];
       } catch (e) {
-        logger.error("Could not read saved ICS feed", e);
+                logger.error("Could not read saved ICS feed", e);
+        unreadable += 1;
         return [];
       }
     });
@@ -38,6 +40,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ urls: feeds });
   } catch (e) {
     logger.error("Could not load ICS feeds", e);
-    return res.status(500).json({ message: "Could not load ICS feeds" });
+        return res.status(200).json({ urls: feeds, unreadable });
   }
 }
