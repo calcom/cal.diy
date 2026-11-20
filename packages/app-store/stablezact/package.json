@@ -1,0 +1,21 @@
+{
+  "name": "@calcom/stablezact",
+  "version": "0.0.1",
+  "description": "Accept cryptocurrency payments with Stablezact",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "private": true,
+  "dependencies": {
+    "@calcom/lib": "workspace:*",
+    "@calcom/prisma": "workspace:*",
+    "@calcom/types": "workspace:*",
+    "@calcom/ui": "workspace:*",
+    "axios": "^1.6.0",
+    "react": "^18.2.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@calcom/tsconfig": "*",
+    "typescript": "^5.3.0"
+  }
+}
