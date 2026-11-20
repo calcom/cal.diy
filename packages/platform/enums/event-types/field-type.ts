@@ -13,6 +13,7 @@ export enum BaseFieldEnum {
   checkbox = "checkbox",
   radio = "radio",
   radioInput = "radioInput",
+  date = "date",
 }
 
 export type BaseFieldType = keyof typeof BaseFieldEnum;

@@ -14,4 +14,5 @@ export const propsTypes = {
   radio: "select",
   boolean: "boolean",
   url: "text",
+  date: "date",
 } as const;

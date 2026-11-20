@@ -2,6 +2,7 @@ import { fieldSchema, fieldTypeEnum, variantsConfigSchema } from "@calcom/prisma
 import { z } from "zod";
 import { fieldTypesConfigMap } from "./fieldTypes";
 import { preprocessNameFieldDataWithVariant } from "./utils";
+import { parseDateFieldBound, parseDateFieldValue } from "./utils/dateField";
 import { getConfig as getVariantsConfig } from "./utils/variantsConfig";
 
 const nonEmptyString = () => z.string().refine((value: string) => value.trim().length > 0);
@@ -45,6 +46,7 @@ export const fieldTypeConfigSchema = z
       .optional(),
     supportsPricing: z.boolean().default(false).optional(),
     optionsSupportPricing: z.boolean().default(false).optional(),
+    supportsDateConfig: z.boolean().default(false).optional(),
     propsType: z.enum([
       "text",
       "textList",
@@ -53,6 +55,7 @@ export const fieldTypeConfigSchema = z
       "boolean",
       "objectiveWithInput",
       "variants",
+      "date",
     ]),
     // It is the config that can tweak what an existing or a new field shows in the App UI or booker UI.
     variantsConfig: z
@@ -289,6 +292,36 @@ export const fieldTypesSchemaMap = {
         code: z.ZodIssueCode.custom,
         message: m("url_validation_error"),
       });
+    },
+  }),
+  date: defineFieldSchema<unknown, string>({
+    // Stored as `yyyy-MM-dd`
+    preprocess: ({ response }) => (response == null ? "" : stringifyResponse(response).trim()),
+    superRefine: ({ field, response, isPartialSchema, ctx, m }) => {
+      const value = response ?? "";
+      if (!value) {
+        if (field.required && !isPartialSchema) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: m("error_required_field") });
+        }
+        return;
+      }
+
+      const date = parseDateFieldValue(value);
+      if (!date) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: m("date_validation_error") });
+        return;
+      }
+
+      const minDate = parseDateFieldBound(field.minDateRange);
+      if (minDate && date < minDate) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: m("date_before_min") });
+        return;
+      }
+
+      const maxDate = parseDateFieldBound(field.maxDateRange);
+      if (maxDate && date > maxDate) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: m("date_after_max") });
+      }
     },
   }),
 };

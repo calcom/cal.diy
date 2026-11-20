@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { useEffect } from "react";
 import type { z } from "zod";
 
@@ -12,7 +13,14 @@ import type { fieldSchema, variantsConfigSchema, FieldType } from "@calcom/prism
 import { AddressInput } from "@calcom/ui/components/address";
 import { InfoBadge } from "@calcom/ui/components/badge";
 import { Button } from "@calcom/ui/components/button";
-import { Label, CheckboxField, EmailField, InputField, Checkbox } from "@calcom/ui/components/form";
+import {
+  Checkbox,
+  CheckboxField,
+  DatePicker,
+  EmailField,
+  InputField,
+  Label,
+} from "@calcom/ui/components/form";
 import { RadioGroup, RadioField } from "@calcom/ui/components/radio";
 import { Tooltip } from "@calcom/ui/components/tooltip";
 import { XIcon } from "@coss/ui/icons";
@@ -20,6 +28,11 @@ import { XIcon } from "@coss/ui/icons";
 import { ComponentForField } from "./FormBuilderField";
 import { propsTypes } from "@calcom/features/form-builder/propsTypes";
 import { preprocessNameFieldDataWithVariant } from "@calcom/features/form-builder/utils";
+import {
+  formatDateFieldValue,
+  parseDateFieldBound,
+  parseDateFieldValue,
+} from "@calcom/features/form-builder/utils/dateField";
 
 export const isValidValueProp: Record<Component["propsType"], (val: unknown) => boolean> = {
   boolean: (val) => typeof val === "boolean",
@@ -29,6 +42,7 @@ export const isValidValueProp: Record<Component["propsType"], (val: unknown) => 
   text: (val) => typeof val === "string",
   textList: (val) => val instanceof Array && val.every((v) => typeof v === "string"),
   variants: (val) => (typeof val === "object" && val !== null) || typeof val === "string",
+  date: (val) => typeof val === "string" || val === undefined || val === null,
 };
 
 type Component =
@@ -79,6 +93,23 @@ type Component =
           variants: z.infer<typeof variantsConfigSchema>["variants"];
           value: Record<string, string> | string | undefined;
           setValue: (value: string | Record<string, string>) => void;
+        },
+      >(
+        props: TProps
+      ) => JSX.Element;
+    }
+  | {
+      propsType: "date";
+      factory: <
+        TProps extends {
+          name: string;
+          placeholder?: string;
+          readOnly?: boolean;
+          value: string | undefined;
+          setValue: (value: string | undefined) => void;
+          dateFormat?: string;
+          minDateRange?: string;
+          maxDateRange?: string;
         },
       >(
         props: TProps
@@ -553,6 +584,32 @@ export const Components: Record<FieldType, Component> = {
     propsType: propsTypes.url,
     factory: (props) => {
       return <Widgets.TextWidget type="url" autoComplete="url" noLabel={true} {...props} />;
+    },
+  },
+  date: {
+    propsType: propsTypes.date,
+    factory: function DateField({ value, setValue, readOnly, placeholder, dateFormat, minDateRange }) {
+      const { t } = useLocale();
+      const date = parseDateFieldValue(value);
+      let label = placeholder || t("select_date");
+      if (date) {
+        try {
+          label = format(date, dateFormat || "yyyy-MM-dd");
+        } catch {
+          // An invalid custom format must not break the booking form
+          label = formatDateFieldValue(date);
+        }
+      }
+      // The picker cannot bound the maximum: the schema rejects dates after maxDateRange
+      return (
+        <DatePicker
+          date={date ?? new Date()}
+          onDatesChange={(newDate) => setValue(formatDateFieldValue(newDate))}
+          disabled={readOnly}
+          minDate={parseDateFieldBound(minDateRange)}
+          label={label}
+        />
+      );
     },
   },
 } as const;

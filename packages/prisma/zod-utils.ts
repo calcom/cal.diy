@@ -905,6 +905,7 @@ export const fieldTypeEnum = z.enum([
   "radioInput",
   "boolean",
   "url",
+  "date",
 ]);
 
 export type FieldType = z.infer<typeof fieldTypeEnum>;
@@ -1029,6 +1030,16 @@ export const baseFieldSchema = z.object({
   requireEmails: excludeOrRequireEmailSchema.optional(),
   // Price associated with the field which works like addons which users can add to the booking
   price: z.coerce.number().min(0).optional(),
+
+  /**
+   * Date field specific options
+   */
+  // Format for displaying the date (e.g., "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy")
+  dateFormat: z.string().optional(),
+  // Minimum date constraint - can be ISO date string or relative like "today", "today+7d"
+  minDateRange: z.string().optional(),
+  // Maximum date constraint - can be ISO date string or relative like "today", "today+30d"
+  maxDateRange: z.string().optional(),
 });
 
 export const variantsConfigSchema = z.object({

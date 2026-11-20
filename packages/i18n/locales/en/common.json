@@ -4748,5 +4748,12 @@
   "user_updated_successfully": "User updated successfully.",
   "error_updating_user": "There was an error updating this user.",
   "please_reschedule": "Please reschedule.",
+  "date_format": "Date format",
+  "min_date": "Minimum date",
+  "max_date": "Maximum date",
+  "date_range_hint": "today, today+7d, today-30d or a date (YYYY-MM-DD)",
+  "date_validation_error": "Invalid date",
+  "date_before_min": "This date is before the earliest allowed date",
+  "date_after_max": "This date is after the latest allowed date",
   "ADD_NEW_STRINGS_ABOVE_THIS_LINE_TO_PREVENT_MERGE_CONFLICTS": "↑↑↑↑↑↑↑↑↑↑↑↑↑ Add your new strings above here ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑"
 }

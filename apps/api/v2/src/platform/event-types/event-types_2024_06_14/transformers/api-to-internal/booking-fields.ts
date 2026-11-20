@@ -248,7 +248,12 @@ function getBaseProperties(field: InputBookingField): CustomField | SystemField 
     ],
     editable: "user",
     required: !!field.required,
-    placeholder: field.placeholder,
+    placeholder: "placeholder" in field ? field.placeholder : undefined,
+    ...(field.type === "date" && {
+      dateFormat: field.dateFormat,
+      minDateRange: field.minDateRange,
+      maxDateRange: field.maxDateRange,
+    }),
     disableOnPrefill: !!field.disableOnPrefill,
     hidden: !!field.hidden,
   };
