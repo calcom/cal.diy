@@ -1,10 +1,28 @@
-import type { ITimezoneOption } from "react-timezone-select";
-
 import dayjs from "@calcom/dayjs";
-
+import type { ITimezoneOption } from "react-timezone-select";
 import isProblematicTimezone from "./isProblematicTimezone";
 
 export type Timezones = { label: string; timezone: string }[];
+
+/**
+ * IANA ids that were renamed and are now backward-compatibility links.
+ * Maps the old (link) id to the current canonical id (tzdata 2022b+ for Kyiv).
+ * Old ids still resolve identically in Intl/dayjs, but the picker only
+ * offers canonical ids, so stored link ids must be mapped on read.
+ */
+export const RENAMED_TIMEZONE_ALIASES: Record<string, string> = {
+  "Europe/Kiev": "Europe/Kyiv",
+  "Asia/Rangoon": "Asia/Yangon",
+  "Asia/Saigon": "Asia/Ho_Chi_Minh",
+};
+
+export const canonicalizeTimezone = (timezone: string): string =>
+  // Own-property lookup only: a bare index would return inherited members for
+  // inputs like "__proto__" or "constructor", handing callers a non-string and
+  // breaking the string contract this function advertises.
+  Object.prototype.hasOwnProperty.call(RENAMED_TIMEZONE_ALIASES, timezone)
+    ? RENAMED_TIMEZONE_ALIASES[timezone]
+    : timezone;
 
 const searchTextFilter = (tzOption: Timezones[number], searchText: string) => {
   return searchText && tzOption.label.toLowerCase().includes(searchText.toLowerCase());
