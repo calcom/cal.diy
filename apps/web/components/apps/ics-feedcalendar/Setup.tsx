@@ -20,12 +20,16 @@ export default function ICSFeedSetup() {
   const [urls, setUrls] = useState<string[]>([""]);
   const [errorMessage, setErrorMessage] = useState("");
   const [errorActionUrl, setErrorActionUrl] = useState("");
-    const [savedUrls, setSavedUrls] = useState<string[]>([]);
+  const [savedUrls, setSavedUrls] = useState<string[]>([]);
+  const [unreadableCount, setUnreadableCount] = useState(0);
 
   useEffect(() => {
     fetch("/api/integrations/ics-feedcalendar/feeds")
       .then((res) => (res.ok ? res.json() : { urls: [] }))
-      .then((json) => setSavedUrls(Array.isArray(json?.urls) ? json.urls : []))
+        .then((json) => {
+        setSavedUrls(Array.isArray(json?.urls) ? json.urls : []);
+        setUnreadableCount(typeof json?.unreadable === "number" ? json.unreadable : 0);
+      })
       .catch(() => setSavedUrls([]));
   }, []);
 
@@ -44,6 +48,9 @@ export default function ICSFeedSetup() {
           <div className="flex w-10/12 flex-col">
             <h1 className="text-default">{t("connect_ics_feed")}</h1>
             <div className="mt-1 text-sm">{t("credentials_stored_encrypted")}</div>
+              {unreadableCount > 0 && (
+              <div className="text-error mt-3 text-sm">{t("ics_feed_unreadable", { count: unreadableCount })}</div>
+            )}
                         {savedUrls.length > 0 && (
               <div className="mt-3 text-sm">
                 <div className="text-emphasis font-medium">{t("saved_ics_feed_urls")}</div>
