@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const responseBody = await result.json();
       errorMessage = responseBody.error;
-    } catch (e) {
+    } catch {
       errorMessage = await result.clone().text();
     }
 
@@ -72,7 +72,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Making sure we only delete zoom_video
   const credentialIdsToDelete = existingCredentialZoomVideo.map((item) => item.id);
   if (credentialIdsToDelete.length > 0) {
-    await prisma.credential.deleteMany({ where: { id: { in: credentialIdsToDelete }, userId } });
+    await prisma.credential.deleteMany({
+      where: {
+        id: { in: credentialIdsToDelete },
+      },
+    });
   }
 
   await createOAuthAppCredential({ appId: "zoom", type: "zoom_video" }, responseBody, req);
