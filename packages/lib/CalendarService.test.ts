@@ -1,5 +1,5 @@
 import { createEvent as createIcsEvent } from "ics";
-import { createCalendarObject, updateCalendarObject } from "tsdav";
+import { createCalendarObject, fetchCalendarObjects, updateCalendarObject } from "tsdav";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("ics", () => ({
@@ -746,5 +746,112 @@ describe("CalendarService - SCHEDULE-AGENT injection", () => {
 
       await expect(service.createEvent(event, 1)).rejects.toThrow();
     });
+  });
+});
+
+describe("CalendarService - getAvailability - PARTSTAT filtering", () => {
+  const CREDENTIAL_EMAIL = "test@example.com";
+  const CALENDAR_URL = "https://caldav.example.com/calendar/";
+
+  const buildIcsPayload = ({
+    partstat,
+    includeAttendee = true,
+  }: {
+    partstat?: "NEEDS-ACTION" | "ACCEPTED" | "DECLINED" | "TENTATIVE";
+    includeAttendee?: boolean;
+  }) => {
+    const attendeeLine = includeAttendee
+      ? `ATTENDEE;CN=Test User;PARTSTAT=${partstat}:mailto:${CREDENTIAL_EMAIL}`
+      : "";
+    return [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Test//Test//EN",
+      "BEGIN:VEVENT",
+      "UID:invited-event-1@example.com",
+      "DTSTAMP:20260101T000000Z",
+      "DTSTART;VALUE=DATE:20260525",
+      "DTEND;VALUE=DATE:20260526",
+      "SUMMARY:All-day invite",
+      "TRANSP:OPAQUE",
+      "ORGANIZER;CN=Alice:mailto:alice@example.com",
+      attendeeLine,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ]
+      .filter(Boolean)
+      .join("\r\n");
+  };
+
+  const mockFetchReturning = (icsPayload: string) => {
+    vi.mocked(fetchCalendarObjects).mockResolvedValue([
+      {
+        url: `${CALENDAR_URL}invited-event-1.ics`,
+        etag: "etag-1",
+        data: icsPayload,
+      },
+    ] as unknown as Awaited<ReturnType<typeof fetchCalendarObjects>>);
+  };
+
+  const callGetAvailability = (service: TestCalendarService) =>
+    service.getAvailability({
+      dateFrom: "2026-05-20T00:00:00Z",
+      dateTo: "2026-05-30T00:00:00Z",
+      // No userId on the selected calendar → skips the prisma timezone lookup
+      selectedCalendars: [{ externalId: CALENDAR_URL, integration: "caldav_calendar" }],
+      mode: "slots",
+    });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // Repro of the reported bug. Currently FAILS on main — the invited-but-unanswered
+  // event comes through as busy because the reader only checks TRANSP, never PARTSTAT.
+  it("skips events where the user's PARTSTAT is NEEDS-ACTION", async () => {
+    const service = new TestCalendarService();
+    mockFetchReturning(buildIcsPayload({ partstat: "NEEDS-ACTION" }));
+
+    const busy = await callGetAvailability(service);
+
+    expect(busy).toEqual([]);
+  });
+
+  it("skips events where the user's PARTSTAT is DECLINED", async () => {
+    const service = new TestCalendarService();
+    mockFetchReturning(buildIcsPayload({ partstat: "DECLINED" }));
+
+    const busy = await callGetAvailability(service);
+
+    expect(busy).toEqual([]);
+  });
+
+  it("keeps events where the user's PARTSTAT is ACCEPTED", async () => {
+    const service = new TestCalendarService();
+    mockFetchReturning(buildIcsPayload({ partstat: "ACCEPTED" }));
+
+    const busy = await callGetAvailability(service);
+
+    expect(busy).toHaveLength(1);
+  });
+
+  // TENTATIVE is intentionally treated as busy (matches Google's default).
+  // This test guards against a future change that would also skip Tentative.
+  it("keeps events where the user's PARTSTAT is TENTATIVE", async () => {
+    const service = new TestCalendarService();
+    mockFetchReturning(buildIcsPayload({ partstat: "TENTATIVE" }));
+
+    const busy = await callGetAvailability(service);
+
+    expect(busy).toHaveLength(1);
+  });
+
+  it("keeps events with no attendees (self-created events)", async () => {
+    const service = new TestCalendarService();
+    mockFetchReturning(buildIcsPayload({ includeAttendee: false }));
+
+    const busy = await callGetAvailability(service);
+
+    expect(busy).toHaveLength(1);
   });
 });
