@@ -25,7 +25,7 @@ import { checkWCAGContrastColor } from "@calcom/lib/getBrandColours";
 import { extractHostTimezone } from "@calcom/lib/hashedLinksUtils";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import type { Prisma } from "@calcom/prisma/client";
-import { CancellationReasonRequirement, SchedulingType } from "@calcom/prisma/enums";
+import { CancellationReasonRequirement, DisableCancelling, SchedulingType } from "@calcom/prisma/enums";
 import type { EditableSchema, fieldSchema } from "@calcom/prisma/zod-utils";
 import type { RouterOutputs } from "@calcom/trpc/react";
 import classNames from "@calcom/ui/classNames";
@@ -65,6 +65,7 @@ import DisableReschedulingController from "./DisableReschedulingController";
 import { FormBuilder } from "./FormBuilder";
 import type { RequiresConfirmationCustomClassNames } from "./RequiresConfirmationController";
 import RequiresConfirmationController from "./RequiresConfirmationController";
+import { DisableCancellingOutput_2024_06_14 } from "@calcom/platform-types";
 
 export type EventAdvancedTabCustomClassNames = {
   destinationCalendar?: SelectClassNames;
@@ -669,7 +670,9 @@ export const EventAdvancedTab = ({
       {!isPlatform && (
         <Controller
           name="requiresCancellationReason"
-          defaultValue={eventType.requiresCancellationReason ?? CancellationReasonRequirement.MANDATORY_HOST_ONLY}
+          defaultValue={
+            eventType.requiresCancellationReason ?? CancellationReasonRequirement.MANDATORY_HOST_ONLY
+          }
           render={({ field: { value, onChange } }) => {
             const cancellationReasonOptions = [
               { value: CancellationReasonRequirement.MANDATORY_BOTH, label: t("mandatory_for_both") },
@@ -718,27 +721,46 @@ export const EventAdvancedTab = ({
         <>
           <Controller
             name="disabledCancelling"
-            render={({ field: { onChange, value } }) => (
-              <SettingsToggle
-                labelClassName="text-sm"
-                toggleSwitchAtTheEnd={true}
-                switchContainerClassName="border-subtle rounded-lg border py-6 px-4 sm:px-6"
-                title={t("disable_cancelling")}
-                data-testid="disable-cancelling-toggle"
-                {...disableCancellingLocked}
-                description={
-                  <LearnMoreLink
-                    t={t}
-                    i18nKey="description_disable_cancelling"
-                    href="https://cal.com/help/event-types/disable-canceling-rescheduling#disable-cancelling"
-                  />
-                }
-                checked={value}
-                onCheckedChange={(val) => {
-                  onChange(val);
-                }}
-              />
-            )}
+            render={
+              ({ field: { onChange, value } }) => {
+                const disableCancellation = [
+                  { value: DisableCancelling.GUESTS, label: t("for_guests_only") },
+                  {
+                    value: DisableCancelling.BOTH_HOST_GUESTS,
+                    label: t("for_host_and_guests"),
+                  },
+                  {
+                    value: DisableCancelling.NOBODY,
+                    label: t("for_nobody")
+                  }
+                ];
+                return (
+                <>
+                <div className="border-subtle rounded-lg border px-4 py-6 sm:px-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-default text-sm font-semibold">{t("disable_cancelling")}</p>
+                    <p className="text-default text-sm">
+                      <LearnMoreLink
+                        t={t}
+                        i18nKey="description_disable_cancelling"
+                        href="https://cal.com/help/event-types/disable-canceling-rescheduling#disable-cancelling"/>
+                    </p>
+                  </div>
+                  <Select 
+                    value={disableCancellation.find(
+                      (opt) => opt.value === (value || DisableCancelling.NOBODY)
+                    )}
+                    options={disableCancellation}
+                    onChange={(selected) => onChange(selected?.value)}
+                    className="w-52"
+                    />
+                </div>
+              </div>
+                  
+                </>);
+              }
+            }
           />
 
           <DisableReschedulingController

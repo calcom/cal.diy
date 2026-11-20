@@ -10,15 +10,16 @@ import {
 import { getTranslation } from "@calcom/i18n/server";
 import { parseRecurringEvent } from "@calcom/lib/isRecurringEvent";
 import { getTimeFormatStringFromUserTimeFormat } from "@calcom/lib/timeFormat";
-import type {
-  Attendee,
-  BookingReference,
-  BookingSeat,
-  DestinationCalendar,
-  Prisma,
-  User,
+import {
+  type Attendee,
+  type BookingReference,
+  type BookingSeat,
+  type DestinationCalendar,
+  type Prisma,
+  type User,
 } from "@calcom/prisma/client";
 import type { SchedulingType } from "@calcom/prisma/enums";
+import { DisableCancelling } from "@calcom/prisma/enums";
 import { bookingResponses as bookingResponsesSchema } from "@calcom/prisma/zod-utils";
 import type { AppsStatus, CalEventResponses, CalendarEvent, Person } from "@calcom/types/Calendar";
 import type { VideoCallData } from "@calcom/types/VideoApiAdapter";
@@ -154,6 +155,17 @@ export class CalendarEventBuilder {
       bookingFields: eventType.bookingFields,
     });
 
+    // const eventHosts = eventType.hosts;
+    // const userId = booking.userId;
+    // let isUserHost = false;
+
+    // for(const host of eventHosts){
+    //   if(host.userId === userId){
+    //     isUserHost = true;
+    //     break;
+    //   }
+    // }
+
     // custom inputs are the old system to record booking responses
     const parsedCustomInputs =
       typeof customInputs === "object" ? (customInputs as Record<string, string>) : null;
@@ -170,7 +182,6 @@ export class CalendarEventBuilder {
       attendees: attendeesList,
       additionalNotes,
     });
-
     // Base builder setup
     builder
       .withEventType({
@@ -185,7 +196,7 @@ export class CalendarEventBuilder {
         seatsShowAvailabilityCount: !!eventType.seatsShowAvailabilityCount,
         customReplyToEmail: eventType.customReplyToEmail,
         disableRescheduling: eventType.disableRescheduling ?? false,
-        disableCancelling: eventType.disableCancelling ?? false,
+        disableCancelling: eventType.disableCancelling ?? DisableCancelling.NOBODY,
       })
       .withMetadataAndResponses({
         additionalNotes,
@@ -316,7 +327,7 @@ export class CalendarEventBuilder {
     seatsShowAvailabilityCount?: boolean | null;
     customReplyToEmail?: string | null;
     disableRescheduling?: boolean;
-    disableCancelling?: boolean;
+    disableCancelling?: DisableCancelling;
   }) {
     this.event = {
       ...this.event,
@@ -332,7 +343,7 @@ export class CalendarEventBuilder {
       seatsShowAvailabilityCount: eventType.seatsPerTimeSlot ? eventType.seatsShowAvailabilityCount : true,
       customReplyToEmail: eventType.customReplyToEmail,
       disableRescheduling: eventType.disableRescheduling ?? false,
-      disableCancelling: eventType.disableCancelling ?? false,
+      disableCancelling: eventType.disableCancelling ?? DisableCancelling.NOBODY,
     };
     return this;
   }
