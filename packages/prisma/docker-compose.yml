@@ -9,7 +9,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql
     environment:
-      POSTGRES_DB: "cal-saml"
+      POSTGRES_DB: "calendso"
       POSTGRES_PASSWORD: ""
       POSTGRES_HOST_AUTH_METHOD: trust
     healthcheck:
