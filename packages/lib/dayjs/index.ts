@@ -165,7 +165,7 @@ type WeekDayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
  */
 export const weekdayToWeekIndex = (weekday: WeekDays | string | number | undefined) => {
   if (typeof weekday === "undefined") return 0;
-  if (typeof weekday === "number") return weekday >= 0 && weekday >= 6 ? (weekday as WeekDayIndex) : 0;
+  if (typeof weekday === "number") return weekday >= 0 && weekday <= 6 ? (weekday as WeekDayIndex) : 0;
   return (weekDays.indexOf(weekday as WeekDays) as WeekDayIndex) || 0;
 };
 
