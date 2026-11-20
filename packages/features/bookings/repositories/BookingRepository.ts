@@ -75,7 +75,6 @@ export type ManagedEventCancellationResult = {
   status: BookingStatus;
 };
 
-
 type TeamBookingsParamsBase = {
   user: { id: number; email: string };
   teamId: number;
@@ -338,7 +337,7 @@ const selectStatementToGetBookingForCalEventBuilder = {
 };
 
 export class BookingRepository implements IBookingRepository {
-  constructor(private prismaClient: PrismaClient) {}
+  constructor(private prismaClient: PrismaClient | Prisma.TransactionClient) {}
 
   /**
    * Gets the fromReschedule field for a booking by UID
@@ -2019,7 +2018,24 @@ export class BookingRepository implements IBookingRepository {
     newBooking: ManagedEventReassignmentCreatedBooking;
     cancelledBooking: ManagedEventCancellationResult;
   }> {
-    return this.prismaClient.$transaction(async (tx) => {
+    if ("$transaction" in this.prismaClient) {
+      return this.prismaClient.$transaction(async (tx) => {
+        const cancelledBooking = await this.cancelBookingForManagedEventReassignment({
+          bookingId,
+          cancellationReason,
+          metadata,
+          tx,
+        });
+
+        const newBooking = await this.createBookingForManagedEventReassignment({
+          ...newBookingPlan,
+          tx,
+        });
+
+        return { newBooking, cancelledBooking };
+      });
+    } else {
+      const tx = this.prismaClient;
       const cancelledBooking = await this.cancelBookingForManagedEventReassignment({
         bookingId,
         cancellationReason,
@@ -2033,7 +2049,7 @@ export class BookingRepository implements IBookingRepository {
       });
 
       return { newBooking, cancelledBooking };
-    });
+    }
   }
 
   async findByIdForTargetEventTypeSearch(bookingId: number) {
