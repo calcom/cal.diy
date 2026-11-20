@@ -741,6 +741,8 @@
   "enter_number_between_range": "Please enter a number between 1 and {{maxOccurences}}",
   "continue_as_guest_description": "Quick and easy - no account required. Perfect for one-time meetings.",
   "email_address": "Email address",
+  "did_you_mean_email": "Did you mean {{email}}?",
+  "use_suggested_email": "Use this address",
   "enter_valid_email": "Please enter a valid email",
   "please_schedule_future_call": " Please schedule a future call if we're not available in {{seconds}} seconds",
   "location": "Location",
