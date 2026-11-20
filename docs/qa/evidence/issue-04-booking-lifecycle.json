@@ -1,0 +1,30 @@
+{
+  "source": "Playwright Issue 04 lifecycle test, 2026-10-12T12:52:27Z, passed in 26.0s",
+  "timezone": "Asia/Saigon",
+  "B01": {
+    "beforeCount": 0,
+    "after": {
+      "status": "ACCEPTED",
+      "start": { "utc": "2026-11-02T09:00:00.000Z", "local": "02/11/2026, 16:00" },
+      "end": { "utc": "2026-11-02T09:30:00.000Z", "local": "02/11/2026, 16:30" }
+    }
+  },
+  "B02": {
+    "before": { "status": "ACCEPTED", "start": "2026-11-02T09:00:00.000Z" },
+    "after": {
+      "oldStatus": "CANCELLED",
+      "oldRescheduled": true,
+      "newStatus": "ACCEPTED",
+      "linkedToOldBooking": true,
+      "newStart": { "utc": "2026-11-03T09:00:00.000Z", "local": "03/11/2026, 16:00" },
+      "newEnd": { "utc": "2026-11-03T09:30:00.000Z", "local": "03/11/2026, 16:30" }
+    }
+  },
+  "B03": {
+    "before": { "status": "ACCEPTED", "start": "2026-11-03T09:00:00.000Z" },
+    "after": {
+      "status": "CANCELLED",
+      "cancellationReason": "QA issue 04: verify cancellation"
+    }
+  }
+}

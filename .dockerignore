@@ -14,6 +14,12 @@ build
 .git
 .github
 
+# Local environment files
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+
 # Testing
 coverage
 **/coverage

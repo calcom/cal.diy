@@ -479,6 +479,18 @@ Note: `docker compose` without the hyphen is now the primary method of using doc
 
    **Note for first-time setup (Calendar integration)**: During the setup wizard, you may encounter a "Connect your Calendar" step that appears to be required. If you do not wish to connect a calendar at this time, you can skip this step by navigating directly to the dashboard at `<NEXT_PUBLIC_WEBAPP_URL>/event-types`. Calendar integrations can be added later from the Settings > Integrations page.
 
+#### Issue 01 local QA quick start (PowerShell)
+
+On the `qa/model-based-booking` checkout, copy `.env.example` only if `.env` does not already exist; keep any existing local configuration. Configure its database variables and unique secrets as described in the [Issue 01 setup and booking architecture guide](docs/qa/issue-01-booking-onboarding-architecture.md). Keep `.env` out of Git.
+
+```powershell
+if (-not (Test-Path -LiteralPath .env)) { Copy-Item .env.example .env }
+docker compose -p caldiy-pr01 up -d --build --quiet-build --quiet-pull
+docker compose -p caldiy-pr01 ps
+```
+
+Check that `database`, `redis`, `calcom-api`, `calcom`, and `studio` are running, then open [http://localhost:3000](http://localhost:3000). The guide records the observed service and HTTP results and the limits of the booking verification.
+
 #### Updating Cal.diy
 
 1. Stop the Cal.diy stack
