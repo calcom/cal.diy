@@ -83,12 +83,10 @@ const usernameCheck = async (usernameRaw: string) => {
 
   const username = slugify(usernameRaw);
 
-  const user = await prisma.user.findUnique({
+  const user = await prisma.user.findFirst({
     where: {
-      username_organizationId: {
-        username,
-        organizationId: null,
-      },
+      username,
+      organizationId: null,
     },
     select: {
       username: true,

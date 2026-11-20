@@ -52,6 +52,7 @@ import type { Provider } from "next-auth/providers/index";
 import { getOrgUsernameFromEmail } from "../signup/utils/getOrgUsernameFromEmail";
 import { dub } from "./dub";
 import { ErrorCode } from "./ErrorCode";
+import { getRoleWithAdminSecurityRequirements } from "./adminSecurity";
 import CalComAdapter from "./next-auth-custom-adapter";
 import { verifyPassword } from "./verifyPassword";
 
@@ -241,47 +242,28 @@ export async function authorizeCredentials(
       throw new Error(ErrorCode.IncorrectTwoFactorCode);
     }
   }
+
+  const passwordMeetsRequirements = isPasswordValid(credentials.password, false, true);
+  if (user.role === UserPermissionRole.ADMIN && user.identityProvider === IdentityProvider.CAL) {
+    await prisma.userPassword.update({
+      where: { userId: user.id },
+      data: { adminPasswordMeetsRequirements: passwordMeetsRequirements },
+    });
+  }
+
   // Check if the user you are logging into has any active teams
   const hasActiveTeams = checkIfUserBelongsToActiveTeam(user);
 
-  // authentication success- but does it meet the minimum password requirements?
-  const validateRole = (role: UserPermissionRole) => {
-    // User's role is not "ADMIN"
-    if (role !== UserPermissionRole.ADMIN) return role;
-    // User's identity provider is not "CAL"
-    if (user.identityProvider !== IdentityProvider.CAL) return role;
+  const adminSecurity = getRoleWithAdminSecurityRequirements({
+    role: user.role,
+    identityProvider: user.identityProvider,
+    passwordMeetsRequirements,
+    twoFactorEnabled: user.twoFactorEnabled,
+  });
+  const baseUser = AdapterUserPresenter.fromCalUser(user, adminSecurity.role, hasActiveTeams);
 
-    if (process.env.NEXT_PUBLIC_IS_E2E) {
-      console.warn("E2E testing is enabled, skipping password and 2FA requirements for Admin");
-      return role;
-    }
-
-    // User's password is valid and two-factor authentication is enabled
-    if (isPasswordValid(credentials.password, false, true) && user.twoFactorEnabled) return role;
-    // Code is running in a development environment
-    if (isENVDev) return role;
-    // By this point it is an ADMIN without valid security conditions
-    return "INACTIVE_ADMIN";
-  };
-
-  const role = validateRole(user.role);
-  const baseUser = AdapterUserPresenter.fromCalUser(user, role, hasActiveTeams);
-
-  if (role === "INACTIVE_ADMIN") {
-    const passwordValid = isPasswordValid(credentials.password, false, true);
-    const has2FA = user.twoFactorEnabled;
-
-    let reason: "both" | "password" | "2fa";
-
-    if (!passwordValid && !has2FA) {
-      reason = "both";
-    } else if (!passwordValid) {
-      reason = "password";
-    } else {
-      reason = "2fa";
-    }
-
-    return { ...baseUser, inactiveAdminReason: reason };
+  if (adminSecurity.role === "INACTIVE_ADMIN") {
+    return { ...baseUser, inactiveAdminReason: adminSecurity.inactiveAdminReason };
   }
 
   return baseUser;
@@ -430,8 +412,36 @@ export const getOptions = ({
       log.debug("callbacks:jwt", safeStringify({ token, user, account, trigger, session }));
       // The data available in 'session' depends on what data was supplied in update method call of session
       if (trigger === "update") {
+        const userId = Number(token.sub);
+        const currentUser =
+          Number.isSafeInteger(userId) && userId > 0
+            ? await prisma.user.findUnique({
+                where: { id: userId },
+                select: {
+                  role: true,
+                  identityProvider: true,
+                  twoFactorEnabled: true,
+                  password: {
+                    select: { adminPasswordMeetsRequirements: true },
+                  },
+                },
+              })
+            : null;
+        const adminSecurity = currentUser
+          ? getRoleWithAdminSecurityRequirements({
+              role: currentUser.role,
+              identityProvider: currentUser.identityProvider,
+              passwordMeetsRequirements:
+                currentUser.password?.adminPasswordMeetsRequirements ??
+                (token.role === UserPermissionRole.ADMIN || token.inactiveAdminReason === "2fa"),
+              twoFactorEnabled: currentUser.twoFactorEnabled,
+            })
+          : null;
+
         return {
           ...token,
+          role: adminSecurity?.role ?? UserPermissionRole.USER,
+          inactiveAdminReason: adminSecurity?.inactiveAdminReason,
           profileId: session?.profileId ?? token.profileId ?? null,
           upId: session?.upId ?? token.upId ?? null,
           locale: session?.locale ?? token.locale ?? "en",
@@ -450,6 +460,13 @@ export const getOptions = ({
             name: true,
             email: true,
             role: true,
+            identityProvider: true,
+            twoFactorEnabled: true,
+            password: {
+              select: {
+                adminPasswordMeetsRequirements: true,
+              },
+            },
             locale: true,
             movedToProfileId: true,
             teams: {
@@ -471,7 +488,13 @@ export const getOptions = ({
 
         // Check if the existingUser has any active teams
         const belongsToActiveTeam = checkIfUserBelongsToActiveTeam(existingUser);
-        const { teams: _teams, ...existingUserWithoutTeamsField } = existingUser;
+        const {
+          teams: _teams,
+          password: _password,
+          identityProvider: _identityProvider,
+          twoFactorEnabled: _twoFactorEnabled,
+          ...existingUserWithoutTeamsField
+        } = existingUser;
         const allProfiles = await ProfileRepository.findAllProfilesForUserIncludingMovedUser(existingUser);
         log.debug(
           "callbacks:jwt:autoMergeIdentities",
@@ -504,6 +527,14 @@ export const getOptions = ({
         return {
           ...existingUserWithoutTeamsField,
           ...token,
+          ...getRoleWithAdminSecurityRequirements({
+            role: existingUser.role,
+            identityProvider: existingUser.identityProvider,
+            passwordMeetsRequirements:
+              existingUser.password?.adminPasswordMeetsRequirements ??
+              (token.role === UserPermissionRole.ADMIN || token.inactiveAdminReason === "2fa"),
+            twoFactorEnabled: existingUser.twoFactorEnabled,
+          }),
           profileId: profile.id,
           upId,
           belongsToActiveTeam,

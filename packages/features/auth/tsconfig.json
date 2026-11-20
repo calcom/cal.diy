@@ -1,9 +1,9 @@
 {
   "extends": "@calcom/tsconfig/react-library.json",
   "compilerOptions": {
+    "target": "ES2015",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "baseUrl": ".",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "experimentalDecorators": true

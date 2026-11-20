@@ -379,9 +379,10 @@ enum UserPermissionRole {
 
 // It holds the password of a User, separate from the User model to avoid leaking the password hash
 model UserPassword {
-  hash   String
-  userId Int    @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hash                           String
+  userId                         Int      @unique
+  adminPasswordMeetsRequirements Boolean?
+  user                           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model TravelSchedule {

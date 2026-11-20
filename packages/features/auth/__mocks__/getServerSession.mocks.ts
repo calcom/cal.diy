@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@calcom/prisma";
 import type { User } from "@calcom/prisma/client";
+import { IdentityProvider } from "@calcom/prisma/enums";
 import type { Mock } from "vitest";
 import { vi } from "vitest";
 import { type DeepMockProxy, mockDeep, mockReset } from "vitest-mock-extended";
@@ -112,6 +113,8 @@ function createMockUser(overrides: Partial<User> = {}): User {
     emailVerified: new Date(),
     completedOnboarding: true,
     role: "USER",
+    identityProvider: IdentityProvider.CAL,
+    twoFactorEnabled: false,
     avatarUrl: null,
     locale: "en",
     ...overrides,

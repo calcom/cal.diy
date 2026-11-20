@@ -1,6 +1,6 @@
 "use client";
 
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -19,6 +19,7 @@ import { Select } from "@calcom/ui/components/form";
 import { SettingsToggle } from "@calcom/ui/components/form";
 import { SkeletonButton, SkeletonContainer, SkeletonText } from "@calcom/ui/components/skeleton";
 import { showToast } from "@calcom/ui/components/toast";
+import { refreshSessionOrSignOut } from "./refreshSessionOrSignOut";
 
 type ChangePasswordSessionFormValues = {
   oldPassword: string;
@@ -49,7 +50,7 @@ const SkeletonLoader = () => {
 };
 
 const PasswordView = ({ user }: PasswordViewProps) => {
-  const { data } = useSession();
+  const { data, update } = useSession();
   const { t } = useLocale();
   const utils = trpc.useUtils();
   const metadata = userMetadataSchema.safeParse(user?.metadata);
@@ -87,20 +88,11 @@ const PasswordView = ({ user }: PasswordViewProps) => {
     },
   });
   const passwordMutation = trpc.viewer.auth.changePassword.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       showToast(t("password_has_been_changed"), "success");
       formMethods.resetField("oldPassword");
       formMethods.resetField("newPassword");
-
-      if (data?.user.role === "INACTIVE_ADMIN") {
-        /*
-      AdminPasswordBanner component relies on the role returned from the session.
-      Next-Auth doesn't provide a way to revalidate the session cookie,
-      so this a workaround to hide the banner after updating the password.
-      discussion: https://github.com/nextauthjs/next-auth/discussions/4229
-      */
-        signOut({ callbackUrl: "/auth/login" });
-      }
+      await refreshSessionOrSignOut(update);
     },
     onError: (error) => {
       showToast(`${t("error_updating_password")}, ${t(error.message)}`, "error");
@@ -142,7 +134,8 @@ const PasswordView = ({ user }: PasswordViewProps) => {
     value: mins,
   }));
 
-  const isDisabled = formMethods.formState.isSubmitting || !formMethods.formState.isDirty || !formMethods.formState.isValid;
+  const isDisabled =
+    formMethods.formState.isSubmitting || !formMethods.formState.isDirty || !formMethods.formState.isValid;
 
   const passwordMinLength = data?.user.role === "USER" ? 7 : 15;
   const isUser = data?.user.role === "USER";

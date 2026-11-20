@@ -1,6 +1,7 @@
 import { validPassword } from "@calcom/features/auth/lib/validPassword";
 import { verifyPassword } from "@calcom/features/auth/lib/verifyPassword";
 import { hashPassword } from "@calcom/lib/auth/hashPassword";
+import { isPasswordValid } from "@calcom/lib/auth/isPasswordValid";
 import { prisma } from "@calcom/prisma";
 import { IdentityProvider } from "@calcom/prisma/enums";
 
@@ -59,6 +60,7 @@ export const changePasswordHandler = async ({ input, ctx }: ChangePasswordOption
   }
 
   const hashedPassword = await hashPassword(newPassword);
+  const adminPasswordMeetsRequirements = isPasswordValid(newPassword, false, true);
   await prisma.userPassword.upsert({
     where: {
       userId: user.id,
@@ -66,9 +68,11 @@ export const changePasswordHandler = async ({ input, ctx }: ChangePasswordOption
     create: {
       hash: hashedPassword,
       userId: user.id,
+      adminPasswordMeetsRequirements,
     },
     update: {
       hash: hashedPassword,
+      adminPasswordMeetsRequirements,
     },
   });
 };
