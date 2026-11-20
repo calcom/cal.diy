@@ -1,8 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { z } from "zod";
-
 import { OrganizerDefaultConferencingAppType } from "@calcom/app-store/locations";
-
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import { getBookingData } from "./getBookingData";
 import type { getEventTypeResponse } from "./getEventTypesFromDB";
 
@@ -45,10 +43,13 @@ const createMockSchema = () => {
       name: z.string(),
       email: z.string(),
       location: z
-        .object({
-          value: z.string(),
-          optionValue: z.string().optional(),
-        })
+        .union([
+          z.string(),
+          z.object({
+            value: z.string(),
+            optionValue: z.string().optional(),
+          }),
+        ])
         .optional(),
       attendeePhoneNumber: z.string().optional(),
       guests: z.array(z.string()).optional(),
@@ -214,6 +215,60 @@ describe("getBookingData", () => {
       });
 
       // The location should be the conferencing type, NOT the URL
+      expect(result.location).toBe(OrganizerDefaultConferencingAppType);
+    });
+
+    it("should handle location when passed as a plain string identifier", async () => {
+      const mockEventType = createMockEventType();
+      const schema = createMockSchema();
+
+      const reqBody = {
+        eventTypeId: 1,
+        start: "2024-01-15T10:00:00.000Z",
+        end: "2024-01-15T10:30:00.000Z",
+        timeZone: "America/New_York",
+        language: "en",
+        metadata: {},
+        responses: {
+          name: "Test User",
+          email: "test@example.com",
+          location: "integrations:signal_video",
+        },
+      };
+
+      const result = await getBookingData({
+        reqBody,
+        eventType: mockEventType,
+        schema,
+      });
+
+      expect(result.location).toBe("integrations:signal_video");
+    });
+
+    it("should handle location as plain string when value is OrganizerDefaultConferencingAppType", async () => {
+      const mockEventType = createMockEventType();
+      const schema = createMockSchema();
+
+      const reqBody = {
+        eventTypeId: 1,
+        start: "2024-01-15T10:00:00.000Z",
+        end: "2024-01-15T10:30:00.000Z",
+        timeZone: "America/New_York",
+        language: "en",
+        metadata: {},
+        responses: {
+          name: "Test User",
+          email: "test@example.com",
+          location: OrganizerDefaultConferencingAppType,
+        },
+      };
+
+      const result = await getBookingData({
+        reqBody,
+        eventType: mockEventType,
+        schema,
+      });
+
       expect(result.location).toBe(OrganizerDefaultConferencingAppType);
     });
   });
