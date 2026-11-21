@@ -1,5 +1,14 @@
 export function normalizeTimezone(value: unknown): string | unknown {
   if (typeof value === "string") {
+    try {
+      const resolved = Intl.DateTimeFormat(undefined, { timeZone: value }).resolvedOptions().timeZone;
+      if (resolved && resolved.toLowerCase() === value.toLowerCase()) {
+        return resolved;
+      }
+    } catch {
+      // Not a valid IANA time zone or unsupported; fall back to manual normalization
+    }
+
     const parts = value.split("/");
     const normalizedParts = parts.map((part) =>
       part
