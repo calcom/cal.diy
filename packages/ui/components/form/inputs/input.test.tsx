@@ -59,6 +59,14 @@ describe("Tests for InputField Component", () => {
     const errorElement = getByRole("textbox");
     expect(errorElement).toHaveAttribute("error", errorMessage);
   });
+
+  it("Should associate label with input when custom id is provided", () => {
+    const { getByLabelText } = render(<InputField id="custom-id" name="testInput" label="Custom Label" />);
+
+    const input = getByLabelText("Custom Label");
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveAttribute("id", "custom-id");
+  });
 });
 
 describe("Tests for PasswordField Component", () => {
@@ -78,6 +86,18 @@ describe("Tests for PasswordField Component", () => {
 
     fireEvent.click(toggleButton);
     expect(passwordInput.type).toBe("password");
+  });
+
+  test("Should associate label with password field when custom id is provided", () => {
+    const { getByLabelText } = render(
+      <TooltipProvider>
+        <PasswordField id="custom-password-id" name="password" label="Custom Password" />
+      </TooltipProvider>
+    );
+
+    const passwordInput = getByLabelText("Custom Password") as HTMLInputElement;
+    expect(passwordInput).toBeInTheDocument();
+    expect(passwordInput).toHaveAttribute("id", "custom-password-id");
   });
 });
 
