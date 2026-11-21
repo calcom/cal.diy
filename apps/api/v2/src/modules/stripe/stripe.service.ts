@@ -1,3 +1,16 @@
+import { SUCCESS_STATUS } from "@calcom/platform-constants";
+import type { Credential, Prisma, User } from "@calcom/prisma/client";
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import Stripe from "stripe";
+import { z } from "zod";
+import { stripeKeysResponseSchema } from "./utils/stripeDataSchemas";
 import { AppConfig } from "@/config/type";
 import { AppsRepository } from "@/modules/apps/apps.repository";
 import { CredentialsRepository } from "@/modules/credentials/credentials.repository";
@@ -5,21 +18,6 @@ import { MembershipsRepository } from "@/modules/memberships/memberships.reposit
 import { stripeInstance } from "@/modules/stripe/utils/newStripeInstance";
 import { StripeData } from "@/modules/stripe/utils/stripeDataSchemas";
 import { UsersRepository } from "@/modules/users/users.repository";
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  UnauthorizedException,
-  InternalServerErrorException,
-} from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import Stripe from "stripe";
-import { z } from "zod";
-
-import { SUCCESS_STATUS } from "@calcom/platform-constants";
-import type { Prisma, Credential, User } from "@calcom/prisma/client";
-
-import { stripeKeysResponseSchema } from "./utils/stripeDataSchemas";
 
 import stringify = require("qs-stringify");
 
@@ -232,18 +230,18 @@ export class StripeService {
     return null;
   }
 
-  async createStripeCustomerId(user: Pick<User, "email" | "name" | "metadata">) {
-    let customerId: string;
-
+  async createStripeCustomerId(user: Pick<User, "email" | "name" | "metadata">): Promise<string> {
     const stripe = this.getStripe();
-    try {
-      const customersResponse = await stripe.customers.list({
-        email: user.email,
-        limit: 1,
-      });
+    const customersResponse = await stripe.customers.list({
+      email: user.email,
+      limit: 1,
+    });
 
-      customerId = customersResponse.data[0].id;
-    } catch (error) {
+    const existingCustomer = customersResponse.data[0];
+    let customerId: string;
+    if (existingCustomer) {
+      customerId = existingCustomer.id;
+    } else {
       const customer = await stripe.customers.create({ email: user.email });
       customerId = customer.id;
     }
