@@ -591,5 +591,29 @@ describe("event tests", () => {
       const result = updateHostInEventName(eventName, oldHost, newHost);
       expect(result).toBe("John and Jane.Smith and John_Doe");
     });
+
+    it("should correctly replace host names starting or ending with non-ASCII letters", () => {
+      const result1 = updateHostInEventName("Meeting with Émile Zola", "Émile Zola", "Bob Smith");
+      expect(result1).toBe("Meeting with Bob Smith");
+
+      const result2 = updateHostInEventName("Meeting with Ömer Yilmaz", "Ömer Yilmaz", "Bob Smith");
+      expect(result2).toBe("Meeting with Bob Smith");
+
+      const result3 = updateHostInEventName("Meeting with Zoë Kravitz", "Zoë Kravitz", "Bob Smith");
+      expect(result3).toBe("Meeting with Bob Smith");
+
+      const result4 = updateHostInEventName("Meeting with 李雷", "李雷", "Bob Smith");
+      expect(result4).toBe("Meeting with Bob");
+    });
+
+    it("should not corrupt words containing non-ASCII names as substrings", () => {
+      const result = updateHostInEventName("Meeting with Renée", "René Dupont", "Bob Smith");
+      expect(result).toBe("Meeting with Renée");
+    });
+
+    it("should not replace host inside snake_case names when only matching a single part", () => {
+      const result = updateHostInEventName("Meeting with John_Doe", "John", "Jane");
+      expect(result).toBe("Meeting with John_Doe");
+    });
   });
 });

@@ -166,10 +166,10 @@ export function updateHostInEventName(eventName: string, oldHost: string, newHos
   for (const { pattern, replacement } of formats) {
     // Escape special regex characters in the pattern
     const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`\\b${escapedPattern}\\b`, "gi");
+    const regex = new RegExp(`(?<![\\p{L}\\p{N}_])${escapedPattern}(?![\\p{L}\\p{N}_])`, "giu");
 
     if (regex.test(updatedEventName)) {
-      updatedEventName = updatedEventName.replace(regex, replacement);
+      updatedEventName = updatedEventName.replace(regex, literal(replacement));
       return updatedEventName;
     }
   }
