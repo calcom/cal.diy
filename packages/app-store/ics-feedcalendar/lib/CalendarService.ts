@@ -197,20 +197,26 @@ class ICSFeedCalendarService implements Calendar {
               .find((vtimezoneComp) => vtimezoneComp.getFirstPropertyValue("tzid") === tzid)
           : undefined;
         const feedHasVtimezone = !!vcalendar.getFirstSubcomponent("vtimezone");
-        const fallbackTzid = definedVtimezone
+        let fallbackTzid: string | undefined = definedVtimezone
           ? undefined
           : tzid || (feedHasVtimezone ? undefined : userTimeZone);
 
+        if (fallbackTzid) {
+          // Checked once per event so a zone name that is not an IANA zone is logged once, not once per occurrence.
+          try {
+            buildFallbackVtimezone(fallbackTzid, event.startDate);
+          } catch (e) {
+            // Adds try-catch to ensure the code proceeds when Apple Calendar provides non-standard TZIDs
+            console.log("error in adding vtimezone", e);
+            fallbackTzid = undefined;
+          }
+        } else if (!definedVtimezone && !feedHasVtimezone) {
+          console.error("No timezone found");
+        }
+
         const getVtimezone = (wallTime: ICAL.Time) => {
           if (definedVtimezone) return definedVtimezone;
-          if (fallbackTzid) {
-            try {
-              return buildFallbackVtimezone(fallbackTzid, wallTime);
-            } catch (e) {
-              // Adds try-catch to ensure the code proceeds when Apple Calendar provides non-standard TZIDs
-              console.log("error in adding vtimezone", e);
-            }
-          }
+          if (fallbackTzid) return buildFallbackVtimezone(fallbackTzid, wallTime);
           return vcalendar.getFirstSubcomponent("vtimezone");
         };
 

@@ -1,7 +1,7 @@
 import type { CredentialPayload } from "@calcom/types/Credential";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-const mockUser = vi.hoisted(() => ({ timeZone: "UTC" }));
+const mockUser = vi.hoisted(() => ({ timeZone: "UTC" as string | null }));
 
 vi.mock("@calcom/lib/crypto", () => ({
   symmetricDecrypt: () => JSON.stringify({ urls: ["https://example.com/feed.ics"] }),
@@ -55,7 +55,11 @@ const feed = (...parts: string[]) =>
 
 const getBusy = async (
   ics: string,
-  { dateFrom = "2025-01-01T00:00:00.000Z", dateTo = "2026-01-01T00:00:00.000Z", userTimeZone = "UTC" } = {}
+  {
+    dateFrom = "2025-01-01T00:00:00.000Z",
+    dateTo = "2026-01-01T00:00:00.000Z",
+    userTimeZone = "UTC",
+  }: { dateFrom?: string; dateTo?: string; userTimeZone?: string | null } = {}
 ) => {
   mockUser.timeZone = userTimeZone;
   vi.stubGlobal("fetch", async () => ({ text: async () => ics }));
@@ -75,6 +79,10 @@ const startsOf = (busy: Awaited<ReturnType<typeof getBusy>>) =>
   Object.fromEntries(busy.map((event) => [event.title, event.start]));
 
 describe("ICSFeedCalendarService.getAvailability timezones", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe("feed names a TZID without defining a VTIMEZONE", () => {
     it("converts a single event from its own zone", async () => {
       const busy = await getBusy(
@@ -244,6 +252,37 @@ describe("ICSFeedCalendarService.getAvailability timezones", () => {
         london: "2025-05-28T11:00:00.000Z",
         denver: "2025-05-29T18:00:00.000Z",
       });
+    });
+  });
+
+  describe("logging", () => {
+    it("logs a zone name that is not an IANA zone once per event, not once per occurrence", async () => {
+      const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+      await getBusy(
+        feed(
+          vevent("weekly", {
+            tzid: "W. Europe Standard Time",
+            start: "20250312T120000",
+            end: "20250312T130000",
+            rrule: "FREQ=WEEKLY;COUNT=6",
+          })
+        ),
+        { dateFrom: "2025-03-12T00:00:00.000Z", dateTo: "2025-05-01T00:00:00.000Z" }
+      );
+
+      const timezoneErrors = log.mock.calls.filter(([message]) => message === "error in adding vtimezone");
+      expect(timezoneErrors).toHaveLength(1);
+    });
+
+    it("reports when no time zone can be found for an event", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+      await getBusy(feed(vevent("floating", { start: "20250528T120000", end: "20250528T130000" })), {
+        userTimeZone: null,
+      });
+
+      expect(error).toHaveBeenCalledWith("No timezone found");
     });
   });
 });
