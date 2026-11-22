@@ -29,10 +29,37 @@ describe("CapitalizeTimeZone", () => {
     expect(output.timeZone).toBe("America/New_York");
   });
 
-  it("should capitalize complex time zone correctly", () => {
+  it("should preserve valid IANA names with lower-case words (Europe/Isle_of_Man)", () => {
+    // Regression test for https://github.com/calcom/cal.com/issues/30587
+    // The naive capitalization used to rewrite this to "Europe/Isle_Of_Man".
     const input = { timeZone: "europe/isle_of_man" };
     const output = plainToClass(TestDto, input);
-    expect(output.timeZone).toBe("Europe/Isle_Of_Man");
+    expect(output.timeZone).toBe("Europe/Isle_of_Man");
+  });
+
+  it("should keep an already-correct IANA name unchanged (Europe/Isle_of_Man)", () => {
+    const input = { timeZone: "Europe/Isle_of_Man" };
+    const output = plainToClass(TestDto, input);
+    expect(output.timeZone).toBe("Europe/Isle_of_Man");
+  });
+
+  it("should preserve other IANA names with lower-case words", () => {
+    const cases: Array<[string, string]> = [
+      ["africa/dar_es_salaam", "Africa/Dar_es_Salaam"],
+      ["america/port_of_spain", "America/Port_of_Spain"],
+      ["america/port-au-prince", "America/Port-au-Prince"],
+      ["asia/ust-nera", "Asia/Ust-Nera"],
+    ];
+    for (const [input, expected] of cases) {
+      const output = plainToClass(TestDto, { timeZone: input });
+      expect(output.timeZone).toBe(expected);
+    }
+  });
+
+  it("should preserve IANA names with inner capitals (Antarctica/McMurdo)", () => {
+    const input = { timeZone: "antarctica/mcmurdo" };
+    const output = plainToClass(TestDto, input);
+    expect(output.timeZone).toBe("Antarctica/McMurdo");
   });
 
   it("should handle already capitalized time zones correctly", () => {
