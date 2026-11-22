@@ -24,6 +24,21 @@ describe("Booking Idempotency Key Extension", () => {
     expect(key1).toBe(key2);
   });
 
+  it("generateIdempotencyKey produces identical keys for equivalent Date objects and ISO strings", () => {
+    const keyDate = generateIdempotencyKey({
+      startTime: new Date("2026-12-01T10:00:00.000Z"),
+      endTime: new Date("2026-12-01T10:30:00.000Z"),
+      userId,
+    });
+    const keyString = generateIdempotencyKey({
+      startTime: "2026-12-01T10:00:00.000Z",
+      endTime: "2026-12-01T10:30:00.000Z",
+      userId,
+    });
+
+    expect(keyString).toBe(keyDate);
+  });
+
   it("generateIdempotencyKey produces distinct keys for different start times or users", () => {
     const keyUser1 = generateIdempotencyKey({
       startTime,

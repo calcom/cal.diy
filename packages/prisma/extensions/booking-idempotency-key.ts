@@ -3,6 +3,13 @@ import { v5 as uuidv5 } from "uuid";
 import { Prisma } from "../client";
 import { BookingStatus } from "../enums";
 
+function extractValue<T>(val: T | { set: T } | undefined): T | undefined {
+  if (val && typeof val === "object" && "set" in val) {
+    return (val as { set: T }).set;
+  }
+  return val as T | undefined;
+}
+
 export function generateIdempotencyKey({
   startTime,
   endTime,
@@ -14,8 +21,10 @@ export function generateIdempotencyKey({
   userId?: number;
   reassignedById?: number | null;
 }) {
+  const startVal = startTime instanceof Date ? startTime.valueOf() : new Date(startTime).valueOf();
+  const endVal = endTime instanceof Date ? endTime.valueOf() : new Date(endTime).valueOf();
   return uuidv5(
-    `${startTime.valueOf()}.${endTime.valueOf()}.${userId}${reassignedById ? `.${reassignedById}` : ""}`,
+    `${startVal}.${endVal}.${userId}${reassignedById ? `.${reassignedById}` : ""}`,
     uuidv5.URL
   );
 }
@@ -26,27 +35,35 @@ export function bookingIdempotencyKeyExtension() {
       query: {
         booking: {
           async create({ args, query }) {
-            if (args.data.status === BookingStatus.ACCEPTED) {
-              const idempotencyKey = generateIdempotencyKey({
-                startTime: args.data.startTime,
-                endTime: args.data.endTime,
-                userId: args.data.user?.connect?.id,
-                reassignedById: args.data.reassignById,
-              });
-              args.data.idempotencyKey = idempotencyKey;
+            const status = extractValue(args.data.status);
+            if (status === BookingStatus.ACCEPTED) {
+              const startTime = extractValue(args.data.startTime);
+              const endTime = extractValue(args.data.endTime);
+              const userId = extractValue(args.data.userId) ?? args.data.user?.connect?.id;
+              const reassignedById = extractValue(args.data.reassignById);
+              if (startTime && endTime) {
+                const idempotencyKey = generateIdempotencyKey({
+                  startTime,
+                  endTime,
+                  userId,
+                  reassignedById,
+                });
+                args.data.idempotencyKey = idempotencyKey;
+              }
             }
             return query(args);
           },
           async update({ args, query }) {
-            if (args.data.status === BookingStatus.CANCELLED || args.data.status === BookingStatus.REJECTED) {
+            const status = extractValue(args.data.status);
+            if (status === BookingStatus.CANCELLED || status === BookingStatus.REJECTED) {
               args.data.idempotencyKey = null;
-            } else if (args.data.status === BookingStatus.ACCEPTED) {
-              let startTime = args.data.startTime as Date | string | undefined;
-              let endTime = args.data.endTime as Date | string | undefined;
-              let userId = (args.data.userId ?? args.data.user?.connect?.id) as number | undefined;
-              let reassignedById = args.data.reassignById as number | null | undefined;
+            } else if (status === BookingStatus.ACCEPTED) {
+              let startTime = extractValue(args.data.startTime as Date | string | { set: Date | string } | undefined);
+              let endTime = extractValue(args.data.endTime as Date | string | { set: Date | string } | undefined);
+              let userId = extractValue(args.data.userId as number | { set: number } | undefined) ?? args.data.user?.connect?.id;
+              let reassignedById = extractValue(args.data.reassignById as number | null | { set: number | null } | undefined);
 
-              if (!startTime || !endTime || userId === undefined) {
+              if (!startTime || !endTime || userId === undefined || reassignedById === undefined) {
                 const existing = await client.booking.findUnique({
                   where: args.where,
                   select: {
@@ -61,7 +78,9 @@ export function bookingIdempotencyKeyExtension() {
                   startTime = startTime ?? existing.startTime;
                   endTime = endTime ?? existing.endTime;
                   userId = userId ?? (existing.userId ?? undefined);
-                  reassignedById = reassignedById ?? existing.reassignById;
+                  if (reassignedById === undefined) {
+                    reassignedById = existing.reassignById;
+                  }
                 }
               }
 
@@ -77,7 +96,8 @@ export function bookingIdempotencyKeyExtension() {
             return query(args);
           },
           async updateMany({ args, query }) {
-            if (args.data.status === BookingStatus.CANCELLED || args.data.status === BookingStatus.REJECTED) {
+            const status = extractValue(args.data.status);
+            if (status === BookingStatus.CANCELLED || status === BookingStatus.REJECTED) {
               args.data.idempotencyKey = null;
             }
             return query(args);
@@ -87,3 +107,4 @@ export function bookingIdempotencyKeyExtension() {
     });
   });
 }
+
