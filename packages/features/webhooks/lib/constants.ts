@@ -64,6 +64,6 @@ export const WEBHOOK_TRIGGER_EVENTS_GROUPED_BY_APP = {
   ] as const,
 };
 
-export const WEBHOOK_TRIGGER_EVENTS = [
-  ...WEBHOOK_TRIGGER_EVENTS_GROUPED_BY_APP.core,
-] as const;
+export const WEBHOOK_TRIGGER_EVENTS = [...WEBHOOK_TRIGGER_EVENTS_GROUPED_BY_APP.core] as const;
+
+export const WEBHOOK_REQUEST_TIMEOUT_MS = 10_000;

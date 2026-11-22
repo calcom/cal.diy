@@ -1,7 +1,7 @@
 import dayjs from "@calcom/dayjs";
 import logger from "@calcom/lib/logger";
 import type { PrismaClient } from "@calcom/prisma";
-
+import { WEBHOOK_REQUEST_TIMEOUT_MS } from "./constants";
 import { DEFAULT_WEBHOOK_VERSION } from "./interface/IWebhookRepository";
 import { createWebhookSignature, jsonParse } from "./sendPayload";
 
@@ -70,6 +70,7 @@ export async function handleWebhookScheduledTriggers(prisma: PrismaClient) {
         headers,
         // Avoid following redirect
         redirect: "manual",
+        signal: AbortSignal.timeout(WEBHOOK_REQUEST_TIMEOUT_MS),
       }).catch((error) => {
         console.error(`Webhook trigger for subscriber url ${job.subscriberUrl} failed with error: ${error}`);
       })
@@ -83,5 +84,5 @@ export async function handleWebhookScheduledTriggers(prisma: PrismaClient) {
     });
   }
 
-  Promise.allSettled(fetchPromises);
+  await Promise.allSettled(fetchPromises);
 }
