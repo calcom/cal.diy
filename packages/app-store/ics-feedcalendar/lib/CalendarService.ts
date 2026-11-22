@@ -39,6 +39,7 @@ const applyTravelDuration = (event: ICAL.Event, seconds: number) => {
 };
 
 const CALENDSO_ENCRYPTION_KEY = process.env.CALENDSO_ENCRYPTION_KEY || "";
+const ICS_FETCH_TIMEOUT_MS = 10_000;
 
 class ICSFeedCalendarService implements Calendar {
   private urls: string[] = [];
@@ -83,11 +84,15 @@ class ICSFeedCalendarService implements Calendar {
   }
 
   fetchCalendars = async (): Promise<{ url: string; vcalendar: ICAL.Component }[]> => {
-    const reqPromises = await Promise.allSettled(this.urls.map((x) => fetch(x).then((y) => [x, y])));
-    const reqs = reqPromises
-      .filter((x) => x.status === "fulfilled")
-      .map((x) => (x as PromiseFulfilledResult<[string, Response]>).value);
-    const res = await Promise.all(reqs.map((x) => x[1].text().then((y) => [x[0], y])));
+    const reqPromises = await Promise.allSettled(
+      this.urls.map(async (url) => {
+        const response = await fetch(url, { signal: AbortSignal.timeout(ICS_FETCH_TIMEOUT_MS) });
+        return [url, await response.text()] as const;
+      })
+    );
+    const res = reqPromises
+      .filter((x): x is PromiseFulfilledResult<readonly [string, string]> => x.status === "fulfilled")
+      .map((x) => x.value);
     return res
       .map((x) => {
         try {
