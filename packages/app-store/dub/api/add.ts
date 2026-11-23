@@ -4,6 +4,7 @@ import { HttpError } from "@calcom/lib/http-error";
 import { defaultHandler } from "@calcom/lib/server/defaultHandler";
 import { defaultResponder } from "@calcom/lib/server/defaultResponder";
 
+import { signOAuthState } from "../../_utils/oauth/encodeOAuthState";
 import getParsedAppKeysFromSlug from "../../_utils/getParsedAppKeysFromSlug";
 import { dubAppKeysSchema, scopeString } from "../lib/utils";
 
@@ -29,7 +30,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   url.searchParams.append("response_type", "code");
   url.searchParams.append("scope", scopeString);
   if (typeof teamId === "string" && !Number.isNaN(Number(teamId))) {
-    url.searchParams.append("state", JSON.stringify({ teamId: Number(teamId) }));
+    url.searchParams.append("state", signOAuthState({ teamId: Number(teamId) }, req.session?.user?.id));
+  } else {
+    url.searchParams.append("state", signOAuthState({ fromApp: false }, req.session?.user?.id));
   }
   const oauthUrl = url.toString();
 

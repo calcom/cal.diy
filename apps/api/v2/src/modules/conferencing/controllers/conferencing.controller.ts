@@ -15,6 +15,7 @@ import {
 import { GetDefaultConferencingAppOutputResponseDto } from "@/modules/conferencing/outputs/get-default-conferencing-app.output";
 import { SetDefaultConferencingAppOutputResponseDto } from "@/modules/conferencing/outputs/set-default-conferencing-app.output";
 import { ConferencingService } from "@/modules/conferencing/services/conferencing.service";
+import { getSafeConferencingRedirectUrl } from "@/modules/conferencing/utils/get-safe-conferencing-redirect-url";
 import { UserWithProfile } from "@/modules/users/users.repository";
 import { HttpService } from "@nestjs/axios";
 import { Logger } from "@nestjs/common";
@@ -148,7 +149,13 @@ export class ConferencingController {
       throw new BadRequestException("Missing `state` query param");
     }
 
-    const decodedCallbackState: OAuthCallbackState = JSON.parse(state);
+    let decodedCallbackState: OAuthCallbackState;
+    try {
+      decodedCallbackState = JSON.parse(state);
+    } catch {
+      throw new BadRequestException("Malformed `state` query param");
+    }
+
     try {
       if (error) {
         throw new BadRequestException(error_description);
@@ -163,10 +170,12 @@ export class ConferencingController {
         };
         try {
           const response = await this.httpService.axiosRef.get(url, { params, headers });
-          const redirectUrl = response.data?.url || decodedCallbackState.onErrorReturnTo || "";
+          const redirectUrl = getSafeConferencingRedirectUrl(
+            response.data?.url ?? decodedCallbackState.onErrorReturnTo
+          );
           return { url: redirectUrl };
         } catch (err) {
-          const fallbackUrl = decodedCallbackState.onErrorReturnTo || "";
+          const fallbackUrl = getSafeConferencingRedirectUrl(decodedCallbackState.onErrorReturnTo);
           return { url: fallbackUrl };
         }
       }
@@ -177,7 +186,7 @@ export class ConferencingController {
         this.logger.error(error.message);
       }
       return {
-        url: decodedCallbackState.onErrorReturnTo ?? "",
+        url: getSafeConferencingRedirectUrl(decodedCallbackState.onErrorReturnTo),
       };
     }
   }

@@ -10,7 +10,10 @@ import stripe from "../lib/server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { code, error, error_description } = req.query;
-  const state = decodeOAuthState(req, "stripe");
+  const state = decodeOAuthState(req);
+  if (!state) {
+    return res.status(401).json({ message: "Invalid OAuth state" });
+  }
 
   if (error) {
     if (error === "access_denied") {

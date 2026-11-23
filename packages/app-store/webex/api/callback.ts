@@ -13,7 +13,10 @@ import { getWebexAppKeys } from "../lib/getWebexAppKeys";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { code } = req.query;
   const { client_id, client_secret } = await getWebexAppKeys();
-  const state = decodeOAuthState(req, "webex");
+  const state = decodeOAuthState(req);
+  if (!state) {
+    return res.status(401).json({ message: "Invalid OAuth state" });
+  }
 
   /** @link https://developer.webex.com/docs/integrations#getting-an-access-token **/
 
