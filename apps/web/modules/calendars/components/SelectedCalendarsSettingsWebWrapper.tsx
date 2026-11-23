@@ -113,12 +113,15 @@ const ConnectedCalendarList = ({
             severity="warning"
             title={t("something_went_wrong")}
             message={
-              <span>
-                <Link href={`/apps/${connectedCalendar.integration.slug}`}>
-                  {connectedCalendar.integration.name}
-                </Link>
-                : {t("calendar_error")}
-              </span>
+              <>
+                <span>
+                  <Link href={`/apps/${connectedCalendar.integration.slug}`}>
+                    {connectedCalendar.integration.name}
+                  </Link>
+                  : {t("calendar_error")}
+                </span>
+                <span className="mt-1 block">{t("calendar_error_availability_hidden")}</span>
+              </>
             }
             iconClassName="h-10 w-10 ml-2 mr-1 mt-0.5"
             actions={
