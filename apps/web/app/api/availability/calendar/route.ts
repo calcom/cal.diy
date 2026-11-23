@@ -17,6 +17,8 @@ import prisma from "@calcom/prisma";
 
 import { buildLegacyRequest } from "@lib/buildLegacyCtx";
 
+import { assertSameOrigin } from "./assertSameOrigin";
+
 const selectedCalendarSelectSchema = z.object({
   integration: z.string(),
   externalId: z.string(),
@@ -69,6 +71,7 @@ async function getHandler() {
 }
 
 async function postHandler(req: NextRequest) {
+  assertSameOrigin(req);
   const user = await authMiddleware();
 
   const body = await req.json();
@@ -88,6 +91,7 @@ async function postHandler(req: NextRequest) {
 }
 
 async function deleteHandler(req: NextRequest) {
+  assertSameOrigin(req);
   const user = await authMiddleware();
   const searchParams = Object.fromEntries(req.nextUrl.searchParams.entries());
 
