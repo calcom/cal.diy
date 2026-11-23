@@ -1,6 +1,5 @@
-import { render, screen, cleanup } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { vi } from "vitest";
-
 import BookingPageTagManager, { handleEvent } from "./BookingPageTagManager";
 
 // NOTE:  We don't intentionally mock appStoreMetadata as that also tests config.json and generated files for us for no cost. If it becomes a pain in future, we could just start mocking it.
@@ -23,7 +22,7 @@ function setOnWindow(prop: any, value: any) {
 afterEach(() => {
   windowProps.forEach((prop) => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
+    //@ts-expect-error
     delete window[prop];
   });
   windowProps.splice(0);
@@ -76,6 +75,68 @@ describe("BookingPageTagManager", () => {
     );
     const scripts = screen.queryAllByTestId("cal-analytics-app-gtm");
     expect(scripts.length).toBe(0);
+  });
+
+  it.each([
+    // CVE-2026-57858: attempts to break out of the enclosing JS string literal
+    "GTM-'});alert(document.cookie);//",
+    // attempts to close the <script> element and open a new one
+    "GTM-123</script><script>alert(document.cookie)</script>",
+    // escape-sequence smuggling
+    "GTM-\\u0027});alert(document.cookie);//",
+  ])("GTM App must neutralize malicious trackingId %s", (trackingId) => {
+    render(
+      <BookingPageTagManager
+        eventType={{
+          metadata: {
+            apps: {
+              gtm: {
+                enabled: true,
+                trackingId,
+              },
+            },
+          },
+          price: 0,
+          currency: "USD",
+        }}
+      />
+    );
+    const scripts = screen.getAllByTestId("cal-analytics-app-gtm");
+    const trackingScript = scripts[0];
+    expect(trackingScript.innerHTML).not.toContain("</script>");
+    expect(trackingScript.innerHTML).not.toContain("<script>");
+    // the full escape sequence chain must be present in the rendered output
+    expect(trackingScript.innerHTML).toContain(
+      trackingId
+        .replace(/\\/g, "\\\\")
+        .replace(/</g, "\\u003C")
+        .replace(/>/g, "\\u003E")
+        .replace(/"/g, '\\"')
+        .replace(/'/g, "\\'")
+    );
+  });
+
+  it("GTM App trackingId containing $-patterns must be interpolated literally (replace() replacement patterns must not be expanded)", () => {
+    render(
+      <BookingPageTagManager
+        eventType={{
+          metadata: {
+            apps: {
+              gtm: {
+                enabled: true,
+                trackingId: "GTM-$&-123",
+              },
+            },
+          },
+          price: 0,
+          currency: "USD",
+        }}
+      />
+    );
+    const scripts = screen.getAllByTestId("cal-analytics-app-gtm");
+    const trackingScript = scripts[0];
+    // textContent because jsdom serializes `&` as `&amp;` in innerHTML
+    expect(trackingScript.textContent).toContain("GTM-$&-123");
   });
 
   it("should not add scripts for an app that doesnt have tag defined(i.e. non-analytics app)", () => {
