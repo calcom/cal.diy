@@ -55,8 +55,34 @@ describe("slugify", () => {
     expect(slugify("📚🕯️")).toEqual("");
   });
 
-  it.skip("should remove unicode", () => {
+  it("should remove unicode", () => {
     expect(slugify("Hello ®️ There")).toEqual("hello-there");
     expect(slugify("®️")).toEqual("");
+  });
+
+  it("should remove symbols that are also classified as emoji", () => {
+    expect(slugify("Hello ® There")).toEqual("hello-there");
+    expect(slugify("Hello © There")).toEqual("hello-there");
+    expect(slugify("Hello ™ There")).toEqual("hello-there");
+    expect(slugify("hello©there")).toEqual("hellothere");
+  });
+
+  it("should convert * to - like any other special character", () => {
+    expect(slugify("hello*there")).toEqual("hello-there");
+    expect(slugify("hello * there")).toEqual("hello-there");
+    expect(slugify("*hello*")).toEqual("hello");
+  });
+
+  it("should remove emoji sequences without leaving stray characters behind", () => {
+    expect(slugify("hello 1️⃣ there")).toEqual("hello-1-there"); // keycap keeps the digit
+    expect(slugify("hello 👍🏽 there")).toEqual("hello-there"); // skin tone modifier
+    expect(slugify("hello 👨‍👩‍👧 there")).toEqual("hello-there"); // zero width joiner sequence
+    expect(slugify("hello 🇮🇳 there")).toEqual("hello-there"); // flag
+    expect(slugify("a😀b")).toEqual("ab");
+  });
+
+  it("should keep letters and digits from any script", () => {
+    expect(slugify("日本語 123")).toEqual("日本語-123");
+    expect(slugify("Ünïcode Ñandú")).toEqual("unicode-nandu");
   });
 });
