@@ -12,7 +12,7 @@ export function transformWorkingHoursForAtom(schedule: {
   availability: ScheduleAvailability;
 }) {
   return getWorkingHours(
-    { timeZone: schedule.timeZone || undefined, utcOffset: 0 },
+    { timeZone: schedule.timeZone || undefined },
     schedule.availability || []
   );
 }
