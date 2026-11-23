@@ -4,6 +4,7 @@ import { stringify } from "node:querystring";
 import { WEBAPP_URL } from "@calcom/lib/constants";
 import prisma from "@calcom/prisma";
 
+import { signOAuthState } from "../../_utils/oauth/encodeOAuthState";
 import getAppKeysFromSlug from "../../_utils/getAppKeysFromSlug";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -31,6 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const params = {
       client_id: clientId,
       redirect_uri,
+      state: signOAuthState({ fromApp: false }, req.session?.user?.id),
     };
     const query = stringify(params);
     const url = `${baseUrl}/oauth/approval?${query}`;

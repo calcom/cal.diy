@@ -6,6 +6,8 @@ import { z } from "zod";
 import { WEBAPP_URL } from "@calcom/lib/constants";
 import prisma from "@calcom/prisma";
 
+import type { IntegrationOAuthCallbackState } from "../../types";
+import { signOAuthState } from "../../_utils/oauth/encodeOAuthState";
 import { getStripeAppKeys } from "../lib/getStripeAppKeys";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -23,6 +25,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
+    let callbackState: IntegrationOAuthCallbackState = { fromApp: false };
+    if (typeof req.query.state === "string") {
+      try {
+        callbackState = { ...callbackState, ...JSON.parse(req.query.state) };
+      } catch {
+        // keep default state
+      }
+    }
+
     const redirect_uri = encodeURI(`${WEBAPP_URL}/api/integrations/stripepayment/callback`);
     const stripeConnectParams: Stripe.OAuthAuthorizeUrlParams = {
       client_id,
@@ -35,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         country: process.env.NEXT_PUBLIC_IS_E2E ? "US" : undefined,
       },
       redirect_uri,
-      state: typeof req.query.state === "string" ? req.query.state : undefined,
+      state: signOAuthState(callbackState, req.session?.user?.id),
     };
     /** stringify is being dumb here */
     const params = z.record(z.any()).parse(stripeConnectParams);

@@ -3,16 +3,20 @@ import process from "node:process";
 import type { NextApiRequest } from "next";
 import type { IntegrationOAuthCallbackState } from "../../types";
 
-const NONCE_EXEMPT_APPS = new Set(["stripe", "basecamp3", "dub", "webex", "tandem"]);
-
-export function decodeOAuthState(req: NextApiRequest, appSlug?: string) {
+/**
+ * Decodes an OAuth callback state. The state must carry a nonce + HMAC nonceHash
+ * bound to the current session user (see signOAuthState) - unsigned or tampered
+ * states are rejected for every app, no exemptions.
+ */
+export function decodeOAuthState(req: NextApiRequest) {
   if (typeof req.query.state !== "string") {
     return undefined;
   }
-  const state: IntegrationOAuthCallbackState = JSON.parse(req.query.state);
-
-  if (appSlug && NONCE_EXEMPT_APPS.has(appSlug)) {
-    return state;
+  let state: IntegrationOAuthCallbackState;
+  try {
+    state = JSON.parse(req.query.state);
+  } catch {
+    return undefined;
   }
 
   if (!state.nonce || !state.nonceHash) {

@@ -13,7 +13,10 @@ import { dubAppKeysSchema } from "../lib/utils";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { code } = req.query;
 
-  const state = decodeOAuthState(req, "dub");
+  const state = decodeOAuthState(req);
+  if (!state) {
+    return res.status(401).json({ message: "Invalid OAuth state" });
+  }
 
   if (typeof code !== "string") {
     if (state?.onErrorReturnTo || state?.returnTo) {

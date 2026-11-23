@@ -15,7 +15,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const code = req.query.code as string;
-  const state = decodeOAuthState(req, "tandem");
+  const state = decodeOAuthState(req);
+  if (!state) {
+    return res.status(401).json({ message: "Invalid OAuth state" });
+  }
 
   let clientId = "";
   let clientSecret = "";

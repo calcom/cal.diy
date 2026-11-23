@@ -6,6 +6,7 @@ import { defaultHandler } from "@calcom/lib/server/defaultHandler";
 import { defaultResponder } from "@calcom/lib/server/defaultResponder";
 import prisma from "@calcom/prisma";
 
+import { signOAuthState } from "../../_utils/oauth/encodeOAuthState";
 import { getBasecampKeys } from "../lib/getBasecampKeys";
 
 async function handler(req: NextApiRequest) {
@@ -23,6 +24,7 @@ async function handler(req: NextApiRequest) {
   const params = {
     type: "web_server",
     client_id,
+    state: signOAuthState({ fromApp: false }, req.session?.user?.id),
   };
   const query = stringify(params);
   const url = `https://launchpad.37signals.com/authorization/new?${query}&redirect_uri=${WEBAPP_URL}/api/integrations/basecamp3/callback`;

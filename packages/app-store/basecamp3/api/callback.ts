@@ -10,6 +10,10 @@ import appConfig from "../config.json";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { code } = req.query;
+  const state = decodeOAuthState(req);
+  if (!state) {
+    return res.status(401).json({ message: "Invalid OAuth state" });
+  }
   const { client_id, client_secret, user_agent } = await getAppKeysFromSlug("basecamp3");
 
   const redirectUri = `${WEBAPP_URL}/api/integrations/basecamp3/callback`;
@@ -86,8 +90,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     },
   });
-
-  const state = decodeOAuthState(req, "basecamp3");
 
   res.redirect(getInstalledAppPath({ variant: appConfig.variant, slug: appConfig.slug }));
 }
