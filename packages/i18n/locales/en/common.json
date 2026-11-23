@@ -1617,6 +1617,7 @@
   "it_stored_encrypted": "It will be stored and encrypted.",
   "go_to_app_store": "Go to App Store",
   "calendar_error": "Try reconnecting your calendar with all necessary permissions",
+  "calendar_error_availability_hidden": "While this calendar can't be reached, your booking page shows no available times. Reconnect it, or turn off its conflict check.",
   "set_your_phone_number": "Set a phone number for the meeting",
   "calendar_no_busy_slots": "There are no busy slots",
   "display_location_label": "Display on booking page",
