@@ -1,14 +1,26 @@
-import Script from "next/script";
-
 import { getEventTypeAppData } from "@calcom/app-store/_utils/getEventTypeAppData";
 import { appStoreMetadata } from "@calcom/app-store/bookerAppsMetaData";
 import type { Tag } from "@calcom/app-store/types";
 import { sdkActionManager } from "@calcom/lib/sdk-event";
 import type { AppMeta } from "@calcom/types/App";
-
+import Script from "next/script";
 import type { appDataSchemas } from "./apps.schemas.generated";
 
 const PushEventPrefix = "cal_analytics_app_";
+
+// App config values (e.g. analytics tracking IDs) are user supplied by event owners and end up
+// interpolated inside JS string literals of inline scripts rendered via dangerouslySetInnerHTML.
+// Escape them so they can neither close the surrounding <script> element (HTML parser sees
+// \u003C, JS still decodes it to "<") nor break out of the enclosing string literal.
+const escapeInterpolatedValue = (value: string) =>
+  value
+    .replace(/\\/g, "\\\\")
+    .replace(/</g, "\\u003C")
+    .replace(/>/g, "\\u003E")
+    .replace(/"/g, '\\"')
+    .replace(/'/g, "\\'")
+    .replace(/\r/g, "\\r")
+    .replace(/\n/g, "\\n");
 
 // AnalyticApp has appData.tag always set
 type AnalyticApp = Omit<AppMeta, "appData"> & {
@@ -112,9 +124,10 @@ export default function BookingPageTagManager({
             const variableName = matches[1];
             if (appDataRecord[variableName]) {
               // Replace if value is available. It can possible not be a template variable that just matches the regex.
+              // Function replacer so `$`-patterns in the value are not interpreted by replace()
               val = val.replace(
                 new RegExp(`{${variableName}}`, "g"),
-                String(appDataRecord[variableName])
+                () => escapeInterpolatedValue(String(appDataRecord[variableName]))
               ) as NonNullable<T>;
             }
           }
