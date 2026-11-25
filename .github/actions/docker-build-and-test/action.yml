@@ -165,6 +165,7 @@ runs:
         context: ./
         file: ./Dockerfile
         push: true
+        sbom: true
         platforms: ${{ inputs.platform }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
