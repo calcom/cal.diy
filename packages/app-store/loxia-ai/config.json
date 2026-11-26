@@ -1,0 +1,22 @@
+{
+  "/*": "Don't modify slug - If required, do it using cli edit command",
+  "name": "Loxia AI",
+  "slug": "loxia-ai",
+  "type": "loxia_ai_automation",
+  "logo": "icon.svg",
+  "url": "https://loxiaai.com",
+  "variant": "automation",
+  "categories": [
+    "automation"
+  ],
+  "publisher": "Loxia AI",
+  "email": "info@loxiaai.com",
+  "description": "24/7 AI Voice, Chat & WhatsApp Appointment Scheduling",
+  "isTemplate": false,
+  "__createdUsingCli": true,
+  "__template": "link-as-an-app",
+  "externalLink": {
+    "url": "https://loxiaai.com/en/dashboard/integrations",
+    "newTab": true
+  }
+}

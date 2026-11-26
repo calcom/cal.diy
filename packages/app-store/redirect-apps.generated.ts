@@ -21,6 +21,7 @@ export const REDIRECT_APPS = [
   "greetmate-ai",
   "lindy",
   "linear",
+  "loxia-ai",
   "millis-ai",
   "monobot",
   "n8n",
