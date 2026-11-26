@@ -454,7 +454,13 @@ export const createBookerStore = () =>
       }
       return set({ layout });
     },
-    selectedDate: getQueryParam("date") || null,
+    selectedDate: (() => {
+      const dateParam = getQueryParam("date");
+      if (dateParam && dayjs(dateParam).isValid()) {
+        return dateParam;
+      }
+      return null;
+    })(),
     setSelectedDate: ({ date: selectedDate, omitUpdatingParams = false, preventMonthSwitching = false }) => {
       // unset selected date
       if (!selectedDate) {
@@ -517,12 +523,17 @@ export const createBookerStore = () =>
     setVerificationCode: (code: string | null) => {
       set({ verificationCode: code });
     },
-    month:
-      getQueryParam("month") ||
-      (getQueryParam("date") && dayjs(getQueryParam("date")).isValid()
-        ? dayjs(getQueryParam("date")).format("YYYY-MM")
-        : null) ||
-      dayjs().format("YYYY-MM"),
+    month: (() => {
+      const monthParam = getQueryParam("month");
+      if (monthParam && dayjs(monthParam, "YYYY-MM", true).isValid()) {
+        return monthParam;
+      }
+      const dateParam = getQueryParam("date");
+      if (dateParam && dayjs(dateParam).isValid()) {
+        return dayjs(dateParam).format("YYYY-MM");
+      }
+      return dayjs().format("YYYY-MM");
+    })(),
     setMonth: (month: string | null) => {
       if (!month) {
         removeQueryParam("month");
