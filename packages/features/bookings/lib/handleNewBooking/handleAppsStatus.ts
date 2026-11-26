@@ -1,6 +1,5 @@
 import type { AdditionalInformation, AppsStatus } from "@calcom/types/Calendar";
 import type { EventResult } from "@calcom/types/EventManager";
-
 import type { Booking } from "./createBooking";
 import type { ReqAppsStatus } from "./getBookingData";
 
@@ -50,6 +49,7 @@ function calculateAggregatedAppsStatus(
     (acc, curr) => {
       if (acc[curr.type]) {
         acc[curr.type].success += curr.success;
+        acc[curr.type].failures += curr.failures;
         acc[curr.type].errors = acc[curr.type].errors.concat(curr.errors);
         acc[curr.type].warnings = acc[curr.type].warnings?.concat(curr.warnings || []);
       } else {
