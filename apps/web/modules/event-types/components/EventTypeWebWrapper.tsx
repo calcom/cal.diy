@@ -141,7 +141,7 @@ const EventTypeWeb = ({
         // When an event-type is updated,
         // guests could still hit a stale cache and see the old page.
       }
-      showToast(t("event_type_updated_successfully", { eventTypeTitle: eventType.title }), "success");
+      showToast(t("event_type_updated_successfully", { eventTypeTitle: currentValues.title }), "success");
     },
     async onSettled() {
       await utils.viewer.eventTypes.get.invalidate();
