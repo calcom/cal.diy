@@ -1,10 +1,8 @@
-import { RRule } from "rrule";
-
 import type { Dayjs } from "@calcom/dayjs";
 import dayjs from "@calcom/dayjs";
 import { detectBrowserTimeFormat, TimeFormat } from "@calcom/lib/timeFormat";
 import type { RecurringEvent } from "@calcom/types/Calendar";
-
+import { RRule } from "rrule";
 import { parseZone } from "./parse-zone";
 
 type ExtraOptions = { withDefaultTimeFormat?: boolean; selectedTimeFormat?: TimeFormat };
@@ -37,37 +35,41 @@ export const parseDate = (
   return processDate(date, language, timeZone, options);
 };
 
-const timeOptions: Intl.DateTimeFormatOptions = {
-  hour12: true,
-  hourCycle: "h12",
-  hour: "numeric",
-  minute: "numeric",
-};
-
-const dateOptions: Intl.DateTimeFormatOptions = {
-  weekday: "long",
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-};
-
 export const parseDateTimeWithTimeZone = (
   date: Date,
   language: string,
   timezone: string,
   options?: ExtraOptions
 ): string => {
-  timeOptions.timeZone = timezone;
-  dateOptions.timeZone = timezone;
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour12: true,
+    hourCycle: "h12",
+    hour: "numeric",
+    minute: "numeric",
+    timeZone: timezone,
+  };
+
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: timezone,
+  };
 
   if (options?.withDefaultTimeFormat) {
     timeOptions.hourCycle = "h12";
   } else if (options?.selectedTimeFormat) {
-    timeOptions.hourCycle = options.selectedTimeFormat === TimeFormat.TWELVE_HOUR ? "h12" : "h24";
+    if (options.selectedTimeFormat === TimeFormat.TWELVE_HOUR) {
+      timeOptions.hourCycle = "h12";
+    } else {
+      timeOptions.hourCycle = "h24";
+    }
     if (timeOptions.hourCycle === "h24") {
       delete timeOptions.hour12;
     }
   }
+
   const formattedDate = new Date(date).toLocaleDateString(language, dateOptions);
   const formattedTime = new Date(date)
     .toLocaleTimeString(language, timeOptions)
