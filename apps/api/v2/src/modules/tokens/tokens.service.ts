@@ -37,7 +37,8 @@ export class TokensService {
 
     let decodedToken: OAuthTokenPayload;
     try {
-      decodedToken = jwt.verify(token, encryptionKey) as OAuthTokenPayload;
+      // OAuthService signs these tokens with jwt.sign(...) and no algorithm option, which is HS256.
+      decodedToken = jwt.verify(token, encryptionKey, { algorithms: ["HS256"] }) as OAuthTokenPayload;
     } catch (_e) {
       return null;
     }
