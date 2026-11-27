@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ErrorCode } from "@calcom/features/auth/lib/ErrorCode";
 import { HttpError } from "@calcom/lib/http-error";
