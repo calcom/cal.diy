@@ -1,5 +1,5 @@
 import type { DateRange } from "@calcom/features/schedules/lib/date-ranges";
-import { IntervalTree, ContainmentSearchAlgorithm, createIntervalNodes } from "@calcom/lib/intervalTree";
+import { ContainmentSearchAlgorithm, createIntervalNodes, IntervalTree } from "@calcom/lib/intervalTree";
 
 /**
  * Filters out date ranges that are completely covered by other date ranges.
@@ -34,17 +34,17 @@ export function filterRedundantDateRanges(dateRanges: DateRange[]): DateRange[] 
       const otherRange = containingNode.item;
       const otherIndex = containingNode.index;
 
-      if (
+      const isIdentical =
         otherRange.start.valueOf() === range.start.valueOf() &&
-        otherRange.end.valueOf() === range.end.valueOf()
-      ) {
-        return otherIndex > index; // Keep current range only if other range has higher index
-      }
+        otherRange.end.valueOf() === range.end.valueOf();
 
-      // If we reach here, the other range actually contains this range
-      return false;
+      // Drop this range if strictly contained by another range,
+      // or if an earlier identical range will be kept instead.
+      if (!isIdentical || otherIndex < index) {
+        return false;
+      }
     }
 
-    return true; // Keep this range
+    return true;
   });
 }
