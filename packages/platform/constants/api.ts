@@ -92,6 +92,7 @@ export const SUPPORTED_LOCALES = [
   "fi",
   "fr",
   "he",
+  "hi",
   "hu",
   "it",
   "ja",
