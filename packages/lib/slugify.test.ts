@@ -46,17 +46,49 @@ describe("slugify", () => {
   });
 
   it("Should replace consecutive dashes with a single dash", () => {
-    expect(slugify("Hello -  World 123_ !@#  Test    456   789")).toEqual("hello-world-123-test-456-789");
+    expect(slugify("Hello -  World 123_ !@#  Test    456   789")).toEqual(
+      "hello-world-123-test-456-789",
+    );
   });
 
-  // This is failing, if we want to fix it, one approach is as used in getValidRhfFieldName
   it("should remove emoji characters", () => {
     expect(slugify("Hello 📚🕯️ There")).toEqual("hello-there");
     expect(slugify("📚🕯️")).toEqual("");
+    expect(slugify("a⭐b")).toEqual("ab");
+    expect(slugify("a🤌b")).toEqual("ab");
+    expect(slugify("a🩰b")).toEqual("ab");
+    expect(slugify("⭐")).toEqual("");
+    expect(slugify("🤌")).toEqual("");
+    expect(slugify("🩰")).toEqual("");
   });
 
-  it.skip("should remove unicode", () => {
+  it("should remove unicode symbols like © and ®", () => {
     expect(slugify("Hello ®️ There")).toEqual("hello-there");
+    expect(slugify("Hello ® There")).toEqual("hello-there");
+    expect(slugify("Hello © There")).toEqual("hello-there");
     expect(slugify("®️")).toEqual("");
+    expect(slugify("®")).toEqual("");
+    expect(slugify("©")).toEqual("");
+  });
+
+  it("should replace symbols like * with dashes", () => {
+    expect(slugify("hello*there")).toEqual("hello-there");
+    expect(slugify("*hellothere")).toEqual("hellothere");
+    expect(slugify("hello*there*")).toEqual("hello-there");
+  });
+
+  it("should handle international characters and preserve non-Latin letters", () => {
+    expect(slugify("Jürgen")).toEqual("jurgen");
+    expect(slugify("Crème brûlée")).toEqual("creme-brulee");
+    expect(slugify("你好")).toEqual("你好");
+    expect(slugify("hello 你好 world")).toEqual("hello-你好-world");
+    expect(slugify("Привет мир")).toEqual("привет-мир");
+  });
+
+  it("should support forDisplayingInput option", () => {
+    expect(slugify("test-", true)).toEqual("test-");
+    expect(slugify("test.", true)).toEqual("test.");
+    expect(slugify("test-", false)).toEqual("test");
+    expect(slugify("test.", false)).toEqual("test");
   });
 });
