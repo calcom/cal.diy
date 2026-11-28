@@ -1,8 +1,6 @@
 import { prisma } from "@calcom/prisma";
 import type { Prisma } from "@calcom/prisma/client";
-
 import { TRPCError } from "@trpc/server";
-
 import type { TrpcSessionUser } from "../../../types";
 import type { TUpdateAppCredentialsInputSchema } from "./updateAppCredentials.schema";
 
@@ -11,6 +9,31 @@ export type UpdateAppCredentialsOptions = {
     user: NonNullable<TrpcSessionUser>;
   };
   input: TUpdateAppCredentialsInputSchema;
+};
+
+const FORBIDDEN_KEYS: Set<string> = new Set(["__proto__", "constructor", "prototype"]);
+
+const sanitizeJsonValue = (value: unknown): Prisma.JsonValue => {
+  if (Array.isArray(value)) {
+    return value.map(sanitizeJsonValue);
+  }
+  if (typeof value === "object" && value !== null) {
+    return sanitizeJsonObject(value);
+  }
+  return value as Prisma.JsonValue;
+};
+
+export const sanitizeJsonObject = (value: unknown): Prisma.JsonObject => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return {};
+  }
+
+  const result: Prisma.JsonObject = {};
+  for (const [key, val] of Object.entries(value)) {
+    if (FORBIDDEN_KEYS.has(key)) continue;
+    result[key] = sanitizeJsonValue(val);
+  }
+  return result;
 };
 
 const validators = {
@@ -45,6 +68,7 @@ export const updateAppCredentialsHandler = async ({ ctx, input }: UpdateAppCrede
       id: input.credentialId,
       userId: user.id,
     },
+    select: { id: true, appId: true, key: true },
   });
   // Check if credential exists
   if (!credential) {
@@ -62,10 +86,11 @@ export const updateAppCredentialsHandler = async ({ ctx, input }: UpdateAppCrede
     },
     data: {
       key: {
-        ...(credential.key as Prisma.JsonObject),
-        ...(validatedKeys as Prisma.JsonObject),
+        ...sanitizeJsonObject(credential.key),
+        ...sanitizeJsonObject(validatedKeys),
       },
     },
+    select: { id: true },
   });
 
   return !!updated;
